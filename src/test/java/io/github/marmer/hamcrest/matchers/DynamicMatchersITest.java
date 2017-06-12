@@ -2,6 +2,7 @@ package io.github.marmer.hamcrest.matchers;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import org.hamcrest.Description;
@@ -68,6 +69,53 @@ public class DynamicMatchersITest {
 		propertyMatcher.describeTo(description);
 		assertThat("Matcher description Text", description.toString(),
 				containsString(hasPropertyMatcherWithoutParamDescriptionText("myFancyProperty")));
+	}
+
+	@Test
+	public void testAndWith_RelatedPropertyExistsButAdditionalPropertyMatchFails_ShouldNotMatch() throws Exception {
+		// Preparation
+
+		// Execution
+		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class)
+				.withMyFancyProperty(equalTo("test"));
+
+		// Assertion
+		assertThat("Matcher of property matches", propertyMatcher.matches(new SamplePojo("notTest")), is(false));
+	}
+
+	@Test
+	public void testAndWith_RelatedPropertyExistsButAdditionalPropertyMatchMatches_ShouldMatch() throws Exception {
+		// Preparation
+
+		// Execution
+		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class)
+				.withMyFancyProperty(equalTo("test"));
+
+		// Assertion
+		assertThat("Matcher of property matches", propertyMatcher.matches(new SamplePojo("test")), is(true));
+	}
+
+	@Test
+	public void testAndWith_RelatedPropertyExistsButAdditionalPropertyMatchMatches_ShouldAddHasPropertyDescriptionWithValue()
+			throws Exception {
+		// Preparation
+
+		// Execution
+		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class)
+				.withMyFancyProperty(equalTo("mops"));
+
+		// Assertion
+		Description description = new StringDescription();
+		propertyMatcher.describeTo(description);
+		assertThat("Matcher description Text", description.toString(),
+				containsString(hasPropertyMatcherWithoutParamDescriptionText("myFancyProperty", equalTo("mops"))));
+	}
+
+	private String hasPropertyMatcherWithoutParamDescriptionText(final String propertyName,
+			final Matcher<String> innerMatcher) {
+		Description instanceOfDescription = new StringDescription();
+		Matchers.hasProperty(propertyName, innerMatcher).describeTo(instanceOfDescription);
+		return instanceOfDescription.toString();
 	}
 
 	private String hasPropertyMatcherWithoutParamDescriptionText(final String propertyName) {

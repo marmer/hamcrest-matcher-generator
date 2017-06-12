@@ -29,4 +29,10 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	protected boolean matchesSafely(final T item) {
 		return instanceOfMatcher.matches(item);
 	}
+
+	public Matcher<T> withMyFancyProperty(final Matcher<?> matching) {
+		// FIXME static implementation is only a helper to prepare a test.
+		// FIXME Make me dynamic
+		return hasProperty("myFancyProperty", matching);
+	}
 }
