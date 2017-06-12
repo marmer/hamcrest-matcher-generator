@@ -14,7 +14,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-import io.github.marmer.hamcrest.matchers.DynamicMatchers;
 import lombok.Value;
 
 public class DynamicMatchersITest {
@@ -57,11 +56,30 @@ public class DynamicMatchersITest {
 		assertThat("Matcher description Text", description.toString(), containsString(instanceOfDescriptionText()));
 	}
 
+	@Test
+	public void testAndWith_RelatedPropertyExists_ShouldAddHasPropertyDescription() throws Exception {
+		// Preparation
+
+		// Execution
+		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class).withMyFancyProperty();
+
+		// Assertion
+		Description description = new StringDescription();
+		propertyMatcher.describeTo(description);
+		assertThat("Matcher description Text", description.toString(),
+				containsString(hasPropertyMatcherWithoutParamDescriptionText("myFancyProperty")));
+	}
+
+	private String hasPropertyMatcherWithoutParamDescriptionText(final String propertyName) {
+		Description instanceOfDescription = new StringDescription();
+		Matchers.hasProperty(propertyName).describeTo(instanceOfDescription);
+		return instanceOfDescription.toString();
+	}
+
 	private String instanceOfDescriptionText() {
 		Description instanceOfDescription = new StringDescription();
 		Matchers.instanceOf(SamplePojo.class).describeTo(instanceOfDescription);
-		String instanceOfDescriptionText = instanceOfDescription.toString();
-		return instanceOfDescriptionText;
+		return instanceOfDescription.toString();
 	}
 
 	@Value
