@@ -7,6 +7,8 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
+import io.github.marmer.hamcrest.matchers.DynamicPropertyMatcherTest.ClassWithSingleProperty;
+
 public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
 	private Matcher<T> instanceOfMatcher;
@@ -38,5 +40,9 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
 	public Matcher<T> with(final String propertyName, final Matcher<String> matcher) {
 		return hasProperty(propertyName, matcher);
+	}
+
+	public Matcher<ClassWithSingleProperty> with(final String propertyName) {
+		return hasProperty(propertyName);
 	}
 }
