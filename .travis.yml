@@ -1,5 +1,8 @@
 "language": "java"
 "jdk": "oraclejdk8"
+sudo: false
+cache:
+    apt: true
 script: "mvn clean test cobertura:cobertura"
 after_success:
   - bash <(curl -s https://codecov.io/bash)
