@@ -180,6 +180,21 @@ public class DynamicPropertyMatcherTest {
 
 	}
 
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyAndCallWithTwoExistingProperties_ShouldMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+				ClassTwoProperties.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("firstProperty", equalTo("firstPropertyValue")).with("secondProperty")
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(true));
+	}
+
 	private String hasPropertyDescriptionText(final String propertyName) {
 		Description instanceOfDescription = new StringDescription();
 		Matchers.hasProperty(propertyName).describeTo(instanceOfDescription);
@@ -191,8 +206,6 @@ public class DynamicPropertyMatcherTest {
 		Matchers.hasProperty(propertyName, innerMatcher).describeTo(instanceOfDescription);
 		return instanceOfDescription.toString();
 	}
-
-	// TODO multiple chained property Matches
 
 	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
 		Description instanceOfDescription = new StringDescription();
