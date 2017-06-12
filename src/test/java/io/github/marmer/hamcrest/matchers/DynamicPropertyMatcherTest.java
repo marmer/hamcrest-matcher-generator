@@ -70,7 +70,7 @@ public class DynamicPropertyMatcherTest {
 	}
 
 	@Test
-	public void testMatches_InitializedWithDynamicPropertyAndCalledWithNotMatchingProperty_ShouldMatch()
+	public void testMatches_InitializedWithDynamicPropertyAndCalledWithNotMatchingProperty_ShouldNotMatch()
 			throws Exception {
 		// Preparation
 		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
@@ -82,6 +82,33 @@ public class DynamicPropertyMatcherTest {
 
 		// Assertion
 		assertThat("matches", matches, is(false));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyAndCallWithNotExistingProperty_ShouldNotMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("differentProperty").matches(new ClassWithSingleProperty("someValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(false));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldMatch() throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("someProperty").matches(new ClassWithSingleProperty("someValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(true));
 	}
 
 	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
