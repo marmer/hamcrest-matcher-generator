@@ -1,5 +1,5 @@
 "language": "java"
-"jdk": "oraclejdk5"
+"jdk": "oraclejdk6"
 sudo: false
 cache:
     apt: true
