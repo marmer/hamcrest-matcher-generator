@@ -1,6 +1,7 @@
 package io.github.marmer.hamcrest.matchers;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -52,6 +53,35 @@ public class DynamicPropertyMatcherTest {
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
 				containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyAndCalledWithMatchingProperty_ShouldMatch() throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("someProperty", is(equalTo("someValue")))
+				.matches(new ClassWithSingleProperty("someValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(true));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyAndCalledWithNotMatchingProperty_ShouldMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("someProperty", is(equalTo("someValue")))
+				.matches(new ClassWithSingleProperty("someDifferentValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(false));
 	}
 
 	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
