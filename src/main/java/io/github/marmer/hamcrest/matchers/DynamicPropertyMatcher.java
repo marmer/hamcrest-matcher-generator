@@ -35,4 +35,8 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 		// FIXME Make me dynamic
 		return hasProperty("myFancyProperty", matching);
 	}
+
+	public Matcher<T> with(final String propertyName, final Matcher<String> matcher) {
+		return hasProperty(propertyName, matcher);
+	}
 }
