@@ -44,6 +44,6 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	}
 
 	public Matcher<T> with(final String propertyName) {
-		return hasProperty(propertyName);
+		return is(both(instanceOfMatcher).and(allOf(hasProperty(propertyName))));
 	}
 }

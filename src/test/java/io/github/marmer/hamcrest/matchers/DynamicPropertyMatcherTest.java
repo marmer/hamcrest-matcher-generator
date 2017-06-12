@@ -113,7 +113,7 @@ public class DynamicPropertyMatcherTest {
 	}
 
 	@Test
-	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainIsInstanceDescription()
+	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainIsInstanceDescription()
 			throws Exception {
 		// Preparation
 		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
@@ -122,6 +122,40 @@ public class DynamicPropertyMatcherTest {
 		Description description = new StringDescription();
 		// Execution
 		classUnderTest.with("someProperty", equalTo("someValue")).describeTo(description);
+
+		// Assertion
+		assertThat("Matcher description Text", description.toString(),
+				containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+	}
+
+	@Test
+	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainHasPropertyDescription()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		Description description = new StringDescription();
+
+		// Execution
+		classUnderTest.with("someProperty", equalTo("someValue")).describeTo(description);
+
+		// Assertion
+		assertThat("Matcher description Text", description.toString(),
+				containsString(hasPropertyDescriptionText("someProperty", equalTo("someValue"))));
+
+	}
+
+	@Test
+	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainIsInstanceDescription()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		Description description = new StringDescription();
+		// Execution
+		classUnderTest.with("someProperty").describeTo(description);
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
@@ -138,11 +172,11 @@ public class DynamicPropertyMatcherTest {
 		Description description = new StringDescription();
 
 		// Execution
-		classUnderTest.with("someProperty", equalTo("someValue")).describeTo(description);
+		classUnderTest.with("someProperty").describeTo(description);
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-				containsString(hasPropertyDescriptionText("someProperty", equalTo("someValue"))));
+				containsString(hasPropertyDescriptionText("someProperty")));
 
 	}
 
