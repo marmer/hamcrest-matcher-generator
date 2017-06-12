@@ -1,13 +1,14 @@
 package io.github.marmer.hamcrest.matchers;
 
+import static org.hamcrest.CoreMatchers.both;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
-
-import io.github.marmer.hamcrest.matchers.DynamicPropertyMatcherTest.ClassWithSingleProperty;
 
 public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
@@ -39,10 +40,10 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	}
 
 	public Matcher<T> with(final String propertyName, final Matcher<String> matcher) {
-		return hasProperty(propertyName, matcher);
+		return is(both(instanceOfMatcher).and(allOf(hasProperty(propertyName, matcher))));
 	}
 
-	public Matcher<ClassWithSingleProperty> with(final String propertyName) {
+	public Matcher<T> with(final String propertyName) {
 		return hasProperty(propertyName);
 	}
 }

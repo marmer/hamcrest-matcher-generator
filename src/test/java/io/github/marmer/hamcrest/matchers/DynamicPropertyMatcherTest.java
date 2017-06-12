@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 import org.junit.Test;
@@ -110,6 +111,55 @@ public class DynamicPropertyMatcherTest {
 		// Assertion
 		assertThat("matches", matches, is(true));
 	}
+
+	@Test
+	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainIsInstanceDescription()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		Description description = new StringDescription();
+		// Execution
+		classUnderTest.with("someProperty", equalTo("someValue")).describeTo(description);
+
+		// Assertion
+		assertThat("Matcher description Text", description.toString(),
+				containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+	}
+
+	@Test
+	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainHasPropertyDescription()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+
+		Description description = new StringDescription();
+
+		// Execution
+		classUnderTest.with("someProperty", equalTo("someValue")).describeTo(description);
+
+		// Assertion
+		assertThat("Matcher description Text", description.toString(),
+				containsString(hasPropertyDescriptionText("someProperty", equalTo("someValue"))));
+
+	}
+
+	private String hasPropertyDescriptionText(final String propertyName) {
+		Description instanceOfDescription = new StringDescription();
+		Matchers.hasProperty(propertyName).describeTo(instanceOfDescription);
+		return instanceOfDescription.toString();
+	}
+
+	private String hasPropertyDescriptionText(final String propertyName, final Matcher<String> innerMatcher) {
+		Description instanceOfDescription = new StringDescription();
+		Matchers.hasProperty(propertyName, innerMatcher).describeTo(instanceOfDescription);
+		return instanceOfDescription.toString();
+	}
+
+	// TODO descriptions for single
+	// TODO multiple chained property Matches
 
 	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
 		Description instanceOfDescription = new StringDescription();
