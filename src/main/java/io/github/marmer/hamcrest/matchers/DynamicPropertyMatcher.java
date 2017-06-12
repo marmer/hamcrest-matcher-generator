@@ -12,6 +12,14 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
+/**
+ * TODO Add javadoc!
+ * 
+ * @author marmer
+ * @date 13.06.2017
+ *
+ * @param <T>
+ */
 public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
 	private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();
