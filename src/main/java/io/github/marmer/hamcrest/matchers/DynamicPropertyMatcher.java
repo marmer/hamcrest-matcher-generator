@@ -5,6 +5,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -12,6 +15,7 @@ import org.hamcrest.TypeSafeMatcher;
 
 public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
+	private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();
 	private Matcher<T> instanceOfMatcher;
 
 	DynamicPropertyMatcher(final Class<T> expectedClass) {
@@ -24,13 +28,23 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 		return hasProperty("myFancyProperty");
 	}
 
+	@Override
 	public void describeTo(final Description description) {
-		instanceOfMatcher.describeTo(description);
+		getFullInnerMatcher().describeTo(description);
 	}
 
 	@Override
 	protected boolean matchesSafely(final T item) {
-		return instanceOfMatcher.matches(item);
+		return getFullInnerMatcher().matches(item);
+	}
+
+	private Matcher<?> getFullInnerMatcher() {
+		if (hasPropertyMatcher.isEmpty()) {
+			return instanceOfMatcher;
+		}
+		@SuppressWarnings("unchecked")
+		Matcher<Object> allOf = Matchers.<Object>allOf(hasPropertyMatcher.toArray(new Matcher[0]));
+		return is(allOf(instanceOfMatcher, allOf));
 	}
 
 	public Matcher<T> withMyFancyProperty(final Matcher<?> matching) {
@@ -39,8 +53,10 @@ public final class DynamicPropertyMatcher<T> extends TypeSafeMatcher<T> {
 		return hasProperty("myFancyProperty", matching);
 	}
 
-	public Matcher<T> with(final String propertyName, final Matcher<String> matcher) {
-		return is(both(instanceOfMatcher).and(allOf(hasProperty(propertyName, matcher))));
+	public DynamicPropertyMatcher<T> with(final String propertyName, final Matcher<String> matcher) {
+		this.hasPropertyMatcher.add(hasProperty(propertyName, matcher));
+
+		return this;
 	}
 
 	public Matcher<T> with(final String propertyName) {
