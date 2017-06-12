@@ -192,7 +192,6 @@ public class DynamicPropertyMatcherTest {
 		return instanceOfDescription.toString();
 	}
 
-	// TODO descriptions for single
 	// TODO multiple chained property Matches
 
 	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
