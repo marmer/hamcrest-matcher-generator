@@ -1,8 +1,12 @@
 package io.github.marmer.hamcrest.matchers;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matchers;
+import org.hamcrest.StringDescription;
 import org.junit.Test;
 
 import lombok.Value;
@@ -11,11 +15,11 @@ public class DynamicPropertyMatcherTest {
 	@Test
 	public void testMatches_OnlyWithMatchingTypeInitialized_ShouldNotMatchInstanceOfDifferentType() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> dynamicPropertyMatcher = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
-		boolean matches = dynamicPropertyMatcher.matches(new AnotherClassWithSingleProperty("someValue"));
+		boolean matches = classUnderTest.matches(new AnotherClassWithSingleProperty("someValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));
@@ -24,14 +28,36 @@ public class DynamicPropertyMatcherTest {
 	@Test
 	public void testMatches_OnlyWithMatchingTypeInitialized_ShouldMatchInstanceOfSameType() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> dynamicPropertyMatcher = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
-		boolean matches = dynamicPropertyMatcher.matches(new ClassWithSingleProperty("someValue"));
+		boolean matches = classUnderTest.matches(new ClassWithSingleProperty("someValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(true));
+	}
+
+	@Test
+	public void testDescribeTo_OnlyWithMatchingTypeInitialized_DescriptionTextShouldContainInstanceOfDescriptionText()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
+		Description description = new StringDescription();
+
+		// Execution
+		classUnderTest.describeTo(description);
+
+		// Assertion
+		assertThat("Matcher description Text", description.toString(),
+				containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+	}
+
+	private String instanceOfDescriptionText(final Class<ClassWithSingleProperty> type) {
+		Description instanceOfDescription = new StringDescription();
+		Matchers.instanceOf(type).describeTo(instanceOfDescription);
+		return instanceOfDescription.toString();
 	}
 
 	@Value
