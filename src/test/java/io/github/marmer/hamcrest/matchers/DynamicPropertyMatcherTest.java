@@ -181,18 +181,65 @@ public class DynamicPropertyMatcherTest {
 	}
 
 	@Test
-	public void testMatches_InitializedWithDynamicPropertyAndCallWithTwoExistingProperties_ShouldMatch()
+	public void testMatches_InitializedWithDynamicPropertyWithInnerMatcherAndCallWithMotExistingPropertiesAtSecondPlace_ShouldMatch()
 			throws Exception {
 		// Preparation
 		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
 				ClassTwoProperties.class);
 
 		// Execution
-		boolean matches = classUnderTest.with("firstProperty", equalTo("firstPropertyValue")).with("secondProperty")
+		boolean matches = classUnderTest.with("firstProperty", equalTo("firstPropertyValue"))
+				.with("notExistingProperty")
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(false));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithTwoExistingProperties_ShouldMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+				ClassTwoProperties.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("secondProperty").with("firstProperty", equalTo("firstPropertyValue"))
 				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(true));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithNotExistingPropertiesAtSecondPlace_ShouldNotMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+				ClassTwoProperties.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("secondProperty")
+				.with("notExistingProperty", equalTo("firstPropertyValue"))
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(false));
+	}
+
+	@Test
+	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithExistingPropertiesAtSecondPlaceButNotMatching_ShouldNotMatch()
+			throws Exception {
+		// Preparation
+		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+				ClassTwoProperties.class);
+
+		// Execution
+		boolean matches = classUnderTest.with("secondProperty").with("firstProperty", equalTo("notMatchingValue"))
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+
+		// Assertion
+		assertThat("matches", matches, is(false));
 	}
 
 	private String hasPropertyDescriptionText(final String propertyName) {
