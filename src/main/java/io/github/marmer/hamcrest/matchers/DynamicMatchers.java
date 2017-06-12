@@ -1,4 +1,4 @@
-package io.github.marmer.hamcrest;
+package io.github.marmer.hamcrest.matchers;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
