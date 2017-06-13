@@ -1,7 +1,5 @@
 "language": "java"
 "jdk": "oraclejdk7"
 sudo: false
-script: "mvn clean test cobertura:cobertura"
-after_success:
-  - bash <(curl -s https://codecov.io/bash) -t bce0d4b1-e15e-4bcd-962d-1a1144854833
-  
+after_success: 
+  - mvn cobertura:cobertura coveralls:report
