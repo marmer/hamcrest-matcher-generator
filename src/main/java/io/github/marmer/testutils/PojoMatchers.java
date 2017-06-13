@@ -1,5 +1,7 @@
 package io.github.marmer.testutils;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Collection of dynamic Matchers.
  *
@@ -7,7 +9,8 @@ package io.github.marmer.testutils;
  * @date 12.06.2017
  *
  */
-public class DynamicMatchers {
+@UtilityClass
+public class PojoMatchers {
 
 	/**
 	 * Prepares a DynamicPropertyMatcher for the given Instance.
