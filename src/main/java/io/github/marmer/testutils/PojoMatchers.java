@@ -23,7 +23,7 @@ public class PojoMatchers {
 	 *            the type
 	 * @return the dynamic property matcher
 	 */
-	public static <T> BeanPropertyMatcher<T> instanceOf(final Class<T> type) {
+	public static <T> BeanPropertyMatcher<T> beanOf(final Class<T> type) {
 		return new BeanPropertyMatcher<T>(type);
 	}
 
