@@ -4,5 +4,5 @@ sudo: false
 install:
   - mvn test-compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 script:
-  - mvn test jacoco:report coveralls:report
+  - mvn test jacoco:prepare-agent jacoco:report coveralls:report
 #after_success:
