@@ -21,34 +21,33 @@ public class PojoMatchersITest {
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
 	@Test
-	public void testInstanceOf_OnlyTypeIsGiven_ShouldMatchIfAnInstanceOfTheGivenTypeIsTriedToMatch() throws Exception {
+	public void testBeanOf_OnlyTypeIsGiven_ShouldMatchIfAnInstanceOfTheGivenTypeIsTriedToMatch() throws Exception {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.beanOf(SamplePojo.class);
 
 		// Assertion
 		assertThat("matches", propertyMatcher.matches(new SamplePojo("someValue")), is(true));
 	}
 
 	@Test
-	public void testInstanceOf_OnlyTypeIsGiven_ShouldNotMatchIfAnInstanceOfTheAnotherTypeIsTriedToMatch()
-			throws Exception {
+	public void testBeanOf_OnlyTypeIsGiven_ShouldNotMatchIfAnInstanceOfTheAnotherTypeIsTriedToMatch() throws Exception {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.beanOf(SamplePojo.class);
 
 		// Assertion
 		assertThat("matches", propertyMatcher.matches(String.class), is(false));
 	}
 
 	@Test
-	public void testInstanceOf_OnlyTypeIsGiven_DescriptionShouldContainInstanceOfDescriptionText() throws Exception {
+	public void testBeanOf_OnlyTypeIsGiven_DescriptionShouldContainInstanceOfDescriptionText() throws Exception {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.beanOf(SamplePojo.class);
 
 		// Assertion
 		Description description = new StringDescription();
