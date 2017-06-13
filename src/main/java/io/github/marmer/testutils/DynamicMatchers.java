@@ -20,8 +20,8 @@ public class DynamicMatchers {
 	 *            the type
 	 * @return the dynamic property matcher
 	 */
-	public static <T> DynamicPropertyMatcher<T> instanceOf(final Class<T> type) {
-		return new DynamicPropertyMatcher<T>(type);
+	public static <T> BeanPropertyMatcher<T> instanceOf(final Class<T> type) {
+		return new BeanPropertyMatcher<T>(type);
 	}
 
 }

@@ -11,14 +11,14 @@ import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 import org.junit.Test;
 
-import io.github.marmer.testutils.DynamicPropertyMatcher;
+import io.github.marmer.testutils.BeanPropertyMatcher;
 import lombok.Value;
 
-public class DynamicPropertyMatcherTest {
+public class BeanPropertyMatcherTest {
 	@Test
 	public void testMatches_OnlyWithMatchingTypeInitialized_ShouldNotMatchInstanceOfDifferentType() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -31,7 +31,7 @@ public class DynamicPropertyMatcherTest {
 	@Test
 	public void testMatches_OnlyWithMatchingTypeInitialized_ShouldMatchInstanceOfSameType() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -45,7 +45,7 @@ public class DynamicPropertyMatcherTest {
 	public void testDescribeTo_OnlyWithMatchingTypeInitialized_DescriptionTextShouldContainInstanceOfDescriptionText()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 		Description description = new StringDescription();
 
@@ -60,7 +60,7 @@ public class DynamicPropertyMatcherTest {
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyAndCalledWithMatchingProperty_ShouldMatch() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -75,7 +75,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyAndCalledWithNotMatchingProperty_ShouldNotMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -90,7 +90,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyAndCallWithNotExistingProperty_ShouldNotMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -103,7 +103,7 @@ public class DynamicPropertyMatcherTest {
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldMatch() throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		// Execution
@@ -117,7 +117,7 @@ public class DynamicPropertyMatcherTest {
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainIsInstanceDescription()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		Description description = new StringDescription();
@@ -133,7 +133,7 @@ public class DynamicPropertyMatcherTest {
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainHasPropertyDescription()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		Description description = new StringDescription();
@@ -151,7 +151,7 @@ public class DynamicPropertyMatcherTest {
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainIsInstanceDescription()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		Description description = new StringDescription();
@@ -167,7 +167,7 @@ public class DynamicPropertyMatcherTest {
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainHasPropertyDescription()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassWithSingleProperty> classUnderTest = new DynamicPropertyMatcher<ClassWithSingleProperty>(
+		BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest = new BeanPropertyMatcher<ClassWithSingleProperty>(
 				ClassWithSingleProperty.class);
 
 		Description description = new StringDescription();
@@ -185,7 +185,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyWithInnerMatcherAndCallWithMotExistingPropertiesAtSecondPlace_ShouldMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+		BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
 				ClassTwoProperties.class);
 
 		// Execution
@@ -201,7 +201,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithTwoExistingProperties_ShouldMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+		BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
 				ClassTwoProperties.class);
 
 		// Execution
@@ -216,7 +216,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithNotExistingPropertiesAtSecondPlace_ShouldNotMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+		BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
 				ClassTwoProperties.class);
 
 		// Execution
@@ -232,7 +232,7 @@ public class DynamicPropertyMatcherTest {
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithExistingPropertiesAtSecondPlaceButNotMatching_ShouldNotMatch()
 			throws Exception {
 		// Preparation
-		DynamicPropertyMatcher<ClassTwoProperties> classUnderTest = new DynamicPropertyMatcher<ClassTwoProperties>(
+		BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
 				ClassTwoProperties.class);
 
 		// Execution
