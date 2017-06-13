@@ -1,4 +1,4 @@
-package io.github.marmer.hamcrest.matchers;
+package io.github.marmer.testutils;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -15,6 +15,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
+import io.github.marmer.testutils.DynamicMatchers;
 import lombok.Value;
 
 public class DynamicMatchersITest {

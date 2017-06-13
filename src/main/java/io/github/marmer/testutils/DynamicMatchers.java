@@ -1,4 +1,4 @@
-package io.github.marmer.hamcrest.matchers;
+package io.github.marmer.testutils;
 
 /**
  * Collection of dynamic Matchers.

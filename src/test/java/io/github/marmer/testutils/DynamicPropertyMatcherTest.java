@@ -1,4 +1,4 @@
-package io.github.marmer.hamcrest.matchers;
+package io.github.marmer.testutils;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -11,6 +11,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 import org.junit.Test;
 
+import io.github.marmer.testutils.DynamicPropertyMatcher;
 import lombok.Value;
 
 public class DynamicPropertyMatcherTest {
