@@ -16,7 +16,7 @@ import org.mockito.quality.Strictness;
 
 import lombok.Value;
 
-public class DynamicMatchersITest {
+public class PojoMatchersITest {
 	@Rule
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
@@ -25,7 +25,7 @@ public class DynamicMatchersITest {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
 
 		// Assertion
 		assertThat("matches", propertyMatcher.matches(new SamplePojo("someValue")), is(true));
@@ -37,7 +37,7 @@ public class DynamicMatchersITest {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
 
 		// Assertion
 		assertThat("matches", propertyMatcher.matches(String.class), is(false));
@@ -48,7 +48,7 @@ public class DynamicMatchersITest {
 		// Preparation
 
 		// Execution
-		Matcher<SamplePojo> propertyMatcher = DynamicMatchers.instanceOf(SamplePojo.class);
+		Matcher<SamplePojo> propertyMatcher = PojoMatchers.instanceOf(SamplePojo.class);
 
 		// Assertion
 		Description description = new StringDescription();
