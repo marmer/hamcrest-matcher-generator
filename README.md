@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/marmer/dynamic-compilesafe-hamcrest-property-matcher.svg?branch=master)](https://travis-ci.org/marmer/dynamic-compilesafe-hamcrest-property-matcher) 
+[![Build Status](https://travis-ci.org/marmer/test-helper-generator.svg?branch=master)](https://travis-ci.org/marmer/test-helper-generator) 
 [![codebeat badge](https://codebeat.co/badges/24fca7c8-55f0-4302-903e-1926475b81ab)](https://codebeat.co/projects/github-com-marmer-dynamic-compilesafe-hamcrest-property-matcher-master)
 [![Coverage Status](https://coveralls.io/repos/github/marmer/test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/test-helper-generator?branch=master)
 
