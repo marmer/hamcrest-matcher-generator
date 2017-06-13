@@ -4,4 +4,4 @@ sudo: false
 script:
   - mvn clean jacoco:prepare-agent test
 after_success:
-  - jacoco:report coveralls:report
+  - mvn jacoco:report coveralls:report
