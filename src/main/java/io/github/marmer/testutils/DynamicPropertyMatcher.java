@@ -1,4 +1,4 @@
-package io.github.marmer.hamcrest.matchers;
+package io.github.marmer.testutils;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.allOf;

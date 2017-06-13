@@ -5,4 +5,4 @@
  * @date 12.06.2017
  *
  */
-package io.github.marmer.hamcrest.matchers;
+package io.github.marmer.testutils;
