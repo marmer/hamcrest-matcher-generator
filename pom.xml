@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.marmer.testutils</groupId>
-	<artifactId>test-helper-generator</artifactId>
+	<artifactId>java-test-helper-generator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>test-helper-generator</name>
+	<name>java-test-helper-generator</name>
 	<description>A tool to generate helper-classes based on production code</description>
 
 	<properties>
