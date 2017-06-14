@@ -7,6 +7,9 @@ import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -39,18 +42,30 @@ public class HasPropertyMatcherGeneratorTest {
 	private final JavaCompiler compiler = new JavaCompilerFactory().createCompiler("eclipse");
 	private final JavaCompilerSettings compilerSettings = compiler.createDefaultSettings();
 	private Path classOutputDir;
+	private ClassLoader classLoader;
 
 	@Before
-	public void prepareOutputDir() throws Exception {
-		this.classOutputDir = temp.newFolder("target").toPath();
+	public void setUp() throws Exception {
+		prepareSourceOutputDir();
+		prepareOutputDir();
+		prepareClassLoader();
+		initCompilerSettings();
 	}
 
-	@Before
+	public void prepareOutputDir() throws Exception {
+		this.classOutputDir = temp.newFolder("target").toPath();
+
+	}
+
+	private void prepareClassLoader() throws MalformedURLException {
+		URL url = classOutputDir.toUri().toURL();
+		classLoader = new URLClassLoader(new URL[] { url });
+	}
+
 	public void prepareSourceOutputDir() throws Exception {
 		this.srcOutputDir = temp.newFolder("src").toPath();
 	}
 
-	@Before
 	public void initCompilerSettings() {
 		compilerSettings.setSourceEncoding("UTF-8");
 		compilerSettings.setSourceVersion("1.7");
@@ -94,6 +109,30 @@ public class HasPropertyMatcherGeneratorTest {
 
 		CompilationResult result = compileGeneratedSourceFileFor(type);
 		assertThat("Compile Warnings", result.getWarnings(), is(emptyArray()));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
+			throws Exception {
+		// Preparation
+		Class<SimplePojo> type = SimplePojo.class;
+
+		// Execution
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+
+		// Assertion
+		loadInstanceOfGeneratedClassFor(type);
+	}
+
+	private Object loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type)
+			throws IOException, Exception, InstantiationException, IllegalAccessException {
+		compileGeneratedSourceFileFor(type);
+		Class<?> loadClass = loadClassFor(type);
+		return loadClass.newInstance();
+	}
+
+	private Class<?> loadClassFor(final Class<?> type) throws Exception {
+		return classLoader.loadClass("io.github.marmer.testutils.samplepojos.SimplePojoMatcher");
 	}
 
 	private CompilationResult compileGeneratedSourceFileFor(final Class<SimplePojo> type) throws IOException {
