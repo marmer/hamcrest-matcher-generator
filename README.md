@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.org/marmer/test-helper-generator.svg?branch=master)](https://travis-ci.org/marmer/test-helper-generator) 
-[![codebeat badge](https://codebeat.co/badges/24fca7c8-55f0-4302-903e-1926475b81ab)](https://codebeat.co/projects/github-com-marmer-dynamic-compilesafe-hamcrest-property-matcher-master)
-[![Coverage Status](https://coveralls.io/repos/github/marmer/test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/test-helper-generator?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/594049636725bd00626ef902/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/594049636725bd00626ef902)
+[![Build Status](https://travis-ci.org/marmer/java-test-helper-generator.svg?branch=master)](https://travis-ci.org/marmer/java-test-helper-generator)
+[![codebeat badge](https://codebeat.co/badges/2e62de6e-bfe9-4a0c-bd22-70adf11b55af)](https://codebeat.co/projects/github-com-marmer-java-test-helper-generator-master)
+[![Coverage Status](https://coveralls.io/repos/github/marmer/java-test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/java-test-helper-generator?branch=master)
+[![Dependency Status](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2)
 
 # dynamic-compilesafe-hamcrest-property-matcher
 A Way to use hamcrest’s hasProperty Matcher dynamically with compiler errors for not existing properties
