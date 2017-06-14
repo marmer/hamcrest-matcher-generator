@@ -97,12 +97,16 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	private CompilationResult compileGeneratedSourceFileFor(final Class<SimplePojo> type) throws IOException {
-		String[] pResourcePaths = { getGeneratedRelativePathOf(type).toString().replaceAll("\\\\", "/") };
+		String[] pResourcePaths = { getGeneratedRelativePathOfUnixString(type) };
 		FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
 		FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
 
 		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
 				compilerSettings);
+	}
+
+	private String getGeneratedRelativePathOfUnixString(final Class<SimplePojo> type) {
+		return getGeneratedRelativePathOf(type).toString().replaceAll("\\\\", "/");
 	}
 
 	private File generatedSourceFileFor(final Class<?> type) {
