@@ -92,7 +92,6 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldCreateJavaFile() throws Exception {
-
 		// Preparation
 		classUnderTest.generateMatcherFor(SimplePojo.class, srcOutputDir);
 
@@ -103,7 +102,6 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
 	    throws Exception {
-
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 
@@ -118,7 +116,6 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
 	    throws Exception {
-
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 
@@ -132,7 +129,6 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
 	    throws Exception {
-
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
