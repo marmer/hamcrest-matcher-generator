@@ -3,8 +3,10 @@ package io.github.marmer.testutils.utils.matchers;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.problems.CompilationProblem;
 import org.apache.commons.lang3.ArrayUtils;
+
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+
 
 public class CleanCompilationResultMatcher extends TypeSafeMatcher<CompilationResult> {
 	@Override
@@ -18,17 +20,24 @@ public class CleanCompilationResultMatcher extends TypeSafeMatcher<CompilationRe
 	}
 
 	@Override
-	protected void describeMismatchSafely(final CompilationResult item, final Description mismatchDescription) {
+	protected void describeMismatchSafely(final CompilationResult item,
+	    final Description mismatchDescription) {
 		mismatchDescription.appendText("contains");
-		CompilationProblem[] errors = item.getErrors();
+
+		final CompilationProblem[] errors = item.getErrors();
+
 		if (!ArrayUtils.isEmpty(errors)) {
-			for (CompilationProblem error : errors) {
+
+			for (final CompilationProblem error : errors) {
 				mismatchDescription.appendText("\n        Error: ").appendValue(error);
 			}
 		}
-		CompilationProblem[] warnings = item.getWarnings();
+
+		final CompilationProblem[] warnings = item.getWarnings();
+
 		if (!ArrayUtils.isEmpty(warnings)) {
-			for (CompilationProblem warning : warnings) {
+
+			for (final CompilationProblem warning : warnings) {
 				mismatchDescription.appendText("\n        Error: ").appendValue(warning);
 			}
 		}
