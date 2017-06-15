@@ -1,7 +1,7 @@
 package io.github.marmer.testutils.samplepojos;
 
+import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.junit.Assert.assertThat;
 
@@ -19,6 +19,7 @@ import org.apache.commons.jci.compilers.JavaCompilerFactory;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
 import org.apache.commons.jci.readers.FileResourceReader;
 import org.apache.commons.jci.stores.FileResourceStore;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,7 +29,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-import io.github.marmer.testutils.BeanPropertyMatcher;
 import lombok.Value;
 
 public class HasPropertyMatcherGeneratorTest {
@@ -96,8 +96,7 @@ public class HasPropertyMatcherGeneratorTest {
 
 		// Assertion
 		CompilationResult result = compileGeneratedSourceFileFor(type);
-		assertThat("Compilation Result", result, new BeanPropertyMatcher<CompilationResult>(CompilationResult.class)
-				.with("errors", is(emptyArray())).with("warnings", is(emptyArray())));
+		assertThat(result, hasNoErrorsOrWarnings());
 	}
 
 	@Test
@@ -111,6 +110,21 @@ public class HasPropertyMatcherGeneratorTest {
 
 		// Assertion
 		loadInstanceOfGeneratedClassFor(type);
+	}
+
+	@Test
+	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
+			throws Exception {
+		// Preparation
+		Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		Object matcher = loadInstanceOfGeneratedClassFor(type);
+
+		// Execution
+		boolean matches = ((Matcher<?>) matcher).matches(new SimplePojo("someValue"));
+
+		// Assertion
+		assertThat("Matches on same Instance", matches, is(true));
 	}
 
 	private Object loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type)
