@@ -1,5 +1,6 @@
 package io.github.marmer.testutils.samplepojos;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
@@ -9,6 +10,8 @@ import org.hamcrest.core.IsInstanceOf;
 import java.io.IOException;
 
 import java.nio.file.Path;
+
+import javax.annotation.Generated;
 
 import javax.lang.model.element.Modifier;
 
@@ -30,7 +33,11 @@ public class HasPropertyMatcherGenerator {
 
 	private TypeSpec type(final Class<?> type) {
 		return TypeSpec.classBuilder(type.getSimpleName() + POSTFIX).superclass(IsInstanceOf.class)
-		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).build();
+		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).build();
+	}
+
+	private AnnotationSpec generatedAnnotation() {
+		return AnnotationSpec.builder(Generated.class).addMember("value", "$S", getClass().getName()).build();
 	}
 
 	private MethodSpec constructor(final Class<?> type) {

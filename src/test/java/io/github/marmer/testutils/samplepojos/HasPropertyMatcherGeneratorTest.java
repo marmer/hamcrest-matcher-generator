@@ -31,12 +31,19 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.util.List;
 
 import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
 
 import static org.hamcrest.CoreMatchers.is;
+
+import static org.hamcrest.Matchers.containsInRelativeOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
 
 import static org.hamcrest.io.FileMatchers.anExistingFile;
 
@@ -140,6 +147,25 @@ public class HasPropertyMatcherGeneratorTest {
 
 		// Assertion
 		assertThat("Matches on same Instance", matches, is(true));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeIsAnnotatedWithGenerated() throws Exception {
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+
+		// Execution
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+
+		// Assertion
+		final List<String> sourceFileLines = readGeneratedSourceFileLines();
+		assertThat("Generated source file lines", sourceFileLines,
+		    containsInRelativeOrder(startsWith("@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
+		        containsString("class " + generatedMatcherClassNameFor(type))));
+	}
+
+	private List<String> readGeneratedSourceFileLines() throws IOException {
+		return Files.readAllLines(generatedSourceFileFor(SimplePojo.class).toPath());
 	}
 
 	private Object loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type) throws IOException, Exception,
