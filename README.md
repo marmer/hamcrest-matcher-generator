@@ -29,3 +29,7 @@ The idea of this helper is to get your feedback allredy at compile time. So your
 `assertThat(someFancyBean, is(fancyBean().withMyFancyProperty(equalTo("Fancy Value))));`
 
 You only have to generate the matchers in advance with this tool, probably with a Plugin of your favorite IDE using this lib or with your favorite build tool.
+
+### How-To
+
+TODO
