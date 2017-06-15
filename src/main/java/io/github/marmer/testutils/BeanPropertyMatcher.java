@@ -42,7 +42,6 @@ public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	}
 
 	private Matcher<?> getFullInnerMatcher() {
-
 		if (hasPropertyMatcher.isEmpty()) {
 			return instanceOfMatcher;
 		}
@@ -55,13 +54,11 @@ public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
 	public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
 		this.hasPropertyMatcher.add(hasProperty(propertyName, matcher));
-
 		return this;
 	}
 
 	public BeanPropertyMatcher<T> with(final String propertyName) {
 		this.hasPropertyMatcher.add(hasProperty(propertyName));
-
 		return this;
 	}
 }

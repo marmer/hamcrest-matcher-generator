@@ -124,14 +124,14 @@
      <after>
       <annotation>1</annotation>
       <assign>0</assign>
-      <block>1</block>
+      <block>0</block>
       <braceLeft>-1</braceLeft>
       <braceLeftClass>-1</braceLeftClass>
       <braceLeftMethod>-1</braceLeftMethod>
       <braceLeftNewline>-1</braceLeftNewline>
       <class>1</class>
       <comment>
-       <separator>1</separator>
+       <separator>0</separator>
       </comment>
       <declaration>0</declaration>
       <enum>1</enum>
@@ -145,18 +145,18 @@
      </after>
      <before>
       <annotation>0</annotation>
-      <block>1</block>
+      <block>0</block>
       <braceRight>-1</braceRight>
-      <caseBlock>1</caseBlock>
+      <caseBlock>0</caseBlock>
       <class>0</class>
       <comment>
        <javadoc>1</javadoc>
-       <multiline>1</multiline>
+       <multiline>0</multiline>
        <separator>1</separator>
-       <singleline>1</singleline>
+       <singleline>0</singleline>
       </comment>
-      <controlStatement>1</controlStatement>
-      <declaration>1</declaration>
+      <controlStatement>0</controlStatement>
+      <declaration>0</declaration>
       <enum>0</enum>
       <footer>1</footer>
       <header>0</header>
