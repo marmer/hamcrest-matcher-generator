@@ -28,9 +28,12 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
+import io.github.marmer.testutils.BeanPropertyMatcher;
 import lombok.Value;
 
 public class HasPropertyMatcherGeneratorTest {
+	private static final String SOURCE_ENCODING = "UTF-8";
+	private static final String JAVA_VERSION = "1.7";
 	private static final String MATCHER_POSTFIX = "Matcher.java";
 	@Rule
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
@@ -67,9 +70,9 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	public void initCompilerSettings() {
-		compilerSettings.setSourceEncoding("UTF-8");
-		compilerSettings.setSourceVersion("1.7");
-		compilerSettings.setTargetVersion("1.7");
+		compilerSettings.setSourceEncoding(SOURCE_ENCODING);
+		compilerSettings.setSourceVersion(JAVA_VERSION);
+		compilerSettings.setTargetVersion(JAVA_VERSION);
 	}
 
 	@Test
@@ -82,7 +85,7 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	@Test
-	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutErrors()
+	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
 			throws Exception {
 		// Preparation
 		Class<SimplePojo> type = SimplePojo.class;
@@ -91,24 +94,9 @@ public class HasPropertyMatcherGeneratorTest {
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
 
 		// Assertion
-
 		CompilationResult result = compileGeneratedSourceFileFor(type);
-		assertThat("Compile Errors", result.getErrors(), is(emptyArray()));
-	}
-
-	@Test
-	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutWarnings()
-			throws Exception {
-		// Preparation
-		Class<SimplePojo> type = SimplePojo.class;
-
-		// Execution
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
-
-		// Assertion
-
-		CompilationResult result = compileGeneratedSourceFileFor(type);
-		assertThat("Compile Warnings", result.getWarnings(), is(emptyArray()));
+		assertThat("Compilation Result", result, new BeanPropertyMatcher<CompilationResult>(CompilationResult.class)
+				.with("errors", is(emptyArray())).with("warnings", is(emptyArray())));
 	}
 
 	@Test

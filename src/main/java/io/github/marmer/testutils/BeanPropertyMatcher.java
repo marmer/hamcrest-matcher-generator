@@ -26,7 +26,7 @@ public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();
 	private Matcher<T> instanceOfMatcher;
 
-	BeanPropertyMatcher(final Class<T> expectedClass) {
+	public BeanPropertyMatcher(final Class<? extends T> expectedClass) {
 		this.instanceOfMatcher = Matchers.instanceOf(expectedClass);
 	}
 
@@ -49,7 +49,7 @@ public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 		return is(allOf(instanceOfMatcher, allOf));
 	}
 
-	public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<String> matcher) {
+	public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
 		this.hasPropertyMatcher.add(hasProperty(propertyName, matcher));
 
 		return this;
