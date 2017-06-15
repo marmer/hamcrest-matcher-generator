@@ -32,9 +32,10 @@ import io.github.marmer.testutils.BeanPropertyMatcher;
 import lombok.Value;
 
 public class HasPropertyMatcherGeneratorTest {
+	private static final String JAVA_FILE_POSTFIX = ".java";
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
-	private static final String MATCHER_POSTFIX = "Matcher.java";
+	private static final String MATCHER_POSTFIX = "Matcher";
 	@Rule
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 	@InjectMocks
@@ -120,7 +121,11 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	private Class<?> loadClassFor(final Class<?> type) throws Exception {
-		return classLoader.loadClass("io.github.marmer.testutils.samplepojos.SimplePojoMatcher");
+		return classLoader.loadClass(generatedFullQualifiedClassNameFor(type));
+	}
+
+	private String generatedFullQualifiedClassNameFor(final Class<?> type) {
+		return getPackageNameOf(type) + "." + generatedMatcherClassNameFor(type);
 	}
 
 	private CompilationResult compileGeneratedSourceFileFor(final Class<SimplePojo> type) throws IOException {
@@ -145,10 +150,14 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	private Path getGeneratedRelativePathOf(final Class<?> type) {
-		return getPackagePath(type).resolve(generatedClassNameFor(type));
+		return getPackagePath(type).resolve(generatedMatcherJavaFileNameFor(type));
 	}
 
-	private String generatedClassNameFor(final Class<?> type) {
+	private String generatedMatcherJavaFileNameFor(final Class<?> type) {
+		return generatedMatcherClassNameFor(type) + JAVA_FILE_POSTFIX;
+	}
+
+	private String generatedMatcherClassNameFor(final Class<?> type) {
 		return type.getSimpleName() + MATCHER_POSTFIX;
 	}
 
