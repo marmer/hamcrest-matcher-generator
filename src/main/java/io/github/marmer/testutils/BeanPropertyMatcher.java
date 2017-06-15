@@ -1,25 +1,26 @@
 package io.github.marmer.testutils;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasProperty;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.is;
+
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasProperty;
+
+
 /**
  * Matcher for beans.
  *
- * @author marmer
- * @date 13.06.2017
+ * @param   <T>  Type of the bean.
  *
- * @param <T>
- *            Type of the bean.
+ * @author  marmer
+ * @date    13.06.2017
  */
 public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
@@ -41,11 +42,14 @@ public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 	}
 
 	private Matcher<?> getFullInnerMatcher() {
+
 		if (hasPropertyMatcher.isEmpty()) {
 			return instanceOfMatcher;
 		}
+
 		@SuppressWarnings("unchecked")
-		Matcher<Object> allOf = Matchers.<Object>allOf(hasPropertyMatcher.toArray(new Matcher[0]));
+		final Matcher<Object> allOf = Matchers.<Object>allOf(hasPropertyMatcher.toArray(new Matcher[0]));
+
 		return is(allOf(instanceOfMatcher, allOf));
 	}
 

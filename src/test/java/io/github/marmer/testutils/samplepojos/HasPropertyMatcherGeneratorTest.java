@@ -1,17 +1,6 @@
 package io.github.marmer.testutils.samplepojos;
 
-import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.io.FileMatchers.anExistingFile;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import lombok.Value;
 
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.JavaCompiler;
@@ -19,17 +8,40 @@ import org.apache.commons.jci.compilers.JavaCompilerFactory;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
 import org.apache.commons.jci.readers.FileResourceReader;
 import org.apache.commons.jci.stores.FileResourceStore;
+
 import org.hamcrest.Matcher;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import org.junit.rules.TemporaryFolder;
+
 import org.mockito.InjectMocks;
+
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+
 import org.mockito.quality.Strictness;
 
-import lombok.Value;
+import java.io.File;
+import java.io.IOException;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
+
+import static org.hamcrest.CoreMatchers.is;
+
+import static org.hamcrest.io.FileMatchers.anExistingFile;
+
+import static org.junit.Assert.assertThat;
+
 
 public class HasPropertyMatcherGeneratorTest {
 	private static final String JAVA_FILE_POSTFIX = ".java";
@@ -62,8 +74,10 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	private void prepareClassLoader() throws MalformedURLException {
-		URL url = classOutputDir.toUri().toURL();
-		classLoader = new URLClassLoader(new URL[] { url });
+		final URL url = classOutputDir.toUri().toURL();
+		classLoader = new URLClassLoader(new URL[] {
+		            url
+		        });
 	}
 
 	public void prepareSourceOutputDir() throws Exception {
@@ -78,6 +92,7 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldCreateJavaFile() throws Exception {
+
 		// Preparation
 		classUnderTest.generateMatcherFor(SimplePojo.class, srcOutputDir);
 
@@ -87,23 +102,25 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
-			throws Exception {
+	    throws Exception {
+
 		// Preparation
-		Class<SimplePojo> type = SimplePojo.class;
+		final Class<SimplePojo> type = SimplePojo.class;
 
 		// Execution
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
 
 		// Assertion
-		CompilationResult result = compileGeneratedSourceFileFor(type);
+		final CompilationResult result = compileGeneratedSourceFileFor(type);
 		assertThat(result, hasNoErrorsOrWarnings());
 	}
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
-			throws Exception {
+	    throws Exception {
+
 		// Preparation
-		Class<SimplePojo> type = SimplePojo.class;
+		final Class<SimplePojo> type = SimplePojo.class;
 
 		// Execution
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -114,23 +131,27 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
-			throws Exception {
+	    throws Exception {
+
 		// Preparation
-		Class<SimplePojo> type = SimplePojo.class;
+		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		Object matcher = loadInstanceOfGeneratedClassFor(type);
+
+		final Object matcher = loadInstanceOfGeneratedClassFor(type);
 
 		// Execution
-		boolean matches = ((Matcher<?>) matcher).matches(new SimplePojo("someValue"));
+		final boolean matches = ((Matcher<?>) matcher).matches(new SimplePojo("someValue"));
 
 		// Assertion
 		assertThat("Matches on same Instance", matches, is(true));
 	}
 
-	private Object loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type)
-			throws IOException, Exception, InstantiationException, IllegalAccessException {
+	private Object loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type) throws IOException, Exception,
+	    InstantiationException, IllegalAccessException {
 		compileGeneratedSourceFileFor(type);
-		Class<?> loadClass = loadClassFor(type);
+
+		final Class<?> loadClass = loadClassFor(type);
+
 		return loadClass.newInstance();
 	}
 
@@ -143,12 +164,14 @@ public class HasPropertyMatcherGeneratorTest {
 	}
 
 	private CompilationResult compileGeneratedSourceFileFor(final Class<SimplePojo> type) throws IOException {
-		String[] pResourcePaths = { getGeneratedRelativePathOfUnixString(type) };
-		FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
-		FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
+		final String[] pResourcePaths = {
+		    getGeneratedRelativePathOfUnixString(type)
+		};
+		final FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
+		final FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
 
 		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
-				compilerSettings);
+		        compilerSettings);
 	}
 
 	private String getGeneratedRelativePathOfUnixString(final Class<SimplePojo> type) {
