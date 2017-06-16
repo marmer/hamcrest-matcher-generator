@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.hasProperty;
  * @author  marmer
  * @date    13.06.2017
  */
-public final class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
+public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
 	private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();
 
