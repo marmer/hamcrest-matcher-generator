@@ -1,21 +1,40 @@
 package io.github.marmer.testutils.samplepojos;
 
 import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+
+import lombok.extern.apachecommons.CommonsLog;
+
+import org.apache.commons.lang3.StringUtils;
+
+import org.hamcrest.Matcher;
 
 import org.hamcrest.core.IsInstanceOf;
+
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 
 import java.io.IOException;
 
 import java.nio.file.Path;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Generated;
 
 import javax.lang.model.element.Modifier;
 
 
+@CommonsLog
 public class HasPropertyMatcherGenerator {
 
 	private static final String POSTFIX = "Matcher";
@@ -28,12 +47,58 @@ public class HasPropertyMatcherGenerator {
 	private JavaFile prepareJavaFile(final Class<?> type) {
 		final TypeSpec typeSpec = type(type);
 
-		return JavaFile.builder(type.getPackage().getName(), typeSpec).indent("\t").skipJavaLangImports(true).build();
+		return JavaFile.builder(getPackageFor(type), typeSpec).indent("\t").skipJavaLangImports(true).build();
+	}
+
+	private String getPackageFor(final Class<?> type) {
+		return type.getPackage().getName();
 	}
 
 	private TypeSpec type(final Class<?> type) {
-		return TypeSpec.classBuilder(type.getSimpleName() + POSTFIX).superclass(IsInstanceOf.class)
-		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).build();
+		return TypeSpec.classBuilder(matcherNameFor(type)).superclass(IsInstanceOf.class)
+		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
+		        propertyMethods(type)).build();
+	}
+
+	private String matcherNameFor(final Class<?> type) {
+		return type.getSimpleName() + POSTFIX;
+	}
+
+	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
+		final PropertyDescriptor[] propertyDescriptors;
+		try {
+			propertyDescriptors = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
+		} catch (IntrospectionException e) {
+			// TODO test me!
+			log.error("Failed to read properties of " + type, e);
+			return Collections.emptyList();
+		}
+
+		final List<MethodSpec> methods = new ArrayList<>();
+		for (final PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+			methods.add(propertyMethodFor(propertyDescriptor, type));
+		}
+
+		return methods;
+	}
+
+	private MethodSpec propertyMethodFor(final PropertyDescriptor propertyDescriptor, final Class<?> type) {
+		// Matcher.class;
+		final ParameterizedTypeName matcherType = ParameterizedTypeName.get(ClassName.get(Matcher.class),
+		        WildcardTypeName.subtypeOf(TypeName.OBJECT));
+		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyDescriptor)).returns(classNameFor(type))
+		    .addModifiers(
+		        Modifier.PUBLIC).addParameter(matcherType, "matcher", Modifier.FINAL).addStatement(
+		        "return this")
+		    .build();
+	}
+
+	private String methodNameToGenerateFor(final PropertyDescriptor propertyDescriptor) {
+		return "with" + StringUtils.capitalize(propertyDescriptor.getName());
+	}
+
+	private ClassName classNameFor(final Class<?> type) {
+		return ClassName.get(getPackageFor(type), matcherNameFor(type));
 	}
 
 	private AnnotationSpec generatedAnnotation() {
