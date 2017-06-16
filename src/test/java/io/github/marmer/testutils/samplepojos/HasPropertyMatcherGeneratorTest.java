@@ -6,6 +6,7 @@ import org.apache.commons.jci.compilers.JavaCompilerFactory;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
 import org.apache.commons.jci.readers.FileResourceReader;
 import org.apache.commons.jci.stores.FileResourceStore;
+import org.apache.commons.lang3.reflect.MethodUtils;
 
 import org.hamcrest.Matcher;
 
@@ -51,6 +52,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
 
 import static org.hamcrest.io.FileMatchers.anExistingFile;
@@ -202,6 +204,53 @@ public class HasPropertyMatcherGeneratorTest {
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
 		    contains(
 		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
+	    throws Exception {
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
+
+		// Execution
+		final boolean matches = matcher.matches(new SimplePojo("someOtherValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(false));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
+	    throws Exception {
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
+
+		// Execution
+		final boolean matches = matcher.matches(new SimplePojo("someValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(true));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
+	    throws Exception {
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+
+		// Execution
+		final Object result = MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
+
+		// Assertion
+		assertThat(result, is(sameInstance(matcher)));
 	}
 
 	private Collection<Method> nonSyntheticMethodsOf(final Class<?> generatedMatcherClass) {
