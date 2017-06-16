@@ -45,16 +45,15 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private JavaFile prepareJavaFile(final Class<?> type) {
-		final TypeSpec typeSpec = type(type);
-
-		return JavaFile.builder(getPackageFor(type), typeSpec).indent("\t").skipJavaLangImports(true).build();
+		return JavaFile.builder(getPackageFor(type), generatedTypeFor(type)).indent("\t").skipJavaLangImports(true)
+		    .build();
 	}
 
 	private String getPackageFor(final Class<?> type) {
 		return type.getPackage().getName();
 	}
 
-	private TypeSpec type(final Class<?> type) {
+	private TypeSpec generatedTypeFor(final Class<?> type) {
 		return TypeSpec.classBuilder(matcherNameFor(type)).superclass(IsInstanceOf.class)
 		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
 		        propertyMethods(type)).build();
