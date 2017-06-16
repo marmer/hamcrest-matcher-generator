@@ -160,8 +160,14 @@ public class HasPropertyMatcherGeneratorTest {
 		// Assertion
 		final List<String> sourceFileLines = readGeneratedSourceFileLines();
 		assertThat("Generated source file lines", sourceFileLines,
-		    containsInRelativeOrder(startsWith("@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
-		        containsString("class " + generatedMatcherClassNameFor(type))));
+		    hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(type));
+	}
+
+	private Matcher<Iterable<? extends String>> hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(
+	    final Class<SimplePojo> type) {
+		return containsInRelativeOrder(startsWith(
+		            "@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
+		        containsString("class " + generatedMatcherClassNameFor(type)));
 	}
 
 	private List<String> readGeneratedSourceFileLines() throws IOException {
