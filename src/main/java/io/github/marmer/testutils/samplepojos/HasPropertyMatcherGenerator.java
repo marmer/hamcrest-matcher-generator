@@ -13,6 +13,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import org.hamcrest.core.IsInstanceOf;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,6 +43,9 @@ public class HasPropertyMatcherGenerator {
 
 	public void generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
+		if (log.isDebugEnabled()) {
+			log.debug(type);
+		}
 		javaFile.writeTo(outputDir);
 	}
 
@@ -53,14 +58,35 @@ public class HasPropertyMatcherGenerator {
 		return type.getPackage().getName();
 	}
 
+	private String matcherNameFor(final Class<?> type) {
+		return type.getSimpleName() + POSTFIX;
+	}
+
 	private TypeSpec generatedTypeFor(final Class<?> type) {
 		return TypeSpec.classBuilder(matcherNameFor(type)).superclass(IsInstanceOf.class)
 		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
-		        propertyMethods(type)).build();
+		        propertyMethods(type)).addMethods(addTypesafeMatcherMethods(type)).build();
 	}
 
-	private String matcherNameFor(final Class<?> type) {
-		return type.getSimpleName() + POSTFIX;
+	private Iterable<MethodSpec> addTypesafeMatcherMethods(final Class<?> type) {
+		return Arrays.asList(describeToMethod(), matchesSafelyMethod(type), describeMissmatchSafelyMethod(type));
+	}
+
+	private MethodSpec describeMissmatchSafelyMethod(final Class<?> type) {
+		final String parameterName = "description";
+		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
+		        parameterName, Modifier.FINAL).addStatement(
+		        "beanPropertyMatcher.describeTo($L)", parameterName).build();
+	}
+
+	private MethodSpec matchesSafelyMethod(final Class<?> type) {
+		// TODO Auto-generated method stub
+		return MethodSpec.methodBuilder("matchesSafely").addAnnotation(Override.class).build();
+	}
+
+	private MethodSpec describeToMethod() {
+		// TODO Auto-generated method stub
+		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).build();
 	}
 
 	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
@@ -82,9 +108,12 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private MethodSpec propertyMethodFor(final PropertyDescriptor propertyDescriptor, final Class<?> type) {
-		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyDescriptor)).returns(classNameFor(type))
+		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyDescriptor)).returns(
+		        classNameOfGeneratedTypeFor(
+		            type))
 		    .addModifiers(
 		        Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
+		        "beanPropertyMatcher.with($S, matcher)", propertyDescriptor.getName()).addStatement(
 		        "return this")
 		    .build();
 	}
@@ -98,7 +127,7 @@ public class HasPropertyMatcherGenerator {
 		return "with" + StringUtils.capitalize(propertyDescriptor.getName());
 	}
 
-	private ClassName classNameFor(final Class<?> type) {
+	private ClassName classNameOfGeneratedTypeFor(final Class<?> type) {
 		return ClassName.get(getPackageFor(type), matcherNameFor(type));
 	}
 
@@ -107,7 +136,8 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private MethodSpec constructor(final Class<?> type) {
-		return MethodSpec.constructorBuilder().addStatement("super($T.class)", type).addModifiers(Modifier.PUBLIC)
+		return MethodSpec.constructorBuilder().addStatement(
+		        "beanPropertyMatcher = new BeanPropertyMatcher<$T>($T.class)", type, type).addModifiers(Modifier.PUBLIC)
 		    .build();
 	}
 
