@@ -83,14 +83,16 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private MethodSpec propertyMethodFor(final PropertyDescriptor propertyDescriptor, final Class<?> type) {
-		// Matcher.class;
-		final ParameterizedTypeName matcherType = ParameterizedTypeName.get(ClassName.get(Matcher.class),
-		        WildcardTypeName.subtypeOf(TypeName.OBJECT));
 		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyDescriptor)).returns(classNameFor(type))
 		    .addModifiers(
-		        Modifier.PUBLIC).addParameter(matcherType, "matcher", Modifier.FINAL).addStatement(
+		        Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
 		        "return this")
 		    .build();
+	}
+
+	private ParameterizedTypeName parameterizedMatchertype() {
+		return ParameterizedTypeName.get(ClassName.get(Matcher.class),
+		        WildcardTypeName.subtypeOf(TypeName.OBJECT));
 	}
 
 	private String methodNameToGenerateFor(final PropertyDescriptor propertyDescriptor) {
