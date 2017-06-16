@@ -35,7 +35,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
 
@@ -44,6 +47,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
 import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
@@ -178,8 +182,8 @@ public class HasPropertyMatcherGeneratorTest {
 		final Class<Matcher<SimplePojo>> generatedMatcherClass = loadGeneratedClassFor(type);
 
 		// Assertion
-		assertThat("Declared matcher methods: ", generatedMatcherClass.getDeclaredMethods(),
-		    arrayContaining(
+		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
+		    contains(
 		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
@@ -195,9 +199,15 @@ public class HasPropertyMatcherGeneratorTest {
 		final Class<Matcher<SimplePojoChild>> generatedMatcherClass = loadGeneratedClassFor(type);
 
 		// Assertion
-		assertThat("Declared matcher methods: ", generatedMatcherClass.getDeclaredMethods(),
-		    arrayContaining(
+		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
+		    contains(
 		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+	}
+
+	private Collection<Method> nonSyntheticMethodsOf(final Class<?> generatedMatcherClass) {
+		return Arrays.stream(generatedMatcherClass.getDeclaredMethods()).filter(m -> !m.isSynthetic()).collect(
+		        Collectors
+		            .toList());
 	}
 
 	private Matcher<Method> matcherConsumingMethodWithReturntypeAndName(
