@@ -28,7 +28,9 @@ public class ReflectionPotentialBeanClassFinderTest {
 		final List<Class<?>> classes = classUnderTest.findClasses("sample.classes");
 
 		// Assertion
-		assertThat("Classes found", classes, containsInAnyOrder(SimpleSampleClass.class, ClassInSubPackage.class));
+		assertThat("Classes found", classes,
+			containsInAnyOrder(SimpleSampleClass.class, ClassInSubPackage.class,
+				sample.classes.subpackage2.ClassInSubPackage.class));
 	}
 
 	@Test
@@ -74,4 +76,19 @@ public class ReflectionPotentialBeanClassFinderTest {
 		// Assertion
 		assertThat("Classes found", classes, is(empty()));
 	}
+
+	@Test
+	public void testFindClasses_MultipleClassesGiven_ShouldReturnAllRelatedClasses() throws Exception {
+		// Preparation
+
+		// Execution
+		final List<Class<?>> classes = classUnderTest.findClasses("sample.classes.subpackage.ClassInSubPackage",
+				"sample.classes.subpackage2.ClassInSubPackage");
+
+		// Assertion
+		assertThat("Classes found", classes,
+			containsInAnyOrder(ClassInSubPackage.class,
+				sample.classes.subpackage2.ClassInSubPackage.class));
+	}
+
 }
