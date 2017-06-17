@@ -58,7 +58,8 @@ public class HasPropertyMatcherGeneratorITest {
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
 	private static final String MATCHER_POSTFIX = "Matcher";
-	private HasPropertyMatcherGenerator classUnderTest = new HasPropertyMatcherGenerator();
+	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+	private final HasPropertyMatcherGenerator classUnderTest = new HasPropertyMatcherGenerator(propertyExtractor);
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private Path srcOutputDir;
