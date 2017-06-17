@@ -112,15 +112,8 @@ public class HasPropertyMatcherGenerator {
 	private TypeSpec generatedTypeFor(final Class<?> type) {
 		return TypeSpec.classBuilder(matcherNameFor(type)).addModifiers(Modifier.PUBLIC).superclass(
 				parameterizedTypesafeMatchertype(type)).addField(innerMatcherField(type))
-			.addAnnotation(generatedAnnotation()).addMethods(typeMethods(type)).build();
-	}
-
-	private List<MethodSpec> typeMethods(final Class<?> type) {
-		final List<MethodSpec> methods = new ArrayList<>();
-		methods.add(constructor(type));
-		methods.addAll(typesafeMatcherMethods(type));
-		methods.addAll(propertyMethods(type));
-		return methods;
+			.addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
+				propertyMethods(type)).addMethods(addTypesafeMatcherMethods(type)).build();
 	}
 
 	private FieldSpec innerMatcherField(final Class<?> type) {
@@ -128,7 +121,7 @@ public class HasPropertyMatcherGenerator {
 					type), INNER_MATCHER_FIELD_NAME, Modifier.PRIVATE, Modifier.FINAL).build();
 	}
 
-	private List<MethodSpec> typesafeMatcherMethods(final Class<?> type) {
+	private Iterable<MethodSpec> addTypesafeMatcherMethods(final Class<?> type) {
 		return Arrays.asList(describeToMethod(), matchesSafelyMathod(type), describeMismatchSafelyMethod(type));
 	}
 
@@ -159,7 +152,7 @@ public class HasPropertyMatcherGenerator {
 				parameterNameDescription, Modifier.FINAL).addModifiers(Modifier.PROTECTED).build();
 	}
 
-	private List<MethodSpec> propertyMethods(final Class<?> type) {
+	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
 
 		final List<MethodSpec> methods = new ArrayList<>();
 		for (final BeanProperty property : propertyExtractor.getPropertiesOf(type)) {
