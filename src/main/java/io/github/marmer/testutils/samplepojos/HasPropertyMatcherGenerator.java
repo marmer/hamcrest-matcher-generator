@@ -49,7 +49,7 @@ import javax.lang.model.element.Modifier;
  *
  * <pre>
     is(allOf(
-        instanceOf(SomeModel.class),
+        instanceOf(Foo.class),
         hasProperty("someProperty", equalTo(42)),
         hasProperty("anotherProperty", greaterThan(42))));
  * </pre>
@@ -57,7 +57,7 @@ import javax.lang.model.element.Modifier;
  * The result can be used as follows.
  *
  * <pre>
-    SomeModel.isSomeModel().withSomeProperts(equalTo(42))
+    Foo.isFoo().withSomeProperts(equalTo(42))
                             .withAnotherProperty(greaterThan(42));
  * </pre>
  *
