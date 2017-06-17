@@ -31,9 +31,8 @@ import java.nio.file.Path;
  * <p>When you automate the generation before the compiler starts, the compiler will show you all
  * the locations you matched the property. So you don't have to wait and whatch your tests fail.</p>
  *
- * @author   marmer
- * @version  $Revision$, $Date$
- * @date     12.06.2017
+ * @author  marmer
+ * @date    12.06.2017
  */
 public interface HasPropertyMatcherClassGenerator {
 
