@@ -113,8 +113,6 @@ public class HasPropertyMatcherGenerator {
 		try {
 			propertyDescriptors = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
-
-			// TODO test me!
 			log.error("Failed to read properties of " + type, e);
 			return Collections.emptyList();
 		}
