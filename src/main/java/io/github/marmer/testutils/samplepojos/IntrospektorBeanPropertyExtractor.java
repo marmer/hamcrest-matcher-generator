@@ -2,6 +2,7 @@ package io.github.marmer.testutils.samplepojos;
 
 import lombok.extern.apachecommons.CommonsLog;
 
+import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -17,18 +18,22 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 
 	@Override
 	public List<BeanProperty> getPropertiesOf(final Class<?> type) {
-		if (type != null) {
-			try {
-				final PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(type, Object.class)
-						.getPropertyDescriptors();
-				return Arrays.stream(propertyDescriptors).map(descriptor -> new BeanProperty(descriptor.getName()))
-					.collect(
-						Collectors.toList());
-			} catch (IntrospectionException e) {
-				log.error("Failed to read properties of " + type, e);
-			}
+		if (type == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return Arrays.stream(propertyDescriptorsOf(type)).map(descriptor -> new BeanProperty(descriptor.getName()))
+				.collect(
+					Collectors.toList());
+		} catch (IntrospectionException e) {
+			log.error("Failed to read properties of " + type, e);
 		}
 		return Collections.emptyList();
+	}
+
+	private PropertyDescriptor[] propertyDescriptorsOf(final Class<?> type) throws IntrospectionException {
+		final BeanInfo beanInfo = Introspector.getBeanInfo(type, Object.class);
+		return beanInfo.getPropertyDescriptors();
 	}
 
 }
