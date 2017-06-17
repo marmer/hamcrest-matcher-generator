@@ -14,9 +14,9 @@ public interface PotentialPojoClassFinder {
 	/**
 	 * Finds all classes in the given package and its sub package.
 	 *
-	 * @param   packageName  the package name
+	 * @param   packageNames  the package names
 	 *
 	 * @return  the list of classes
 	 */
-	List<Class<?>> findClasses(String packageName);
+	List<Class<?>> findClasses(String... packageNames);
 }
