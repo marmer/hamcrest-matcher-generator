@@ -48,9 +48,9 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
 import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
@@ -108,6 +108,7 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldCreateJavaFile() throws Exception {
+
 		// Preparation
 		classUnderTest.generateMatcherFor(SimplePojo.class, srcOutputDir);
 
@@ -118,6 +119,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 
@@ -132,6 +134,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 
@@ -145,6 +148,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -160,6 +164,7 @@ public class HasPropertyMatcherGeneratorTest {
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeIsAnnotatedWithGenerated() throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 
@@ -175,6 +180,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -185,13 +191,14 @@ public class HasPropertyMatcherGeneratorTest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-		    contains(
+		    hasItem(
 		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreatedWithChildTypeAndPropertiesAtParent_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojoChild> type = SimplePojoChild.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -202,13 +209,14 @@ public class HasPropertyMatcherGeneratorTest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-		    contains(
+		    hasItem(
 		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -225,6 +233,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
@@ -241,6 +250,7 @@ public class HasPropertyMatcherGeneratorTest {
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
 	    throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
