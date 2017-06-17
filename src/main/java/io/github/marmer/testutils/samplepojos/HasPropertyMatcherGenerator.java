@@ -38,7 +38,6 @@ import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * This class can be used to generate a compile safe matcher for a property bean which acts as a
  * combination of {@link AllOf}, {@link IsInstanceOf} and {@link HasProperty} like:
