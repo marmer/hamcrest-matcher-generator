@@ -16,13 +16,6 @@ import org.junit.Test;
 
 import org.junit.rules.TemporaryFolder;
 
-import org.mockito.InjectMocks;
-
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-
-import org.mockito.quality.Strictness;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -65,10 +58,7 @@ public class HasPropertyMatcherGeneratorITest {
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
 	private static final String MATCHER_POSTFIX = "Matcher";
-	@Rule
-	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
-	@InjectMocks
-	private HasPropertyMatcherGenerator classUnderTest;
+	private HasPropertyMatcherGenerator classUnderTest = new HasPropertyMatcherGenerator();
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private Path srcOutputDir;
@@ -92,8 +82,8 @@ public class HasPropertyMatcherGeneratorITest {
 	private URLClassLoader getClassLoader() throws MalformedURLException {
 		final URL url = classOutputDir.toUri().toURL();
 		return new URLClassLoader(new URL[] {
-		            url
-		        });
+					url
+				});
 	}
 
 	public void prepareSourceOutputDir() throws Exception {
@@ -118,7 +108,7 @@ public class HasPropertyMatcherGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -133,7 +123,7 @@ public class HasPropertyMatcherGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -147,7 +137,7 @@ public class HasPropertyMatcherGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -174,12 +164,12 @@ public class HasPropertyMatcherGeneratorITest {
 		// Assertion
 		final List<String> sourceFileLines = readGeneratedSourceFileLines();
 		assertThat("Generated source file lines", sourceFileLines,
-		    hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(type));
+			hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(type));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -191,13 +181,13 @@ public class HasPropertyMatcherGeneratorITest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-		    hasItem(
-		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+			hasItem(
+				is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreatedWithChildTypeAndPropertiesAtParent_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojoChild> type = SimplePojoChild.class;
@@ -209,13 +199,13 @@ public class HasPropertyMatcherGeneratorITest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-		    hasItem(
-		        is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+			hasItem(
+				is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -232,7 +222,7 @@ public class HasPropertyMatcherGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -249,7 +239,7 @@ public class HasPropertyMatcherGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -265,24 +255,24 @@ public class HasPropertyMatcherGeneratorITest {
 
 	private Collection<Method> nonSyntheticMethodsOf(final Class<?> generatedMatcherClass) {
 		return Arrays.stream(generatedMatcherClass.getDeclaredMethods()).filter(m -> !m.isSynthetic()).collect(
-		        Collectors
-		            .toList());
+				Collectors
+					.toList());
 	}
 
 	private Matcher<Method> matcherConsumingMethodWithReturntypeAndName(
-	    final Class<?> generatedMatcherClass,
-	    final String propertyName) {
+		final Class<?> generatedMatcherClass,
+		final String propertyName) {
 		return allOf(
-		        hasProperty("name", equalTo(propertyName)), // TODO add "with" prefix
-		        hasProperty("parameterTypes", arrayContaining(Matcher.class)),
-		        hasProperty("returnType", is(generatedMatcherClass)));
+				hasProperty("name", equalTo(propertyName)), // TODO add "with" prefix
+				hasProperty("parameterTypes", arrayContaining(Matcher.class)),
+				hasProperty("returnType", is(generatedMatcherClass)));
 	}
 
 	private Matcher<Iterable<? extends String>> hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(
-	    final Class<SimplePojo> type) {
+		final Class<SimplePojo> type) {
 		return containsInRelativeOrder(startsWith(
-		            "@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
-		        containsString("class " + generatedMatcherClassNameFor(type)));
+					"@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
+				containsString("class " + generatedMatcherClassNameFor(type)));
 	}
 
 	private List<String> readGeneratedSourceFileLines() throws IOException {
@@ -290,7 +280,7 @@ public class HasPropertyMatcherGeneratorITest {
 	}
 
 	private <T> Matcher<T> loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type) throws IOException, Exception,
-	    InstantiationException, IllegalAccessException {
+		InstantiationException, IllegalAccessException {
 		compileGeneratedSourceFileFor(type);
 
 		final Class<Matcher<T>> loadClass = loadGeneratedClassFor(type);
@@ -308,13 +298,13 @@ public class HasPropertyMatcherGeneratorITest {
 
 	private CompilationResult compileGeneratedSourceFileFor(final Class<?> type) throws IOException {
 		final String[] pResourcePaths = {
-		    getGeneratedRelativePathOfUnixString(type)
+			getGeneratedRelativePathOfUnixString(type)
 		};
 		final FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
 		final FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
 
 		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
-		        compilerSettings);
+				compilerSettings);
 	}
 
 	private String getGeneratedRelativePathOfUnixString(final Class<?> type) {
