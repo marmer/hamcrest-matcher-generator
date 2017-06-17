@@ -18,15 +18,15 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 
 	@Override
 	public List<BeanProperty> getPropertiesOf(final Class<?> type) {
-		if (type == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return Arrays.stream(propertyDescriptorsOf(type)).map(descriptor -> new BeanProperty(descriptor.getName()))
-				.collect(
-					Collectors.toList());
-		} catch (IntrospectionException e) {
-			log.error("Failed to read properties of " + type, e);
+		if (type != null) {
+			try {
+				return Arrays.stream(propertyDescriptorsOf(type)).map(descriptor ->
+							new BeanProperty(descriptor.getName()))
+					.collect(
+						Collectors.toList());
+			} catch (IntrospectionException e) {
+				log.error("Failed to read properties of " + type, e);
+			}
 		}
 		return Collections.emptyList();
 	}
