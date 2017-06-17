@@ -42,6 +42,7 @@ import javax.lang.model.element.Modifier;
 public class HasPropertyMatcherGenerator {
 
 	private static final String POSTFIX = "Matcher";
+	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
 
 	public void generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
@@ -84,7 +85,7 @@ public class HasPropertyMatcherGenerator {
 		final String parameterName = "description";
 		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
 		        parameterName, Modifier.FINAL).addStatement(
-		        "beanPropertyMatcher.describeTo($L)", parameterName).addModifiers(Modifier.PUBLIC).build();
+		        "$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName).addModifiers(Modifier.PUBLIC).build();
 	}
 
 	private MethodSpec matchesSafelyMathod(final Class<?> type) {
@@ -93,7 +94,7 @@ public class HasPropertyMatcherGenerator {
 		    .returns(
 		        Boolean.TYPE).addParameter(type,
 		        parameterItem, Modifier.FINAL).addStatement(
-		        "return beanPropertyMatcher.matches($L)", parameterItem).build();
+		        "return $L.matches($L)", INNER_MATCHER_FIELD_NAME, parameterItem).build();
 	}
 
 	private MethodSpec describeMismatchSafelyMethod(final Class<?> type) {
@@ -101,7 +102,8 @@ public class HasPropertyMatcherGenerator {
 		final String parameterNameDescription = "description";
 		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).addParameter(type,
 		        parameterName, Modifier.FINAL).addStatement(
-		        "beanPropertyMatcher.describeMismatch($L, $L)", parameterName, parameterNameDescription).addParameter(
+		        "$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, parameterName, parameterNameDescription)
+		    .addParameter(
 		        Description.class,
 		        parameterNameDescription, Modifier.FINAL).addModifiers(Modifier.PROTECTED).build();
 	}
@@ -131,7 +133,7 @@ public class HasPropertyMatcherGenerator {
 		            type))
 		    .addModifiers(
 		        Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
-		        "beanPropertyMatcher.with($S, matcher)", propertyDescriptor.getName()).addStatement(
+		        "$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, propertyDescriptor.getName()).addStatement(
 		        "return this")
 		    .build();
 	}
@@ -160,7 +162,8 @@ public class HasPropertyMatcherGenerator {
 
 	private MethodSpec constructor(final Class<?> type) {
 		return MethodSpec.constructorBuilder().addStatement(
-		        "beanPropertyMatcher = new BeanPropertyMatcher<$T>($T.class)", type, type).addModifiers(Modifier.PUBLIC)
+		        "$L = new BeanPropertyMatcher<$T>($T.class)", INNER_MATCHER_FIELD_NAME, type, type).addModifiers(
+		        Modifier.PUBLIC)
 		    .build();
 	}
 
