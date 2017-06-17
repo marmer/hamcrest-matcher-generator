@@ -60,7 +60,7 @@ import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.junit.Assert.assertThat;
 
 
-public class HasPropertyMatcherGeneratorTest {
+public class HasPropertyMatcherGeneratorITest {
 	private static final String JAVA_FILE_POSTFIX = ".java";
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
