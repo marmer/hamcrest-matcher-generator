@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.samplepojos;
+package io.github.marmer.testutils.generators.beanmatcher;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -9,8 +9,6 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
-
-import io.github.marmer.testutils.BeanPropertyMatcher;
 
 import lombok.extern.apachecommons.CommonsLog;
 
