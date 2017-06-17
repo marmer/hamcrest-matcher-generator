@@ -77,7 +77,7 @@ public class HasPropertyMatcherGenerator {
 	 * folders).
 	 *
 	 * @param   type       the type
-	 * @param   outputDir  the output dir
+	 * @param   outputDir  the output (base) dir
 	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
