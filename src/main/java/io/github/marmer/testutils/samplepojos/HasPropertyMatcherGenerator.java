@@ -2,6 +2,7 @@ package io.github.marmer.testutils.samplepojos;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -9,14 +10,15 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
+import io.github.marmer.testutils.BeanPropertyMatcher;
+
 import lombok.extern.apachecommons.CommonsLog;
 
 import org.apache.commons.lang3.StringUtils;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-
-import org.hamcrest.core.IsInstanceOf;
+import org.hamcrest.TypeSafeMatcher;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -44,7 +46,7 @@ public class HasPropertyMatcherGenerator {
 	public void generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
 		if (log.isDebugEnabled()) {
-			log.debug(type);
+			log.debug(javaFile);
 		}
 		javaFile.writeTo(outputDir);
 	}
@@ -63,30 +65,45 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private TypeSpec generatedTypeFor(final Class<?> type) {
-		return TypeSpec.classBuilder(matcherNameFor(type)).superclass(IsInstanceOf.class)
-		    .addModifiers(Modifier.PUBLIC).addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
+		return TypeSpec.classBuilder(matcherNameFor(type)).addModifiers(Modifier.PUBLIC).superclass(
+		        parameterizedTypesafeMatchertype(type)).addField(innerMatcherField(type))
+		    .addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
 		        propertyMethods(type)).addMethods(addTypesafeMatcherMethods(type)).build();
 	}
 
+	private FieldSpec innerMatcherField(final Class<?> type) {
+		return FieldSpec.builder(ParameterizedTypeName.get(BeanPropertyMatcher.class,
+		            type), "beanPropertyMatcher", Modifier.PRIVATE, Modifier.FINAL).build();
+	}
+
 	private Iterable<MethodSpec> addTypesafeMatcherMethods(final Class<?> type) {
-		return Arrays.asList(describeToMethod(), matchesSafelyMethod(type), describeMissmatchSafelyMethod(type));
-	}
-
-	private MethodSpec describeMissmatchSafelyMethod(final Class<?> type) {
-		final String parameterName = "description";
-		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
-		        parameterName, Modifier.FINAL).addStatement(
-		        "beanPropertyMatcher.describeTo($L)", parameterName).build();
-	}
-
-	private MethodSpec matchesSafelyMethod(final Class<?> type) {
-		// TODO Auto-generated method stub
-		return MethodSpec.methodBuilder("matchesSafely").addAnnotation(Override.class).build();
+		return Arrays.asList(describeToMethod(), matchesSafelyMathod(type), describeMismatchSafelyMethod(type));
 	}
 
 	private MethodSpec describeToMethod() {
-		// TODO Auto-generated method stub
-		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).build();
+		final String parameterName = "description";
+		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
+		        parameterName, Modifier.FINAL).addStatement(
+		        "beanPropertyMatcher.describeTo($L)", parameterName).addModifiers(Modifier.PUBLIC).build();
+	}
+
+	private MethodSpec matchesSafelyMathod(final Class<?> type) {
+		final String parameterItem = "item";
+		return MethodSpec.methodBuilder("matchesSafely").addAnnotation(Override.class).addModifiers(Modifier.PROTECTED)
+		    .returns(
+		        Boolean.TYPE).addParameter(type,
+		        parameterItem, Modifier.FINAL).addStatement(
+		        "return beanPropertyMatcher.matches($L)", parameterItem).build();
+	}
+
+	private MethodSpec describeMismatchSafelyMethod(final Class<?> type) {
+		final String parameterName = "item";
+		final String parameterNameDescription = "description";
+		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).addParameter(type,
+		        parameterName, Modifier.FINAL).addStatement(
+		        "beanPropertyMatcher.describeMismatch($L, $L)", parameterName, parameterNameDescription).addParameter(
+		        Description.class,
+		        parameterNameDescription, Modifier.FINAL).addModifiers(Modifier.PROTECTED).build();
 	}
 
 	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
@@ -94,6 +111,7 @@ public class HasPropertyMatcherGenerator {
 		try {
 			propertyDescriptors = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
 		} catch (IntrospectionException e) {
+
 			// TODO test me!
 			log.error("Failed to read properties of " + type, e);
 			return Collections.emptyList();
@@ -116,6 +134,11 @@ public class HasPropertyMatcherGenerator {
 		        "beanPropertyMatcher.with($S, matcher)", propertyDescriptor.getName()).addStatement(
 		        "return this")
 		    .build();
+	}
+
+	private ParameterizedTypeName parameterizedTypesafeMatchertype(final Class<?> type) {
+		return ParameterizedTypeName.get(TypeSafeMatcher.class,
+		        type);
 	}
 
 	private ParameterizedTypeName parameterizedMatchertype() {
