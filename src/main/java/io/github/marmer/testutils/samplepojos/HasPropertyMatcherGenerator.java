@@ -25,17 +25,12 @@ import org.hamcrest.beans.HasProperty;
 import org.hamcrest.core.AllOf;
 import org.hamcrest.core.IsInstanceOf;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-
 import java.io.IOException;
 
 import java.nio.file.Path;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Generated;
@@ -43,6 +38,7 @@ import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * This class can be used to generate a compile safe matcher for a property bean which acts as a
  * combination of {@link AllOf}, {@link IsInstanceOf} and {@link HasProperty} like:
@@ -54,30 +50,41 @@ import javax.lang.model.element.Modifier;
         hasProperty("anotherProperty", greaterThan(42))));
  * </pre>
  *
- * The result can be used as follows.
+ * <p>The result can be used as follows.</p>
  *
  * <pre>
     Foo.isFoo().withSomeProperts(equalTo(42))
                             .withAnotherProperty(greaterThan(42));
  * </pre>
  *
- * When you automate the generation before the compiler starts, the compiler will show you all the
- * locations you matched the property. So you don't have to wait and whatch your tests fail.
+ * <p>When you automate the generation before the compiler starts, the compiler will show you all
+ * the locations you matched the property. So you don't have to wait and whatch your tests fail.</p>
  *
- * @author  marmer
- * @date    12.06.2017
+ * @author   marmer
+ * @version  $Revision$, $Date$
+ * @date     12.06.2017
  */
 @CommonsLog
 public class HasPropertyMatcherGenerator {
 	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
+	private final BeanPropertyExtractor propertyExtractor;
+
+	/**
+	 * Creates a new Instance.
+	 *
+	 * @param  propertyExtractor  the property extractor
+	 */
+	public HasPropertyMatcherGenerator(final BeanPropertyExtractor propertyExtractor) {
+		this.propertyExtractor = propertyExtractor;
+	}
 
 	/**
 	 * Generate matcher for the given type in the given class directory (including its package
 	 * folders).
 	 *
 	 * @param   type       the type
-	 * @param   outputDir  the output (base) dir
+	 * @param   outputDir  the output dir
 	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
@@ -111,7 +118,7 @@ public class HasPropertyMatcherGenerator {
 
 	private FieldSpec innerMatcherField(final Class<?> type) {
 		return FieldSpec.builder(ParameterizedTypeName.get(BeanPropertyMatcher.class,
-					type), "beanPropertyMatcher", Modifier.PRIVATE, Modifier.FINAL).build();
+					type), INNER_MATCHER_FIELD_NAME, Modifier.PRIVATE, Modifier.FINAL).build();
 	}
 
 	private Iterable<MethodSpec> addTypesafeMatcherMethods(final Class<?> type) {
@@ -146,29 +153,22 @@ public class HasPropertyMatcherGenerator {
 	}
 
 	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
-		final PropertyDescriptor[] propertyDescriptors;
-		try {
-			propertyDescriptors = Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors();
-		} catch (IntrospectionException e) {
-			log.error("Failed to read properties of " + type, e);
-			return Collections.emptyList();
-		}
 
 		final List<MethodSpec> methods = new ArrayList<>();
-		for (final PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-			methods.add(propertyMethodFor(propertyDescriptor, type));
+		for (final BeanProperty property : propertyExtractor.getPropertiesOf(type)) {
+			methods.add(propertyMethodFor(property.getName(), type));
 		}
 
 		return methods;
 	}
 
-	private MethodSpec propertyMethodFor(final PropertyDescriptor propertyDescriptor, final Class<?> type) {
-		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyDescriptor)).returns(
+	private MethodSpec propertyMethodFor(final String propertyName, final Class<?> type) {
+		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyName)).returns(
 				classNameOfGeneratedTypeFor(
 					type))
 			.addModifiers(
 				Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
-				"$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, propertyDescriptor.getName()).addStatement(
+				"$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, propertyName).addStatement(
 				"return this")
 			.build();
 	}
@@ -183,8 +183,8 @@ public class HasPropertyMatcherGenerator {
 				WildcardTypeName.subtypeOf(TypeName.OBJECT));
 	}
 
-	private String methodNameToGenerateFor(final PropertyDescriptor propertyDescriptor) {
-		return "with" + StringUtils.capitalize(propertyDescriptor.getName());
+	private String methodNameToGenerateFor(final String propertyName) {
+		return "with" + StringUtils.capitalize(propertyName);
 	}
 
 	private ClassName classNameOfGeneratedTypeFor(final Class<?> type) {

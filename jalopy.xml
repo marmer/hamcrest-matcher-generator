@@ -151,9 +151,9 @@
       <class>0</class>
       <comment>
        <javadoc>1</javadoc>
-       <multiline>0</multiline>
+       <multiline>1</multiline>
        <separator>1</separator>
-       <singleline>0</singleline>
+       <singleline>1</singleline>
       </comment>
       <controlStatement>0</controlStatement>
       <declaration>0</declaration>
@@ -294,21 +294,21 @@
       <blockTagsShort>false</blockTagsShort>
       <check>
        <description>
-        <enabled>false</enabled>
-        <firstSentence>false</firstSentence>
+        <enabled>true</enabled>
+        <firstSentence>true</firstSentence>
         <onlyWhenGenerate>false</onlyWhenGenerate>
-        <onlyWhenNoSee>false</onlyWhenNoSee>
+        <onlyWhenNoSee>true</onlyWhenNoSee>
         <onlyWhenParamOrReturn>false</onlyWhenParamOrReturn>
         <useReturnDescription>false</useReturnDescription>
        </description>
        <ignoreRuntimeExceptions>false</ignoreRuntimeExceptions>
-       <innerclass>false</innerclass>
+       <innerclass>true</innerclass>
        <keepThrowsTags>false</keepThrowsTags>
        <suppressWhenSee>false</suppressWhenSee>
        <tags>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
         <missingDescription>false</missingDescription>
-        <missingTags>false</missingTags>
+        <missingTags>true</missingTags>
         <onlyWhenGenerate>false</onlyWhenGenerate>
         <onlyWhenParamOrReturn>false</onlyWhenParamOrReturn>
         <useDescription>false</useDescription>
@@ -324,20 +324,20 @@
       <fieldsShort>true</fieldsShort>
       <generate>
        <bean>true</bean>
-       <class>0</class>
-       <constructor>0</constructor>
+       <class>517</class>
+       <constructor>517</constructor>
        <enabled>false</enabled>
-       <excludeOverride>false</excludeOverride>
+       <excludeOverride>true</excludeOverride>
        <exclusions/>
        <field>0</field>
-       <formatBeanProperty>true</formatBeanProperty>
-       <method>0</method>
+       <formatBeanProperty>false</formatBeanProperty>
+       <method>517</method>
        <seeTag>false</seeTag>
-       <useExisting>false</useExisting>
+       <useExisting>true</useExisting>
       </generate>
       <html>
        <indent>true</indent>
-       <verify>false</verify>
+       <verify>true</verify>
       </html>
       <methodsShort>true</methodsShort>
       <normalizeWhitespace>true</normalizeWhitespace>
@@ -357,18 +357,18 @@
        <innerSpacing>2</innerSpacing>
        <methodTypeParams>false</methodTypeParams>
        <order>@param^param|@return^return|@throws^throws|@author^common|@version^common|@see^common|@since^common|@serial^common|@serialData^common|@serialField^common|@deprecated^common|@custom^common|@beaninfo^none|@@attribute^none|@invalid^common|@todo^common|@xdoclet^none|@jalopy.group^none|@call-tree^none</order>
-       <removeMisused>false</removeMisused>
+       <removeMisused>true</removeMisused>
        <sort>true</sort>
        <sortAttributes>true</sortAttributes>
        <sortXDoclet>true</sortXDoclet>
-       <spelling>false</spelling>
+       <spelling>true</spelling>
       </tags>
       <templates>
        <class><![CDATA[/**
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @version $Revision$, $Date$
+ * @date $Date$
  */]]></class>
        <constructor>
         <bottom><![CDATA[ */]]></bottom>
@@ -381,7 +381,7 @@
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @version $Revision$, $Date$
+ * @date $Date$
  */]]></enum>
        <getter>
         <bottom><![CDATA[ */]]></bottom>
@@ -395,7 +395,7 @@
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @version $Revision$, $Date$
+ * @date $Date$
  */]]></interface>
        <method>
         <bottom><![CDATA[ */]]></bottom>
@@ -412,7 +412,9 @@
         <top><![CDATA[/**
  * TODO DOCUMENT ME!]]></top>
        </setter>
-       <variable>/** TODO DOCUMENT ME! */</variable>
+       <variable><![CDATA[/**
+ * TODO DOCUMENT ME!
+ */]]></variable>
       </templates>
       <transform>false</transform>
       <wrap>
@@ -420,14 +422,14 @@
         <delim>
          <class>true</class>
          <ctor>true</ctor>
-         <field>false</field>
+         <field>true</field>
          <interface>true</interface>
          <method>true</method>
         </delim>
        </after>
        <inline>true</inline>
        <keepNewline>false</keepNewline>
-       <lineLength>120</lineLength>
+       <lineLength>100</lineLength>
       </wrap>
      </javadoc>
      <keepFirstColumnAsIs>false</keepFirstColumnAsIs>
@@ -562,7 +564,7 @@
      <tabs>
       <comments>false</comments>
       <enable>true</enable>
-      <onlyLeading>true</onlyLeading>
+      <onlyLeading>false</onlyLeading>
      </tabs>
      <ternaryOperand>true</ternaryOperand>
     </indentation>
