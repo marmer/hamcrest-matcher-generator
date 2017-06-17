@@ -1,4 +1,4 @@
-package io.github.marmer.testutils;
+package io.github.marmer.testutils.generators.beanmatcher;
 
 import lombok.Value;
 
@@ -23,8 +23,8 @@ public class BeanPropertyMatcherTest {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.matches(new AnotherClassWithSingleProperty("someValue"));
@@ -38,8 +38,8 @@ public class BeanPropertyMatcherTest {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.matches(new ClassWithSingleProperty("someValue"));
@@ -50,12 +50,12 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testDescribeTo_OnlyWithMatchingTypeInitialized_DescriptionTextShouldContainInstanceOfDescriptionText()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 		final Description description = new StringDescription();
 
 		// Execution
@@ -63,7 +63,7 @@ public class BeanPropertyMatcherTest {
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-		    containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+			containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
 	}
 
 	@Test
@@ -71,12 +71,12 @@ public class BeanPropertyMatcherTest {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("someProperty", is(equalTo("someValue")))
-		        .matches(new ClassWithSingleProperty("someValue"));
+				.matches(new ClassWithSingleProperty("someValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(true));
@@ -84,16 +84,16 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyAndCalledWithNotMatchingProperty_ShouldNotMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("someProperty", is(equalTo("someValue")))
-		        .matches(new ClassWithSingleProperty("someDifferentValue"));
+				.matches(new ClassWithSingleProperty("someDifferentValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));
@@ -101,16 +101,16 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyAndCallWithNotExistingProperty_ShouldNotMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("differentProperty").matches(new ClassWithSingleProperty(
-		            "someValue"));
+					"someValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));
@@ -121,8 +121,8 @@ public class BeanPropertyMatcherTest {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("someProperty").matches(new ClassWithSingleProperty("someValue"));
@@ -133,12 +133,12 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainIsInstanceDescription()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		final Description description = new StringDescription();
 
@@ -147,17 +147,17 @@ public class BeanPropertyMatcherTest {
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-		    containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+			containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
 	}
 
 	@Test
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingPropertyAndInnerMatcher_ShouldContainHasPropertyDescription()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		final Description description = new StringDescription();
 
@@ -166,18 +166,18 @@ public class BeanPropertyMatcherTest {
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-		    containsString(hasPropertyDescriptionText("someProperty", equalTo("someValue"))));
+			containsString(hasPropertyDescriptionText("someProperty", equalTo("someValue"))));
 
 	}
 
 	@Test
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainIsInstanceDescription()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		final Description description = new StringDescription();
 
@@ -186,17 +186,17 @@ public class BeanPropertyMatcherTest {
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-		    containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
+			containsString(instanceOfDescriptionText(ClassWithSingleProperty.class)));
 	}
 
 	@Test
 	public void testDescribeTo_InitializedWithDynamicPropertyAndCallWithExistingProperty_ShouldContainHasPropertyDescription()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
-		    new BeanPropertyMatcher<ClassWithSingleProperty>(
-		        ClassWithSingleProperty.class);
+			new BeanPropertyMatcher<ClassWithSingleProperty>(
+				ClassWithSingleProperty.class);
 
 		final Description description = new StringDescription();
 
@@ -205,22 +205,22 @@ public class BeanPropertyMatcherTest {
 
 		// Assertion
 		assertThat("Matcher description Text", description.toString(),
-		    containsString(hasPropertyDescriptionText("someProperty")));
+			containsString(hasPropertyDescriptionText("someProperty")));
 
 	}
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyWithInnerMatcherAndCallWithMotExistingPropertiesAtSecondPlace_ShouldMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
-		        ClassTwoProperties.class);
+				ClassTwoProperties.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("firstProperty", equalTo("firstPropertyValue"))
-		        .with("notExistingProperty")
-		        .matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+				.with("notExistingProperty")
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));
@@ -228,16 +228,16 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithTwoExistingProperties_ShouldMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
-		        ClassTwoProperties.class);
+				ClassTwoProperties.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("secondProperty").with("firstProperty",
-		        equalTo("firstPropertyValue"))
-		        .matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+				equalTo("firstPropertyValue"))
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(true));
@@ -245,16 +245,16 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithNotExistingPropertiesAtSecondPlace_ShouldNotMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
-		        ClassTwoProperties.class);
+				ClassTwoProperties.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("secondProperty")
-		        .with("notExistingProperty", equalTo("firstPropertyValue"))
-		        .matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+				.with("notExistingProperty", equalTo("firstPropertyValue"))
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));
@@ -262,15 +262,15 @@ public class BeanPropertyMatcherTest {
 
 	@Test
 	public void testMatches_InitializedWithDynamicPropertyWithoutInnerMatcherAndCallWithExistingPropertiesAtSecondPlaceButNotMatching_ShouldNotMatch()
-	    throws Exception {
+		throws Exception {
 
 		// Preparation
 		final BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
-		        ClassTwoProperties.class);
+				ClassTwoProperties.class);
 
 		// Execution
 		final boolean matches = classUnderTest.with("secondProperty").with("firstProperty", equalTo("notMatchingValue"))
-		        .matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
+				.matches(new ClassTwoProperties("firstPropertyValue", "secondPropertyValue"));
 
 		// Assertion
 		assertThat("matches", matches, is(false));

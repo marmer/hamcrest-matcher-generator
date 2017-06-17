@@ -1,4 +1,4 @@
-package io.github.marmer.testutils;
+package io.github.marmer.testutils.generators.beanmatcher;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

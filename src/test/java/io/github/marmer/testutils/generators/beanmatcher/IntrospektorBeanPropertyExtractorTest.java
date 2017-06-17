@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.samplepojos;
+package io.github.marmer.testutils.generators.beanmatcher;
 
 import org.junit.Test;
 
