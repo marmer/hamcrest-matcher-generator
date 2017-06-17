@@ -32,6 +32,17 @@ public class ReflectionPotentialBeanClassFinderTest {
 	}
 
 	@Test
+	public void testFindClasses_FullQualifiedClassNameGiven_ShouldReturnOnlyTheRelatedClass() throws Exception {
+		// Preparation
+
+		// Execution
+		final List<Class<?>> classes = classUnderTest.findClasses("sample.classes.SimpleSampleClass");
+
+		// Assertion
+		assertThat("Classes found", classes, containsInAnyOrder(SimpleSampleClass.class));
+	}
+
+	@Test
 	public void testFindClasses_NotExistingPackageGiven_ShouldNotReturnNoClasses() throws Exception {
 		// Preparation
 
