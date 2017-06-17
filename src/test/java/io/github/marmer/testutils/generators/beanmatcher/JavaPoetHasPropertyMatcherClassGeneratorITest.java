@@ -53,13 +53,14 @@ import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.junit.Assert.assertThat;
 
 
-public class HasPropertyMatcherGeneratorITest {
+public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String JAVA_FILE_POSTFIX = ".java";
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
 	private static final String MATCHER_POSTFIX = "Matcher";
 	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-	private final HasPropertyMatcherGenerator classUnderTest = new HasPropertyMatcherGenerator(propertyExtractor);
+	private final HasPropertyMatcherClassGenerator classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
+			propertyExtractor);
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private Path srcOutputDir;
@@ -272,7 +273,7 @@ public class HasPropertyMatcherGeneratorITest {
 	private Matcher<Iterable<? extends String>> hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(
 		final Class<SimplePojo> type) {
 		return containsInRelativeOrder(startsWith(
-					"@Generated(\"" + HasPropertyMatcherGenerator.class.getName() + "\")"),
+					"@Generated(\"" + JavaPoetHasPropertyMatcherClassGenerator.class.getName() + "\")"),
 				containsString("class " + generatedMatcherClassNameFor(type)));
 	}
 
