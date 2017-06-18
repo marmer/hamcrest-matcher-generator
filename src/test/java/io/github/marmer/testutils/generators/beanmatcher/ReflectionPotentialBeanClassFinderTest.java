@@ -2,6 +2,7 @@ package io.github.marmer.testutils.generators.beanmatcher;
 
 import org.junit.Test;
 
+import sample.classes.ComplexSample;
 import sample.classes.SimpleSampleClass;
 
 import sample.classes.subpackage.ClassInSubPackage;
@@ -30,7 +31,8 @@ public class ReflectionPotentialBeanClassFinderTest {
 		// Assertion
 		assertThat("Classes found", classes,
 			containsInAnyOrder(SimpleSampleClass.class, ClassInSubPackage.class,
-				sample.classes.subpackage2.ClassInSubPackage.class));
+				sample.classes.subpackage2.ClassInSubPackage.class, ComplexSample.class, ComplexSample.InnerClass.class,
+				ComplexSample.InnerStaticClass.class));
 	}
 
 	@Test

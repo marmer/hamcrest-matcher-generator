@@ -53,7 +53,7 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 	}
 
 	private boolean isIrrelevant(final Class<?> clazz) {
-		return isPackageInfo(clazz) || clazz.isInterface();
+		return isPackageInfo(clazz) || clazz.isInterface() || clazz.isAnonymousClass();
 	}
 
 	private boolean isPackageInfo(final Class<?> clazz) {
