@@ -4,7 +4,6 @@ sudo: false
 cache:
   directories:
   - $HOME/.m2
-  - $M2_HOME
 script:
   - mvn clean jacoco:prepare-agent test -U
 after_success:
