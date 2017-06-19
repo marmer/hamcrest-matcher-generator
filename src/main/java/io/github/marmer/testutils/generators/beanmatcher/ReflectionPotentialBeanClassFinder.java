@@ -9,6 +9,11 @@ import org.reflections.Reflections;
 
 import org.reflections.scanners.SubTypesScanner;
 
+import org.reflections.util.ClasspathHelper;
+
+import java.net.URL;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +30,11 @@ import java.util.stream.Collectors;
  * @date    18.06.2017
  */
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
+	private final Collection<URL> classLoaderURLs;
+
+	public ReflectionPotentialBeanClassFinder(final ClassLoader... classLoaders) {
+		this.classLoaderURLs = ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
+	}
 
 	@Override
 	public List<Class<?>> findClasses(final String... packageNames) {
@@ -44,7 +54,8 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 		if (StringUtils.isBlank(packageName)) {
 			return Collections.emptySet();
 		}
-		final Reflections reflections = new Reflections(packageName, new SubTypesScanner(false));
+		final Reflections reflections = new Reflections(packageName,
+		        classLoaderURLs, new SubTypesScanner(false));
 		return reflections.getSubTypesOf(Object.class);
 	}
 
