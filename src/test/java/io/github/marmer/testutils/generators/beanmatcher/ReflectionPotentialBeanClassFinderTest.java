@@ -22,7 +22,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 	@Test
 	public void testFindClasses_PackageWithClassesGiven_ShouldFindAllRelevantClassesInThePackageAndItsSubPackage()
-		throws Exception {
+	    throws Exception {
 		// Preparation
 
 		// Execution
@@ -30,9 +30,9 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 		// Assertion
 		assertThat("Classes found", classes,
-			containsInAnyOrder(SimpleSampleClass.class, ClassInSubPackage.class,
-				sample.classes.subpackage2.ClassInSubPackage.class, ComplexSample.class, ComplexSample.InnerClass.class,
-				ComplexSample.InnerStaticClass.class));
+		    containsInAnyOrder(SimpleSampleClass.class, ClassInSubPackage.class,
+		        sample.classes.subpackage2.ClassInSubPackage.class, ComplexSample.class, ComplexSample.InnerClass.class,
+		        ComplexSample.InnerStaticClass.class));
 	}
 
 	@Test
@@ -85,12 +85,12 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 		// Execution
 		final List<Class<?>> classes = classUnderTest.findClasses("sample.classes.subpackage.ClassInSubPackage",
-				"sample.classes.subpackage2.ClassInSubPackage");
+		        "sample.classes.subpackage2.ClassInSubPackage");
 
 		// Assertion
 		assertThat("Classes found", classes,
-			containsInAnyOrder(ClassInSubPackage.class,
-				sample.classes.subpackage2.ClassInSubPackage.class));
+		    containsInAnyOrder(ClassInSubPackage.class,
+		        sample.classes.subpackage2.ClassInSubPackage.class));
 	}
 
 }
