@@ -9,4 +9,3 @@ script:
   - mvn clean jacoco:prepare-agent test -U
 after_success:
   - mvn jacoco:report coveralls:report
-  
