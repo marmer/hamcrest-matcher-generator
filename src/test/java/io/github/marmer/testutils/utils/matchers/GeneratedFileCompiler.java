@@ -9,6 +9,10 @@ import org.apache.commons.jci.stores.FileResourceStore;
 
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -72,5 +76,30 @@ public abstract class GeneratedFileCompiler {
 		return srcOutputDir.resolve(getGeneratedRelativePathOf(type));
 	}
 
+	public <T> Class<?> loadGeneratedClassFor(final Class<?> type) throws Exception {
+		return (Class<?>) getClassLoader().loadClass(getGeneratedFullQualifiedClassNameFor(type));
+	}
+
+	private URLClassLoader getClassLoader() throws MalformedURLException {
+		final URL url = classOutputDir.toUri().toURL();
+		return new URLClassLoader(new URL[] {
+					url
+				});
+	}
+
 	public abstract String getGeneratedClassNameFor(final Class<?> type);
+
+	public Class<?> compileAndLoadGeneratedClassFor(final Class<?> type) throws IOException, Exception {
+		compileGeneratedSourceFileFor(type);
+		return loadGeneratedClassFor(type);
+	}
+
+	public <T> T compileAndLoadInstanceOfGeneratedClassFor(final Class<?> type) throws IOException, Exception,
+		InstantiationException, IllegalAccessException {
+		compileGeneratedSourceFileFor(type);
+
+		final Class<?> loadClass = loadGeneratedClassFor(type);
+
+		return (T) loadClass.newInstance();
+	}
 }

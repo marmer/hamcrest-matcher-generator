@@ -18,10 +18,6 @@ import java.io.IOException;
 
 import java.lang.reflect.Method;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -64,7 +60,6 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	public void setUp() throws Exception {
 		prepareSourceOutputDir();
 		prepareOutputDir();
-		getClassLoader();
 		initCompiler();
 	}
 
@@ -80,14 +75,6 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	public void prepareOutputDir() throws Exception {
 		this.classOutputDir = temp.newFolder("target").toPath();
-
-	}
-
-	private URLClassLoader getClassLoader() throws MalformedURLException {
-		final URL url = classOutputDir.toUri().toURL();
-		return new URLClassLoader(new URL[] {
-					url
-				});
 	}
 
 	public void prepareSourceOutputDir() throws Exception {
@@ -130,7 +117,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
 
 		// Assertion
-		loadInstanceOfGeneratedClassFor(type);
+		compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 	}
 
 	@Test
@@ -141,7 +128,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
 
-		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution
 		final boolean matches = matcher.matches(new SimplePojo("someValue"));
@@ -175,7 +162,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
-		final Class<Matcher<SimplePojo>> generatedMatcherClass = loadGeneratedClassFor(type);
+		final Class<?> generatedMatcherClass = compiler.loadGeneratedClassFor(type);
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
@@ -193,7 +180,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
-		final Class<Matcher<SimplePojoChild>> generatedMatcherClass = loadGeneratedClassFor(type);
+		final Class<?> generatedMatcherClass = compiler.loadGeneratedClassFor(type);
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
@@ -208,7 +195,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
 		// Execution
@@ -225,7 +212,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
 		// Execution
@@ -242,7 +229,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		final Matcher<SimplePojo> matcher = loadInstanceOfGeneratedClassFor(type);
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution
 		final Object result = MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
@@ -275,19 +262,6 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	private List<String> readGeneratedSourceFileLines() throws IOException {
 		return Files.readAllLines(generatedSourceFileFor(SimplePojo.class).toPath());
-	}
-
-	private <T> Matcher<T> loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type) throws IOException, Exception,
-		InstantiationException, IllegalAccessException {
-		compiler.compileGeneratedSourceFileFor(type);
-
-		final Class<Matcher<T>> loadClass = loadGeneratedClassFor(type);
-
-		return (Matcher<T>) loadClass.newInstance();
-	}
-
-	private <T> Class<Matcher<T>> loadGeneratedClassFor(final Class<?> type) throws Exception {
-		return (Class<Matcher<T>>) getClassLoader().loadClass(compiler.getGeneratedFullQualifiedClassNameFor(type));
 	}
 
 	private File generatedSourceFileFor(final Class<?> type) {
