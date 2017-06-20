@@ -1,7 +1,5 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
-import org.hamcrest.Matcher;
-
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -38,10 +36,6 @@ public class MatcherFileGeneratorTest {
 	@Mock
 	private Path outputDir;
 
-	private Matcher<SamplePojo1> samplePojo1Matcher = mock(Matcher.class, "samplePojo1Matcher");
-	private Matcher<SamplePojo2> samplePojo2Matcher = mock(Matcher.class, "samplePojo2Matcher");
-	private Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
-	private Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
 	@Mock
 	private FactoryMethodFacadeGenerator factoryMethodFacadeGenerator;
 	@Mock
@@ -61,7 +55,6 @@ public class MatcherFileGeneratorTest {
 		// Assertion
 		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo1.class, outputDir);
 		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo2.class, outputDir);
-
 	}
 
 	@Test
@@ -69,6 +62,9 @@ public class MatcherFileGeneratorTest {
 		throws Exception {
 
 		// Preparation
+		final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
+		final Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
+
 		final List<Class<?>> classesToGenerateFacadeFor = Arrays.asList(SamplePojo1Matcher.class,
 				SamplePojo2Matcher.class);
 		doReturn(Arrays.asList(SamplePojo1.class,
