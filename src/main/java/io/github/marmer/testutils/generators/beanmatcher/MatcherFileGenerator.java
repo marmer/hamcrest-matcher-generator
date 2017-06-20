@@ -23,16 +23,13 @@ public class MatcherFileGenerator implements TestHelperMatcherGenerator {
 	private final FactoryMethodFacadeGenerator factoryMethodFacadeGenerator;
 	private JavaFileClassLoader javaFileClassLoader;
 
-	private final Path outputDir;
-
-	public MatcherFileGenerator(final PotentialPojoClassFinder potentialPojoClassFinder, final Path outputDir,
+	public MatcherFileGenerator(final PotentialPojoClassFinder potentialPojoClassFinder,
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator,
 		final FactoryMethodFacadeGenerator factoryMethodFacadeGenerator,
 		final JavaFileClassLoader javaFileClassLoader) {
 		this.potentialPojoClassFinder = potentialPojoClassFinder;
 		this.hasPropertyMatcherClassGenerator = hasPropertyMatcherClassGenerator;
 		this.factoryMethodFacadeGenerator = factoryMethodFacadeGenerator;
-		this.outputDir = outputDir;
 		this.javaFileClassLoader = javaFileClassLoader;
 	}
 
@@ -40,12 +37,18 @@ public class MatcherFileGenerator implements TestHelperMatcherGenerator {
 	public void generateHelperForClassesAllIn(final String... packageOrQualifiedClassNames) throws IOException {
 		final List<Class<?>> potentialPojoClasses = potentialPojoClassFinder.findClasses(packageOrQualifiedClassNames);
 
-		final List<Path> generatedMatcherPaths = new ArrayList<>(ArrayUtils.getLength(packageOrQualifiedClassNames));
-		for (final Class<?> potentialPojoClass : potentialPojoClasses) {
-			generatedMatcherPaths.add(hasPropertyMatcherClassGenerator.generateMatcherFor(potentialPojoClass,
-					outputDir));
-		}
+		final List<Path> generatedMatcherPaths = generateMatchersFor(potentialPojoClasses,
+				packageOrQualifiedClassNames);
 		final List<Class<?>> generatedMatcherClasses = javaFileClassLoader.load(generatedMatcherPaths);
 		factoryMethodFacadeGenerator.generateFacadeFor(generatedMatcherClasses);
+	}
+
+	private List<Path> generateMatchersFor(final List<Class<?>> potentialPojoClasses,
+		final String... packageOrQualifiedClassNames) throws IOException {
+		final List<Path> generatedMatcherPaths = new ArrayList<>(ArrayUtils.getLength(packageOrQualifiedClassNames));
+		for (final Class<?> potentialPojoClass : potentialPojoClasses) {
+			generatedMatcherPaths.add(hasPropertyMatcherClassGenerator.generateMatcherFor(potentialPojoClass));
+		}
+		return generatedMatcherPaths;
 	}
 }

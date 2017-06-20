@@ -53,8 +53,8 @@ public class MatcherFileGeneratorTest {
 		classUnderTest.generateHelperForClassesAllIn(packageName);
 
 		// Assertion
-		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo1.class, outputDir);
-		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo2.class, outputDir);
+		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo1.class);
+		verify(hasPropertyMatcherClassGenerator).generateMatcherFor(SamplePojo2.class);
 	}
 
 	@Test
@@ -70,9 +70,9 @@ public class MatcherFileGeneratorTest {
 		doReturn(Arrays.asList(SamplePojo1.class,
 				SamplePojo2.class)).when(potentialPojoClassFinder).findClasses(packageName);
 		doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-			SamplePojo1.class, outputDir);
+			SamplePojo1.class);
 		doReturn(simplePojo2MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-			SamplePojo2.class, outputDir);
+			SamplePojo2.class);
 		doReturn(classesToGenerateFacadeFor).when(javaFileClassLoader).load(
 			Arrays.asList(simplePojo1MatcherPath,
 				simplePojo2MatcherPath));
