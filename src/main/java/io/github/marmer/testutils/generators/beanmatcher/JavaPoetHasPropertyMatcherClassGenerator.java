@@ -42,21 +42,25 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
 	private final BeanPropertyExtractor propertyExtractor;
+	private final Path outputDir;
 
 	/**
 	 * Creates a new Instance.
 	 *
 	 * @param  propertyExtractor  the property extractor
+	 * @param  outputDir          the output dir
 	 */
-	public JavaPoetHasPropertyMatcherClassGenerator(final BeanPropertyExtractor propertyExtractor) {
+	public JavaPoetHasPropertyMatcherClassGenerator(final BeanPropertyExtractor propertyExtractor,
+		final Path outputDir) {
 		this.propertyExtractor = propertyExtractor;
+		this.outputDir = outputDir;
 	}
 
 	/* (non-Javadoc)
 	 * @see io.github.marmer.testutils.generators.beanmatcher.HasPropertyMatcherClassGenerator#generateMatcherFor(java.lang.Class, java.nio.file.Path)
 	 */
 	@Override
-	public Path generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
+	public Path generateMatcherFor(final Class<?> type) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
 		if (log.isDebugEnabled()) {
 			log.debug(javaFile);

@@ -40,13 +40,12 @@ public interface HasPropertyMatcherClassGenerator {
 	 * Generate matcher for the given type in the given class directory (including its package
 	 * folders).
 	 *
-	 * @param   type       the type
-	 * @param   outputDir  the output dir
+	 * @param   type  the type
 	 *
 	 * @return  TODO DOCUMENT ME!
 	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
-	Path generateMatcherFor(Class<?> type, Path outputDir) throws IOException;
+	Path generateMatcherFor(Class<?> type) throws IOException;
 
 }

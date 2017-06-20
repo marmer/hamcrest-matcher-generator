@@ -48,8 +48,7 @@ import static org.junit.Assert.assertThat;
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String MATCHER_POSTFIX = "Matcher";
 	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-	private final HasPropertyMatcherClassGenerator classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-			propertyExtractor);
+	private HasPropertyMatcherClassGenerator classUnderTest;
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private Path srcOutputDir;
@@ -61,6 +60,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		prepareSourceOutputDir();
 		prepareOutputDir();
 		initCompiler();
+		initClassUnderTest();
+	}
+
+	private void initClassUnderTest() {
+		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
+				propertyExtractor, srcOutputDir);
 	}
 
 	private void initCompiler() {
@@ -85,7 +90,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldCreateJavaFile() throws Exception {
 
 		// Preparation
-		classUnderTest.generateMatcherFor(SimplePojo.class, srcOutputDir);
+		classUnderTest.generateMatcherFor(SimplePojo.class);
 
 		// Assertion
 		assertThat(generatedSourceFileFor(SimplePojo.class), is(anExistingFile()));
@@ -99,7 +104,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type = SimplePojo.class;
 
 		// Execution
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 
 		// Assertion
 		final CompilationResult result = compiler.compileGeneratedSourceFileFor(type);
@@ -114,7 +119,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type = SimplePojo.class;
 
 		// Execution
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 
 		// Assertion
 		compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
@@ -126,7 +131,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
@@ -144,7 +149,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type = SimplePojo.class;
 
 		// Execution
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 
 		// Assertion
 		final List<String> sourceFileLines = readGeneratedSourceFileLines();
@@ -158,7 +163,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
@@ -176,7 +181,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojoChild> type = SimplePojoChild.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
@@ -194,7 +199,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
@@ -211,7 +216,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
@@ -228,7 +233,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
-		classUnderTest.generateMatcherFor(type, srcOutputDir);
+		classUnderTest.generateMatcherFor(type);
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution
