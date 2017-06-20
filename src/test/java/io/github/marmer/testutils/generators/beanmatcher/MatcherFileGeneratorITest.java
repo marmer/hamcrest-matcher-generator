@@ -54,8 +54,7 @@ public class MatcherFileGeneratorITest {
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
 				srcOutputDir);
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
-				new JavaPoetFactoryMethodFacadeGenerator(), new FileSystemJavaFileClassLoader()); // TODO replace by
-                                                                                                  // real bla
+				new JavaPoetFactoryMethodFacadeGenerator(), new CommonsJciJavaFileClassLoader(srcOutputDir));
 	}
 
 	public void prepareOutputDir() throws Exception {
