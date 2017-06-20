@@ -56,12 +56,13 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	 * @see io.github.marmer.testutils.generators.beanmatcher.HasPropertyMatcherClassGenerator#generateMatcherFor(java.lang.Class, java.nio.file.Path)
 	 */
 	@Override
-	public void generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
+	public Path generateMatcherFor(final Class<?> type, final Path outputDir) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
 		if (log.isDebugEnabled()) {
 			log.debug(javaFile);
 		}
 		javaFile.writeTo(outputDir);
+		return null; // TODO ;)
 	}
 
 	private JavaFile prepareJavaFile(final Class<?> type) {
