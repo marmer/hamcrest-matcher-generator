@@ -1,11 +1,8 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
+import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
+
 import org.apache.commons.jci.compilers.CompilationResult;
-import org.apache.commons.jci.compilers.JavaCompiler;
-import org.apache.commons.jci.compilers.JavaCompilerFactory;
-import org.apache.commons.jci.compilers.JavaCompilerSettings;
-import org.apache.commons.jci.readers.FileResourceReader;
-import org.apache.commons.jci.stores.FileResourceStore;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 import org.hamcrest.Matcher;
@@ -27,7 +24,6 @@ import java.net.URLClassLoader;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,9 +50,6 @@ import static org.junit.Assert.assertThat;
 
 
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
-	private static final String JAVA_FILE_POSTFIX = ".java";
-	private static final String SOURCE_ENCODING = "UTF-8";
-	private static final String JAVA_VERSION = "1.7";
 	private static final String MATCHER_POSTFIX = "Matcher";
 	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 	private final HasPropertyMatcherClassGenerator classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
@@ -64,16 +57,25 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private Path srcOutputDir;
-	private final JavaCompiler compiler = new JavaCompilerFactory().createCompiler("eclipse");
-	private final JavaCompilerSettings compilerSettings = compiler.createDefaultSettings();
 	private Path classOutputDir;
+	private GeneratedFileCompiler compiler;
 
 	@Before
 	public void setUp() throws Exception {
 		prepareSourceOutputDir();
 		prepareOutputDir();
 		getClassLoader();
-		initCompilerSettings();
+		initCompiler();
+	}
+
+	private void initCompiler() {
+		compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir) {
+
+			@Override
+			public String getGeneratedClassNameFor(final Class<?> type) {
+				return type.getSimpleName() + MATCHER_POSTFIX;
+			}
+		};
 	}
 
 	public void prepareOutputDir() throws Exception {
@@ -90,12 +92,6 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	public void prepareSourceOutputDir() throws Exception {
 		this.srcOutputDir = temp.newFolder("src").toPath();
-	}
-
-	public void initCompilerSettings() {
-		compilerSettings.setSourceEncoding(SOURCE_ENCODING);
-		compilerSettings.setSourceVersion(JAVA_VERSION);
-		compilerSettings.setTargetVersion(JAVA_VERSION);
 	}
 
 	@Test
@@ -119,7 +115,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
 
 		// Assertion
-		final CompilationResult result = compileGeneratedSourceFileFor(type);
+		final CompilationResult result = compiler.compileGeneratedSourceFileFor(type);
 		assertThat(result, hasNoErrorsOrWarnings());
 	}
 
@@ -176,7 +172,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		compileGeneratedSourceFileFor(type);
+		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
 		final Class<Matcher<SimplePojo>> generatedMatcherClass = loadGeneratedClassFor(type);
@@ -194,7 +190,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojoChild> type = SimplePojoChild.class;
 		classUnderTest.generateMatcherFor(type, srcOutputDir);
-		compileGeneratedSourceFileFor(type);
+		compiler.compileGeneratedSourceFileFor(type);
 
 		// Execution
 		final Class<Matcher<SimplePojoChild>> generatedMatcherClass = loadGeneratedClassFor(type);
@@ -274,7 +270,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type) {
 		return containsInRelativeOrder(startsWith(
 					"@Generated(\"" + JavaPoetHasPropertyMatcherClassGenerator.class.getName() + "\")"),
-				containsString("class " + generatedMatcherClassNameFor(type)));
+				containsString("class " + compiler.getGeneratedClassNameFor(type)));
 	}
 
 	private List<String> readGeneratedSourceFileLines() throws IOException {
@@ -283,7 +279,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	private <T> Matcher<T> loadInstanceOfGeneratedClassFor(final Class<SimplePojo> type) throws IOException, Exception,
 		InstantiationException, IllegalAccessException {
-		compileGeneratedSourceFileFor(type);
+		compiler.compileGeneratedSourceFileFor(type);
 
 		final Class<Matcher<T>> loadClass = loadGeneratedClassFor(type);
 
@@ -291,54 +287,11 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	private <T> Class<Matcher<T>> loadGeneratedClassFor(final Class<?> type) throws Exception {
-		return (Class<Matcher<T>>) getClassLoader().loadClass(generatedFullQualifiedClassNameFor(type));
-	}
-
-	private String generatedFullQualifiedClassNameFor(final Class<?> type) {
-		return getPackageNameOf(type) + "." + generatedMatcherClassNameFor(type);
-	}
-
-	private CompilationResult compileGeneratedSourceFileFor(final Class<?> type) throws IOException {
-		final String[] pResourcePaths = {
-			getGeneratedRelativePathOfUnixString(type)
-		};
-		final FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
-		final FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
-
-		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
-				compilerSettings);
-	}
-
-	private String getGeneratedRelativePathOfUnixString(final Class<?> type) {
-		return getGeneratedRelativePathOf(type).toString().replaceAll("\\\\", "/");
+		return (Class<Matcher<T>>) getClassLoader().loadClass(compiler.getGeneratedFullQualifiedClassNameFor(type));
 	}
 
 	private File generatedSourceFileFor(final Class<?> type) {
-		return generatedSourcePathFor(type).toFile();
-	}
-
-	private Path generatedSourcePathFor(final Class<?> type) {
-		return srcOutputDir.resolve(getGeneratedRelativePathOf(type));
-	}
-
-	private Path getGeneratedRelativePathOf(final Class<?> type) {
-		return getPackagePath(type).resolve(generatedMatcherJavaFileNameFor(type));
-	}
-
-	private String generatedMatcherJavaFileNameFor(final Class<?> type) {
-		return generatedMatcherClassNameFor(type) + JAVA_FILE_POSTFIX;
-	}
-
-	private String generatedMatcherClassNameFor(final Class<?> type) {
-		return type.getSimpleName() + MATCHER_POSTFIX;
-	}
-
-	private Path getPackagePath(final Class<?> type) {
-		return Paths.get(getPackageNameOf(type).replaceAll("\\.", "/"));
-	}
-
-	private String getPackageNameOf(final Class<?> type) {
-		return type.getPackage().getName();
+		return compiler.getGeneratedSourcePathFor(type).toFile();
 	}
 
 	public static class SimplePojo {
