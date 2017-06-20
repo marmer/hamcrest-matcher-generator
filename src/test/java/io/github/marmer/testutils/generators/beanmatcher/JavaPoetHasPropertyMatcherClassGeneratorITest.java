@@ -97,6 +97,18 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	@Test
+	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldReturnPathOfCreatedJavaFile() throws Exception {
+		// Preparation
+
+		// Execution
+		final Path pathOfGeneratedMatcher = classUnderTest.generateMatcherFor(SimplePojo.class);
+
+		// Assertion
+		assertThat("pathOfGeneratedMatcher", pathOfGeneratedMatcher,
+			is(equalTo(compiler.getGeneratedSourcePathFor(SimplePojo.class))));
+	}
+
+	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
 		throws Exception {
 
