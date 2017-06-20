@@ -43,8 +43,10 @@ public interface HasPropertyMatcherClassGenerator {
 	 * @param   type       the type
 	 * @param   outputDir  the output dir
 	 *
+	 * @return  TODO DOCUMENT ME!
+	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
-	void generateMatcherFor(Class<?> type, Path outputDir) throws IOException;
+	Path generateMatcherFor(Class<?> type, Path outputDir) throws IOException;
 
 }
