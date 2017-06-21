@@ -134,6 +134,7 @@ public class MatcherFileGeneratorITest {
 		// Assertion
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		final Method facadeMethod = compiler.getFacadeMethodFor(type);
-		assertThat("Matcher facade factory method for " + type, facadeMethod.getReturnType(), is(matcher.getClass()));
+		assertThat("Return Type of matcher facade factory method for " + type, facadeMethod.getReturnType().getName(),
+			is(equalTo(matcher.getClass().getName())));
 	}
 }
