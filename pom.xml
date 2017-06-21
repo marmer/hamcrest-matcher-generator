@@ -123,7 +123,6 @@
 				<artifactId>coveralls-maven-plugin</artifactId>
 				<version>4.3.0</version>
 				<configuration>
-					<scanForSources>true</scanForSources>
 					<sourceDirectories>
 						<sourceDirectory>java-test-helper-generator-core/src/main/java/</sourceDirectory>
 						<sourceDirectory>java-test-helper-generator-maven-plugin/src/main/java/</sourceDirectory>
