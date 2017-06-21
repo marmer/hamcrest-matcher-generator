@@ -6,6 +6,7 @@ import org.apache.commons.jci.compilers.JavaCompilerFactory;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
 import org.apache.commons.jci.readers.FileResourceReader;
 import org.apache.commons.jci.stores.FileResourceStore;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -146,7 +147,11 @@ public class GeneratedFileCompiler {
 	}
 
 	public Class<?> compileAndLoadFacade() throws Exception {
-		compileFacade();
+		final CompilationResult compilationResult = compileFacade();
+		if (!ArrayUtils.isEmpty(compilationResult.getErrors())) {
+			throw new RuntimeException("Cannot compile generated Fascade: " +
+				StringUtils.join(compilationResult.getErrors(), ","));
+		}
 		return getClassLoader().loadClass(FULL_QUALIFIED_FACADE_NAME);
 	}
 
