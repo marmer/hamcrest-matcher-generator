@@ -11,6 +11,12 @@ import org.mockito.junit.MockitoRule;
 
 import org.mockito.quality.Strictness;
 
+import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.FactoryMethodFacadeGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
+
 import java.nio.file.Path;
 
 import java.util.Arrays;

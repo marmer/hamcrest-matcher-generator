@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import org.apache.commons.io.FileUtils;
 
@@ -7,6 +7,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.junit.rules.TemporaryFolder;
+
+import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
 
 import java.io.IOException;
 

@@ -1,7 +1,9 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import org.junit.Test;
 
+import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
+import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 import sample.classes.ComplexSample;
 import sample.classes.SimpleSampleClass;
 

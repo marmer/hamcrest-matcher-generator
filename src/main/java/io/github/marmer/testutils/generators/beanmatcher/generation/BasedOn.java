@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.generation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

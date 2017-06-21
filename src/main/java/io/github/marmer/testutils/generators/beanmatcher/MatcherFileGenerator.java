@@ -2,6 +2,11 @@ package io.github.marmer.testutils.generators.beanmatcher;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import io.github.marmer.testutils.generators.beanmatcher.generation.FactoryMethodFacadeGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
+
 import java.io.IOException;
 
 import java.nio.file.Path;
