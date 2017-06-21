@@ -1,5 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
+import org.apache.commons.io.FileUtils;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -96,7 +98,35 @@ public class CommonsJciJavaFileClassLoaderITest {
 		// Assertion
 		assertThat("classLoad", classLoad, is(empty()));
 	}
-	// TODO test on not existing java file
-	// TODO test not existing base path
+
+	@Test
+	public void testLoad_NotExistingJavaFileGiven_ShouldNotIncludeJavafileInResults() throws Exception {
+
+		// Preparation
+		prepareValidSourceFile();
+		Files.delete(javaFile);
+
+		// Execution
+		final List<Class<?>> classLoad = classUnderTest.load(Collections.singletonList(javaFile));
+
+		// Assertion
+		assertThat("classLoad", classLoad, is(empty()));
+		// TODO
+	}
+
+	@Test
+	public void testLoad_InitializedWithNotExistingBasePath_ShouldNotIncludeJavafileInResults() throws Exception {
+
+		// Preparation
+		prepareValidSourceFile();
+		FileUtils.deleteQuietly(sourceBaseDir.toFile());
+
+		// Execution
+		final List<Class<?>> classLoad = classUnderTest.load(Collections.singletonList(javaFile));
+
+		// Assertion
+		assertThat("classLoad", classLoad, is(empty()));
+		// TODO
+	}
 
 }
