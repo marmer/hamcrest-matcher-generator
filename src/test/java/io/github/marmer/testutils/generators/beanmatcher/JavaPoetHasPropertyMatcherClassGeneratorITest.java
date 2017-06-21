@@ -72,7 +72,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir) {
 
 			@Override
-			public String getGeneratedClassNameFor(final Class<?> type) {
+			public String getGeneratedMatcherClassNameFor(final Class<?> type) {
 				return type.getSimpleName() + MATCHER_POSTFIX;
 			}
 		};
@@ -274,7 +274,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<SimplePojo> type) {
 		return containsInRelativeOrder(startsWith(
 					"@Generated(\"" + JavaPoetHasPropertyMatcherClassGenerator.class.getName() + "\")"),
-				containsString("class " + compiler.getGeneratedClassNameFor(type)));
+				containsString("class " + compiler.getGeneratedMatcherClassNameFor(type)));
 	}
 
 	private List<String> readGeneratedSourceFileLines() throws IOException {

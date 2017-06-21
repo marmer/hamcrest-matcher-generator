@@ -20,14 +20,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
-public abstract class GeneratedFileCompiler {
+public class GeneratedFileCompiler {
+
+	private static final String MATCHER_POSTFIX = "Matcher";
 	private static final String JAVA_FILE_POSTFIX = ".java";
 	private static final String SOURCE_ENCODING = "UTF-8";
 	private static final String JAVA_VERSION = "1.7";
 
-	private static final String FACADE_PACKAGE = "io.github.marmer.testutils";
-	private static final String FACADE_NAME = "BeanPropertyMatchers";
-	private static final String FULL_QUALIFIED_FACADE_NAME = FACADE_PACKAGE + "." + FACADE_NAME;
+	public static final String FACADE_PACKAGE = "io.github.marmer.testutils";
+	public static final String FACADE_NAME = "BeanPropertyMatchers";
+	public static final String FULL_QUALIFIED_FACADE_NAME = FACADE_PACKAGE + "." + FACADE_NAME;
 
 	private final Path srcOutputDir;
 	private final Path classOutputDir;
@@ -48,10 +50,8 @@ public abstract class GeneratedFileCompiler {
 		final String[] pResourcePaths = {
 			getGeneratedRelativePathOfUnixString(type)
 		};
-		final FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
-		final FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
-
-		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
+		return compiler.compile(pResourcePaths, newSrcOutputDirReader(), newClassOutputDirStore(),
+				getClass().getClassLoader(),
 				compilerSettings);
 	}
 
@@ -59,15 +59,21 @@ public abstract class GeneratedFileCompiler {
 		final String[] pResourcePaths = {
 			getFacadePath()
 		};
-		final FileResourceReader sourceFolderResource = new FileResourceReader(srcOutputDir.toFile());
-		final FileResourceStore classFolderResource = new FileResourceStore(classOutputDir.toFile());
-
-		return compiler.compile(pResourcePaths, sourceFolderResource, classFolderResource, getClass().getClassLoader(),
+		return compiler.compile(pResourcePaths, newSrcOutputDirReader(), newClassOutputDirStore(),
+				getClass().getClassLoader(),
 				compilerSettings);
 	}
 
+	private FileResourceReader newSrcOutputDirReader() {
+		return new FileResourceReader(srcOutputDir.toFile());
+	}
+
+	private FileResourceStore newClassOutputDirStore() {
+		return new FileResourceStore(classOutputDir.toFile());
+	}
+
 	private String getFacadePath() {
-		return unixPathStringOf(srcOutputDir.resolve(relativeDirectoryOf(FULL_QUALIFIED_FACADE_NAME)));
+		return unixPathStringOf(relativeDirectoryOf(FULL_QUALIFIED_FACADE_NAME)) + JAVA_FILE_POSTFIX;
 	}
 
 	private String getGeneratedRelativePathOfUnixString(final Class<?> type) {
@@ -75,7 +81,11 @@ public abstract class GeneratedFileCompiler {
 	}
 
 	private String unixPathStringOf(final Path path) {
-		return path.toString().replace("\\", "/");
+		return unixPathStringOf(path.toString());
+	}
+
+	private String unixPathStringOf(final String stringPath) {
+		return stringPath.replace("\\", "/");
 	}
 
 	private Path generatedRelativePathOf(final Class<?> type) {
@@ -95,11 +105,11 @@ public abstract class GeneratedFileCompiler {
 	}
 
 	private String getJavaFileNameFor(final Class<?> type) {
-		return getGeneratedClassNameFor(type) + JAVA_FILE_POSTFIX;
+		return getGeneratedMatcherClassNameFor(type) + JAVA_FILE_POSTFIX;
 	}
 
 	public String getGeneratedFullQualifiedClassNameFor(final Class<?> type) {
-		return packageNameOf(type) + "." + getGeneratedClassNameFor(type);
+		return packageNameOf(type) + "." + getGeneratedMatcherClassNameFor(type);
 	}
 
 	public Path getGeneratedSourcePathFor(final Class<?> type) {
@@ -117,7 +127,9 @@ public abstract class GeneratedFileCompiler {
 				});
 	}
 
-	public abstract String getGeneratedClassNameFor(final Class<?> type);
+	public String getGeneratedMatcherClassNameFor(final Class<?> type) {
+		return type.getSimpleName() + MATCHER_POSTFIX;
+	}
 
 	public Class<?> compileAndLoadGeneratedClassFor(final Class<?> type) throws IOException, Exception {
 		compileGeneratedSourceFileFor(type);
@@ -133,13 +145,14 @@ public abstract class GeneratedFileCompiler {
 		return (T) loadClass.newInstance();
 	}
 
-	public Object compileAndLoadFacade() throws Exception {
+	public Class<?> compileAndLoadFacade() throws Exception {
 		compileFacade();
 		return getClassLoader().loadClass(FULL_QUALIFIED_FACADE_NAME);
 	}
 
 	public Method getFacadeMethodFor(final Class<?> type) throws Exception, NoSuchMethodException {
-		final Object facade = compileAndLoadFacade();
-		return facade.getClass().getMethod("is" + StringUtils.capitalize(type.getSimpleName()));
+		final Class<?> facade = compileAndLoadFacade();
+		return facade.getDeclaredMethod("is" + StringUtils.capitalize(type.getSimpleName()));
 	}
+
 }
