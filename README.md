@@ -1,7 +1,6 @@
 [![Build Status](https://travis-ci.org/marmer/java-test-helper-generator.svg?branch=master)](https://travis-ci.org/marmer/java-test-helper-generator)
 [![codebeat badge](https://codebeat.co/badges/670d9178-beb7-438d-9823-53943c7fdf95)](https://codebeat.co/projects/github-com-marmer-java-test-helper-generator-master)
-[![Coverage Status]
-(https://coveralls.io/repos/github/marmer/java-test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/java-test-helper-generator?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/marmer/java-test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/java-test-helper-generator?branch=master)
 [![Dependency Status](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2)
 
 dynamic-compilesafe-hamcrest-property-matcher
