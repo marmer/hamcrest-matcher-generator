@@ -4,6 +4,8 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
+import lombok.extern.apachecommons.CommonsLog;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+@CommonsLog
 public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacadeGenerator {
 	private final Path outputPath;
 	private final String packageName;
@@ -30,6 +33,9 @@ public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacade
 	@Override
 	public void generateFacadeFor(final List<Class<?>> classesToGenerateFacadeFor) throws IOException {
 		final JavaFile javaFile = JavaFile.builder(packageName, typeFor(classesToGenerateFacadeFor)).build();
+		if (log.isDebugEnabled()) {
+			log.debug(javaFile);
+		}
 		javaFile.writeTo(outputPath);
 	}
 
@@ -42,8 +48,17 @@ public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacade
 	}
 
 	private MethodSpec factoryMethodsFor(final Class<?> classesToGenerateFacadeFor) {
-		return MethodSpec.methodBuilder("is" + StringUtils.capitalize(classesToGenerateFacadeFor.getSimpleName()))
+		return MethodSpec.methodBuilder(methodNameFor(classesToGenerateFacadeFor))
 			.build();
+	}
+
+	private String methodNameFor(final Class<?> classesToGenerateFacadeFor) {
+		return "is" + StringUtils.capitalize(baseTypeOf(classesToGenerateFacadeFor).getSimpleName());
+	}
+
+	private Class<?> baseTypeOf(final Class<?> classesToGenerateFacadeFor) {
+		final BasedOn annotation = classesToGenerateFacadeFor.getAnnotation(BasedOn.class);
+		return annotation.value();
 	}
 
 }

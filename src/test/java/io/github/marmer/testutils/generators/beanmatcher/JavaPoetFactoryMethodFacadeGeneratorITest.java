@@ -61,7 +61,7 @@ public class JavaPoetFactoryMethodFacadeGeneratorITest {
 		// Preparation
 
 		// Execution
-		classUnderTest.generateFacadeFor(Arrays.asList(Sample1Type.class, Sample2Type.class));
+		classUnderTest.generateFacadeFor(Arrays.asList(Sample1TypeMatcher.class, Sample2TypeMatcher.class));
 
 		// Assertion
 		final Class<?> fascade = compiler.compileAndLoadFacade();
@@ -75,6 +75,12 @@ public class JavaPoetFactoryMethodFacadeGeneratorITest {
 	// TODO test ClassHasNoDefaultConstructor
 	// TODO test Should have generated annotation
 	// TODO test should be util class (is final and has no non private constructor)
+
+	@BasedOn(Sample1Type.class)
+	public static class Sample1TypeMatcher { }
+
+	@BasedOn(Sample2Type.class)
+	public static class Sample2TypeMatcher { }
 
 	public static class Sample1Type { }
 
