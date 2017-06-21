@@ -1,5 +1,9 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.generation;
 
+import io.github.marmer.testutils.generators.beanmatcher.generation.BasedOn;
+import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 
 import org.apache.commons.jci.compilers.CompilationResult;

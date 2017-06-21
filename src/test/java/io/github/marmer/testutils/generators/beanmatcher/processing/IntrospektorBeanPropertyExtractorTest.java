@@ -1,6 +1,10 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import org.junit.Test;
+
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.generation;
 
 /**
  * Generator for Matcher facades.

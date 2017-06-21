@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import lombok.Value;
 
@@ -8,6 +8,8 @@ import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 
 import org.junit.Test;
+
+import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BeanPropertyMatcher;
 
 import static org.hamcrest.CoreMatchers.containsString;
 

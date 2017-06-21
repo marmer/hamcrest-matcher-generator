@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.generation;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -10,6 +10,9 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
+import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BeanPropertyMatcher;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import lombok.extern.apachecommons.CommonsLog;
 
 import org.apache.commons.lang3.StringUtils;
