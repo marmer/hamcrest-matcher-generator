@@ -17,8 +17,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasProperty;
 
 import static org.junit.Assert.assertThat;
@@ -32,6 +34,7 @@ public class CommonsJciJavaFileClassLoaderITest {
 
 	private static final String VALID_JAVA_SOURCE_FILE_CONTENT = "package " + PACKAGE + ";\n" +
 		"public class " + CLASS_NAME + " { }";
+	private static final String INVALID_JAVA_SOURCE_FILE_CONTENT = "SomeDefinitelyNotValidJavaFileContent { }";
 
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
@@ -59,6 +62,11 @@ public class CommonsJciJavaFileClassLoaderITest {
 			StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	}
 
+	private void prepareInvalidSourceFile() throws IOException {
+		Files.write(javaFile, INVALID_JAVA_SOURCE_FILE_CONTENT.getBytes(),
+			StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+	}
+
 	private void initClassUnderTest() throws Exception {
 		classUnderTest = new CommonsJciJavaFileClassLoader(sourceBaseDir);
 	}
@@ -75,8 +83,19 @@ public class CommonsJciJavaFileClassLoaderITest {
 		// Assertion
 		assertThat("classLoad", classLoad, contains(hasProperty("name", equalTo(QUALIFIED_CLASS_NAME))));
 	}
-	// TODO test errors on cleass loading
-	// TODO test errors on compile
+
+	@Test
+	public void testLoad_InvalidJavaFileGiven_ShouldNotIncludeJavafileInResults() throws Exception {
+
+		// Preparation
+		prepareInvalidSourceFile();
+
+		// Execution
+		final List<Class<?>> classLoad = classUnderTest.load(Collections.singletonList(javaFile));
+
+		// Assertion
+		assertThat("classLoad", classLoad, is(empty()));
+	}
 	// TODO test on not existing java file
 	// TODO test not existing base path
 

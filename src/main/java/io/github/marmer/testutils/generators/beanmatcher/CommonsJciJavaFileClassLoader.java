@@ -2,7 +2,6 @@ package io.github.marmer.testutils.generators.beanmatcher;
 
 import lombok.extern.apachecommons.CommonsLog;
 
-import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.JavaCompiler;
 import org.apache.commons.jci.compilers.JavaCompilerFactory;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
@@ -14,6 +13,7 @@ import org.apache.commons.jci.stores.ResourceStoreClassLoader;
 import java.nio.file.Path;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -39,17 +39,16 @@ public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {
 		final FileResourceReader sourceFolderResource = new FileResourceReader(sourceBaseDir.toFile());
 
 		final MemoryResourceStore pStore = new MemoryResourceStore();
-		final CompilationResult compileResult = compiler.compile(resourcePathOf(sourceFiles), sourceFolderResource,
-				pStore,
-				getClass().getClassLoader(),
-				compilerSettings);
+		compiler.compile(resourcePathOf(sourceFiles), sourceFolderResource, pStore, getClass().getClassLoader(),
+			compilerSettings);
 
 		return loadClassesFor(sourceFiles, pStore);
 	}
 
 	private List<Class<?>> loadClassesFor(final List<Path> sourceFiles, final MemoryResourceStore pStore) {
 		return sourceFiles.stream().map(sourceBaseDir::relativize).map(Path::toString)
-			.map(this::toQualifiedClassName).map(qualifiedName -> loadClass(qualifiedName, pStore)).collect(Collectors
+			.map(this::toQualifiedClassName).map(qualifiedName -> loadClass(qualifiedName, pStore)).filter(
+				Objects::nonNull).collect(Collectors
 				.toList());
 	}
 
