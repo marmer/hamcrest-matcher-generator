@@ -125,8 +125,8 @@
 				<configuration>
 					<scanForSources>true</scanForSources>
 					<sourceDirectories>
-						<sourceDirectory>java-test-helper-generator-core/src/</sourceDirectory>
-						<sourceDirectory>java-test-helper-generator-maven-plugin/src/</sourceDirectory>
+						<sourceDirectory>java-test-helper-generator-core/src/main/java/</sourceDirectory>
+						<sourceDirectory>java-test-helper-generator-maven-plugin/src/main/java/</sourceDirectory>
 					</sourceDirectories>
 				</configuration>
 			</plugin>
