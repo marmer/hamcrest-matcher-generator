@@ -20,6 +20,7 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>io.github.marmer.testutils</groupId>
 				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
 				<configuration>
 					<!-- Specify the MyMojo parameter -->
