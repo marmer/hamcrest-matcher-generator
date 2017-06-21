@@ -7,9 +7,20 @@
 	<packaging>pom</packaging>
 	<name>java-test-helper-generator</name>
 	<description>A tool to generate helper-classes based on production code</description>
-
+	
+	<url>https://github.com/marmer/java-test-helper-generator</url>
+	<scm>
+		<url>https://github.com/marmer/java-test-helper-generator</url>
+	</scm>
+	<ciManagement>
+		<system>travis-ci</system>
+		<url>https://travis-ci.org/marmer/java-test-helper-generator</url>
+	</ciManagement>
+	<inceptionYear>2017</inceptionYear>
+	
 	<modules>
 		<module>java-test-helper-generator-core</module>
+		<module>java-test-helper-generator-maven-plugin</module>
 	</modules>
 
 	<properties>
