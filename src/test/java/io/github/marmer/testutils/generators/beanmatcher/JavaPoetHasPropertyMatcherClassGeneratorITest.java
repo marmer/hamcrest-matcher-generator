@@ -280,7 +280,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		final Class<?> generatedMatcherClass,
 		final String propertyName) {
 		return allOf(
-				hasProperty("name", equalTo(propertyName)), // TODO add "with" prefix
+				hasProperty("name", equalTo(propertyName)),
 				hasProperty("parameterTypes", arrayContaining(Matcher.class)),
 				hasProperty("returnType", is(generatedMatcherClass)));
 	}
