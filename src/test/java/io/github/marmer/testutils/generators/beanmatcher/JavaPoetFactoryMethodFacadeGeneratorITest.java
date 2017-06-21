@@ -87,7 +87,20 @@ public class JavaPoetFactoryMethodFacadeGeneratorITest {
 			hasItemInArray(hasProperty("modifiers", equalTo(Modifier.STATIC | Modifier.PUBLIC))));
 	}
 
-	// TODO test crestedInstancesShouldNotBeNewAndNotRecycled
+	@Test
+	public void testGenerateFacadeFor_ClassGiven_FactoryMethodShouldReturnGivenType() throws Exception {
+		// Preparation
+
+		// Execution
+		classUnderTest.generateFacadeFor(Collections.singletonList(Sample1TypeMatcher.class));
+
+		// Assertion
+
+		final Class<?> fascade = compiler.compileAndLoadFacade();
+		assertThat("Declared Methods of generated Fascade", fascade.getDeclaredMethods(),
+			hasItemInArray(hasProperty("returnType", is(Sample1TypeMatcher.class))));
+	}
+
 	// TODO test ClassHasNoDefaultConstructor
 	// TODO test Should have generated annotation
 	// TODO test should be util class (is final and has no non private constructor)

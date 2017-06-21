@@ -46,21 +46,21 @@ public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacade
 		return TypeSpec.classBuilder(className).addMethods(factoryMethodsFor(classesToGenerateFacadeFor)).build();
 	}
 
-	private List<MethodSpec> factoryMethodsFor(final List<Class<?>> classesToGenerateFacadeFor) {
-		return classesToGenerateFacadeFor.stream().map(this::factoryMethodsFor).collect(Collectors.toList());
+	private List<MethodSpec> factoryMethodsFor(final List<Class<?>> classToGenerateFacadeFor) {
+		return classToGenerateFacadeFor.stream().map(this::factoryMethodsFor).collect(Collectors.toList());
 	}
 
-	private MethodSpec factoryMethodsFor(final Class<?> classesToGenerateFacadeFor) {
-		return MethodSpec.methodBuilder(methodNameFor(classesToGenerateFacadeFor)).addModifiers(PUBLIC, STATIC)
-			.build();
+	private MethodSpec factoryMethodsFor(final Class<?> classToGenerateFacadeFor) {
+		return MethodSpec.methodBuilder(methodNameFor(classToGenerateFacadeFor)).addModifiers(PUBLIC, STATIC).returns(
+				classToGenerateFacadeFor).addStatement("return new $T()", classToGenerateFacadeFor).build();
 	}
 
-	private String methodNameFor(final Class<?> classesToGenerateFacadeFor) {
-		return "is" + StringUtils.capitalize(baseTypeOf(classesToGenerateFacadeFor).getSimpleName());
+	private String methodNameFor(final Class<?> classToGenerateFacadeFor) {
+		return "is" + StringUtils.capitalize(baseTypeOf(classToGenerateFacadeFor).getSimpleName());
 	}
 
-	private Class<?> baseTypeOf(final Class<?> classesToGenerateFacadeFor) {
-		final BasedOn annotation = classesToGenerateFacadeFor.getAnnotation(BasedOn.class);
+	private Class<?> baseTypeOf(final Class<?> classToGenerateFacadeFor) {
+		final BasedOn annotation = classToGenerateFacadeFor.getAnnotation(BasedOn.class);
 		return annotation.value();
 	}
 
