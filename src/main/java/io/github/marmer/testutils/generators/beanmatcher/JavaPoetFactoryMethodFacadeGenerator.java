@@ -15,6 +15,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
+
 
 @CommonsLog
 public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacadeGenerator {
@@ -48,7 +51,7 @@ public class JavaPoetFactoryMethodFacadeGenerator implements FactoryMethodFacade
 	}
 
 	private MethodSpec factoryMethodsFor(final Class<?> classesToGenerateFacadeFor) {
-		return MethodSpec.methodBuilder(methodNameFor(classesToGenerateFacadeFor))
+		return MethodSpec.methodBuilder(methodNameFor(classesToGenerateFacadeFor)).addModifiers(PUBLIC, STATIC)
 			.build();
 	}
 
