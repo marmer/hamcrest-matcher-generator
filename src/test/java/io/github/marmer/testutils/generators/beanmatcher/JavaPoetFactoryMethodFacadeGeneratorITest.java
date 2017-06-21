@@ -8,9 +8,12 @@ import org.junit.Test;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.lang.reflect.Modifier;
+
 import java.nio.file.Path;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
@@ -70,7 +73,20 @@ public class JavaPoetFactoryMethodFacadeGeneratorITest {
 					hasItemInArray(hasProperty("name", equalTo("isSample2Type"))))));
 	}
 
-	// TODO methods are static
+	@Test
+	public void testGenerateFacadeFor_ClassGiven_GeneratedMethodShouldBePublicStatic() throws Exception {
+		// Preparation
+
+		// Execution
+		classUnderTest.generateFacadeFor(Collections.singletonList(Sample1TypeMatcher.class));
+
+		// Assertion
+
+		final Class<?> fascade = compiler.compileAndLoadFacade();
+		assertThat("Declared Methods of generated Fascade", fascade.getDeclaredMethods(),
+			hasItemInArray(hasProperty("modifiers", equalTo(Modifier.STATIC | Modifier.PUBLIC))));
+	}
+
 	// TODO test crestedInstancesShouldNotBeNewAndNotRecycled
 	// TODO test ClassHasNoDefaultConstructor
 	// TODO test Should have generated annotation
