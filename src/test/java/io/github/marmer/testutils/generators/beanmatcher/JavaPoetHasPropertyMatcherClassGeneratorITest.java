@@ -138,6 +138,21 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	@Test
+	public void testGenerateMatcherFor_MatcherHasBeenGenerated_ShouldBeAnnotatedWithBaseClass() throws Exception {
+
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+
+		// Execution
+		classUnderTest.generateMatcherFor(type);
+
+		// Assertion
+		final Class<?> generatedClass = compiler.compileAndLoadGeneratedClassFor(type);
+		final BasedOn annotation = generatedClass.getAnnotation(BasedOn.class);
+		assertThat("Annotation value of generated class", annotation.value(), is(type));
+	}
+
+	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
 		throws Exception {
 

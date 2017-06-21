@@ -82,7 +82,7 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	private TypeSpec generatedTypeFor(final Class<?> type) {
 		return TypeSpec.classBuilder(matcherNameFor(type)).addModifiers(Modifier.PUBLIC).superclass(
 				parameterizedTypesafeMatchertype(type)).addField(innerMatcherField(type))
-			.addMethod(constructor(type)).addAnnotation(generatedAnnotation()).addMethods(
+			.addMethod(constructor(type)).addAnnotations(generatedAnnotations(type)).addMethods(
 				propertyMethods(type)).addMethods(addTypesafeMatcherMethods(type)).build();
 	}
 
@@ -161,8 +161,11 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 		return ClassName.get(type.getPackage().getName(), matcherNameFor(type));
 	}
 
-	private AnnotationSpec generatedAnnotation() {
-		return AnnotationSpec.builder(Generated.class).addMember("value", "$S", getClass().getName()).build();
+	private List<AnnotationSpec> generatedAnnotations(final Class<?> type) {
+		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember("value", "$S", getClass().getName())
+				.build(),
+				AnnotationSpec.builder(BasedOn.class).addMember("value", "$T.class", type)
+					.build());
 	}
 
 	private MethodSpec constructor(final Class<?> type) {
