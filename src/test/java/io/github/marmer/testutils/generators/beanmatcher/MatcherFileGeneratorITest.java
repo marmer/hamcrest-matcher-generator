@@ -29,7 +29,6 @@ import static org.junit.Assert.assertThat;
 
 public class MatcherFileGeneratorITest {
 
-	private static final String MATCHER_POSTFIX = "Matcher";
 	private PotentialPojoClassFinder potentialPojoClassFinder;
 	private TestHelperMatcherGenerator classUnderTest;
 	private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
@@ -54,7 +53,9 @@ public class MatcherFileGeneratorITest {
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
 				srcOutputDir);
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
-				new JavaPoetFactoryMethodFacadeGenerator(), new CommonsJciJavaFileClassLoader(srcOutputDir));
+				new JavaPoetFactoryMethodFacadeGenerator(srcOutputDir, GeneratedFileCompiler.FACADE_PACKAGE,
+					GeneratedFileCompiler.FACADE_NAME),
+				new CommonsJciJavaFileClassLoader(srcOutputDir));
 	}
 
 	public void prepareOutputDir() throws Exception {
@@ -66,13 +67,7 @@ public class MatcherFileGeneratorITest {
 	}
 
 	private void initCompiler() {
-		compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir) {
-
-			@Override
-			public String getGeneratedClassNameFor(final Class<?> type) {
-				return type.getSimpleName() + MATCHER_POSTFIX;
-			}
-		};
+		compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir);
 	}
 
 	@Test

@@ -1,5 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
+import java.io.IOException;
+
 import java.util.List;
 
 
@@ -14,7 +16,9 @@ public interface FactoryMethodFacadeGenerator {
 	/**
 	 * Generates a facade.
 	 *
-	 * @param  classesToGenerateFacadeFor  the classes to generate a facade for
+	 * @param   classesToGenerateFacadeFor  the classes to generate facade for
+	 *
+	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
-	void generateFacadeFor(List<Class<?>> classesToGenerateFacadeFor);
+	void generateFacadeFor(List<Class<?>> classesToGenerateFacadeFor) throws IOException;
 }
