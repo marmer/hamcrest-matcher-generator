@@ -124,6 +124,8 @@
 				<version>4.3.0</version>
 				<configuration>
 					<scanForSources>true</scanForSources>
+					<sourceDirectories>java-test-helper-generator-core/src</sourceDirectories>
+					<sourceDirectories>java-test-helper-generator-maven-plugin/src</sourceDirectories>
 				</configuration>
 			</plugin>
 			<plugin>
