@@ -42,7 +42,7 @@ public interface HasPropertyMatcherClassGenerator {
 	 *
 	 * @param   type  the type
 	 *
-	 * @return  TODO DOCUMENT ME!
+	 * @return  Paths of generated matchers.
 	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
