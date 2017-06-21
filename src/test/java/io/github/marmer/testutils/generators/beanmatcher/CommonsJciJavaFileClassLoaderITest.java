@@ -111,7 +111,6 @@ public class CommonsJciJavaFileClassLoaderITest {
 
 		// Assertion
 		assertThat("classLoad", classLoad, is(empty()));
-		// TODO
 	}
 
 	@Test
@@ -126,7 +125,6 @@ public class CommonsJciJavaFileClassLoaderITest {
 
 		// Assertion
 		assertThat("classLoad", classLoad, is(empty()));
-		// TODO
 	}
 
 }
