@@ -9,6 +9,7 @@
 		<groupId>io.github.marmer.testutils</groupId>
 		<artifactId>java-test-helper-generator</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>..</relativePath>
 	</parent>
 
 	<properties>
