@@ -8,14 +8,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 
 
-public class GenerateMatchersMojoTest {
+public class MatchersMojoTest {
 	@Rule
 	public MojoRule rule = new MojoRule();
 
 	@Test
 	public void testSomething() throws Exception {
 		rule.getPluginDescriptorPath();
-		final GenerateMatchersMojo myMojo = (GenerateMatchersMojo) rule.lookupMojo("matchers",
+		final MatchersMojo myMojo = (MatchersMojo) rule.lookupMojo("matchers",
 				"src/test/resources/unit/testproject/pom.xml");
 		assertNotNull(myMojo);
 		myMojo.execute();
