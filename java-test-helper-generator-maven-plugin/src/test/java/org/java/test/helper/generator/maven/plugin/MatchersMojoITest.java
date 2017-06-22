@@ -1,6 +1,5 @@
 package org.java.test.helper.generator.maven.plugin;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -18,7 +17,6 @@ import static org.hamcrest.Matchers.is;
 
 import org.hamcrest.io.FileMatchers;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
@@ -30,7 +28,7 @@ import java.io.File;
 import java.util.Arrays;
 
 
-public class MatchersMojoTest {
+public class MatchersMojoITest {
     @Rule
     public TestResources testResources = new TestResources();
     @Rule
@@ -49,7 +47,7 @@ public class MatchersMojoTest {
     }
 
     @Test
-    public void testMethodname_Precondition_Expectation() throws Exception {
+    public void testTestprojectCanBeBuildWithoutMojoExecution() throws Exception {
         // Preparation
 
         // Execution
@@ -61,14 +59,6 @@ public class MatchersMojoTest {
 
     private File pom() {
         return new File(testProject, "pom.xml");
-    }
-
-    private void mojoLoadingExample() throws Exception, MojoExecutionException {
-        final MatchersMojo myMojo =
-            (MatchersMojo) rule.lookupMojo("matchers",
-                "src/test/resources/unit/testproject/pom.xml");
-        assertNotNull(myMojo);
-        myMojo.execute();
     }
 
     private int executeGoals(final String... goals) throws MavenInvocationException,
