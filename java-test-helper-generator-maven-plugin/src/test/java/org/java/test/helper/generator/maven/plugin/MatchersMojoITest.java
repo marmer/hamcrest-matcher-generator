@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -70,7 +69,6 @@ public class MatchersMojoITest {
     }
 
     @Test
-    @Ignore("temporary ignore")
     public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
         // Preparation
 
@@ -82,7 +80,6 @@ public class MatchersMojoITest {
     }
 
     @Test
-    @Ignore("temporary ignore")
     public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
         throws Exception {
         // Preparation
