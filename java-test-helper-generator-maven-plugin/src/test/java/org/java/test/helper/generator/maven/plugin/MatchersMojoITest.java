@@ -116,7 +116,12 @@ public class MatchersMojoITest {
     private void prepareExecutableFor(final Invoker invoker) {
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
             final String getenv = System.getenv("M2_HOME");
-            final File mavenExecutable = new File(getenv, "bin/mvn.cmd");
+            File mavenExecutable = new File(getenv, "bin/mvn.cmd");
+
+            if (!mavenExecutable.exists()) {
+                mavenExecutable = new File(getenv, "bin/mvn.bat");
+            }
+
             invoker.setMavenExecutable(mavenExecutable);
         }
     }
