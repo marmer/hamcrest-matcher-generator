@@ -155,8 +155,8 @@
 						<sourceDirectory>java-test-helper-generator-maven-plugin/src/main/java/</sourceDirectory>
 					</sourceDirectories>
 					<jacocoReports>
-						<jacocoReport>java-test-helper-generator-core/target/site/jacoco</jacocoReport>
-						<jacocoReport>java-test-helper-generator-maven-plugin/site/jacoco</jacocoReport>
+						<jacocoReport>java-test-helper-generator-core/target/site/jacoco/jacoco.xml</jacocoReport>
+						<jacocoReport>java-test-helper-generator-maven-plugin/target/site/jacoco/jacoco.xml</jacocoReport>
 					</jacocoReports>
 				</configuration>
 			</plugin>
