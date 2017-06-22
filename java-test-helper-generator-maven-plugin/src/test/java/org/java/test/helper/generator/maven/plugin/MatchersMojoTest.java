@@ -6,20 +6,28 @@ import org.apache.maven.plugin.testing.resources.TestResources;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 
-import static org.hamcrest.io.FileMatchers.anExistingFileOrDirectory;
+import org.codehaus.plexus.util.cli.CommandLineException;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+
+import static org.hamcrest.Matchers.is;
+
+import org.hamcrest.io.FileMatchers;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 
 public class MatchersMojoTest {
@@ -28,11 +36,31 @@ public class MatchersMojoTest {
     @Rule
     public MojoRule rule = new MojoRule();
 
+    private File testProject;
+
+    @Before
+    public void setUp() throws Exception {
+        testProject = testResources.getBasedir("testproject");
+    }
+
     @Test
     public void testSomething() throws Exception {
-        final File testProject = testResources.getBasedir("testproject");
+        assertThat(pom(), FileMatchers.aFileNamed(equalTo("pom.xml")));
+    }
 
-        assertThat(testProject, anExistingFileOrDirectory());
+    @Test
+    public void testMethodname_Precondition_Expectation() throws Exception {
+        // Preparation
+
+        // Execution
+        final int exitStatus = executeGoals("clean", "compile");
+
+        // Expectation
+        assertThat("Execution exit status", exitStatus, is(0));
+    }
+
+    private File pom() {
+        return new File(testProject, "pom.xml");
     }
 
     private void mojoLoadingExample() throws Exception, MojoExecutionException {
@@ -43,13 +71,19 @@ public class MatchersMojoTest {
         myMojo.execute();
     }
 
-    private void invokerusageExample() throws MavenInvocationException {
-        // Not working yet ;)
+    private int executeGoals(final String... goals) throws MavenInvocationException,
+        CommandLineException {
         final InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(new File("/path/to/pom.xml"));
-        request.setGoals(Collections.singletonList("install"));
+        request.setPomFile(pom());
+        request.setGoals(Arrays.asList(goals));
 
         final Invoker invoker = new DefaultInvoker();
-        invoker.execute(request);
+        final InvocationResult result = invoker.execute(request);
+
+        if (result.getExecutionException() != null) {
+            throw result.getExecutionException();
+        }
+
+        return result.getExitCode();
     }
 }
