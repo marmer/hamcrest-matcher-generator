@@ -7,8 +7,7 @@ cache:
 script:
   - mvn clean jacoco:prepare-agent test -U
 after_success:
-  - mvn jacoco:report
-  - mvn coveralls:report
+  - mvn jacoco:report coveralls:report
 
 #script:
 #  - mvn clean jacoco:prepare-agent test -U
