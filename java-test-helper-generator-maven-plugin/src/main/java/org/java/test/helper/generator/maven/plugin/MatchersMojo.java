@@ -35,7 +35,7 @@ import java.io.IOException;
 	defaultPhase = LifecyclePhase.PROCESS_SOURCES,
 	threadSafe = false
 )
-public class GenerateMatchersMojo extends AbstractMojo {
+public class MatchersMojo extends AbstractMojo {
 
 	/** Location of the file. */
 	@Parameter(
