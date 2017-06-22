@@ -7,7 +7,13 @@ cache:
 script:
   - mvn clean jacoco:prepare-agent test -U
 after_success:
-  - mvn -f java-test-helper-generator-core/pom.xml jacoco:report
-  - mvn -f java-test-helper-generator-maven-plugin/pom.xml jacoco:report
-  - mvn -f java-test-helper-generator-core/pom.xml coveralls:report 
+  - mvn jacoco:report
+  - mvn coveralls:report
+
+#script:
+#  - mvn clean jacoco:prepare-agent test -U
+#after_success:
+#  - mvn -f java-test-helper-generator-core/pom.xml jacoco:report
+#  - mvn -f java-test-helper-generator-maven-plugin/pom.xml jacoco:report
+#  - mvn -f java-test-helper-generator-core/pom.xml coveralls:report 
 # TODO report the whole fun. Not only the core classes
