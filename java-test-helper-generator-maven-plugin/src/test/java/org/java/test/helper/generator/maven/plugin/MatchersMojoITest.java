@@ -1,5 +1,7 @@
 package org.java.test.helper.generator.maven.plugin;
 
+import org.apache.commons.io.FileUtils;
+
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -38,20 +40,44 @@ public class MatchersMojoITest {
 
     @Before
     public void setUp() throws Exception {
+        FileUtils.deleteQuietly(testProject);
         testProject = testResources.getBasedir("testproject");
     }
 
     @Test
-    public void testSomething() throws Exception {
+    public void testTestprojectShouldHavePom() throws Exception {
         assertThat(pom(), FileMatchers.aFileNamed(equalTo("pom.xml")));
     }
 
     @Test
-    public void testTestprojectCanBeBuildWithoutMojoExecution() throws Exception {
+    public void testTestprojectShouldBeBuildWithoutMojoExecution() throws Exception {
         // Preparation
 
         // Execution
         final int exitStatus = executeGoals("clean", "compile");
+
+        // Expectation
+        assertThat("Execution exit status", exitStatus, is(0));
+    }
+
+    @Test
+    public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
+        // Preparation
+
+        // Execution
+        final int exitStatus = executeGoals("testHelperGenerator:matchers");
+
+        // Expectation
+        assertThat("Execution exit status", exitStatus, is(0));
+    }
+
+    @Test
+    public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
+        throws Exception {
+        // Preparation
+
+        // Execution
+        final int exitStatus = executeGoals("testHelperGenerator:matchers test");
 
         // Expectation
         assertThat("Execution exit status", exitStatus, is(0));
