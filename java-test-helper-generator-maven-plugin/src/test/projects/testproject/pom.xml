@@ -37,7 +37,8 @@
 				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
 				<configuration>
 					<matcherSources>
-						<matcherSource>pck.model</matcherSource>
+						<matcherSource>some.pck.model</matcherSource>
+						<matcherSource>some.pck.model.SimpleModel</matcherSource>
 					</matcherSources>
 					<outputDir>${project.build.directory}/generated-test-sources</outputDir>
 				</configuration>
