@@ -4,23 +4,8 @@ import org.apache.commons.io.FileUtils;
 
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
-
-import org.codehaus.plexus.util.cli.CommandLineException;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-
-import static org.hamcrest.Matchers.is;
 
 import org.hamcrest.io.FileMatchers;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,101 +13,81 @@ import org.junit.Test;
 
 import java.io.File;
 
-import java.util.Arrays;
+import static org.hamcrest.CoreMatchers.equalTo;
+
+import static org.hamcrest.Matchers.is;
+
+import static org.hamcrest.io.FileMatchers.anExistingFile;
+
+import static org.junit.Assert.assertThat;
 
 
 public class MatchersMojoITest {
-    @Rule
-    public TestResources testResources = new TestResources();
-    @Rule
-    public MojoRule rule = new MojoRule();
+	@Rule
+	public TestResources testResources = new TestResources();
+	@Rule
+	public MojoRule rule = new MojoRule();
 
-    private File testProject;
+	private File testProject;
 
-    @Before
-    public void setUp() throws Exception {
-        FileUtils.deleteQuietly(testProject);
-        testProject = testResources.getBasedir("testproject");
-    }
+	@Before
+	public void setUp() throws Exception {
+		FileUtils.deleteQuietly(testProject);
+		testProject = testResources.getBasedir("testproject");
+	}
 
-    @Test
-    public void testMojoCanBeExecutedInIsulation() throws Exception {
-        final MatchersMojo myMojo = (MatchersMojo) rule.lookupMojo("matchers", pom());
-        assertNotNull(myMojo);
-        myMojo.execute();
-    }
+	@Test
+	public void testMojoCanBeExecutedInIsulation() throws Exception {
+		executeMojo("matchers");
+	}
 
-    @Test
-    public void testTestprojectShouldHavePom() throws Exception {
-        assertThat(pom(), FileMatchers.aFileNamed(equalTo("pom.xml")));
-    }
+	@Test
+	public void testPluginRunHasCreatedMatcherSource() throws Exception {
 
-    @Test
-    public void testTestprojectShouldBeBuildWithoutMojoExecution() throws Exception {
-        // Preparation
+		// Preparation
+		assertThat("For this test required file is missing",
+			inSrcMainJava("some/pck/model/SimpleModel.java"),
+			is(anExistingFile()));
 
-        // Execution
-        final int exitStatus = executeGoals("clean", "compile");
+		// Execution
+		executeMojo("matchers");
 
-        // Expectation
-        assertThat("Execution exit status", exitStatus, is(0));
-    }
+		// Expectation
+		assertThat("Should have been generated",
+			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+			is(anExistingFile()));
+	}
 
-    @Test
-    public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
-        // Preparation
+	private void executeMojo(final String goal) throws Exception {
+		rule.executeMojo(testProject, goal);
+	}
 
-        // Execution
-        final int exitStatus = executeGoals("testHelperGenerator:matchers");
+	@Test
+	public void testTestprojectShouldHavePom() throws Exception {
+		assertThat(pomFile(), FileMatchers.aFileNamed(equalTo("pom.xml")));
+	}
 
-        // Expectation
-        assertThat("Execution exit status", exitStatus, is(0));
-    }
+	private File inGeneratedTestSourcesDir(final String path) {
+		return new File(generatedTestSourcesDir(), path);
+	}
 
-    @Test
-    public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
-        throws Exception {
-        // Preparation
+	private File inSrcMainJava(final String path) {
+		return new File(getSrcMainJavaDir(), path);
+	}
 
-        // Execution
-        final int exitStatus = executeGoals("testHelperGenerator:matchers test");
+	private File getSrcMainJavaDir() {
+		return new File(testProject, "src/main/java");
+	}
 
-        // Expectation
-        assertThat("Execution exit status", exitStatus, is(0));
-    }
+	private File generatedTestSourcesDir() {
+		return new File(targetDir(), "generated-test-sources");
+	}
 
-    private File pom() {
-        return new File(testProject, "pom.xml");
-    }
+	private File targetDir() {
+		return new File(testProject, "target");
+	}
 
-    private int executeGoals(final String... goals) throws MavenInvocationException,
-        CommandLineException {
-        final InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(pom());
-        request.setGoals(Arrays.asList(goals));
-
-        final Invoker invoker = new DefaultInvoker();
-        prepareExecutableFor(invoker);
-
-        final InvocationResult result = invoker.execute(request);
-
-        if (result.getExecutionException() != null) {
-            throw result.getExecutionException();
-        }
-
-        return result.getExitCode();
-    }
-
-    private void prepareExecutableFor(final Invoker invoker) {
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            final String getenv = System.getenv("M2_HOME");
-            File mavenExecutable = new File(getenv, "bin/mvn.cmd");
-
-            if (!mavenExecutable.exists()) {
-                mavenExecutable = new File(getenv, "bin/mvn.bat");
-            }
-
-            invoker.setMavenExecutable(mavenExecutable);
-        }
-    }
+	private File pomFile() {
+		return new File(testProject, "pom.xml");
+	}
 }

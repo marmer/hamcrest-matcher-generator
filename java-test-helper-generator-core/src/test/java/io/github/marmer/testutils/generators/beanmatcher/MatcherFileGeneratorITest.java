@@ -3,8 +3,6 @@ package io.github.marmer.testutils.generators.beanmatcher;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetFactoryMethodFacadeGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGeneratorITest;
-import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGeneratorITest.SimplePojo;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;

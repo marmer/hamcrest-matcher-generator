@@ -7,7 +7,7 @@
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Test MyMojo</name>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -36,8 +36,10 @@
 				<groupId>io.github.marmer.testutils</groupId>
 				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
 				<configuration>
-					<!-- Specify the MyMojo parameter -->
-					<outputDirectory>target/test-harness/testproject</outputDirectory>
+					<matcherSources>
+						<matcherSource>pck.model</matcherSource>
+					</matcherSources>
+					<outputDir>${project.build.directory}/generated-test-sources</outputDir>
 				</configuration>
 			</plugin>
 		</plugins>
