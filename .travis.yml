@@ -7,7 +7,8 @@ cache:
 script:
   - mvn clean jacoco:prepare-agent test -U
 after_success:
-  - mvn jacoco:report
+  - mvn -f java-test-helper-generator-core/pom.xml clean jacoco:prepare-agent test jacoco:report
+  - mvn -f java-test-helper-generator-maven-plugin/pom.xml clean jacoco:prepare-agent test jacoco:report
   - mvn coveralls:report
 
 #script:
