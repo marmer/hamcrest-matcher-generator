@@ -102,6 +102,8 @@ public class MatchersMojoITest {
         request.setGoals(Arrays.asList(goals));
 
         final Invoker invoker = new DefaultInvoker();
+        prepareExecutableFor(invoker);
+
         final InvocationResult result = invoker.execute(request);
 
         if (result.getExecutionException() != null) {
@@ -109,5 +111,13 @@ public class MatchersMojoITest {
         }
 
         return result.getExitCode();
+    }
+
+    private void prepareExecutableFor(final Invoker invoker) {
+        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            final String getenv = System.getenv("M2_HOME");
+            final File mavenExecutable = new File(getenv, "bin/mvn.cmd");
+            invoker.setMavenExecutable(mavenExecutable);
+        }
     }
 }
