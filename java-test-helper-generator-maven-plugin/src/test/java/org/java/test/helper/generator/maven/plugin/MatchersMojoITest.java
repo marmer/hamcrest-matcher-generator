@@ -54,13 +54,11 @@ public class MatchersMojoITest {
     }
 
     @Test
-    @Ignore("temporary ignore")
     public void testTestprojectShouldHavePom() throws Exception {
         assertThat(pom(), FileMatchers.aFileNamed(equalTo("pom.xml")));
     }
 
     @Test
-    @Ignore("temporary ignore")
     public void testTestprojectShouldBeBuildWithoutMojoExecution() throws Exception {
         // Preparation
 
