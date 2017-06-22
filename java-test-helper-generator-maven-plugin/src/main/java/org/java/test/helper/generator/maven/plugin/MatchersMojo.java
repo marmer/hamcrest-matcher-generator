@@ -41,10 +41,6 @@ public class MatchersMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        if (true) {
-            throw new MojoExecutionException("Life is fun");
-        }
-
         final File f = outputDirectory;
 
         if (!f.exists()) {
