@@ -55,6 +55,7 @@ public class MatchersMojoITest {
 		executeMojo("matchers");
 
 		// Expectation
+		print(inGeneratedTestSourcesDir("some/pck/model/"));
 		assertThat("Should have been generated: " + inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
 			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
 			is(anExistingFile()));
