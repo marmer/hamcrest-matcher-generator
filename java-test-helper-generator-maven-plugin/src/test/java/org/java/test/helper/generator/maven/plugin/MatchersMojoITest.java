@@ -91,7 +91,12 @@ public class MatchersMojoITest {
 
 	private File print(final File dir) {
 		System.out.println("Content of " + dir);
-		Arrays.stream(dir.list()).forEach(System.out::println);
+		final String[] list = dir.list();
+		if ((list == null) || (list.length == 0)) {
+			System.out.println("empty");
+		} else {
+			Arrays.stream(list).forEach(System.out::println);
+		}
 		System.out.println("---");
 		return dir;
 	}
