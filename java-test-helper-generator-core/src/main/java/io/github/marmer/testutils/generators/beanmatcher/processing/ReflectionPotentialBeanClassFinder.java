@@ -2,6 +2,8 @@ package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import com.google.common.base.Objects;
 
+import lombok.extern.apachecommons.CommonsLog;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
  * @author  marmer
  * @date    18.06.2017
  */
+@CommonsLog
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
 	private final Collection<URL> classLoaderURLs;
 	private ClassLoader[] classLoaders;
@@ -36,6 +39,11 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 	public ReflectionPotentialBeanClassFinder(final ClassLoader... classLoaders) {
 		this.classLoaders = classLoaders;
 		this.classLoaderURLs = ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
+
+		if (log.isDebugEnabled()) {
+			log.debug("Classloader URLs: " +
+				classLoaderURLs.stream().map(Object::toString).collect(Collectors.joining("; ")));
+		}
 	}
 
 	@Override
