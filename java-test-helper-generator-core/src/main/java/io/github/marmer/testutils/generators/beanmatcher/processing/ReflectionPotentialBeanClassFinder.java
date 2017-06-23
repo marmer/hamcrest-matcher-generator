@@ -31,8 +31,10 @@ import java.util.stream.Collectors;
  */
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
 	private final Collection<URL> classLoaderURLs;
+	private ClassLoader[] classLoaders;
 
 	public ReflectionPotentialBeanClassFinder(final ClassLoader... classLoaders) {
+		this.classLoaders = classLoaders;
 		this.classLoaderURLs = ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
 	}
 
@@ -54,9 +56,22 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 		if (StringUtils.isBlank(packageName)) {
 			return Collections.emptySet();
 		}
-		final Reflections reflections = new Reflections(packageName,
-		        classLoaderURLs, new SubTypesScanner(false));
-		return reflections.getSubTypesOf(Object.class);
+		final Set<Class<?>> results = new HashSet<>();
+
+		results.addAll(classesByClassloaderFor(packageName));
+		results.addAll(classesByClassLoaderUrlsFor(packageName));
+
+		return results;
+	}
+
+	private Set<Class<? extends Object>> classesByClassLoaderUrlsFor(final String packageName) {
+		return new Reflections(packageName,
+				classLoaderURLs, new SubTypesScanner(false)).getSubTypesOf(Object.class);
+	}
+
+	private Set<Class<? extends Object>> classesByClassloaderFor(final String packageName) {
+		return new Reflections(packageName, classLoaders,
+				new SubTypesScanner(false)).getSubTypesOf(Object.class);
 	}
 
 	private boolean isRelevant(final Class<?> clazz) {
