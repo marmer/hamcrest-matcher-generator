@@ -13,6 +13,8 @@ import org.junit.Test;
 
 import java.io.File;
 
+import java.util.Arrays;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import static org.hamcrest.Matchers.is;
@@ -68,23 +70,30 @@ public class MatchersMojoITest {
 	}
 
 	private File inGeneratedTestSourcesDir(final String path) {
-		return new File(generatedTestSourcesDir(), path);
+		return print(new File(generatedTestSourcesDir(), path));
 	}
 
 	private File inSrcMainJava(final String path) {
-		return new File(getSrcMainJavaDir(), path);
+		return print(new File(getSrcMainJavaDir(), path));
 	}
 
 	private File getSrcMainJavaDir() {
-		return new File(testProject, "src/main/java");
+		return print(new File(testProject, "src/main/java"));
 	}
 
 	private File generatedTestSourcesDir() {
-		return new File(targetDir(), "generated-test-sources");
+		return print(new File(targetDir(), "generated-test-sources"));
 	}
 
 	private File targetDir() {
-		return new File(testProject, "target");
+		return print(new File(testProject, "target"));
+	}
+
+	private File print(final File dir) {
+		System.out.println("Content of " + dir);
+		Arrays.stream(dir.list()).forEach(System.out::println);
+		System.out.println("---");
+		return dir;
 	}
 
 	private File pomFile() {
