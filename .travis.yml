@@ -8,6 +8,8 @@ cache:
   directories:
     - "$HOME/.m2"
 #    - "$HOME/docker"
+before_install:
+  - chmod +x mvnw
 script:
   - ./mvnw clean jacoco:prepare-agent test -U
 #  - docker run -it --name my-maven-project -v $HOME/.m2/repository:/root/.m2/repository/ -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8-alpine mvn clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven -U
