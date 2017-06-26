@@ -125,7 +125,9 @@ public class MatchersMojo extends AbstractMojo {
 			try {
 				urls.add(path.toUri().toURL());
 			} catch (MalformedURLException e) {
+
 				// TODO care about it!
+				throw new RuntimeException("somethign bad happened", e);
 			}
 		}
 
