@@ -50,8 +50,9 @@ public class MatchersMojoSystemTest {
 		assertThat(pomFile(), FileMatchers.aFileNamed(equalTo("pom.xml")));
 	}
 
+	// TODO move the tests to another module!
 	@Test
-	public void testTestprojectShouldBeBuildWithoutMojoExecution() throws Exception {
+	public void testTestprojectShouldBeBuildableWithoutMojoExecution() throws Exception {
 		// Preparation
 
 		// Execution
