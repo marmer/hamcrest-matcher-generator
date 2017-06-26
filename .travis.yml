@@ -10,6 +10,6 @@ cache:
 before_script:
   - export
 script:
-  - docker run -it --rm --name my-maven-project -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven
+  - docker run -it --rm --name my-maven-project -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8 mvn install clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven
 after_success:
   - mvn jacoco:report coveralls:report
