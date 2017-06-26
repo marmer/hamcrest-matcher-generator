@@ -35,6 +35,7 @@
 			<plugin>
 				<groupId>io.github.marmer.testutils</groupId>
 				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
 				<configuration>
 					<matcherSources>
 						<matcherSource>some.pck.model</matcherSource>
