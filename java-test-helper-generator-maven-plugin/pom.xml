@@ -14,10 +14,6 @@
 
 	<name>java-test-helper-generator-maven-plugin</name>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
@@ -52,11 +48,6 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.shared</groupId>
-			<artifactId>maven-invoker</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
