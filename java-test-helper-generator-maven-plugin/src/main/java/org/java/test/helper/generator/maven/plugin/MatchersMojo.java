@@ -60,7 +60,7 @@ import java.util.List;
  */
 @Mojo(
 	name = "matchers",
-	defaultPhase = LifecyclePhase.PROCESS_SOURCES,
+	defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES,
 	threadSafe = false,
 	requiresDependencyResolution = ResolutionScope.COMPILE,
 	requiresProject = true
