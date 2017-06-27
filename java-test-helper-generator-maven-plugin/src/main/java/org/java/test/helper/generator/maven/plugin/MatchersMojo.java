@@ -64,8 +64,7 @@ import java.util.List;
 	defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES,
 	threadSafe = false,
 	requiresDependencyResolution = ResolutionScope.COMPILE,
-	requiresProject = true,
-	requiresDirectInvocation = false
+	requiresProject = true
 )
 @Execute(phase = LifecyclePhase.PROCESS_CLASSES)
 public class MatchersMojo extends AbstractMojo {

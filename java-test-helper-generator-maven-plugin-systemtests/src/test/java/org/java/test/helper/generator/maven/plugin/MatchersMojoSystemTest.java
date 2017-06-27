@@ -74,7 +74,7 @@ public class MatchersMojoSystemTest {
     public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
         throws Exception {
         // Preparation
-        // hier
+
         // Execution
         final int exitStatus = executeGoals("testHelperGenerator:matchers", "test");
 
@@ -83,7 +83,7 @@ public class MatchersMojoSystemTest {
     }
 
     @Test
-    public void testPluginRunHasCreatedMatcherSource() throws Exception {
+    public void testPluginRunHasCreatedMatcherSourceOnCallingPluginGoalDirectly() throws Exception {
         // Preparation
         assertThat("For this test required file is missing",
             inSrcMainJava("some/pck/model/SimpleModel.java"),
@@ -91,6 +91,24 @@ public class MatchersMojoSystemTest {
 
         // Execution
         executeGoals("testHelperGenerator:matchers");
+
+        // Expectation
+        assertThat(
+            "Should have been generated: " +
+            inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+            inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+            is(anExistingFile()));
+    }
+
+    @Test
+    public void testPluginRunHasCreatedMatcherSourceOnTestGoal() throws Exception {
+        // Preparation
+        assertThat("For this test required file is missing",
+            inSrcMainJava("some/pck/model/SimpleModel.java"),
+            is(anExistingFile()));
+
+        // Execution
+        executeGoals("test");
 
         // Expectation
         assertThat(
@@ -144,8 +162,7 @@ public class MatchersMojoSystemTest {
 
     private void prepareExecutableFor(final Invoker invoker) {
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            // final String getenv = System.getenv("M2_HOME");
-            final String getenv = "C:\\opt\\apache-maven-3.5.0";
+            final String getenv = System.getenv("M2_HOME");
             File mavenExecutable = new File(getenv, "bin/mvn.cmd");
 
             if (!mavenExecutable.exists()) {
