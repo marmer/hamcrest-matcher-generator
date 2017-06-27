@@ -26,7 +26,6 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -54,8 +53,6 @@ import java.util.List;
  *
  * <p>The generated classes will be in the same package as the base of the classes.</p>
  *
- * <p>TODO ignore errors!</p>
- *
  * @author  marmer
  * @date    21.06.2017
  */
@@ -72,9 +69,14 @@ public class MatchersMojo extends AbstractMojo {
 
 	private static final String FACADE_NAME = "BeanPropertyMatchers";
 
-	@Component
+	/** The Project itself. */
+	@Parameter(
+		defaultValue = "${project}",
+		readonly = true
+	)
 	private MavenProject project;
 
+	/** Packages of classes or qualified class names used to generate matchers for. */
 	@Parameter(
 		required = true,
 		defaultValue = "${project.groupId}"
@@ -127,9 +129,7 @@ public class MatchersMojo extends AbstractMojo {
 			try {
 				urls.add(path.toUri().toURL());
 			} catch (MalformedURLException e) {
-
-				// TODO care about it!
-				throw new RuntimeException("somethign bad happened", e);
+				throw new RuntimeException("This shuold not happen", e);
 			}
 		}
 

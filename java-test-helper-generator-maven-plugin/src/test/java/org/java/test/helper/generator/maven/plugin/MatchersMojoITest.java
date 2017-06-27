@@ -4,15 +4,24 @@ import org.apache.commons.io.FileUtils;
 
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
+
+import org.codehaus.plexus.util.cli.CommandLineException;
 
 import org.hamcrest.io.FileMatchers;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+
+import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 
@@ -35,6 +44,7 @@ public class MatchersMojoITest {
 	public void setUp() throws Exception {
 		FileUtils.deleteQuietly(testProject);
 		testProject = testResources.getBasedir("testproject");
+		executeGoals("compile");
 	}
 
 	@Test
@@ -43,7 +53,6 @@ public class MatchersMojoITest {
 	}
 
 	@Test
-	@Ignore // TODO think about it
 	public void testPluginRunHasCreatedMatcherSource() throws Exception {
 
 		// Preparation
@@ -91,5 +100,35 @@ public class MatchersMojoITest {
 
 	private File pomFile() {
 		return new File(testProject, "pom.xml");
+	}
+
+	private int executeGoals(final String... goals) throws MavenInvocationException, CommandLineException {
+		final InvocationRequest request = new DefaultInvocationRequest();
+		request.setPomFile(pomFile());
+		request.setGoals(Arrays.asList(goals));
+
+		final Invoker invoker = new DefaultInvoker();
+		prepareExecutableFor(invoker);
+
+		final InvocationResult result = invoker.execute(request);
+
+		if (result.getExecutionException() != null) {
+			throw result.getExecutionException();
+		}
+
+		return result.getExitCode();
+	}
+
+	private void prepareExecutableFor(final Invoker invoker) {
+		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+			final String getenv = System.getenv("M2_HOME");
+			File mavenExecutable = new File(getenv, "bin/mvn.cmd");
+
+			if (!mavenExecutable.exists()) {
+				mavenExecutable = new File(getenv, "bin/mvn.bat");
+			}
+
+			invoker.setMavenExecutable(mavenExecutable);
+		}
 	}
 }
