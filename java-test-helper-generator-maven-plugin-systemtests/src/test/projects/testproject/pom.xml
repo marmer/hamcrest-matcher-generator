@@ -46,7 +46,6 @@
 				<executions>
 					<execution>
 						<id>matchers</id>
-						<phase>generate-test-sources</phase>
 						<goals>
 							<goal>matchers</goal>
 						</goals>
