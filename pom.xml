@@ -21,6 +21,7 @@
 	<modules>
 		<module>java-test-helper-generator-core</module>
 		<module>java-test-helper-generator-maven-plugin</module>
+		<module>java-test-helper-generator-maven-plugin-systemtests</module>
 	</modules>
 
 	<properties>
