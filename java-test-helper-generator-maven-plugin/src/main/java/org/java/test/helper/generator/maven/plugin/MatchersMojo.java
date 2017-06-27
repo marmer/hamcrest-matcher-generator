@@ -27,6 +27,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -63,8 +64,10 @@ import java.util.List;
 	defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES,
 	threadSafe = false,
 	requiresDependencyResolution = ResolutionScope.COMPILE,
-	requiresProject = true
+	requiresProject = true,
+	requiresDirectInvocation = false
 )
+@Execute(phase = LifecyclePhase.PROCESS_CLASSES)
 public class MatchersMojo extends AbstractMojo {
 	private static final String FACADE_PACKAGE = "io.github.marmer.testutils";
 

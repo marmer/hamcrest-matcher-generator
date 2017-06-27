@@ -43,6 +43,15 @@
 					</matcherSources>
 					<outputDir>${project.build.directory}/generated-test-sources</outputDir>
 				</configuration>
+				<executions>
+					<execution>
+						<id>matchers</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>matchers</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
