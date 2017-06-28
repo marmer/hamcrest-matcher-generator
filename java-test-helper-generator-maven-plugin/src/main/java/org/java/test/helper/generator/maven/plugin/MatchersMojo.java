@@ -45,6 +45,7 @@ import java.nio.file.Paths;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -135,12 +136,6 @@ public class MatchersMojo extends AbstractMojo {
 	}
 
 	private List<Path> toPath(final List<String> stringPaths) {
-		final List<Path> paths = new LinkedList<>();
-
-		for (final String path : stringPaths) {
-			paths.add(Paths.get(path));
-		}
-
-		return paths;
+		return stringPaths.stream().map(Paths::get).collect(Collectors.toList());
 	}
 }
