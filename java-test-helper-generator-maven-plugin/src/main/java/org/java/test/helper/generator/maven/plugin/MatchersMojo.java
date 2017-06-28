@@ -113,7 +113,7 @@ public class MatchersMojo extends AbstractMojo {
 				hasPropertyMatcherClassGenerator,
 				new JavaPoetFactoryMethodFacadeGenerator(outputDir.toPath(), FACADE_PACKAGE,
 					FACADE_NAME),
-				new CommonsJciJavaFileClassLoader(outputDir.toPath()));
+				new CommonsJciJavaFileClassLoader(outputDir.toPath(), classLoader));
 
 		try {
 			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);

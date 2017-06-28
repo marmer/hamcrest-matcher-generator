@@ -17,6 +17,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 
+/**
+ * The Class CommonsJciJavaFileClassLoader.
+ *
+ * @author  MarMer
+ * @since   28.06.2017
+ * @date    $Date$
+ */
 @CommonsLog
 public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {
 	private static final String SOURCE_ENCODING = "UTF-8";
@@ -25,21 +32,32 @@ public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {
 	private final JavaCompiler compiler = new JavaCompilerFactory().createCompiler("eclipse");
 	private final JavaCompilerSettings compilerSettings = compiler.createDefaultSettings();
 	private final Path sourceBaseDir;
+	private ClassLoader classLoader;
 
-	public CommonsJciJavaFileClassLoader(final Path sourceBaseDir) {
+	/**
+	 * Instantiates a new commons jci java file class loader.
+	 *
+	 * @param  sourceBaseDir  the source base dir
+	 * @param  classLoader    the class loader
+	 */
+	public CommonsJciJavaFileClassLoader(final Path sourceBaseDir, final ClassLoader classLoader) {
 		this.sourceBaseDir = sourceBaseDir;
+		this.classLoader = classLoader;
 
 		compilerSettings.setSourceEncoding(SOURCE_ENCODING);
 		compilerSettings.setSourceVersion(JAVA_VERSION);
 		compilerSettings.setTargetVersion(JAVA_VERSION);
 	}
 
+	/* (non-Javadoc)
+	 * @see io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader#load(java.util.List)
+	 */
 	@Override
 	public List<Class<?>> load(final List<Path> sourceFiles) {
 		final FileResourceReader sourceFolderResource = new FileResourceReader(sourceBaseDir.toFile());
 
 		final MemoryResourceStore pStore = new MemoryResourceStore();
-		compiler.compile(resourcePathOf(sourceFiles), sourceFolderResource, pStore, getClass().getClassLoader(),
+		compiler.compile(resourcePathOf(sourceFiles), sourceFolderResource, pStore, classLoader,
 			compilerSettings);
 
 		return loadClassesFor(sourceFiles, pStore);
@@ -67,7 +85,7 @@ public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {
 
 	private Class<?> loadClass(final String qualifiedClassName, final MemoryResourceStore pStore) {
 		try {
-			final ClassLoader classLoader = new ResourceStoreClassLoader(getClass().getClassLoader(),
+			final ClassLoader classLoader = new ResourceStoreClassLoader(this.classLoader,
 					new ResourceStore[] {
 						pStore
 					});

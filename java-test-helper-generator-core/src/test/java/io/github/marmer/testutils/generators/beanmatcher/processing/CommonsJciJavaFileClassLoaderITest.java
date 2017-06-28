@@ -8,8 +8,6 @@ import org.junit.Test;
 
 import org.junit.rules.TemporaryFolder;
 
-import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
-
 import java.io.IOException;
 
 import java.nio.file.Files;
@@ -47,6 +45,7 @@ public class CommonsJciJavaFileClassLoaderITest {
 
 	private Path sourceBaseDir;
 	private Path javaFile;
+	private final ClassLoader classLoader = getClass().getClassLoader();
 
 	@Before
 	public void setUp() throws Exception {
@@ -72,7 +71,7 @@ public class CommonsJciJavaFileClassLoaderITest {
 	}
 
 	private void initClassUnderTest() throws Exception {
-		classUnderTest = new CommonsJciJavaFileClassLoader(sourceBaseDir);
+		classUnderTest = new CommonsJciJavaFileClassLoader(sourceBaseDir, classLoader);
 	}
 
 	@Test

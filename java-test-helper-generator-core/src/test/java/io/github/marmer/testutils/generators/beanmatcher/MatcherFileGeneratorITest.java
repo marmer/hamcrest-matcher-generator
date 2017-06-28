@@ -46,6 +46,7 @@ public class MatcherFileGeneratorITest {
 	private Path srcOutputDir;
 	private Path classOutputDir;
 	private GeneratedFileCompiler compiler;
+	private final ClassLoader classLoader = getClass().getClassLoader();
 
 	@Before
 	public void setUp() throws Exception {
@@ -63,7 +64,7 @@ public class MatcherFileGeneratorITest {
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
 				new JavaPoetFactoryMethodFacadeGenerator(srcOutputDir, GeneratedFileCompiler.FACADE_PACKAGE,
 					GeneratedFileCompiler.FACADE_NAME),
-				new CommonsJciJavaFileClassLoader(srcOutputDir));
+				new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader));
 	}
 
 	public void prepareOutputDir() throws Exception {
