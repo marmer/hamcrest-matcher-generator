@@ -11,16 +11,20 @@ import org.junit.rules.ExpectedException;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import org.mockito.quality.Strictness;
 
+import java.io.File;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -36,6 +40,9 @@ public class MatchersMojoTest {
 
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
+
+	@Spy
+	private File outputDir = new File("outputDir");
 
 	@Test
 	public void testExecute_MavenClassloaderIsNotAbleToResolveRequiredDependencies_ShouldBreakTheBuild()
@@ -53,7 +60,17 @@ public class MatchersMojoTest {
 
 		// Execution
 		classUnderTest.execute();
+	}
 
+	@Test
+	public void testExecute_OutputDirGiven_OutputDirPathShouldBeUsedAsTestSource() throws Exception {
+		// Preparation
+
+		// Execution
+		classUnderTest.execute();
+
+		// Assertion
+		verify(mavenProject).addTestCompileSourceRoot(outputDir.toString());
 	}
 
 }
