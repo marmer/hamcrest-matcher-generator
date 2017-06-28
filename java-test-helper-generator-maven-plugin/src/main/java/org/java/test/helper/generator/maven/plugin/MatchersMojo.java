@@ -93,7 +93,6 @@ public class MatchersMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-
 		final ClassLoader classLoader;
 		try {
 			classLoader = new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
@@ -106,12 +105,11 @@ public class MatchersMojo extends AbstractMojo {
 				classLoader);
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 		final JavaPoetHasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
-			new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
-				outputDir.toPath());
+			new JavaPoetHasPropertyMatcherClassGenerator(
+				propertyExtractor, outputDir.toPath());
 		final MatcherFileGenerator matcherFileGenerator = new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				new JavaPoetFactoryMethodFacadeGenerator(outputDir.toPath(), FACADE_PACKAGE,
-					FACADE_NAME),
+				new JavaPoetFactoryMethodFacadeGenerator(outputDir.toPath(), FACADE_PACKAGE, FACADE_NAME),
 				new CommonsJciJavaFileClassLoader(outputDir.toPath(), classLoader));
 
 		try {
@@ -119,6 +117,7 @@ public class MatchersMojo extends AbstractMojo {
 		} catch (IOException e) {
 			throw new MojoFailureException("Something went wront", e);
 		}
+		project.addTestCompileSourceRoot(outputDir.toString());
 	}
 
 	private URL[] toUrls(final List<Path> classpathRootPaths) {
