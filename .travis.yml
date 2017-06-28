@@ -6,7 +6,10 @@ services:
 cache:
   directories:
     - "$HOME/docker"
+    - "$HOME/.m2/repository"
+install:
+  - docker run -it --name my-maven-project-install -v $HOME/.m2/repository:/root/.m2/repository/ -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8-alpine mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 script:
-  - docker run -it --name my-maven-project -v $HOME/.m2/repository:/root/.m2/repository/ -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8-alpine mvn clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven -U -X
+  - docker run -it --name my-maven-project-test -v $HOME/.m2/repository:/root/.m2/repository/ -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8-alpine mvn clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven -U -X -V
 after_success:
-  - mvn jacoco:report coveralls:report
+  - docker run -it --name my-maven-project-report -v $HOME/.m2/repository:/root/.m2/repository/ -v "$PWD":/usr/src/mymaven -w /usr/src/mymaven maven:3.5-jdk-8-alpine mvn jacoco:report coveralls:report -V
