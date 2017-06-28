@@ -97,10 +97,8 @@ public class MatchersMojo extends AbstractMojo {
 		try {
 			classLoader = new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
 					getClass().getClassLoader());
-		} catch (DependencyResolutionRequiredException e1) {
-
-			// TODO care about me
-			throw new MojoFailureException("Cannot access Dependencies");
+		} catch (DependencyResolutionRequiredException e) {
+			throw new MojoFailureException("Cannot access Dependencies", e);
 		}
 
 		final ReflectionPotentialBeanClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
