@@ -4,11 +4,16 @@ sudo: false
 cache:
   directories:
     - "$HOME/.m2/repository"
+    - "$HOME/apache-maven-3.5.0"
 before_cache:
   - rm -rfv $HOME/.m2/repository/io/github/marmer
+before_install:
+  - export M2_HOME=$HOME/apache-maven-3.5.0
+  - if [ ! -d $M2_HOME/bin ]; then curl https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz | tar zxf - -C $HOME; fi
+  - export PATH=$M2_HOME/bin:$PATH
 install:
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 script:
-  - mvn clean jacoco:prepare-agent test -Dmaven.home=/usr/share/maven -U -X -V
+  - mvn clean jacoco:prepare-agent test -U -X -V
 after_success:
   - mvn jacoco:report coveralls:report -V
