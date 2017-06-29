@@ -2,9 +2,9 @@ package io.github.marmer.testutils.generators.beanmatcher.generation;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
@@ -26,7 +26,6 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -127,14 +126,8 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 				parameterNameDescription, Modifier.FINAL).addModifiers(Modifier.PROTECTED).build();
 	}
 
-	private Iterable<MethodSpec> propertyMethods(final Class<?> type) {
-
-		final List<MethodSpec> methods = new ArrayList<>();
-		for (final BeanProperty property : propertyExtractor.getPropertiesOf(type)) {
-			methods.add(propertyMethodFor(property.getName(), type));
-		}
-
-		return methods;
+	private List<MethodSpec> propertyMethods(final Class<?> type) {
+		return propertyExtractor.getPropertiesOf(type).stream().map(property -> propertyMethodFor(property.getName(), type)).collect(Collectors.toList());		
 	}
 
 	private MethodSpec propertyMethodFor(final String propertyName, final Class<?> type) {
