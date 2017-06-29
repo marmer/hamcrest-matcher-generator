@@ -1,7 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetFactoryMethodFacadeGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BasedOn;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 
 import org.junit.Before;
