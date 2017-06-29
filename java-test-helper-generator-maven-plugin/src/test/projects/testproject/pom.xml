@@ -17,6 +17,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>io.github.marmer.testutils</groupId>
+			<artifactId>java-test-helper-generator-dependencies</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest-all</artifactId>
 			<version>1.3</version>
