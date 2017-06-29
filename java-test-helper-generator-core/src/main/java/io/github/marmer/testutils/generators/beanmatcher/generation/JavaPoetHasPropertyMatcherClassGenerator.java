@@ -1,5 +1,19 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.annotation.Generated;
+import javax.lang.model.element.Modifier;
+
+import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -15,24 +29,6 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanProper
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import lombok.extern.apachecommons.CommonsLog;
-
-import org.apache.commons.lang3.StringUtils;
-
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-
-import java.io.IOException;
-
-import java.nio.file.Path;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.Generated;
-
-import javax.lang.model.element.Modifier;
 
 
 /**
@@ -87,7 +83,12 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 		return TypeSpec.classBuilder(matcherNameFor(type)).addModifiers(Modifier.PUBLIC).superclass(
 				parameterizedTypesafeMatchertype(type)).addField(innerMatcherField(type))
 			.addMethod(constructor(type)).addAnnotations(generatedAnnotations(type)).addMethods(
-				propertyMethods(type)).addMethods(addTypesafeMatcherMethods(type)).build();
+				propertyMethods(type)).addMethods(typesafeMatcherMethods(type)).addMethod(factoryMethod(type)).build();
+	}
+
+	private MethodSpec factoryMethod(Class<?> type) { 
+		return MethodSpec.methodBuilder(StringUtils.uncapitalize(type.getSimpleName())).addStatement("return new $L()", matcherNameFor(type)).returns(classNameOfGeneratedTypeFor(
+					type)).addModifiers(Modifier.STATIC, Modifier.PUBLIC).build();
 	}
 
 	private FieldSpec innerMatcherField(final Class<?> type) {
@@ -95,7 +96,7 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 					type), INNER_MATCHER_FIELD_NAME, Modifier.PRIVATE, Modifier.FINAL).build();
 	}
 
-	private Iterable<MethodSpec> addTypesafeMatcherMethods(final Class<?> type) {
+	private Iterable<MethodSpec> typesafeMatcherMethods(final Class<?> type) {
 		return Arrays.asList(describeToMethod(), matchesSafelyMathod(type), describeMismatchSafelyMethod(type));
 	}
 
