@@ -10,8 +10,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BasedOn;
-import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BeanPropertyMatcher;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import lombok.extern.apachecommons.CommonsLog;

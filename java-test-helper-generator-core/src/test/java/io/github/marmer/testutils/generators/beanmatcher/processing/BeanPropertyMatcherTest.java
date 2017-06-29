@@ -9,7 +9,7 @@ import org.hamcrest.StringDescription;
 
 import org.junit.Test;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BeanPropertyMatcher;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 
 import static org.hamcrest.CoreMatchers.containsString;
 

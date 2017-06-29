@@ -4,7 +4,7 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.dependencies.BasedOn;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import lombok.extern.apachecommons.CommonsLog;
 
 import org.apache.commons.lang3.StringUtils;
