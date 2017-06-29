@@ -1,11 +1,16 @@
 package org.java.test.helper.generator.maven.plugin;
 
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.FactoryMethodFacadeGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetFactoryMethodFacadeGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -101,16 +106,20 @@ public class MatchersMojo extends AbstractMojo {
 			throw new MojoFailureException("Cannot access Dependencies", e);
 		}
 
-		final ReflectionPotentialBeanClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
+		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
 				classLoader);
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-		final JavaPoetHasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
+		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
 			new JavaPoetHasPropertyMatcherClassGenerator(
 				propertyExtractor, outputDir.toPath());
-		final MatcherFileGenerator matcherFileGenerator = new MatcherFileGenerator(potentialPojoClassFinder,
+		final FactoryMethodFacadeGenerator factoryMethodFacadeGenerator = new JavaPoetFactoryMethodFacadeGenerator(
+				outputDir.toPath(), FACADE_PACKAGE, FACADE_NAME);
+		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(outputDir.toPath(),
+				classLoader);
+		final MatcherGenerator matcherFileGenerator = new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				new JavaPoetFactoryMethodFacadeGenerator(outputDir.toPath(), FACADE_PACKAGE, FACADE_NAME),
-				new CommonsJciJavaFileClassLoader(outputDir.toPath(), classLoader));
+				factoryMethodFacadeGenerator,
+				javaFileClassLoader);
 
 		try {
 			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
