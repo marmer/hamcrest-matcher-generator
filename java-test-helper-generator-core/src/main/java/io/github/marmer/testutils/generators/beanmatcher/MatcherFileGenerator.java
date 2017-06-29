@@ -24,7 +24,7 @@ import java.util.List;
  * @date    20.06.2017
  */
 @CommonsLog
-public class MatcherFileGenerator implements TestHelperMatcherGenerator {
+public class MatcherFileGenerator implements MatcherGenerator {
 	private final PotentialPojoClassFinder potentialPojoClassFinder;
 	private final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 

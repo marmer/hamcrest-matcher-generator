@@ -38,7 +38,7 @@ import static org.junit.Assert.assertThat;
 public class MatcherFileGeneratorITest {
 
 	private PotentialPojoClassFinder potentialPojoClassFinder;
-	private TestHelperMatcherGenerator classUnderTest;
+	private MatcherGenerator classUnderTest;
 	private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 
 	@Rule
