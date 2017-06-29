@@ -14,6 +14,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>io.github.marmer.testutils</groupId>
+			<artifactId>java-test-helper-generator-dependencies</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.squareup</groupId>
 			<artifactId>javapoet</artifactId>
 		</dependency>

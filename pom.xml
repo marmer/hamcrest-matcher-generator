@@ -19,6 +19,7 @@
 	<inceptionYear>2017</inceptionYear>
 
 	<modules>
+		<module>java-test-helper-generator-dependencies</module>
 		<module>java-test-helper-generator-core</module>
 		<module>java-test-helper-generator-maven-plugin</module>
 	</modules>
