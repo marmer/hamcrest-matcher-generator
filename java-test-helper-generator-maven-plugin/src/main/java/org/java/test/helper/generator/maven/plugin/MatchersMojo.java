@@ -83,10 +83,7 @@ public class MatchersMojo extends AbstractMojo {
 	private MavenProject project;
 
 	/** Packages of classes or qualified class names used to generate matchers for. */
-	@Parameter(
-		required = true,
-		defaultValue = "${project.groupId}"
-	)
+	@Parameter(required = true)
 	private String[] matcherSources;
 
 	/** Location where to put the generated sources to. */
