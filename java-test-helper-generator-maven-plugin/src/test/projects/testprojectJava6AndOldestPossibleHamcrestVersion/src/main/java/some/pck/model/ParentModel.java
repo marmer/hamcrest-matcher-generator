@@ -16,6 +16,18 @@ public class ParentModel {
 		this.someChildModel = someChildModel;
 	}
 
+	public String getSomePropertyOfTypeString() {
+		return somePropertyOfTypeString;
+	}
+
+	public Integer getSomePropertyOfTypeInteger() {
+		return somePropertyOfTypeInteger;
+	}
+
+	public ChildModel getSomeChildModel() {
+		return someChildModel;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

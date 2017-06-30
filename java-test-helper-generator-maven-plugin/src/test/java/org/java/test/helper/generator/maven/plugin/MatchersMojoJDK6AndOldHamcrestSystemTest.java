@@ -1,7 +1,14 @@
 package org.java.test.helper.generator.maven.plugin;
 
-import org.apache.commons.io.FileUtils;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.io.FileMatchers.anExistingFile;
+import static org.junit.Assert.assertThat;
 
+import java.io.File;
+import java.util.Arrays;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.resources.TestResources;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -9,29 +16,14 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-
 import org.codehaus.plexus.util.cli.CommandLineException;
-
 import org.hamcrest.io.FileMatchers;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 
-import java.util.Arrays;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-
-import static org.hamcrest.Matchers.is;
-
-import static org.hamcrest.io.FileMatchers.anExistingFile;
-
-import static org.junit.Assert.assertThat;
-
-
-public class MatchersMojoSystemTest {
+public abstract class MatchersMojoJDK6AndOldHamcrestSystemTest { 
 	@Rule
 	public TestResources testResources = new TestResources();
 
@@ -40,8 +32,9 @@ public class MatchersMojoSystemTest {
 	@Before
 	public void setUp() throws Exception {
 		FileUtils.deleteQuietly(testProject);
-		testProject = testResources.getBasedir("testproject");
+		testProject = testResources.getBasedir("testprojectJava6AndOldestPossibleHamcrestVersion");
 	}
+
 
 	@Test
 	public void testTestprojectShouldHavePom() throws Exception {

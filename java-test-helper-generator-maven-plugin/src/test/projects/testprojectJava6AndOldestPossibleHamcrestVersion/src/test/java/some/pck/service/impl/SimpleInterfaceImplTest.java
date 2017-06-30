@@ -18,7 +18,7 @@ public class SimpleInterfaceImplTest {
 	}
 	
 	@Test
-	public void testMethodenname_Vorbedingung_ErwartetesVerhalten() throws Exception {
+	public void testMatchingWithStaticMethod() throws Exception {
 		assertThat(new SimpleModel("someValue"), is(simpleModel().withSomeProperty(equalTo("someValue"))));
 	}
 
