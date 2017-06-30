@@ -34,6 +34,7 @@ public class MatchersMojoITest {
 	public void testPluginRunHasCreatedMatcherSource() throws Exception {
 
 		// Preparation
+		testProject.executeGoals("compile");
 		assertThat("For this test required file is missing",
 			testProject.srcMainJava("some/pck/model/SimpleModel.java"),
 			is(anExistingFile()));
