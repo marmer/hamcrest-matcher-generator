@@ -21,8 +21,7 @@ import java.util.Arrays;
 
 
 public class TestProjectResource extends TestResources {
-
-	private File testProject;
+	private File baseDir;
 
 	public TestProjectResource(final String projectName) {
 		super();
@@ -33,11 +32,15 @@ public class TestProjectResource extends TestResources {
 		}
 	}
 
+	public File getBaseDir() {
+		return baseDir;
+	}
+
 	@Override
 	public File getBasedir(final String projectName) throws IOException {
-		FileUtils.deleteQuietly(testProject);
-		testProject = super.getBasedir("projectName");
-		return testProject;
+		FileUtils.deleteQuietly(baseDir);
+		baseDir = super.getBasedir("projectName");
+		return baseDir;
 	}
 
 	@Override
@@ -59,7 +62,7 @@ public class TestProjectResource extends TestResources {
 	}
 
 	public File getSrcMainJavaDir() {
-		return new File(testProject, "src/main/java");
+		return new File(baseDir, "src/main/java");
 	}
 
 	public File generatedTestSourcesDir() {
@@ -67,11 +70,11 @@ public class TestProjectResource extends TestResources {
 	}
 
 	public File targetDir() {
-		return new File(testProject, "target");
+		return new File(baseDir, "target");
 	}
 
 	public File pomFile() {
-		return new File(testProject, "pom.xml");
+		return new File(baseDir, "pom.xml");
 	}
 
 	public int executeGoals(
