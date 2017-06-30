@@ -50,3 +50,4 @@ hs_err_pid*
 /.project
 /.settings/
 
+.*.md.html

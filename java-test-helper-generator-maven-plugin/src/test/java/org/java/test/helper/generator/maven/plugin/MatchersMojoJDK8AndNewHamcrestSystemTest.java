@@ -9,7 +9,6 @@ import java.io.File;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.plugin.testing.resources.TestResources;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -24,28 +23,59 @@ import org.junit.Rule;
 import org.junit.Test;
 
 
-public class MatchersMojoITest {
+public abstract class MatchersMojoJDK8AndNewHamcrestSystemTest { 
 	@Rule
 	public TestResources testResources = new TestResources();
-	@Rule
-	public MojoRule rule = new MojoRule();
 
 	private File testProject;
 
 	@Before
 	public void setUp() throws Exception {
 		FileUtils.deleteQuietly(testProject);
-		testProject = testResources.getBasedir("testprojectJava6AndOldestPossibleHamcrestVersion");
-		executeGoals("compile");
+		testProject = testResources.getBasedir("testprojectJava8AndCurrentHamcrestVersion");
+	}
+
+
+	@Test
+	public void testTestprojectShouldHavePom() throws Exception {
+		assertThat(pomFile(), FileMatchers.aFileNamed(equalTo("pom.xml")));
 	}
 
 	@Test
-	public void testMojoCanBeExecutedInIsulation() throws Exception {
-		executeMojo("matchers");
+	public void testTestprojectShouldBeBuildableWithoutMojoExecution() throws Exception {
+		// Preparation
+
+		// Execution
+		final int exitStatus = executeGoals("clean", "compile");
+
+		// Expectation
+		assertThat("Execution exit status", exitStatus, is(0));
 	}
 
 	@Test
-	public void testPluginRunHasCreatedMatcherSource() throws Exception {
+	public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
+		// Preparation
+
+		// Execution
+		final int exitStatus = executeGoals("testHelperGenerator:matchers");
+
+		// Expectation
+		assertThat("Execution exit status", exitStatus, is(0));
+	}
+
+	@Test
+	public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors() throws Exception {
+		// Preparation
+
+		// Execution
+		final int exitStatus = executeGoals("testHelperGenerator:matchers", "test");
+
+		// Expectation
+		assertThat("Execution exit status", exitStatus, is(0));
+	}
+
+	@Test
+	public void testPluginRunHasCreatedMatcherSourceOnCallingPluginGoalDirectly() throws Exception {
 
 		// Preparation
 		assertThat("For this test required file is missing",
@@ -53,21 +83,33 @@ public class MatchersMojoITest {
 			is(anExistingFile()));
 
 		// Execution
-		executeMojo("matchers");
+		executeGoals("testHelperGenerator:matchers");
 
 		// Expectation
-		assertThat("Should have been generated: " + inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+		assertThat(
+			"Should have been generated: " +
+			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
 			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
 			is(anExistingFile()));
 	}
 
-	private void executeMojo(final String goal) throws Exception {
-		rule.executeMojo(testProject, goal);
-	}
-
 	@Test
-	public void testTestprojectShouldHavePom() throws Exception {
-		assertThat(pomFile(), FileMatchers.aFileNamed(equalTo("pom.xml")));
+	public void testPluginRunHasCreatedMatcherSourceOnTestGoal() throws Exception {
+
+		// Preparation
+		assertThat("For this test required file is missing",
+			inSrcMainJava("some/pck/model/SimpleModel.java"),
+			is(anExistingFile()));
+
+		// Execution
+		executeGoals("test");
+
+		// Expectation
+		assertThat(
+			"Should have been generated: " +
+			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+			inGeneratedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+			is(anExistingFile()));
 	}
 
 	private File inGeneratedTestSourcesDir(final String path) {
