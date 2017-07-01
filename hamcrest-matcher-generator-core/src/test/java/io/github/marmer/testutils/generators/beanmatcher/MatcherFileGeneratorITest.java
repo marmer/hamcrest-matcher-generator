@@ -22,8 +22,6 @@ import org.junit.rules.TemporaryFolder;
 
 import sample.classes.SimpleSampleClass;
 
-import java.lang.reflect.Method;
-
 import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -124,23 +122,5 @@ public class MatcherFileGeneratorITest {
 
 		// Assertion
 		assertThat(result, is(sameInstance(matcher)));
-	}
-
-	@Test
-	public void testGenerateMatcherFor_PackageGiven_FassadeWithFactoryMethodsForGeneratedMatchesExists()
-		throws Exception {
-
-		// Preparation
-		final Class<?> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
-
-		// Execution
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
-
-		// Assertion
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		final Method facadeMethod = compiler.getFacadeMethodFor(type);
-		assertThat("Return Type of matcher facade factory method for " + type, facadeMethod.getReturnType().getName(),
-			is(equalTo(matcher.getClass().getName())));
 	}
 }
