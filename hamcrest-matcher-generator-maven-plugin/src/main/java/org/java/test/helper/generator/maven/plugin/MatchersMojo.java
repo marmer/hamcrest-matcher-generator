@@ -90,6 +90,8 @@ public class MatchersMojo extends AbstractMojo {
 	)
 	private File outputDir;
 
+	private PathToUrlDelegate pathToUrlDelegate = new PathToUrlDelegate();
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		validateMatcherSourcesSet();
@@ -128,14 +130,14 @@ public class MatchersMojo extends AbstractMojo {
 		}
 	}
 
-	private URL[] toUrls(final List<Path> classpathRootPaths) {
+	private URL[] toUrls(final List<Path> classpathRootPaths) throws MojoFailureException {
 		final List<URL> urls = new LinkedList<>();
 
 		for (final Path path : classpathRootPaths) {
 			try {
-				urls.add(path.toUri().toURL());
+				urls.add(pathToUrlDelegate.toUrl(path));
 			} catch (MalformedURLException e) {
-				throw new RuntimeException("This shuold not happen", e);
+				throw new MojoFailureException("Error resolving classpath elements", e);
 			}
 		}
 
