@@ -7,7 +7,7 @@ import java.io.IOException;
  * Generator for Matchers.
  *
  * @author  marmer
- * @since    20.06.2017
+ * @since   20.06.2017
  */
 public interface MatcherGenerator {
 
