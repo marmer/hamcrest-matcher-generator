@@ -23,8 +23,18 @@ import org.mockito.quality.Strictness;
 
 import java.io.File;
 
+import java.net.MalformedURLException;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.util.Collections;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
+
+import static org.junit.Assert.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,6 +56,9 @@ public class MatchersMojoTest {
 
 	@Spy
 	private File outputDir = new File("outputDir");
+
+	@Spy
+	private PathToUrlDelegate pathToUrlDelegate = new PathToUrlDelegate();
 
 	private String[] matcherSources = new String[] {
 		"some.package"
@@ -98,5 +111,25 @@ public class MatchersMojoTest {
 
 		// Execution
 		classUnderTest.execute();
+	}
+
+	@Test
+	public void testExecute_ErrorOnLoadingClassesByProjectTestClasspathElements_ShouldBreakTheBuild() throws Exception {
+
+		// Preparation
+		final MalformedURLException malformedURLException = new MalformedURLException();
+		final String classpathElementPath = "anyClasspathElement";
+		final Path path = Paths.get(classpathElementPath);
+		when(mavenProject.getTestClasspathElements()).thenReturn(Collections.singletonList(classpathElementPath));
+		when(pathToUrlDelegate.toUrl(path)).thenThrow(malformedURLException);
+
+		// Assertion
+		exception.expect(MojoFailureException.class);
+		exception.expectCause(is(sameInstance(malformedURLException)));
+		exception.expectMessage(is(equalTo("Error resolving classpath elements")));
+
+		// Execution
+		classUnderTest.execute();
+
 	}
 }
