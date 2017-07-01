@@ -1,19 +1,5 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.Generated;
-import javax.lang.model.element.Modifier;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -27,7 +13,26 @@ import com.squareup.javapoet.WildcardTypeName;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+
 import lombok.extern.apachecommons.CommonsLog;
+
+import org.apache.commons.lang3.StringUtils;
+
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
+
+import java.io.IOException;
+
+import java.nio.file.Path;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.Generated;
+
+import javax.lang.model.element.Modifier;
 
 
 /**
@@ -38,6 +43,7 @@ import lombok.extern.apachecommons.CommonsLog;
  */
 @CommonsLog
 public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatcherClassGenerator {
+	private static final String FACTORY_METHOD_PREFIX = "is";
 	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
 	private final BeanPropertyExtractor propertyExtractor;
@@ -85,8 +91,9 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 				propertyMethods(type)).addMethods(typesafeMatcherMethods(type)).addMethod(factoryMethod(type)).build();
 	}
 
-	private MethodSpec factoryMethod(Class<?> type) { 
-		return MethodSpec.methodBuilder(StringUtils.uncapitalize(type.getSimpleName())).addStatement("return new $L()", matcherNameFor(type)).returns(classNameOfGeneratedTypeFor(
+	private MethodSpec factoryMethod(final Class<?> type) {
+		return MethodSpec.methodBuilder(FACTORY_METHOD_PREFIX + type.getSimpleName()).addStatement("return new $L()",
+				matcherNameFor(type)).returns(classNameOfGeneratedTypeFor(
 					type)).addModifiers(Modifier.STATIC, Modifier.PUBLIC).build();
 	}
 
@@ -127,7 +134,8 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private List<MethodSpec> propertyMethods(final Class<?> type) {
-		return propertyExtractor.getPropertiesOf(type).stream().map(property -> propertyMethodFor(property.getName(), type)).collect(Collectors.toList());		
+		return propertyExtractor.getPropertiesOf(type).stream().map(property ->
+					propertyMethodFor(property.getName(), type)).collect(Collectors.toList());
 	}
 
 	private MethodSpec propertyMethodFor(final String propertyName, final Class<?> type) {

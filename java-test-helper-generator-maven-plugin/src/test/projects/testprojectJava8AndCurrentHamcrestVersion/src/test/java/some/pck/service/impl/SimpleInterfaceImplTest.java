@@ -1,9 +1,8 @@
 package some.pck.service.impl;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static some.pck.model.SimpleModelMatcher.simpleModel;
+import static some.pck.model.SimpleModelMatcher.isSimpleModel;
 
 import org.junit.Test;
 
@@ -19,7 +18,7 @@ public class SimpleInterfaceImplTest {
 	
 	@Test
 	public void testMatchingWithStaticMethod() throws Exception {
-		assertThat(new SimpleModel("someValue"), is(simpleModel().withSomeProperty(equalTo("someValue"))));
+		assertThat(new SimpleModel("someValue"), isSimpleModel().withSomeProperty(equalTo("someValue")));
 	}
 
 }

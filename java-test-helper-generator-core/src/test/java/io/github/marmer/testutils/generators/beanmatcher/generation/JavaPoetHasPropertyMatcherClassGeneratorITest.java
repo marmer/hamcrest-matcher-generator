@@ -1,9 +1,40 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
+import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
+
+import org.apache.commons.jci.compilers.CompilationResult;
+import org.apache.commons.lang3.reflect.MethodUtils;
+
+import org.hamcrest.Matcher;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.lang.reflect.Method;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
+
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -11,31 +42,10 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
+
 import static org.hamcrest.io.FileMatchers.anExistingFile;
+
 import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.commons.jci.compilers.CompilationResult;
-import org.apache.commons.lang3.reflect.MethodUtils;
-import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
-import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 
 
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
@@ -262,19 +272,19 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Assertion
 		assertThat(result, is(sameInstance(matcher)));
 	}
-	
+
 	@Test
 	public void testGenerateMatcherFor_StaticMethodWithBaseTypeNameIsCalled_ShouldReturnAnInstanceOfTheMatcher()
-			throws Exception {
-		
+		throws Exception {
+
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type);
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		
+
 		// Execution
-		final Object result = MethodUtils.invokeStaticMethod(matcher.getClass(),"simplePojo");
-		
+		final Object result = MethodUtils.invokeStaticMethod(matcher.getClass(), "isSimplePojo");
+
 		// Assertion
 		assertThat(result.getClass().getSimpleName(), is(equalTo("SimplePojo" + MATCHER_POSTFIX)));
 	}
