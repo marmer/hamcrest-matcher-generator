@@ -95,25 +95,9 @@ public class MatchersMojo extends AbstractMojo {
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		validateMatcherSourcesSet();
-		final ClassLoader classLoader;
-		try {
-			classLoader = new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
-					getClass().getClassLoader());
-		} catch (DependencyResolutionRequiredException e) {
-			throw new MojoFailureException("Cannot access Dependencies", e);
-		}
+		final ClassLoader classLoader = getTestClasspathClassLoader();
 
-		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
-				classLoader);
-		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
-			new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, outputDir.toPath());
-		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(outputDir.toPath(),
-				classLoader);
-		final MatcherGenerator matcherFileGenerator = new MatcherFileGenerator(potentialPojoClassFinder,
-				hasPropertyMatcherClassGenerator,
-				javaFileClassLoader);
+		final MatcherGenerator matcherFileGenerator = createMatcherGenerator(classLoader, outputDir.toPath());
 
 		try {
 			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
@@ -121,6 +105,29 @@ public class MatchersMojo extends AbstractMojo {
 			throw new MojoFailureException("Something went wront", e);
 		}
 		project.addTestCompileSourceRoot(outputDir.toString());
+	}
+
+	private ClassLoader getTestClasspathClassLoader() throws MojoFailureException {
+		try {
+			return new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
+					getClass().getClassLoader());
+		} catch (DependencyResolutionRequiredException e) {
+			throw new MojoFailureException("Cannot access Dependencies", e);
+		}
+	}
+
+	private MatcherGenerator createMatcherGenerator(final ClassLoader classLoader, final Path outputDirPath) {
+		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
+				classLoader);
+		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
+			new JavaPoetHasPropertyMatcherClassGenerator(
+				propertyExtractor, outputDirPath);
+		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(outputDirPath,
+				classLoader);
+		return new MatcherFileGenerator(potentialPojoClassFinder,
+				hasPropertyMatcherClassGenerator,
+				javaFileClassLoader);
 	}
 
 	private void validateMatcherSourcesSet() throws MojoFailureException {
