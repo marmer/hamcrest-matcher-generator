@@ -71,9 +71,6 @@ import java.util.stream.Collectors;
 )
 @Execute(phase = LifecyclePhase.PROCESS_CLASSES)
 public class MatchersMojo extends AbstractMojo {
-	private static final String FACADE_PACKAGE = "io.github.marmer.testutils";
-
-	private static final String FACADE_NAME = "BeanPropertyMatchers";
 
 	/** The Project itself. */
 	@Parameter(
