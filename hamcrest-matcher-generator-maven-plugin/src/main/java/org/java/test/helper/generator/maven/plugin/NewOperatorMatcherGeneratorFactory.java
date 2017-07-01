@@ -19,7 +19,7 @@ import java.nio.file.Path;
  * A factory for creating {@link MatcherGenerator} objects by connecting them manually.
  *
  * @author  marmer
- * @date    01.07.2017
+ * @since   01.07.2017
  */
 public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFactory {
 

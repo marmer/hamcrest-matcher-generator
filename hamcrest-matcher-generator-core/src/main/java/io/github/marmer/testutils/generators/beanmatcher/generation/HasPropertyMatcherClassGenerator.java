@@ -32,7 +32,7 @@ import java.nio.file.Path;
  * the locations you matched the property. So you don't have to wait and whatch your tests fail.</p>
  *
  * @author  marmer
- * @date    12.06.2017
+ * @since    12.06.2017
  */
 public interface HasPropertyMatcherClassGenerator {
 

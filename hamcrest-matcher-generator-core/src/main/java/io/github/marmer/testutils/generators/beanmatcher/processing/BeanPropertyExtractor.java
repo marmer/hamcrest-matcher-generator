@@ -6,9 +6,8 @@ import java.util.List;
 /**
  * The Interface Extracts properties of a bean.
  *
- * @author   $author$
- * @version  $Revision$, $Date$
- * @date     17.06.2017
+ * @author   marmer
+ * @since     17.06.2017
  */
 public interface BeanPropertyExtractor {
 

@@ -20,7 +20,7 @@ import java.util.List;
  * The Class MatcherFileGenerator.
  *
  * @author  marmer
- * @date    20.06.2017
+ * @since    20.06.2017
  */
 @CommonsLog
 public class MatcherFileGenerator implements MatcherGenerator {

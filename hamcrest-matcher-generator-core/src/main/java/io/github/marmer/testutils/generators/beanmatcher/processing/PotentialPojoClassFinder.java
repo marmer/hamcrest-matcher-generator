@@ -7,7 +7,7 @@ import java.util.List;
  * A Finder for classes.
  *
  * @author  marmer
- * @date    18.06.2017
+ * @since    18.06.2017
  */
 public interface PotentialPojoClassFinder {
 

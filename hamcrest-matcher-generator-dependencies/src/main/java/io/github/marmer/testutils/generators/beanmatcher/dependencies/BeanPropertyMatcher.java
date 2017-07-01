@@ -19,7 +19,7 @@ import java.util.List;
  * @param  <T> Type of the bean.
  *
  * @author marmer
- * @date   13.06.2017
+ * @since   13.06.2017
  */
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();

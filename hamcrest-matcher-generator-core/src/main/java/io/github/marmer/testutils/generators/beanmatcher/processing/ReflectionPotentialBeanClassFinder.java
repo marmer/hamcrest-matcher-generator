@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * <p>See: https://github.com/ronmamo/reflections</p>
  *
  * @author  marmer
- * @date    18.06.2017
+ * @since    18.06.2017
  */
 @CommonsLog
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
