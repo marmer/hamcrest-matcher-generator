@@ -4,6 +4,9 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
+import org.codehaus.plexus.util.ReflectionUtils;
+
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,6 +47,15 @@ public class MatchersMojoTest {
 	@Spy
 	private File outputDir = new File("outputDir");
 
+	private String[] matcherSources = new String[] {
+		"some.package"
+	};
+
+	@Before
+	public void setUp() throws Exception {
+		ReflectionUtils.setVariableValueInObject(classUnderTest, "matcherSources", matcherSources);
+	}
+
 	@Test
 	public void testExecute_MavenClassloaderIsNotAbleToResolveRequiredDependencies_ShouldBreakTheBuild()
 		throws Exception {
@@ -73,4 +85,18 @@ public class MatchersMojoTest {
 		verify(mavenProject).addTestCompileSourceRoot(outputDir.toString());
 	}
 
+	@Test
+	public void testExecute_NoPackagesOrQualifiedClassnamesGivenForExecution_ShouldStopTheBuild() throws Exception {
+
+		// Preparation
+		ReflectionUtils.setVariableValueInObject(classUnderTest, "matcherSources", new String[0]);
+
+		// Assertion
+		exception.expect(MojoFailureException.class);
+		exception.expectMessage(
+			"Missing MatcherSources. You should at least add one Package or qualified class name in matcherSources");
+
+		// Execution
+		classUnderTest.execute();
+	}
 }
