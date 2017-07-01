@@ -43,6 +43,8 @@ import javax.lang.model.element.Modifier;
  */
 @CommonsLog
 public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatcherClassGenerator {
+	private static final String PARAMETER_NAME_ITEM = "item";
+	private static final String PARAMETER_NAME_DESCRIPTION = "description";
 	private static final String FACTORY_METHOD_PREFIX = "is";
 	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
@@ -104,14 +106,14 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private MethodSpec describeToMethod() {
-		final String parameterName = "description";
+		final String parameterName = PARAMETER_NAME_DESCRIPTION;
 		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
 				parameterName, Modifier.FINAL).addStatement(
 				"$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName).addModifiers(Modifier.PUBLIC).build();
 	}
 
 	private MethodSpec matchesSafelyMathod(final Class<?> type) {
-		final String parameterItem = "item";
+		final String parameterItem = PARAMETER_NAME_ITEM;
 		return MethodSpec.methodBuilder("matchesSafely").addAnnotation(Override.class).addModifiers(Modifier.PROTECTED)
 			.returns(
 				Boolean.TYPE).addParameter(type,
@@ -120,8 +122,8 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private MethodSpec describeMismatchSafelyMethod(final Class<?> type) {
-		final String parameterName = "item";
-		final String parameterNameDescription = "description";
+		final String parameterName = PARAMETER_NAME_ITEM;
+		final String parameterNameDescription = PARAMETER_NAME_DESCRIPTION;
 		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).addParameter(type,
 				parameterName, Modifier.FINAL).addStatement(
 				"$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, parameterName, parameterNameDescription)
