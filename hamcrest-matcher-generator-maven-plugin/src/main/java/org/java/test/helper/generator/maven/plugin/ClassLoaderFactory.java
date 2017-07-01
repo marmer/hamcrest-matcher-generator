@@ -5,7 +5,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import java.util.List;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * A factory for creating Classloader objects.
  *
