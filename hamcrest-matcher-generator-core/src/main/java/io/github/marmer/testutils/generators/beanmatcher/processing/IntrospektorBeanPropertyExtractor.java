@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+/**
+ * The Class IntrospektorBeanPropertyExtractor.
+ *
+ * @author  marmer
+ * @since   01.07.2017
+ */
 @CommonsLog
 public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor {
 
