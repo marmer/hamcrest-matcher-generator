@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/marmer/hamcrest-matcher-generator.svg?branch=master)](https://travis-ci.org/marmer/hamcrest-matcher-generator)
-[![codebeat badge](https://codebeat.co/badges/670d9178-beb7-438d-9823-53943c7fdf95)](https://codebeat.co/projects/github-com-marmer-hamcrest-matcher-generator-master)
+[![codebeat badge](https://codebeat.co/badges/e6115b82-9d80-4bdd-b36c-3a32c388f61a)](https://codebeat.co/projects/github-com-marmer-hamcrest-matcher-generator-master)
 [![Coverage Status](https://coveralls.io/repos/github/marmer/hamcrest-matcher-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/hamcrest-matcher-generator?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2)
+[![Dependency Status](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f)
 
 hamcrest-matcher-generator
 ==========================
