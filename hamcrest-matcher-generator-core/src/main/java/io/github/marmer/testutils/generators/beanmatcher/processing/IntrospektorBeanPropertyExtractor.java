@@ -4,7 +4,6 @@ import lombok.extern.apachecommons.CommonsLog;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 
 import java.util.Arrays;
@@ -15,6 +14,8 @@ import java.util.stream.Collectors;
 
 @CommonsLog
 public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor {
+
+	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
 
 	@Override
 	public List<BeanProperty> getPropertiesOf(final Class<?> type) {
@@ -32,7 +33,7 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 	}
 
 	private PropertyDescriptor[] propertyDescriptorsOf(final Class<?> type) throws IntrospectionException {
-		final BeanInfo beanInfo = Introspector.getBeanInfo(type, Object.class);
+		final BeanInfo beanInfo = introspectorDelegate.getBeanInfo(type);
 		return beanInfo.getPropertyDescriptors();
 	}
 
