@@ -1,15 +1,7 @@
 package org.java.test.helper.generator.maven.plugin;
 
-import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
-import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
+import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -40,17 +32,6 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -90,44 +71,30 @@ public class MatchersMojo extends AbstractMojo {
 	)
 	private File outputDir;
 
-	private PathToUrlDelegate pathToUrlDelegate = new PathToUrlDelegate();
+	private ClassLoaderFactory classloaderFactory = new ByClasspathStringPathElementURLClassLoaderFactory(getClass()
+			.getClassLoader());
+
+	private MatcherGeneratorFactory matcherGeneratorFactory = new NewOperatorMatcherGeneratorFactory();
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		validateMatcherSourcesSet();
-		final ClassLoader classLoader = getTestClasspathClassLoader();
+		project.addTestCompileSourceRoot(outputDir.toString());
 
-		final MatcherGenerator matcherFileGenerator = createMatcherGenerator(classLoader, outputDir.toPath());
+		final ClassLoader classLoader;
+		try {
+			classLoader = classloaderFactory.creatClassloader(project.getTestClasspathElements());
+		} catch (DependencyResolutionRequiredException e) {
+			throw new MojoFailureException("Cannot access Dependencies", e);
+		}
+
+		final MatcherGenerator matcherFileGenerator = matcherGeneratorFactory.createBy(classLoader, outputDir.toPath());
 
 		try {
 			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
 		} catch (IOException e) {
-			throw new MojoFailureException("Something went wront", e);
+			throw new MojoFailureException("Error on matcher generation", e);
 		}
-		project.addTestCompileSourceRoot(outputDir.toString());
-	}
-
-	private ClassLoader getTestClasspathClassLoader() throws MojoFailureException {
-		try {
-			return new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
-					getClass().getClassLoader());
-		} catch (DependencyResolutionRequiredException e) {
-			throw new MojoFailureException("Cannot access Dependencies", e);
-		}
-	}
-
-	private MatcherGenerator createMatcherGenerator(final ClassLoader classLoader, final Path outputDirPath) {
-		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
-				classLoader);
-		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
-			new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, outputDirPath);
-		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(outputDirPath,
-				classLoader);
-		return new MatcherFileGenerator(potentialPojoClassFinder,
-				hasPropertyMatcherClassGenerator,
-				javaFileClassLoader);
 	}
 
 	private void validateMatcherSourcesSet() throws MojoFailureException {
@@ -137,21 +104,4 @@ public class MatchersMojo extends AbstractMojo {
 		}
 	}
 
-	private URL[] toUrls(final List<Path> classpathRootPaths) throws MojoFailureException {
-		final List<URL> urls = new LinkedList<>();
-
-		for (final Path path : classpathRootPaths) {
-			try {
-				urls.add(pathToUrlDelegate.toUrl(path));
-			} catch (MalformedURLException e) {
-				throw new MojoFailureException("Error resolving classpath elements", e);
-			}
-		}
-
-		return urls.toArray(new URL[urls.size()]);
-	}
-
-	private List<Path> toPath(final List<String> stringPaths) {
-		return stringPaths.stream().map(Paths::get).collect(Collectors.toList());
-	}
 }
