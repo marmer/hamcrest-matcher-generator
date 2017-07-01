@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * based of.
  *
  * @author marmer
- * @date   21.06.2017
+ * @since   21.06.2017
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

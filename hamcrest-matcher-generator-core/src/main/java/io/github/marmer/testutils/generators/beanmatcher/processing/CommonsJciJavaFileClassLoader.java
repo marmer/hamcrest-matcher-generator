@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
  *
  * @author  MarMer
  * @since   28.06.2017
- * @date    $Date$
  */
 @CommonsLog
 public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {

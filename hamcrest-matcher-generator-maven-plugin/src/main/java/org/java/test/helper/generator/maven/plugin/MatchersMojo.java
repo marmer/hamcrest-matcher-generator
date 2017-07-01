@@ -41,7 +41,7 @@ import java.io.IOException;
  * <p>The generated classes will be in the same package as the base of the classes.</p>
  *
  * @author  marmer
- * @date    21.06.2017
+ * @since   21.06.2017
  */
 @Mojo(
 	name = "matchers",

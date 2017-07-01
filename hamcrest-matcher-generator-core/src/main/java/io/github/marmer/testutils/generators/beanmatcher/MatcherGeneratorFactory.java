@@ -7,7 +7,7 @@ import java.nio.file.Path;
  * A factory for creating MatcherGenerator objects.
  *
  * @author  marmer
- * @date    01.07.2017
+ * @since    01.07.2017
  */
 public interface MatcherGeneratorFactory {
 

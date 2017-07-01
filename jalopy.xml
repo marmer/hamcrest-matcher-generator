@@ -368,7 +368,7 @@
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @date $Date$
+ * @since $Date$
  */]]></class>
        <constructor>
         <bottom><![CDATA[ */]]></bottom>
@@ -381,7 +381,7 @@
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @date $Date$
+ * @since $Date$
  */]]></enum>
        <getter>
         <bottom><![CDATA[ */]]></bottom>
@@ -395,7 +395,7 @@
  * TODO DOCUMENT ME!
  *
  * @author $author$
- * @date $Date$
+ * @since $Date$
  */]]></interface>
        <method>
         <bottom><![CDATA[ */]]></bottom>

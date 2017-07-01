@@ -39,7 +39,7 @@ import javax.lang.model.element.Modifier;
  * The Class JavaPoetHasPropertyMatcherClassGenerator.
  *
  * @author  marmer
- * @date    17.06.2017
+ * @since    17.06.2017
  */
 @CommonsLog
 public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatcherClassGenerator {
