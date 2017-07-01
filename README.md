@@ -1,11 +1,11 @@
-[![Build Status](https://travis-ci.org/marmer/java-test-helper-generator.svg?branch=master)](https://travis-ci.org/marmer/java-test-helper-generator)
-[![codebeat badge](https://codebeat.co/badges/670d9178-beb7-438d-9823-53943c7fdf95)](https://codebeat.co/projects/github-com-marmer-java-test-helper-generator-master)
-[![Coverage Status](https://coveralls.io/repos/github/marmer/java-test-helper-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/java-test-helper-generator?branch=master)
+[![Build Status](https://travis-ci.org/marmer/hamcrest-matcher-generator.svg?branch=master)](https://travis-ci.org/marmer/hamcrest-matcher-generator)
+[![codebeat badge](https://codebeat.co/badges/670d9178-beb7-438d-9823-53943c7fdf95)](https://codebeat.co/projects/github-com-marmer-hamcrest-matcher-generator-master)
+[![Coverage Status](https://coveralls.io/repos/github/marmer/hamcrest-matcher-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/hamcrest-matcher-generator?branch=master)
 [![Dependency Status](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/59415a87368b0800700df4a2)
 
-dynamic-compilesafe-hamcrest-property-matcher
-=============================================
-This library (hopefully) provides a collection of helper generators for tests.
+hamcrest-matcher-generator
+==========================
+This library provides the generation of hamcrest matchers without the need to pollute the production code. 
 
 Bean Property Matcher
 ---------------------
@@ -26,13 +26,13 @@ This strategy works pretty well, if you have only changed the property name and 
 
 The idea of this helper is to get your feedback allredy at compile time. So your favorite IDE or build tool can show you all the places you have to change as well in a way like the following:
 
-`assertThat(someFancyBean, is(fancyBean().withMyFancyProperty(equalTo("Fancy Value))));`
+	assertThat(new SimpleModel("someValue"), isSimpleModel().withSomeProperty(equalTo("someValue")));
 
 You only have to generate the matchers in advance with this tool, probably with a Plugin of your favorite IDE using this lib or with your favorite build tool.
 
 ### How-To
 
-TODO
+Currently there is only a maven plugin for the matcher generation. But a gradle extension is planed as well. If you want to see how to configure your project, read the Requirements section and have a look at the [projects used for testing the plugin](hamcrest-matcher-generator-maven-plugin/src/test/projects)
 
 Requirements
 ============
@@ -70,13 +70,13 @@ For JDK6 you may use:
 	</dependency>`
 
 
-java-test-helper-generator-dependencies
+hamcrest-matcher-generator-dependencies
 ---------------------------------------
 The generated sources need some classes 
 
 	<dependency>
 		<groupId>io.github.marmer.testutils</groupId>
-		<artifactId>java-test-helper-generator-dependencies</artifactId>
+		<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
 		<version>#INSERT_CURRENT_PROJECT_VERSION#</version>
 		<scope>test</scope>
 	</dependency>
