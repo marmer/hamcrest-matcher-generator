@@ -3,21 +3,21 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>java-test-helper-generator</artifactId>
+		<artifactId>hamcrest-matcher-generator</artifactId>
 		<groupId>io.github.marmer.testutils</groupId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
-	<artifactId>java-test-helper-generator-maven-plugin</artifactId>
+	<artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 
-	<name>java-test-helper-generator-maven-plugin</name>
+	<name>hamcrest-matcher-generator-maven-plugin</name>
 
 	<dependencies>
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
-			<artifactId>java-test-helper-generator-core</artifactId>
+			<artifactId>hamcrest-matcher-generator-core</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 

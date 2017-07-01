@@ -24,7 +24,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
-			<artifactId>java-test-helper-generator-dependencies</artifactId>
+			<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
@@ -46,7 +46,7 @@
 		<plugins>
 			<plugin>
 				<groupId>io.github.marmer.testutils</groupId>
-				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
+				<artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
 				<configuration>
 					<matcherSources>

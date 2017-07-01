@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>java-test-helper-generator-core</artifactId>
-	<name>java-test-helper-generator-core</name>
+	<artifactId>hamcrest-matcher-generator-core</artifactId>
+	<name>hamcrest-matcher-generator-core</name>
 	<packaging>jar</packaging>
 	<description>Core functionality</description>
 	<parent>
 		<groupId>io.github.marmer.testutils</groupId>
-		<artifactId>java-test-helper-generator</artifactId>
+		<artifactId>hamcrest-matcher-generator</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
-			<artifactId>java-test-helper-generator-dependencies</artifactId>
+			<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>

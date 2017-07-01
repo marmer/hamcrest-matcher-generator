@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>io.github.marmer.some.test.project.group.id</groupId>
-	<artifactId>testprojectJava6AndOldestPossibleHamcrestVersion</artifactId>
+	<artifactId>testprojectJava8AndCurrentHamcrestVersion</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Test MyMojo</name>
@@ -18,14 +18,14 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
-			<artifactId>java-test-helper-generator-dependencies</artifactId>
+			<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-all</artifactId>
-			<version>1.2</version>
+			<artifactId>java-hamcrest</artifactId>
+			<version>2.0.0.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -39,27 +39,8 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.12</version>
-				<executions>
-					<execution>
-						<id>add-test-source</id>
-						<phase>generate-test-sources</phase>
-						<goals>
-							<goal>add-test-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>${project.build.directory}/generated-test-sources</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>io.github.marmer.testutils</groupId>
-				<artifactId>java-test-helper-generator-maven-plugin</artifactId>
+				<artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
 				<configuration>
 					<matcherSources>
@@ -79,34 +60,4 @@
 			</plugin>
 		</plugins>
 	</build>
-	
-	<repositories>
-		<repository>
-			<id>central</id>
-			<name>central</name>
-			<url>http://central.maven.org/maven2/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>jahia</id>
-			<name>jahia</name>
-			<url>http://maven.jahia.org/maven2/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>atlassian</id>
-			<name>Atlassian 3rd-Party</name>
-			<url>https://maven.atlassian.com/3rdparty/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
 </project>

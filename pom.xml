@@ -2,26 +2,26 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.marmer.testutils</groupId>
-	<artifactId>java-test-helper-generator</artifactId>
+	<artifactId>hamcrest-matcher-generator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>java-test-helper-generator</name>
+	<name>hamcrest-matcher-generator</name>
 	<description>A tool to generate helper-classes based on production code</description>
 
-	<url>https://github.com/marmer/java-test-helper-generator</url>
+	<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 	<scm>
-		<url>https://github.com/marmer/java-test-helper-generator</url>
+		<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 	</scm>
 	<ciManagement>
 		<system>travis-ci</system>
-		<url>https://travis-ci.org/marmer/java-test-helper-generator</url>
+		<url>https://travis-ci.org/marmer/hamcrest-matcher-generator</url>
 	</ciManagement>
 	<inceptionYear>2017</inceptionYear>
 
 	<modules>
-		<module>java-test-helper-generator-dependencies</module>
-		<module>java-test-helper-generator-core</module>
-		<module>java-test-helper-generator-maven-plugin</module>
+		<module>hamcrest-matcher-generator-dependencies</module>
+		<module>hamcrest-matcher-generator-core</module>
+		<module>hamcrest-matcher-generator-maven-plugin</module>
 	</modules>
 
 	<properties>
@@ -152,12 +152,12 @@
 				<version>4.3.0</version>
 				<configuration>
 					<sourceDirectories>
-						<sourceDirectory>java-test-helper-generator-core/src/main/java/</sourceDirectory>
-						<sourceDirectory>java-test-helper-generator-maven-plugin/src/main/java/</sourceDirectory>
+						<sourceDirectory>hamcrest-matcher-generator-core/src/main/java/</sourceDirectory>
+						<sourceDirectory>hamcrest-matcher-generator-maven-plugin/src/main/java/</sourceDirectory>
 					</sourceDirectories>
 					<jacocoReports>
-						<jacocoReport>java-test-helper-generator-core/target/site/jacoco/jacoco.xml</jacocoReport>
-						<jacocoReport>java-test-helper-generator-maven-plugin/target/site/jacoco/jacoco.xml</jacocoReport>
+						<jacocoReport>hamcrest-matcher-generator-core/target/site/jacoco/jacoco.xml</jacocoReport>
+						<jacocoReport>hamcrest-matcher-generator-maven-plugin/target/site/jacoco/jacoco.xml</jacocoReport>
 					</jacocoReports>
 				</configuration>
 			</plugin>

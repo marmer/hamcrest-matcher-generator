@@ -4,13 +4,13 @@
 
 	<parent>
 		<groupId>io.github.marmer.testutils</groupId>
-		<artifactId>java-test-helper-generator</artifactId>
+		<artifactId>hamcrest-matcher-generator</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
-	<artifactId>java-test-helper-generator-dependencies</artifactId>
-	<name>java-test-helper-generator-dependencies</name>
+	<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+	<name>hamcrest-matcher-generator-dependencies</name>
 
 	<dependencies>
 		<dependency>
