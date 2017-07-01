@@ -154,10 +154,12 @@
 					<sourceDirectories>
 						<sourceDirectory>hamcrest-matcher-generator-core/src/main/java/</sourceDirectory>
 						<sourceDirectory>hamcrest-matcher-generator-maven-plugin/src/main/java/</sourceDirectory>
+						<sourceDirectory>hamcrest-matcher-generator-dependencies/src/main/java/</sourceDirectory>
 					</sourceDirectories>
 					<jacocoReports>
 						<jacocoReport>hamcrest-matcher-generator-core/target/site/jacoco/jacoco.xml</jacocoReport>
 						<jacocoReport>hamcrest-matcher-generator-maven-plugin/target/site/jacoco/jacoco.xml</jacocoReport>
+						<jacocoReport>hamcrest-matcher-generator-dependencies/target/site/jacoco/jacoco.xml</jacocoReport>
 					</jacocoReports>
 				</configuration>
 			</plugin>
