@@ -167,9 +167,10 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private List<AnnotationSpec> generatedAnnotations(final Class<?> type) {
-		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember("value", "$S", getClass().getName())
+		String annotationMemberName = "value";
+		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember(annotationMemberName, "$S", getClass().getName())
 				.build(),
-				AnnotationSpec.builder(BasedOn.class).addMember("value", "$T.class", type)
+				AnnotationSpec.builder(BasedOn.class).addMember(annotationMemberName, "$T.class", type)
 					.build());
 	}
 
