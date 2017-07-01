@@ -13,6 +13,8 @@ import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClas
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /*
@@ -95,6 +97,7 @@ public class MatchersMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		validateMatcherSourcesSet();
 		final ClassLoader classLoader;
 		try {
 			classLoader = new URLClassLoader(toUrls(toPath(project.getTestClasspathElements())),
@@ -124,6 +127,13 @@ public class MatchersMojo extends AbstractMojo {
 			throw new MojoFailureException("Something went wront", e);
 		}
 		project.addTestCompileSourceRoot(outputDir.toString());
+	}
+
+	private void validateMatcherSourcesSet() throws MojoFailureException {
+		if (ArrayUtils.isEmpty(matcherSources)) {
+			throw new MojoFailureException(
+				"Missing MatcherSources. You should at least add one Package or qualified class name in matcherSources");
+		}
 	}
 
 	private URL[] toUrls(final List<Path> classpathRootPaths) {
