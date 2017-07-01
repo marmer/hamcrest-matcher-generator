@@ -137,6 +137,7 @@ public class GeneratedFileCompiler {
 		return loadGeneratedClassFor(type);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T compileAndLoadInstanceOfGeneratedClassFor(final Class<?> type) throws IOException, Exception,
 		InstantiationException, IllegalAccessException {
 		compileGeneratedSourceFileFor(type);

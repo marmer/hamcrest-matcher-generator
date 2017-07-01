@@ -1,7 +1,5 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
-import java.io.IOException;
-
 import java.nio.file.Path;
 
 import java.util.List;
