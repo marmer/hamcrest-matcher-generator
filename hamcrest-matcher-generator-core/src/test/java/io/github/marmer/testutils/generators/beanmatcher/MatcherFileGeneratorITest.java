@@ -1,7 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetFactoryMethodFacadeGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGeneratorITest.SimplePojo;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
@@ -62,8 +61,6 @@ public class MatcherFileGeneratorITest {
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
 				srcOutputDir);
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
-				new JavaPoetFactoryMethodFacadeGenerator(srcOutputDir, GeneratedFileCompiler.FACADE_PACKAGE,
-					GeneratedFileCompiler.FACADE_NAME),
 				new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader));
 	}
 
