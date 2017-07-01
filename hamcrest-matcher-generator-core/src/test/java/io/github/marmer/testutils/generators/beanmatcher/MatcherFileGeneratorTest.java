@@ -1,5 +1,9 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
+import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -11,16 +15,9 @@ import org.mockito.junit.MockitoRule;
 
 import org.mockito.quality.Strictness;
 
-import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.FactoryMethodFacadeGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
-
 import java.nio.file.Path;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -42,8 +39,6 @@ public class MatcherFileGeneratorTest {
 	@Mock
 	private Path outputDir;
 
-	@Mock
-	private FactoryMethodFacadeGenerator factoryMethodFacadeGenerator;
 	@Mock
 	private JavaFileClassLoader javaFileClassLoader;
 
@@ -71,23 +66,19 @@ public class MatcherFileGeneratorTest {
 		final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
 		final Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
 
-		final List<Class<?>> classesToGenerateFacadeFor = Arrays.asList(SamplePojo1Matcher.class,
-				SamplePojo2Matcher.class);
 		doReturn(Arrays.asList(SamplePojo1.class,
 				SamplePojo2.class)).when(potentialPojoClassFinder).findClasses(packageName);
 		doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
 			SamplePojo1.class);
 		doReturn(simplePojo2MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
 			SamplePojo2.class);
-		doReturn(classesToGenerateFacadeFor).when(javaFileClassLoader).load(
-			Arrays.asList(simplePojo1MatcherPath,
-				simplePojo2MatcherPath));
 
 		// Execution
 		classUnderTest.generateHelperForClassesAllIn(packageName);
 
 		// Assertion
-		verify(factoryMethodFacadeGenerator).generateFacadeFor(classesToGenerateFacadeFor);
+		verify(javaFileClassLoader).load(Arrays.asList(simplePojo1MatcherPath,
+				simplePojo2MatcherPath));
 	}
 
 	private static class SamplePojo1 { }

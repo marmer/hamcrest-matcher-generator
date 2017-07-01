@@ -1,6 +1,5 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.FactoryMethodFacadeGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
@@ -28,16 +27,13 @@ public class MatcherFileGenerator implements MatcherGenerator {
 	private final PotentialPojoClassFinder potentialPojoClassFinder;
 	private final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 
-	private final FactoryMethodFacadeGenerator factoryMethodFacadeGenerator;
 	private JavaFileClassLoader javaFileClassLoader;
 
 	public MatcherFileGenerator(final PotentialPojoClassFinder potentialPojoClassFinder,
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator,
-		final FactoryMethodFacadeGenerator factoryMethodFacadeGenerator,
 		final JavaFileClassLoader javaFileClassLoader) {
 		this.potentialPojoClassFinder = potentialPojoClassFinder;
 		this.hasPropertyMatcherClassGenerator = hasPropertyMatcherClassGenerator;
-		this.factoryMethodFacadeGenerator = factoryMethodFacadeGenerator;
 		this.javaFileClassLoader = javaFileClassLoader;
 	}
 
@@ -51,8 +47,7 @@ public class MatcherFileGenerator implements MatcherGenerator {
 
 		final List<Path> generatedMatcherPaths = generateMatchersFor(potentialPojoClasses,
 				packageOrQualifiedClassNames);
-		final List<Class<?>> generatedMatcherClasses = javaFileClassLoader.load(generatedMatcherPaths);
-		factoryMethodFacadeGenerator.generateFacadeFor(generatedMatcherClasses);
+		javaFileClassLoader.load(generatedMatcherPaths);
 	}
 
 	private List<Path> generateMatchersFor(final List<Class<?>> potentialPojoClasses,
