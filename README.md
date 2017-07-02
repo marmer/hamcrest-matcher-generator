@@ -4,6 +4,41 @@
 [![Dependency Status](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/99567e4d527e4c5ebedbb5625aeba438)](https://www.codacy.com/app/marmer/hamcrest-matcher-generator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marmer/hamcrest-matcher-generator&amp;utm_campaign=Badge_Grade)
 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=lines)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=ncloc)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=comment_lines_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=public_documented_api_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=public_documented_api_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=test_errors)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=test_failures)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=skipped_tests)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=test_success_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=it_coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_it_coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_overall_coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_duplicated_lines_density)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=blocker_violations)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=critical_violations)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_blocker_violations)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_critical_violations)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=code_smells)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_code_smells)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=bugs)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_bugs)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=vulnerabilities)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_vulnerabilities)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_debt_ratio)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_sqale_debt_ratio)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_maintainability_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_reliability_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=new_security_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+
+
+
+
 hamcrest-matcher-generator
 ==========================
 This library provides the generation of hamcrest matchers without the need to pollute the production code. 
