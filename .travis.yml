@@ -8,7 +8,7 @@ addons:
   sonarcloud:
     organization: marmer-github
     token:
-      secure: hAnBAsfYwz2xp8e+KfUtGRBExK0LsegDddJ1Uj/nuwY/xt7DlrFH2d9uJ2VJAXAfT3cwxVh+NFvTgjZ08k/BsUjj73aFpz63TPE1dtrhA65IHRMMyXOYJiZ/c6WNMHu1YuFCfqhojnb2x0y/cCJv45uE4rKBA80KQVSSKzLSPfKpTcRXk1YBL5syoRBX0AglJC57j8zTmJJ7tVh5q04vd8zFbjT58jKRB7qvAT8msHkTNzT8iAPCdpK+4pmKXFmKiXWwUZs4dtNh/72XqBJHm4MCAs0qcQpdeDft6R+HKV4IaeVxLr6TA+bH+slscoyrWENyBkquMqe5J/+RhJpB7QpWe5P/5QBp0B9b2ZHRPfB7RhXCHC7h41ayjJrxJ2Hcd/QVWcboQGZaD1713q8ZJhSALHNwdZA6lx/Vs7StB2QDT9KKCrHQ5HuzIlxSnZu7YBhCfYAlT2zlkl7mTNypD6keXo7lBmEAXPoChbeekdHXxYDZwJZIbCe8+fuIbYVleTL383OPYkGXb/eZSyt3WNbAdryF9cQCrYifEtpJwgo9swgT3P0lunFBN0dZhRVM0Zgl4J/r0Tim2PDI6SjbZR/ZWuZuWMdc3ESMSeRMmA7ahY0NVaCdMA87a40H2Jwycu7bEzoOboZ8cITmpjWW0quIPpCdRyg9jC8nJ3XPTZQ=
+      secure: SONAR_KEY
 cache:
   directories:
   - "$HOME/.m2/repository"
@@ -24,6 +24,9 @@ before_install:
 install:
 - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U
 script:
-- mvn clean jacoco:prepare-agent package sonar:sonar
+- mvn clean jacoco:prepare-agent package sonar:sonar -V
 after_success:
 - mvn jacoco:report coveralls:report -V
+env:
+  global:
+    secure: iudMB0yRK+UPB58toUn1UDSSZQGt9viq2VAU9eu7e4/B12MBIO50Ur89uVlEjOll3FuNCSkrwMaKwOOn7aZnelVNw1sJ1+U4+hiQFqg6oFA4bprYkEPAzH3aBbP4oO2FuEwftPasyUy1vzDyMm1PM8QuSbT0RaYiVUrYE5O5V7n62ZzWrvxE/XtlpvMqg1vaCF+8iHNVxEJwTAVFxKOuixsrN9pQaUAXs+DxPdTHzrIKAV/FIpyJiPG/ndP0WTW7VO9gM9J04yIt8265Fa1xlk9x3yJrc90fTC0OqnjruCJmpwjzRSIWbYTivX0iYdRkRz3v3zOcTXgB3MepwIxzqWMG75eCvJX/UfUbyDLzkctU5d6bhzVfUqvzLp1lrGZAD2CgTEknh/jZlYHz7ZFXXbAHPJovbOE/0J4CrzqXGD3cikGX8Lo5NlHW4nHEDrSSp2Mky3CU1EDjbnFpp4AbdlGhExym1frJ/Nsvsz7MUZ5uEBt20i7awQme0zDPd7ZDS1VbQKl3GkmQmQ3X4rncUxgbjUgwqMCeKzfFoLuQj48GT0BJvHoXlNmwf4h3zlZsLNddc/yMufs3XlGMC5OxUjiUQAr4m/QIL8CmjI1qTV5M1gueTtH06h0BByf8a0/kWtRV9s8Cdq7xEqPMprxg9zEFkRMfwGCpoTzgPUmPfKg=
