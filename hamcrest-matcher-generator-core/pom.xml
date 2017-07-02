@@ -46,11 +46,20 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-jci-eclipse</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>be.joengenduvel.java.verifiers</groupId>
+			<artifactId>to-string</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>nl.jqno.equalsverifier</groupId>
+			<artifactId>equalsverifier</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>

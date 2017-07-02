@@ -4,8 +4,6 @@ import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyM
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 
-import lombok.extern.apachecommons.CommonsLog;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
@@ -20,9 +18,8 @@ import java.util.List;
  * The Class MatcherFileGenerator.
  *
  * @author  marmer
- * @since    20.06.2017
+ * @since   20.06.2017
  */
-@CommonsLog
 public class MatcherFileGenerator implements MatcherGenerator {
 	private final PotentialPojoClassFinder potentialPojoClassFinder;
 	private final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
@@ -40,11 +37,6 @@ public class MatcherFileGenerator implements MatcherGenerator {
 	@Override
 	public void generateHelperForClassesAllIn(final String... packageOrQualifiedClassNames) throws IOException {
 		final List<Class<?>> potentialPojoClasses = potentialPojoClassFinder.findClasses(packageOrQualifiedClassNames);
-		if (log.isDebugEnabled()) {
-			log.debug("Classes found:");
-			potentialPojoClasses.stream().forEach(log::debug);
-		}
-
 		final List<Path> generatedMatcherPaths = generateMatchersFor(potentialPojoClasses,
 				packageOrQualifiedClassNames);
 		javaFileClassLoader.load(generatedMatcherPaths);
