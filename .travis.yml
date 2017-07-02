@@ -4,20 +4,26 @@ sudo: false
 addons:
   apt:
     packages:
-      - oracle-java8-installer
+    - oracle-java8-installer
+  sonarcloud:
+    organization: marmer-github
+    token:
+      secure: hAnBAsfYwz2xp8e+KfUtGRBExK0LsegDddJ1Uj/nuwY/xt7DlrFH2d9uJ2VJAXAfT3cwxVh+NFvTgjZ08k/BsUjj73aFpz63TPE1dtrhA65IHRMMyXOYJiZ/c6WNMHu1YuFCfqhojnb2x0y/cCJv45uE4rKBA80KQVSSKzLSPfKpTcRXk1YBL5syoRBX0AglJC57j8zTmJJ7tVh5q04vd8zFbjT58jKRB7qvAT8msHkTNzT8iAPCdpK+4pmKXFmKiXWwUZs4dtNh/72XqBJHm4MCAs0qcQpdeDft6R+HKV4IaeVxLr6TA+bH+slscoyrWENyBkquMqe5J/+RhJpB7QpWe5P/5QBp0B9b2ZHRPfB7RhXCHC7h41ayjJrxJ2Hcd/QVWcboQGZaD1713q8ZJhSALHNwdZA6lx/Vs7StB2QDT9KKCrHQ5HuzIlxSnZu7YBhCfYAlT2zlkl7mTNypD6keXo7lBmEAXPoChbeekdHXxYDZwJZIbCe8+fuIbYVleTL383OPYkGXb/eZSyt3WNbAdryF9cQCrYifEtpJwgo9swgT3P0lunFBN0dZhRVM0Zgl4J/r0Tim2PDI6SjbZR/ZWuZuWMdc3ESMSeRMmA7ahY0NVaCdMA87a40H2Jwycu7bEzoOboZ8cITmpjWW0quIPpCdRyg9jC8nJ3XPTZQ=
 cache:
   directories:
-    - "$HOME/.m2/repository"
-    - "$HOME/apache-maven-3.5.0"
+  - "$HOME/.m2/repository"
+  - "$HOME/apache-maven-3.5.0"
+  - "$HOME/.sonar/cache"
 before_cache:
-  - rm -rfv $HOME/.m2/repository/io/github/marmer
+- rm -rfv $HOME/.m2/repository/io/github/marmer
 before_install:
-  - export M2_HOME=$HOME/apache-maven-3.5.0
-  - if [ ! -d $M2_HOME/bin ]; then curl https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz | tar zxf - -C $HOME; fi
-  - export PATH=$M2_HOME/bin:$PATH
+- export M2_HOME=$HOME/apache-maven-3.5.0
+- if [ ! -d $M2_HOME/bin ]; then curl https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+  | tar zxf - -C $HOME; fi
+- export PATH=$M2_HOME/bin:$PATH
 install:
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U
+- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U
 script:
-  - mvn clean jacoco:prepare-agent test -U -X -V
+- mvn clean jacoco:prepare-agent package sonar:sonar
 after_success:
-  - mvn jacoco:report coveralls:report -V
+- mvn jacoco:report coveralls:report -V
