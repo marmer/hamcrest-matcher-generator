@@ -14,8 +14,6 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 
-import lombok.extern.apachecommons.CommonsLog;
-
 import org.apache.commons.lang3.StringUtils;
 
 import org.hamcrest.Description;
@@ -41,7 +39,6 @@ import javax.lang.model.element.Modifier;
  * @author  marmer
  * @since   17.06.2017
  */
-@CommonsLog
 public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatcherClassGenerator {
 	private static final String PARAMETER_NAME_ITEM = "item";
 	private static final String PARAMETER_NAME_DESCRIPTION = "description";
@@ -66,9 +63,6 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	@Override
 	public Path generateMatcherFor(final Class<?> type) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
-		if (log.isDebugEnabled()) {
-			log.debug(javaFile);
-		}
 		javaFile.writeTo(outputDir);
 		return outputDir.resolve(javaFile.toJavaFileObject().getName());
 	}
@@ -167,8 +161,9 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private List<AnnotationSpec> generatedAnnotations(final Class<?> type) {
-		String annotationMemberName = "value";
-		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember(annotationMemberName, "$S", getClass().getName())
+		final String annotationMemberName = "value";
+		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember(annotationMemberName, "$S",
+					getClass().getName())
 				.build(),
 				AnnotationSpec.builder(BasedOn.class).addMember(annotationMemberName, "$T.class", type)
 					.build());
