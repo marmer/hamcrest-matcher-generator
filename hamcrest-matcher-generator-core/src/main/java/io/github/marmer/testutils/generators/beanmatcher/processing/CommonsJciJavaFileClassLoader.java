@@ -84,11 +84,11 @@ public class CommonsJciJavaFileClassLoader implements JavaFileClassLoader {
 
 	private Class<?> loadClass(final String qualifiedClassName, final MemoryResourceStore pStore) {
 		try {
-			final ClassLoader classLoader = new ResourceStoreClassLoader(this.classLoader,
+			final ClassLoader resourceStoreClassLoader = new ResourceStoreClassLoader(this.classLoader,
 					new ResourceStore[] {
 						pStore
 					});
-			return classLoader.loadClass(qualifiedClassName);
+			return resourceStoreClassLoader.loadClass(qualifiedClassName);
 		} catch (ClassNotFoundException e) {
 
 			log.error("No Class exists with name: " + qualifiedClassName, e);
