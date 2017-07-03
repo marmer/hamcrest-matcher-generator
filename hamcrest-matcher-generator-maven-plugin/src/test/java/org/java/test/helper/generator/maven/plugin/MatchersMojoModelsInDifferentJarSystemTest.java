@@ -17,26 +17,17 @@ import org.junit.Test;
 
 public class MatchersMojoModelsInDifferentJarSystemTest {
     @Rule
-    public TestProjectResource testproject = new TestProjectResource("testprojectDependencyUser");
-
-    @Rule
-    public TestProjectResource testprojectDependencyProvider =
-        new TestProjectResource("testprojectDependencyProvider");
+    public TestProjectResource testproject =
+        new TestProjectResource("testprojectExternalDependencies");
 
     @Test
     public void testTestprojectShouldHavePom() throws Exception {
         assertThat(testproject.pomFile(), FileMatchers.aFileNamed(equalTo("pom.xml")));
     }
 
-    private void testprojectWithDependentModelClassesExists() throws Exception {
-        final int exitStatus = testprojectDependencyProvider.executeGoals("install");
-        assertThat("Install of dependent testproject should be successfull", exitStatus, is(0));
-    }
-
     @Test
     public void testTestprojectShouldBeBuildableWithoutMojoExecution() throws Exception {
         // Preparation
-        testprojectWithDependentModelClassesExists();
 
         // Execution
         final int exitStatus = testproject.executeGoals("clean", "compile");
@@ -48,7 +39,6 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     @Test
     public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
         // Preparation
-        testprojectWithDependentModelClassesExists();
 
         // Execution
         final int exitStatus = testproject.executeGoals("hamcrestMatcherGenerator:matchers");
@@ -61,7 +51,6 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
         throws Exception {
         // Preparation
-        testprojectWithDependentModelClassesExists();
 
         // Execution
         final int exitStatus = testproject.executeGoals("hamcrestMatcherGenerator:matchers",
@@ -74,7 +63,6 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     @Test
     public void testPluginRunHasCreatedMatcherSourceOnCallingPluginGoalDirectly() throws Exception {
         // Preparation
-        testprojectWithDependentModelClassesExists();
         assertThat("For this test required file is missing",
             testproject.srcMainJava("some/pck/model/SimpleModel.java"),
             is(anExistingFile()));
@@ -93,7 +81,6 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     @Test
     public void testPluginRunHasCreatedMatcherSourceOnTestGoal() throws Exception {
         // Preparation
-        testprojectWithDependentModelClassesExists();
         assertThat("For this test required file is missing",
             testproject.srcMainJava("some/pck/model/SimpleModel.java"),
             is(anExistingFile()));
