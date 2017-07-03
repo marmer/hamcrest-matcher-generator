@@ -30,7 +30,7 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
 
     private void testprojectWithDependentModelClassesExists() throws Exception {
         final int exitStatus = testprojectDependencyProvider.executeGoals("install");
-        assertThat("Dependent testproject should exist", exitStatus, is(0));
+        assertThat("Install of dependent testproject should be successfull", exitStatus, is(0));
     }
 
     @Test
