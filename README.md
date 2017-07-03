@@ -2,7 +2,6 @@
 [![codebeat badge](https://codebeat.co/badges/e6115b82-9d80-4bdd-b36c-3a32c388f61a)](https://codebeat.co/projects/github-com-marmer-hamcrest-matcher-generator-master)
 [![Coverage Status](https://coveralls.io/repos/github/marmer/hamcrest-matcher-generator/badge.svg?branch=master)](https://coveralls.io/github/marmer/hamcrest-matcher-generator?branch=master)
 [![Dependency Status](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/99567e4d527e4c5ebedbb5625aeba438)](https://www.codacy.com/app/marmer/hamcrest-matcher-generator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marmer/hamcrest-matcher-generator&amp;utm_campaign=Badge_Grade)
 
 [![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=lines)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
 [![Technical debt ratio](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=ncloc)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
