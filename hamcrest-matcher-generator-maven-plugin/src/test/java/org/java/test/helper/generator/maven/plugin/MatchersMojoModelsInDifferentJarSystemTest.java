@@ -52,7 +52,8 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     }
 
     private File matcherFileLocation() {
-        return testproject.targetDir().toPath().resolve(TestProjectResource.GENERATED_TEST_SOURCES)
+        return testproject.getBaseDir().toPath().resolve("testprojectDependencyUser")
+                          .resolve("target").resolve(TestProjectResource.GENERATED_TEST_SOURCES)
                           .resolve("some/pck/model/SimpleModelMatcher.java").toFile();
     }
 
