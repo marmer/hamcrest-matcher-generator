@@ -14,6 +14,8 @@ import static org.junit.Assert.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
+
 
 public class MatchersMojoModelsInDifferentJarSystemTest {
     @Rule
@@ -37,62 +39,33 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
     }
 
     @Test
-    public void testPluginExecutionShouldWorkWithoutAnyErrors() throws Exception {
-        // Preparation
-
-        // Execution
-        final int exitStatus = testproject.executeGoals("hamcrestMatcherGenerator:matchers");
-
-        // Expectation
-        assertThat("Execution exit status", exitStatus, is(0));
-    }
-
-    @Test
-    public void testPhaseTestShouldStillWorkAfterPluginExecutionWithoutAnyErrors()
-        throws Exception {
-        // Preparation
-
-        // Execution
-        final int exitStatus = testproject.executeGoals("hamcrestMatcherGenerator:matchers",
-                "test");
-
-        // Expectation
-        assertThat("Execution exit status", exitStatus, is(0));
-    }
-
-    @Test
     public void testPluginRunHasCreatedMatcherSourceOnCallingPluginGoalDirectly() throws Exception {
         // Preparation
-        assertThat("For this test required file is missing",
-            testproject.srcMainJava("some/pck/model/SimpleModel.java"),
-            is(anExistingFile()));
 
         // Execution
         testproject.executeGoals("hamcrestMatcherGenerator:matchers");
 
         // Expectation
-        assertThat(
-            "Should have been generated: " +
-            testproject.generatedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
-            testproject.generatedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+        assertThat("Should have been generated: " + matcherFileLocation(),
+            matcherFileLocation(),
             is(anExistingFile()));
+    }
+
+    private File matcherFileLocation() {
+        return testproject.targetDir().toPath().resolve(TestProjectResource.GENERATED_TEST_SOURCES)
+                          .resolve("some/pck/model/SimpleModelMatcher.java").toFile();
     }
 
     @Test
     public void testPluginRunHasCreatedMatcherSourceOnTestGoal() throws Exception {
         // Preparation
-        assertThat("For this test required file is missing",
-            testproject.srcMainJava("some/pck/model/SimpleModel.java"),
-            is(anExistingFile()));
 
         // Execution
         testproject.executeGoals("test");
 
         // Expectation
-        assertThat(
-            "Should have been generated: " +
-            testproject.generatedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
-            testproject.generatedTestSourcesDir("some/pck/model/SimpleModelMatcher.java"),
+        assertThat("Should have been generated: " + matcherFileLocation(),
+            matcherFileLocation(),
             is(anExistingFile()));
     }
 }
