@@ -38,19 +38,6 @@ public class MatchersMojoModelsInDifferentJarSystemTest {
         assertThat("Execution exit status", exitStatus, is(0));
     }
 
-    @Test
-    public void testPluginRunHasCreatedMatcherSourceOnCallingPluginGoalDirectly() throws Exception {
-        // Preparation
-
-        // Execution
-        testproject.executeGoals("hamcrestMatcherGenerator:matchers");
-
-        // Expectation
-        assertThat("Should have been generated: " + matcherFileLocation(),
-            matcherFileLocation(),
-            is(anExistingFile()));
-    }
-
     private File matcherFileLocation() {
         return testproject.getBaseDir().toPath().resolve("testprojectDependencyUser")
                           .resolve("target").resolve(TestProjectResource.GENERATED_TEST_SOURCES)
