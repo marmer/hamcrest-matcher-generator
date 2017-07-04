@@ -10,8 +10,12 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
+import static org.hamcrest.Matchers.blankOrNullString;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import org.hamcrest.StringDescription;
 
@@ -270,6 +274,30 @@ public class BeanPropertyMatcherTest {
 
         // Assertion
         assertThat("matches", matches, is(false));
+    }
+
+    @Test
+    public void testDescribeMissmatch_WrongTypeGiven_DescriptionShuoldContainTypeInformationOfGivenWrongType()
+        throws Exception {
+        // Preparation
+        final Matcher<?> classUnderTest =
+            new BeanPropertyMatcher<ClassWithSingleProperty>(ClassWithSingleProperty.class);
+
+        final Description description = new StringDescription();
+        final AnotherClassWithSingleProperty modelClass =
+            new AnotherClassWithSingleProperty("someProperty");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final Description instanceOfMissmatchDescription = new StringDescription();
+        instanceOf(ClassWithSingleProperty.class).describeMismatch(modelClass,
+            instanceOfMissmatchDescription);
+
+        assertThat(description.toString(),
+            is(both(not(blankOrNullString())).and(
+                    containsString(instanceOfMissmatchDescription.toString()))));
     }
 
     private String hasPropertyDescriptionText(final String propertyName) {
