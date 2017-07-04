@@ -24,6 +24,8 @@ import org.junit.Test;
 
 
 public class BeanPropertyMatcherTest {
+    private static final String AND = " and ";
+
     @Test
     public void testMatches_OnlyWithMatchingTypeInitialized_ShouldNotMatchInstanceOfDifferentType()
         throws Exception {
@@ -377,7 +379,7 @@ public class BeanPropertyMatcherTest {
 
         assertThat(description.toString(),
             is(equalTo(
-                    instanceOfMissmatchTextFor(modelClass.getClass()) + " and " +
+                    instanceOfMissmatchTextFor(modelClass.getClass()) + AND +
                     propertyMissmatchDescriptionText)));
     }
 
@@ -456,8 +458,57 @@ public class BeanPropertyMatcherTest {
 
         assertThat(description.toString(),
             is(equalTo(
-                    propertyMissmatchDescriptionTextForNonExisting + " and " +
+                    propertyMissmatchDescriptionTextForNonExisting + AND +
                     propertyMissmatchDescriptionTextForNonMatching)));
+    }
+
+    @Test
+    public void testDescribeMissmatch_LotsOfNotMatchingObjetsGiven_MissmatchDescriptionShouldBeInOrder()
+        throws Exception {
+        final String propertyNameOfNotExistingProperty = "notExistingProperty";
+        final Matcher<String> propertyMatcherOfNotExistingProperty = equalTo("anyValue");
+
+        final String propertyNameOfNonMatching1 = "firstProperty";
+        final Matcher<String> propertyMatcherOfNonMatching1 = equalTo("expectedPropertyValue1");
+
+        final String propertyNameOfNonMatching2 = "secondProperty";
+        final Matcher<String> propertyMatcherOfNonMatching2 = equalTo("expectedPropertyValue2");
+
+        final Matcher<?> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
+                ClassTwoProperties.class).with(propertyNameOfNotExistingProperty,
+                                             propertyMatcherOfNotExistingProperty)
+                                         .with(propertyNameOfNonMatching1,
+                                             propertyMatcherOfNonMatching1).with(
+                                             propertyNameOfNonMatching2,
+                                             propertyMatcherOfNonMatching2);
+
+        final Description description = new StringDescription();
+        final ClassTwoProperties modelClass =
+            new ClassTwoProperties("unexpectedPropertyValue1", "unexpectedPropertyValue2");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final String propertyMissmatchDescriptionTextForNonExisting =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfNotExistingProperty,
+                propertyMatcherOfNotExistingProperty);
+
+        final String propertyMissmatchDescriptionTextForNonMatching1 =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfNonMatching1,
+                propertyMatcherOfNonMatching1);
+        final String propertyMissmatchDescriptionTextForNonMatching2 =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfNonMatching2,
+                propertyMatcherOfNonMatching2);
+
+        assertThat(description.toString(),
+            is(equalTo(
+                    propertyMissmatchDescriptionTextForNonExisting + AND +
+                    propertyMissmatchDescriptionTextForNonMatching1 + AND +
+                    propertyMissmatchDescriptionTextForNonMatching2)));
     }
 
     private String getHasPropertyMissmatchDescriptionFor(final Object modelClass,
