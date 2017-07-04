@@ -69,11 +69,14 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         }
 
         for (final Matcher<?> matcher : hasPropertyMatcher) {
-            if (gotMissmatch) {
-                mismatchDescription.appendText(" and ");
-            }
+            if (!matcher.matches(item)) {
+                if (gotMissmatch) {
+                    mismatchDescription.appendText(" and ");
+                }
 
-            matcher.describeMismatch(item, mismatchDescription);
+                matcher.describeMismatch(item, mismatchDescription);
+                gotMissmatch = true;
+            }
         }
     }
 }

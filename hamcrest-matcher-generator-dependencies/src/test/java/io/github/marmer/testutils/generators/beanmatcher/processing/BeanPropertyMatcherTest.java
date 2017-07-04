@@ -5,6 +5,7 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanProper
 import lombok.Value;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -378,6 +379,85 @@ public class BeanPropertyMatcherTest {
             is(equalTo(
                     instanceOfMissmatchTextFor(modelClass.getClass()) + " and " +
                     propertyMissmatchDescriptionText)));
+    }
+
+    @Test
+    public void testDescribeMissmatch_ObjectWithOneMatchingAndSomeNotMatchingPropertyGiven_NotMatchingMissmatchShouldNotBePartOfResultingDescription()
+        throws Exception {
+        final String propertyNameOfNotExistingProperty = "notExistingProperty";
+        final Matcher<String> propertyMatcherOfNotExistingProperty = equalTo("anyValue");
+
+        final String propertyNameOfMatching = "firstProperty";
+        final Matcher<String> propertyMatcherOfMatching = equalTo("expectedPropertyValue1");
+
+        final String propertyNameOfNonMatching = "secondProperty";
+        final Matcher<String> propertyMatcherOfNonMatching = equalTo("expectedPropertyValue2");
+
+        final Matcher<?> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
+                ClassTwoProperties.class).with(propertyNameOfNotExistingProperty,
+                                             propertyMatcherOfNotExistingProperty)
+                                         .with(propertyNameOfMatching, propertyMatcherOfMatching)
+                                         .with(propertyNameOfNonMatching,
+                                             propertyMatcherOfNonMatching);
+
+        final Description description = new StringDescription();
+        final ClassTwoProperties modelClass =
+            new ClassTwoProperties("expectedPropertyValue1", "unexpectedPropertyValue2");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final String propertyMissmatchDescriptionTextForMatching =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfMatching,
+                propertyMatcherOfMatching);
+
+        assertThat(description.toString(),
+            is(not(containsString(propertyMissmatchDescriptionTextForMatching))));
+    }
+
+    @Test
+    public void testDescribeMissmatch_ObjectWithOneMatchingAndSomeNotMatchingPropertyGiven_NotMatchingResultsShouldBeShownInOrder()
+        throws Exception {
+        final String propertyNameOfNotExistingProperty = "notExistingProperty";
+        final Matcher<String> propertyMatcherOfNotExistingProperty = equalTo("anyValue");
+
+        final String propertyNameOfMatching = "firstProperty";
+        final Matcher<String> propertyMatcherOfMatching = equalTo("expectedPropertyValue1");
+
+        final String propertyNameOfNonMatching = "secondProperty";
+        final Matcher<String> propertyMatcherOfNonMatching = equalTo("expectedPropertyValue2");
+
+        final Matcher<?> classUnderTest = new BeanPropertyMatcher<ClassTwoProperties>(
+                ClassTwoProperties.class).with(propertyNameOfNotExistingProperty,
+                                             propertyMatcherOfNotExistingProperty)
+                                         .with(propertyNameOfMatching, propertyMatcherOfMatching)
+                                         .with(propertyNameOfNonMatching,
+                                             propertyMatcherOfNonMatching);
+
+        final Description description = new StringDescription();
+        final ClassTwoProperties modelClass =
+            new ClassTwoProperties("expectedPropertyValue1", "unexpectedPropertyValue2");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final String propertyMissmatchDescriptionTextForNonExisting =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfNotExistingProperty,
+                propertyMatcherOfNotExistingProperty);
+
+        final String propertyMissmatchDescriptionTextForNonMatching =
+            getHasPropertyMissmatchDescriptionFor(modelClass,
+                propertyNameOfNonMatching,
+                propertyMatcherOfNonMatching);
+
+        assertThat(description.toString(),
+            is(equalTo(
+                    propertyMissmatchDescriptionTextForNonExisting + " and " +
+                    propertyMissmatchDescriptionTextForNonMatching)));
     }
 
     private String getHasPropertyMissmatchDescriptionFor(final Object modelClass,
