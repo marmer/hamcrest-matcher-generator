@@ -306,8 +306,7 @@ public class BeanPropertyMatcherTest {
                 propertyMatcher);
 
         final Description description = new StringDescription();
-        final AnotherClassWithSingleProperty modelClass =
-            new AnotherClassWithSingleProperty("realPropertyValue");
+        final ClassWithSingleProperty modelClass = new ClassWithSingleProperty("realPropertyValue");
 
         // Execution
         classUnderTest.describeMismatch(modelClass, description);
@@ -334,8 +333,7 @@ public class BeanPropertyMatcherTest {
                 propertyMatcher);
 
         final Description description = new StringDescription();
-        final AnotherClassWithSingleProperty modelClass =
-            new AnotherClassWithSingleProperty("realPropertyValue");
+        final ClassWithSingleProperty modelClass = new ClassWithSingleProperty("realPropertyValue");
 
         // Execution
         classUnderTest.describeMismatch(modelClass, description);
@@ -350,8 +348,7 @@ public class BeanPropertyMatcherTest {
             containsString(" and " + propertyMissmatchDescriptionText));
     }
 
-    private String getHasPropertyMissmatchDescriptionFor(
-        final AnotherClassWithSingleProperty modelClass,
+    private String getHasPropertyMissmatchDescriptionFor(final Object modelClass,
         final String propertyName,
         final Matcher<String> propertyMatcher) {
         final Description propertyMissmatchDescription = new StringDescription();
