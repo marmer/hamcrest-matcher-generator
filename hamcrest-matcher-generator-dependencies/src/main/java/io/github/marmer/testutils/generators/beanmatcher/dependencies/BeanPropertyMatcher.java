@@ -62,7 +62,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @Override
     protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
         if (!instanceOfMatcher.matches(item)) {
-            instanceOfMatcher.describeMismatch(item, mismatchDescription);
+            mismatchDescription.appendText("Is an instance of " + item.getClass());
         }
     }
 }
