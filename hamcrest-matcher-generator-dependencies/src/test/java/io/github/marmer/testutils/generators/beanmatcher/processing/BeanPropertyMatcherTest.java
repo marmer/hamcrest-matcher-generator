@@ -10,12 +10,8 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
-import static org.hamcrest.Matchers.blankOrNullString;
-import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 
 import org.hamcrest.StringDescription;
 
@@ -291,13 +287,9 @@ public class BeanPropertyMatcherTest {
         classUnderTest.describeMismatch(modelClass, description);
 
         // Expectation
-        final Description instanceOfMissmatchDescription = new StringDescription();
-        instanceOf(ClassWithSingleProperty.class).describeMismatch(modelClass,
-            instanceOfMissmatchDescription);
 
         assertThat(description.toString(),
-            is(both(not(blankOrNullString())).and(
-                    containsString(instanceOfMissmatchDescription.toString()))));
+            is(equalTo("Is an instance of " + AnotherClassWithSingleProperty.class)));
     }
 
     private String hasPropertyDescriptionText(final String propertyName) {
