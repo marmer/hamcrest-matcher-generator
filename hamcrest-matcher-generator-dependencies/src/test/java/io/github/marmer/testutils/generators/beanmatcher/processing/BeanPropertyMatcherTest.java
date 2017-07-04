@@ -11,7 +11,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 
 import org.hamcrest.StringDescription;
 
@@ -289,7 +291,74 @@ public class BeanPropertyMatcherTest {
         // Expectation
 
         assertThat(description.toString(),
-            is(equalTo("Is an instance of " + AnotherClassWithSingleProperty.class)));
+            startsWith("Is an instance of " + AnotherClassWithSingleProperty.class));
+    }
+
+    @Test
+    public void testDescribeMissmatch_InstanceWithNotMatchingPropertyGiven_ShouldContainNotMatchingPropertyText()
+        throws Exception {
+        // Preparation
+        final String propertyName = "someProperty";
+        final Matcher<String> propertyMatcher = equalTo("expectedPropertyValue");
+        final Matcher<?> classUnderTest =
+            new BeanPropertyMatcher<ClassWithSingleProperty>(ClassWithSingleProperty.class).with(
+                propertyName,
+                propertyMatcher);
+
+        final Description description = new StringDescription();
+        final AnotherClassWithSingleProperty modelClass =
+            new AnotherClassWithSingleProperty("realPropertyValue");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final String propertyMissmatchDescriptionText = getHasPropertyMissmatchDescriptionFor(
+                modelClass,
+                propertyName,
+                propertyMatcher);
+
+        assertThat(description.toString(),
+            containsString(" and " + propertyMissmatchDescriptionText));
+    }
+
+    @Test
+    public void testDescribeMissmatch_InstanceWithNotExistingPropertyGiven_ShouldContainNotMatchingPropertyText()
+        throws Exception {
+        // Preparation
+        final String propertyName = "someNotExistingProperty";
+        final Matcher<String> propertyMatcher = equalTo("expectedPropertyValue");
+        final Matcher<?> classUnderTest =
+            new BeanPropertyMatcher<ClassWithSingleProperty>(ClassWithSingleProperty.class).with(
+                propertyName,
+                propertyMatcher);
+
+        final Description description = new StringDescription();
+        final AnotherClassWithSingleProperty modelClass =
+            new AnotherClassWithSingleProperty("realPropertyValue");
+
+        // Execution
+        classUnderTest.describeMismatch(modelClass, description);
+
+        // Expectation
+        final String propertyMissmatchDescriptionText = getHasPropertyMissmatchDescriptionFor(
+                modelClass,
+                propertyName,
+                propertyMatcher);
+
+        assertThat(description.toString(),
+            containsString(" and " + propertyMissmatchDescriptionText));
+    }
+
+    private String getHasPropertyMissmatchDescriptionFor(
+        final AnotherClassWithSingleProperty modelClass,
+        final String propertyName,
+        final Matcher<String> propertyMatcher) {
+        final Description propertyMissmatchDescription = new StringDescription();
+        hasProperty(propertyName, equalTo(propertyMatcher)).describeMismatch(modelClass,
+            propertyMissmatchDescription);
+
+        return propertyMissmatchDescription.toString();
     }
 
     private String hasPropertyDescriptionText(final String propertyName) {

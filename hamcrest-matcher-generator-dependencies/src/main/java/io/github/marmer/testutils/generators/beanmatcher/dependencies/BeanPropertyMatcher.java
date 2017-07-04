@@ -64,5 +64,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         if (!instanceOfMatcher.matches(item)) {
             mismatchDescription.appendText("Is an instance of " + item.getClass());
         }
+
+        for (final Matcher<?> matcher : hasPropertyMatcher) {
+            mismatchDescription.appendText(" and ");
+            matcher.describeMismatch(item, mismatchDescription);
+        }
     }
 }
