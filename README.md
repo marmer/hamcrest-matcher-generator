@@ -7,6 +7,7 @@
 [![Maintainability Rating](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
 [![Readability Rating](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
 [![Security Rating](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=security_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
+[![Code Smells](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=code_smells)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
 
 hamcrest-matcher-generator
 ==========================
