@@ -1,7 +1,6 @@
 [![Build Status](https://travis-ci.org/marmer/hamcrest-matcher-generator.svg?branch=master)](https://travis-ci.org/marmer/hamcrest-matcher-generator)
 [![Code Coverage](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=coverage)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator)
 [![Technical Dept](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_debt_ratio)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator)
-[![codebeat badge](https://codebeat.co/badges/e6115b82-9d80-4bdd-b36c-3a32c388f61a)](https://codebeat.co/projects/github-com-marmer-hamcrest-matcher-generator-master)
 [![Dependency Status](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/5957d3e6368b080030c69d3f)
  
 [![Maintainability Rating](https://sonarcloud.io/api/badges/measure?key=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/dashboard/index/io.github.marmer.testutils:hamcrest-matcher-generator) 
