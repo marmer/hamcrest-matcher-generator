@@ -4,8 +4,10 @@ import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
 
 import org.codehaus.plexus.util.ReflectionUtils;
 
@@ -34,6 +36,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 
+import static org.mockito.ArgumentMatchers.any;
+
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -75,9 +81,44 @@ public class MatchersMojoTest {
 
 	private final MatcherGenerator matcherGenerator = mock(MatcherGenerator.class);
 
+	@Mock
+	private ProjectDependenciesResolver projectDependenciesResolver;
+
+	@Mock
+	private MavenSession mavenSession;
+
+	@Mock
+	private DependencyValidatorFactory dependencyValidatorFactory;
+
+	@Mock
+	private DependencyValidator dependencyValidator;
+
 	@Before
 	public void setUp() throws Exception {
 		ReflectionUtils.setVariableValueInObject(classUnderTest, "matcherSources", matcherSources);
+		ReflectionUtils.setVariableValueInObject(classUnderTest,
+			"allowMissingHamcrestDependency",
+			false);
+	}
+
+	@Test
+	public void testExecute_MissingRequiredDependenciesAreNotAllowedAndDependenciesAreMissing_BuildShouldBreak()
+		throws Exception {
+
+		// Vorbereitung
+		ReflectionUtils.setVariableValueInObject(classUnderTest,
+			"allowMissingHamcrestDependency",
+			false);
+		final MojoFailureException buildBrakingException = new MojoFailureException("any needed dependency is missing");
+		doReturn(dependencyValidator).when(dependencyValidatorFactory).createBy(mavenProject,
+			projectDependenciesResolver, mavenSession);
+		doThrow(buildBrakingException).when(dependencyValidator).validateProjectHasNeededDependencies();
+
+		// Prüfung
+		exception.expect(is(buildBrakingException));
+
+		// Ausführung
+		classUnderTest.execute();
 	}
 
 	@Test
@@ -85,9 +126,12 @@ public class MatchersMojoTest {
 		throws Exception {
 
 		// Preparation
+		projectDependenceisAreValid();
+
 		final DependencyResolutionRequiredException dependencyResolutionRequiredException = mock(
 				DependencyResolutionRequiredException.class);
-		when(mavenProject.getTestClasspathElements()).thenThrow(dependencyResolutionRequiredException);
+		when(mavenProject.getTestClasspathElements()).thenThrow(
+			dependencyResolutionRequiredException);
 
 		// Expectation
 		exception.expect(MojoFailureException.class);
@@ -98,8 +142,15 @@ public class MatchersMojoTest {
 		classUnderTest.execute();
 	}
 
+	private void projectDependenceisAreValid() throws MojoFailureException {
+		doReturn(dependencyValidator).when(dependencyValidatorFactory).createBy(any(MavenProject.class),
+			any(ProjectDependenciesResolver.class), any(MavenSession.class));
+		doNothing().when(dependencyValidator).validateProjectHasNeededDependencies();
+	}
+
 	@Test
 	public void testExecute_GenerationOfClasspathWorks_OutputDirPathShouldBeUsedAsTestSource() throws Exception {
+		projectDependenceisAreValid();
 		readyForGeneration();
 
 		// Execution
@@ -113,6 +164,7 @@ public class MatchersMojoTest {
 	public void testExecute_NoPackagesOrQualifiedClassnamesGivenForExecution_ShouldStopTheBuild() throws Exception {
 
 		// Preparation
+		projectDependenceisAreValid();
 		ReflectionUtils.setVariableValueInObject(classUnderTest, "matcherSources", new String[0]);
 
 		// Assertion
@@ -128,6 +180,7 @@ public class MatchersMojoTest {
 	public void testExecute_ClassloaderCanBeCreatedByClasspathElements_GenerationShouldStart() throws Exception {
 
 		// Preparation
+		projectDependenceisAreValid();
 		readyForGeneration();
 
 		// Execution
@@ -141,7 +194,9 @@ public class MatchersMojoTest {
 	public void testExecute_AnErrorHappensOnGeneration_BuildShouldStopWithAnAppropriatErrorMessage() throws Exception {
 
 		// Preparation
+		projectDependenceisAreValid();
 		readyForGeneration();
+
 		final IOException ioException = new IOException("some error message");
 		doThrow(ioException).when(matcherGenerator).generateHelperForClassesAllIn(matcherSources);
 
@@ -152,12 +207,12 @@ public class MatchersMojoTest {
 
 		// Execution
 		classUnderTest.execute();
-
 	}
 
 	private void readyForGeneration() throws Exception {
 		classLoaderIsReady();
-		when(matcherGeneratorFactory.createBy(classLoader, outputDir.toPath())).thenReturn(matcherGenerator);
+		when(matcherGeneratorFactory.createBy(classLoader, outputDir.toPath())).thenReturn(
+			matcherGenerator);
 	}
 
 	private void classLoaderIsReady() throws Exception {
