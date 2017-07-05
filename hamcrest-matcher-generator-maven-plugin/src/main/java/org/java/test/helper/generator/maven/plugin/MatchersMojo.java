@@ -133,9 +133,8 @@ public class MatchersMojo extends AbstractMojo {
 			throw new MojoFailureException("Cannot access Dependencies", e);
 		}
 
-		final MatcherGenerator matcherFileGenerator = matcherGeneratorFactory.createBy(classLoader,
+		return matcherGeneratorFactory.createBy(classLoader,
 				outputDir.toPath());
-		return matcherFileGenerator;
 	}
 
 	private void validateNeededDependencies() throws MojoFailureException {

@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
@@ -109,6 +111,26 @@ public class MavenDependencyValidatorTest {
 
 		// Execution
 		classUnderTest.validateProjectHasNeededDependencies();
+	}
+
+	@Test
+	public void testValidateProjectHasNeededDependencies_ErrorsOnResolvingRependencies_ShouldBreakTheBuild()
+		throws Exception {
+
+		// Vorbereitung
+		final RepositorySystemSession repositorySystemSession = mock(RepositorySystemSession.class);
+		when(mavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
+		when(projectDependenciesResolver.resolve(
+				any(DefaultDependencyResolutionRequest.class))).thenThrow(DependencyResolutionException.class);
+
+		// Prüfung
+		exception.expect(MojoFailureException.class);
+		exception.expectMessage(is(equalTo("Cannot resolve dependencies")));
+		exception.expectCause(is(instanceOf(DependencyResolutionException.class)));
+
+		// Ausführung
+		classUnderTest.validateProjectHasNeededDependencies();
+
 	}
 
 	private DependencyResolutionResult prepareDependencyResolutionResult() throws DependencyResolutionException {

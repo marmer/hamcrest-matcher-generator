@@ -85,9 +85,7 @@ public class MavenDependencyValidator implements DependencyValidator {
 					new DefaultDependencyResolutionRequest(mavenProject,
 						mavenSession.getRepositorySession()));
 		} catch (DependencyResolutionException e) {
-
-			// TODO care about me!
-			throw new RuntimeException("bla", e);
+			throw new MojoFailureException("Cannot resolve dependencies", e);
 		}
 	}
 
