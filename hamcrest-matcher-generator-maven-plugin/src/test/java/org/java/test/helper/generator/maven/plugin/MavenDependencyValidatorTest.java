@@ -114,6 +114,21 @@ public class MavenDependencyValidatorTest {
 	}
 
 	@Test
+	public void testValidateProjectHasNeededDependencies_AllDependenciesFound_NoExceptionIsThrown() throws Exception {
+
+		// Preparation
+		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
+
+		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependenciesExcept());
+
+		// Execution
+		classUnderTest.validateProjectHasNeededDependencies();
+
+		// Expectation
+		// No Exception thrown
+	}
+
+	@Test
 	public void testValidateProjectHasNeededDependencies_ErrorsOnResolvingRependencies_ShouldBreakTheBuild()
 		throws Exception {
 
