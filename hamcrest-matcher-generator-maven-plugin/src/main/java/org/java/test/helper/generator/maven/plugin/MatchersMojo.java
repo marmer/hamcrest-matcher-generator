@@ -95,7 +95,8 @@ public class MatchersMojo extends AbstractMojo {
 	 */
 	@Parameter(
 		required = true,
-		defaultValue = "false"
+		defaultValue = "false",
+		property = "allowMissingHamcrestDependency"
 	)
 	private boolean allowMissingHamcrestDependency;
 
@@ -138,9 +139,11 @@ public class MatchersMojo extends AbstractMojo {
 	}
 
 	private void validateNeededDependencies() throws MojoFailureException {
-		final DependencyValidator dependencyValidator = dependencyValidatorFactory.createBy(project,
-				projectDependenciesResolver, mavenSession);
-		dependencyValidator.validateProjectHasNeededDependencies();
+		if (!allowMissingHamcrestDependency) {
+			final DependencyValidator dependencyValidator = dependencyValidatorFactory.createBy(project,
+					projectDependenciesResolver, mavenSession);
+			dependencyValidator.validateProjectHasNeededDependencies();
+		}
 	}
 
 	private void validateMatcherSourcesSet() throws MojoFailureException {

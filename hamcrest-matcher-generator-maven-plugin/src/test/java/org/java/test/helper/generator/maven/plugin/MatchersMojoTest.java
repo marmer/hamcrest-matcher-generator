@@ -113,12 +113,30 @@ public class MatchersMojoTest {
 		doReturn(dependencyValidator).when(dependencyValidatorFactory).createBy(mavenProject,
 			projectDependenciesResolver, mavenSession);
 		doThrow(buildBrakingException).when(dependencyValidator).validateProjectHasNeededDependencies();
+		final MojoFailureException buildBrakingExceptionForMissingDependencies = buildBrakingException;
 
 		// Prüfung
-		exception.expect(is(buildBrakingException));
+		exception.expect(is(buildBrakingExceptionForMissingDependencies));
 
 		// Ausführung
 		classUnderTest.execute();
+	}
+
+	@Test
+	public void testExecute_MissingRequiredDependenciesAreAllowedAndDependenciesAreMissingAndAllOtherRequirementsForGenerationAreGood_GenerationShouldStart()
+		throws Exception {
+
+		// Preparation
+		ReflectionUtils.setVariableValueInObject(classUnderTest,
+			"allowMissingHamcrestDependency",
+			true);
+		readyForGeneration();
+
+		// Execution
+		classUnderTest.execute();
+
+		// Assertion
+		verify(matcherGenerator).generateHelperForClassesAllIn(matcherSources);
 	}
 
 	@Test
