@@ -22,6 +22,6 @@ before_install:
   | tar zxf - -C $HOME; fi
 - export PATH=$M2_HOME/bin:$PATH
 install:
-- mvn install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
+- mvn clean install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
 script:
-- mvn clean jacoco:prepare-agent package sonar:sonar -V
+- mvn jacoco:prepare-agent package sonar:sonar -V
