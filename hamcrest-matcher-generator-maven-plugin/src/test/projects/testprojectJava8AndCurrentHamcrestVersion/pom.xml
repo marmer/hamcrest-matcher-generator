@@ -18,7 +18,7 @@
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
 			<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -40,13 +40,13 @@
 			<plugin>
 				<groupId>io.github.marmer.testutils</groupId>
 				<artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>${project.version}</version>
 				<configuration>
 					<matcherSources>
 						<matcherSource>some.pck.model</matcherSource>
 						<matcherSource>some.pck.model.SimpleModel</matcherSource>
 					</matcherSources>
-					<outputDir>${project.build.directory}/generated-test-sources</outputDir>
+					<outputDir>target/generated-test-sources</outputDir>
 				</configuration>
 				<executions>
 					<execution>
