@@ -22,98 +22,98 @@ import java.util.function.Consumer;
 
 
 public class TestProjectResource extends TestWatcher {
-    public static final String GENERATED_TEST_SOURCES = "generated-test-sources";
+	public static final String GENERATED_TEST_SOURCES = "generated-test-sources";
 
-    private File baseDir;
+	private File baseDir;
 
-    private Consumer<Description> startingMethod;
-    private Consumer<Description> finishedMethod;
+	private Consumer<Description> startingMethod;
+	private Consumer<Description> finishedMethod;
 
-    public TestProjectResource(final String projectName) {
-        new TestResources() {
-            {
-                startingMethod = this::starting;
-                finishedMethod = this::finished;
-            }
+	public TestProjectResource(final String projectName) {
+		new TestResources("src/test/projects", "target/test-projects") {
 
-            @Override
-            protected void starting(final Description description) {
-                try {
-                    super.starting(description);
-                    baseDir = getBasedir(projectName);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-    }
+			{
+				startingMethod = this::starting;
+				finishedMethod = this::finished;
+			}
 
-    @Override
-    protected void starting(final Description description) {
-        startingMethod.accept(description);
-    }
+			@Override
+			protected void starting(final Description description) {
+				try {
+					super.starting(description);
+					baseDir = getBasedir(projectName);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+	}
 
-    @Override
-    protected void finished(final Description description) {
-        finishedMethod.accept(description);
-    }
+	@Override
+	protected void starting(final Description description) {
+		startingMethod.accept(description);
+	}
 
-    public File getBaseDir() {
-        return baseDir;
-    }
+	@Override
+	protected void finished(final Description description) {
+		finishedMethod.accept(description);
+	}
 
-    public File generatedTestSourcesDir(final String path) {
-        return new File(generatedTestSourcesDir(), path);
-    }
+	public File getBaseDir() {
+		return baseDir;
+	}
 
-    public File srcMainJava(final String path) {
-        return new File(getSrcMainJavaDir(), path);
-    }
+	public File generatedTestSourcesDir(final String path) {
+		return new File(generatedTestSourcesDir(), path);
+	}
 
-    public File getSrcMainJavaDir() {
-        return new File(baseDir, "src/main/java");
-    }
+	public File srcMainJava(final String path) {
+		return new File(getSrcMainJavaDir(), path);
+	}
 
-    public File generatedTestSourcesDir() {
-        return new File(targetDir(), GENERATED_TEST_SOURCES);
-    }
+	public File getSrcMainJavaDir() {
+		return new File(baseDir, "src/main/java");
+	}
 
-    public File targetDir() {
-        return new File(baseDir, "target");
-    }
+	public File generatedTestSourcesDir() {
+		return new File(targetDir(), GENERATED_TEST_SOURCES);
+	}
 
-    public File pomFile() {
-        return new File(baseDir, "pom.xml");
-    }
+	public File targetDir() {
+		return new File(baseDir, "target");
+	}
 
-    public int executeGoals(final String... goals) throws MavenInvocationException,
-        CommandLineException {
-        final InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(pomFile());
-        request.setGoals(Arrays.asList(goals));
+	public File pomFile() {
+		return new File(baseDir, "pom.xml");
+	}
 
-        final Invoker invoker = new DefaultInvoker();
-        prepareExecutableFor(invoker);
+	public int executeGoals(final String... goals) throws MavenInvocationException, CommandLineException {
+		final InvocationRequest request = new DefaultInvocationRequest();
+		request.setPomFile(pomFile());
+		request.setGoals(Arrays.asList(goals));
 
-        final InvocationResult result = invoker.execute(request);
+		final Invoker invoker = new DefaultInvoker();
+		prepareExecutableFor(invoker);
 
-        if (result.getExecutionException() != null) {
-            throw result.getExecutionException();
-        }
+		final InvocationResult result = invoker.execute(request);
 
-        return result.getExitCode();
-    }
+		if (result.getExecutionException() != null) {
+			throw result.getExecutionException();
+		}
 
-    private void prepareExecutableFor(final Invoker invoker) {
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-            final String getenv = System.getenv("M2_HOME");
-            File mavenExecutable = new File(getenv, "bin/mvn.cmd");
+		return result.getExitCode();
+	}
 
-            if (!mavenExecutable.exists()) {
-                mavenExecutable = new File(getenv, "bin/mvn.bat");
-            }
+	private void prepareExecutableFor(final Invoker invoker) {
+		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+			final String getenv = System.getenv("M2_HOME");
+			File mavenExecutable = new File(getenv, "bin/mvn.cmd");
 
-            invoker.setMavenExecutable(mavenExecutable);
-        }
-    }
+			if (!mavenExecutable.exists()) {
+				mavenExecutable = new File(getenv, "bin/mvn.bat");
+			}
+
+			invoker.setMavenExecutable(mavenExecutable);
+		}
+	}
 }
