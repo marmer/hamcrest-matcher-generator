@@ -30,7 +30,7 @@ public class TestProjectResource extends TestWatcher {
 	private Consumer<Description> finishedMethod;
 
 	public TestProjectResource(final String projectName) {
-		new TestResources("src/test/projects", "target/test-projects") {
+		new TestResources("target/test-projects-base", "target/test-projects") {
 
 			{
 				startingMethod = this::starting;
