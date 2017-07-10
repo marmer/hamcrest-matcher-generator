@@ -51,6 +51,12 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Dependency.class)
 public class MavenDependencyValidatorTest {
+	private static final String MISSING_HAMCREST_DEPENDENCY_ERROR_MESSAGE =
+		"Cannot find any hamcrest dependency. Make sure you have added directly or indiredtly org.hamcrest:java-hamcrest in any version or org.hamcrest:hamcrest-all at version 1.2 accessible from test scope. Otherwise the generated classes may not compile work.";
+
+	private static final String MISSING_OWN_DEPENDENCY_ERROR_MESSAGE =
+		"Cannot find any hamcrest-matcher-generator-dependencies. Make sure you have added it directly or indiredtly io.github.marmer.testutils.hamcrest-matcher-generator-dependencies in the same version as the related plugin. Otherwise the generated classes may not compile work";
+
 	@Rule
 	public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
@@ -75,7 +81,52 @@ public class MavenDependencyValidatorTest {
 	private Dependency newHamcrestDependency = dependency("org.hamcrest", "java-hamcrest");
 
 	@Test
-	public void testValidateProjectHasNeededDependencies_CannotFindAHamcrestDependency_ExceptionWithAnAppropriateMessageIsThrown()
+	public void testValidateProjectHasNeededDependencies_CannotFindOwnDependencyButItsGroupId_ExceptionWithAnAppropriateMessageIsThrown()
+		throws Exception {
+
+		// Preparation
+		final Dependency dependencyWithOwnGroupId = dependency("io.github.marmer.testutils",
+				"someUnexpectedArtifactId");
+		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
+		final List<Dependency> allRelevantDependencies = allRelevantDependenciesExcept(
+				ownDependency);
+		allRelevantDependencies.add(dependencyWithOwnGroupId);
+		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependencies);
+
+		// Expectation
+		exception.expect(MojoFailureException.class);
+		exception.expectMessage(is(
+				equalTo(
+					MISSING_OWN_DEPENDENCY_ERROR_MESSAGE)));
+
+		// Execution
+		classUnderTest.validateProjectHasNeededDependencies();
+	}
+
+	@Test
+	public void testValidateProjectHasNeededDependencies_CannotFindAnyHamcrestDependencyButItsGroupId_ExceptionWithAnAppropriateMessageIsThrown()
+		throws Exception {
+
+		// Preparation
+		final Dependency dependencyWithHamcrestGroupId = dependency("org.hamcrest", "someUnexpectedArtifactId");
+		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
+		final List<Dependency> allRelevantDependencies = allRelevantDependenciesExcept(
+				newHamcrestDependency, oldHamcrestDependency);
+		allRelevantDependencies.add(dependencyWithHamcrestGroupId);
+		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependencies);
+
+		// Expectation
+		exception.expect(MojoFailureException.class);
+		exception.expectMessage(is(
+				equalTo(
+					MISSING_HAMCREST_DEPENDENCY_ERROR_MESSAGE)));
+
+		// Execution
+		classUnderTest.validateProjectHasNeededDependencies();
+	}
+
+	@Test
+	public void testValidateProjectHasNeededDependencies_CannotFindAnyHamcrestDependency_ExceptionWithAnAppropriateMessageIsThrown()
 		throws Exception {
 
 		// Preparation
@@ -87,7 +138,7 @@ public class MavenDependencyValidatorTest {
 		exception.expect(MojoFailureException.class);
 		exception.expectMessage(is(
 				equalTo(
-					"Cannot find any hamcrest dependency. Make sure you have added directly or indiredtly org.hamcrest:java-hamcrest in any version or org.hamcrest:hamcrest-all at version 1.2 accessible from test scope. Otherwise the generated classes may not compile work.")));
+					MISSING_HAMCREST_DEPENDENCY_ERROR_MESSAGE)));
 
 		// Execution
 		classUnderTest.validateProjectHasNeededDependencies();
@@ -107,7 +158,7 @@ public class MavenDependencyValidatorTest {
 		exception.expect(MojoFailureException.class);
 		exception.expectMessage(is(
 				equalTo(
-					"Cannot find any hamcrest-matcher-generator-dependencies. Make sure you have added it directly or indiredtly io.github.marmer.testutils.hamcrest-matcher-generator-dependencies in the same version as the related plugin. Otherwise the generated classes may not compile work")));
+					MISSING_OWN_DEPENDENCY_ERROR_MESSAGE)));
 
 		// Execution
 		classUnderTest.validateProjectHasNeededDependencies();
@@ -120,6 +171,40 @@ public class MavenDependencyValidatorTest {
 		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
 
 		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependenciesExcept());
+
+		// Execution
+		classUnderTest.validateProjectHasNeededDependencies();
+
+		// Expectation
+		// No Exception thrown
+	}
+
+	@Test
+	public void testValidateProjectHasNeededDependencies_AllDependenciesAndOnlyOldHamcrestDependencyFound_NoExceptionIsThrown()
+		throws Exception {
+
+		// Preparation
+		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
+
+		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependenciesExcept(
+				newHamcrestDependency));
+
+		// Execution
+		classUnderTest.validateProjectHasNeededDependencies();
+
+		// Expectation
+		// No Exception thrown
+	}
+
+	@Test
+	public void testValidateProjectHasNeededDependencies_AllDependenciesAndOnlyNewHamcrestDependencyFound_NoExceptionIsThrown()
+		throws Exception {
+
+		// Preparation
+		final DependencyResolutionResult dependencyResolutionResult = prepareDependencyResolutionResult();
+
+		when(dependencyResolutionResult.getDependencies()).thenReturn(allRelevantDependenciesExcept(
+				oldHamcrestDependency));
 
 		// Execution
 		classUnderTest.validateProjectHasNeededDependencies();
