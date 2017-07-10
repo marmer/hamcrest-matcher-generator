@@ -11,6 +11,8 @@
 	<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 	<scm>
 		<url>https://github.com/marmer/hamcrest-matcher-generator</url>
+		<connection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</connection>
+		<developerConnection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</developerConnection>
 	</scm>
 	<ciManagement>
 		<system>travis-ci</system>
@@ -171,6 +173,11 @@
 	</dependencyManagement>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+			</plugin>
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
