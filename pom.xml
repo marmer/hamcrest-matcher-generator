@@ -13,6 +13,7 @@
 	<scm>
 		<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 		<connection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</connection>
+		<developerConnection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</developerConnection>
 	</scm>
 
 	<ciManagement>
