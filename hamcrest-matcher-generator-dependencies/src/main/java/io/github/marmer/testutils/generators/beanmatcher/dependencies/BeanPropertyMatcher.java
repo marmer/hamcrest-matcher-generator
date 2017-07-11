@@ -21,7 +21,7 @@ import java.util.List;
  * @since  13.06.2017
  */
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
-    private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<>();
+    private final List<Matcher<?>> hasPropertyMatcher = new ArrayList<Matcher<?>>();
     private Matcher<?> instanceOfMatcher;
 
     public BeanPropertyMatcher(final Class<? extends T> expectedClass) {
@@ -40,7 +40,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     @SuppressWarnings("unchecked")
     private Matcher<?> getFullInnerMatcher() {
-        final List<Matcher<?>> fullMatcher = new ArrayList<>();
+        final List<Matcher<?>> fullMatcher = new ArrayList<Matcher<?>>();
         fullMatcher.add(instanceOfMatcher);
         fullMatcher.addAll(hasPropertyMatcher);
 
