@@ -44,7 +44,18 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<powermock.version>1.7.0</powermock.version>
 	</properties>
-
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
