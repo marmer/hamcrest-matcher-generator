@@ -25,3 +25,4 @@ install:
 - mvn clean install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
 script:
 - mvn jacoco:prepare-agent package sonar:sonar -V
+- mvn clean deploy -Dmaven.test.skip --settings server-settings.xml
