@@ -56,6 +56,16 @@
 		</repository>
 	</distributionManagement>
 
+	<developers>
+		<developer>
+			<id>marmer</id>
+			<name>Mariano Mertinat</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+	</developers>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
