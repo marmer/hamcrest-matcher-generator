@@ -26,65 +26,85 @@ import java.util.stream.Collectors;
  *
  * <p>See: https://github.com/ronmamo/reflections</p>
  *
- * @author  marmer
- * @since   18.06.2017
+ * @author marmer
+ * @since  18.06.2017
  */
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
-	private final Collection<URL> classLoaderURLs;
-	private ClassLoader[] classLoaders;
+    private final Collection<URL> classLoaderURLs;
+    private ClassLoader[] classLoaders;
 
-	public ReflectionPotentialBeanClassFinder(final ClassLoader... classLoaders) {
-		this.classLoaders = classLoaders;
-		this.classLoaderURLs = ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
-	}
+    public ReflectionPotentialBeanClassFinder(final ClassLoader... classLoaders) {
+        this.classLoaders = classLoaders;
+        this.classLoaderURLs =
+            ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
+    }
 
-	@Override
-	public List<Class<?>> findClasses(final String... packageNames) {
-		if (ArrayUtils.isEmpty(packageNames)) {
-			return Collections.emptyList();
-		}
+    @Override
+    public List<Class<?>> findClasses(final String... packageNames) {
+        if (ArrayUtils.isEmpty(packageNames)) {
+            return Collections.emptyList();
+        }
 
-		final Set<Class<?>> packagesSet = new HashSet<>();
-		for (final String packageName : packageNames) {
-			packagesSet.addAll(findClasses(packageName));
-		}
+        final Set<Class<?>> packagesSet = new HashSet<>();
 
-		return packagesSet.parallelStream().filter(this::isRelevant).collect(Collectors.toList());
-	}
+        for (final String packageName : packageNames) {
+            packagesSet.addAll(findClasses(packageName));
+        }
 
-	private Set<Class<?>> findClasses(final String packageName) {
-		if (StringUtils.isBlank(packageName)) {
-			return Collections.emptySet();
-		}
+        return packagesSet.parallelStream().filter(this::isRelevant).collect(Collectors.toList());
+    }
 
-		final Set<Class<?>> results = new HashSet<>();
+    private Set<Class<?>> findClasses(final String packageName) {
+        if (StringUtils.isBlank(packageName)) {
+            return Collections.emptySet();
+        }
 
-		results.addAll(classesByClassloaderFor(packageName));
-		results.addAll(classesByClassLoaderUrlsFor(packageName));
+        return classesFor(packageName);
+    }
 
-		return results;
-	}
+    private Set<Class<?>> classesFor(final String packageName) {
+        final Set<Class<?>> results = new HashSet<>();
 
-	private Set<Class<? extends Object>> classesByClassLoaderUrlsFor(final String packageName) {
-		return new Reflections(packageName,
-				classLoaderURLs, new SubTypesScanner(false)).getSubTypesOf(Object.class);
-	}
+        results.addAll(classesByClassloaderFor(packageName));
+        results.addAll(classesByClassLoaderUrlsFor(packageName));
 
-	private Set<Class<? extends Object>> classesByClassloaderFor(final String packageName) {
-		return new Reflections(packageName, classLoaders,
-				new SubTypesScanner(false)).getSubTypesOf(Object.class);
-	}
+        return results;
+    }
 
-	private boolean isRelevant(final Class<?> clazz) {
-		return !isIrrelevant(clazz);
-	}
+    private Set<Class<? extends Object>> classesByClassLoaderUrlsFor(final String packageName) {
+        final Set<Class<? extends Object>> classesByClassLoaderUrls = new HashSet<>();
+        classesByClassLoaderUrls.addAll(
+            new Reflections(packageName, classLoaderURLs, new SubTypesScanner(false)).getSubTypesOf(
+                Object.class));
+        classesByClassLoaderUrls.addAll(
+            new Reflections(packageName, classLoaderURLs, new SubTypesScanner(false)).getSubTypesOf(
+                Exception.class));
 
-	private boolean isIrrelevant(final Class<?> clazz) {
-		return isPackageInfo(clazz) || clazz.isInterface() || clazz.isAnonymousClass();
-	}
+        return classesByClassLoaderUrls;
+    }
 
-	private boolean isPackageInfo(final Class<?> clazz) {
-		return Objects.equal("package-info", clazz.getSimpleName());
-	}
+    private Set<Class<? extends Object>> classesByClassloaderFor(final String packageName) {
+        final Set<Class<? extends Object>> classesByClassLoader = new HashSet<>();
 
+        classesByClassLoader.addAll(
+            new Reflections(packageName, classLoaders, new SubTypesScanner(false)).getSubTypesOf(
+                Object.class));
+        classesByClassLoader.addAll(
+            new Reflections(packageName, classLoaders, new SubTypesScanner(false)).getSubTypesOf(
+                Exception.class));
+
+        return classesByClassLoader;
+    }
+
+    private boolean isRelevant(final Class<?> clazz) {
+        return !isIrrelevant(clazz);
+    }
+
+    private boolean isIrrelevant(final Class<?> clazz) {
+        return isPackageInfo(clazz) || clazz.isInterface() || clazz.isAnonymousClass();
+    }
+
+    private boolean isPackageInfo(final Class<?> clazz) {
+        return Objects.equal("package-info", clazz.getSimpleName());
+    }
 }
