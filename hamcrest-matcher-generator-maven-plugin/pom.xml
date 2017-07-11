@@ -13,6 +13,7 @@
 	<packaging>maven-plugin</packaging>
 
 	<name>hamcrest-matcher-generator-maven-plugin</name>
+	<description>The maven plugin of hamcrest-matcher-generator</description>
 
 	<dependencies>
 		<dependency>

@@ -6,7 +6,7 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>hamcrest-matcher-generator</name>
-	<description>A tool to generate helper-classes based on production code</description>
+	<description>A tool to generate hamcrest matchers based on any model classes (or other classes with property getters)</description>
 
 	<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 
@@ -43,6 +43,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<powermock.version>1.7.0</powermock.version>
 	</properties>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

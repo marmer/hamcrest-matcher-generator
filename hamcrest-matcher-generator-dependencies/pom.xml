@@ -11,6 +11,7 @@
 
 	<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
 	<name>hamcrest-matcher-generator-dependencies</name>
+	<description>Dependencies for projects using generated classes of hamcrest-matcher-generator</description>
 
 	<properties>
 		<maven.compiler.source>1.6</maven.compiler.source>
