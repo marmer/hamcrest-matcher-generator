@@ -9,16 +9,26 @@
 	<description>A tool to generate helper-classes based on production code</description>
 
 	<url>https://github.com/marmer/hamcrest-matcher-generator</url>
+
 	<scm>
 		<url>https://github.com/marmer/hamcrest-matcher-generator</url>
 		<connection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</connection>
-		<developerConnection>scm:git:https://github.com/marmer/hamcrest-matcher-generator</developerConnection>
 	</scm>
+
 	<ciManagement>
 		<system>travis-ci</system>
 		<url>https://travis-ci.org/marmer/hamcrest-matcher-generator</url>
 	</ciManagement>
+
 	<inceptionYear>2017</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<modules>
 		<module>hamcrest-matcher-generator-dependencies</module>
@@ -236,4 +246,32 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
