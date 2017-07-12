@@ -217,6 +217,10 @@
 						<goals>
 							<goal>sign</goal>
 						</goals>
+						<configuration>
+							<skip>false</skip>
+							<useAgent>true</useAgent>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
