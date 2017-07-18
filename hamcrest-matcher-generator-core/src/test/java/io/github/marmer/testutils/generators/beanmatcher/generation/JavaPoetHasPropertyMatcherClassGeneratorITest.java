@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -295,8 +296,26 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		assertThat("Matcher matches matching class", matches, is(true));
 	}
 
-	// TODO test what happens, if the base is a "matcher" itself
-	// TODO test what happens, if the type is a base type
+	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceHasBeenGenerated_NoConvenienceMethodShouldExist()
+		throws Exception {
+
+		// Preparation
+		final Class<PojoWithMatcherProperty> type = PojoWithMatcherProperty.class;
+
+		// Execution
+		classUnderTest.generateMatcherFor(type);
+
+		// Assertion
+		final Matcher<PojoWithMatcherProperty> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
+		final List<Method> methods = getMethodsByName(matcher, "withSomeProperty");
+		assertThat("Matcher matches matching class", methods, hasSize(1));
+	}
+
+	private List<Method> getMethodsByName(final Matcher<PojoWithMatcherProperty> matcher, final String methodName) {
+		return Arrays.stream(matcher.getClass().getMethods()).filter(method -> methodName.equals(method.getName()))
+			.collect(Collectors.toList());
+	}
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
@@ -360,6 +379,18 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	private File generatedSourceFileFor(final Class<?> type) {
 		return compiler.getGeneratedSourcePathFor(type).toFile();
+	}
+
+	public static class PojoWithMatcherProperty {
+		private Matcher<?> someProperty;
+
+		private PojoWithMatcherProperty(final Matcher<?> someProperty) {
+			this.someProperty = someProperty;
+		}
+
+		public Matcher<?> getSomeProperty() {
+			return someProperty;
+		}
 	}
 
 	public static class SimplePojo {

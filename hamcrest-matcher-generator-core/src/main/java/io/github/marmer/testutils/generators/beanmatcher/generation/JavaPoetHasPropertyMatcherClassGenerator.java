@@ -130,9 +130,14 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private List<MethodSpec> propertyMethods(final Class<?> type) {
-		return propertyExtractor.getPropertiesOf(type).stream().flatMap(property ->
-					Stream.of(propertyMatcherMethodFor(property, type),
-						propertyMethodFor(property, type))).collect(Collectors.toList());
+		return propertyExtractor.getPropertiesOf(type).stream().flatMap(property -> {
+				if (Matcher.class.equals(property.getType())) {
+					return Stream.of(propertyMatcherMethodFor(property, type));
+				} else {
+					return Stream.of(propertyMatcherMethodFor(property, type),
+							propertyMethodFor(property, type));
+				}
+			}).collect(Collectors.toList());
 	}
 
 	private MethodSpec propertyMatcherMethodFor(final BeanProperty property, final Class<?> type) {
