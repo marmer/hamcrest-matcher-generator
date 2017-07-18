@@ -55,6 +55,7 @@ public class MatcherFileGeneratorITest {
 
 	private void initClassUnderTest() {
 		potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder();
+
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
 				srcOutputDir);
@@ -81,6 +82,7 @@ public class MatcherFileGeneratorITest {
 		// Preparation
 		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
 		classUnderTest.generateHelperForClassesAllIn(type.getName());
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
 
@@ -98,8 +100,45 @@ public class MatcherFileGeneratorITest {
 		// Preparation
 		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
 		classUnderTest.generateHelperForClassesAllIn(type.getName());
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
+
+		// Execution
+		final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(true));
+	}
+
+	@Test
+	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndNotEqualValueIsGiven_ShouldNotMatch()
+		throws Exception {
+
+		// Preparation
+		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+		classUnderTest.generateHelperForClassesAllIn(type.getName());
+
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
+
+		// Execution
+		final boolean matches = matcher.matches(new SimpleSampleClass("someOtherValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(false));
+	}
+
+	@Test
+	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndEqualValueIsGiven_ShouldMatch()
+		throws Exception {
+
+		// Preparation
+		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+		classUnderTest.generateHelperForClassesAllIn(type.getName());
+
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
 
 		// Execution
 		final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
@@ -115,6 +154,7 @@ public class MatcherFileGeneratorITest {
 		// Preparation
 		final Class<?> type = SimpleSampleClass.class;
 		classUnderTest.generateHelperForClassesAllIn(type.getName());
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution

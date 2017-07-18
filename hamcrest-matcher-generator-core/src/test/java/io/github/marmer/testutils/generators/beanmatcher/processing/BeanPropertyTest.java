@@ -16,7 +16,7 @@ public class BeanPropertyTest {
 
 	@Test
 	public void shouldImplementToString() {
-		final BeanProperty sut = new BeanProperty("name");
+		final BeanProperty sut = new BeanProperty("name", BeanPropertyTest.class);
 		ToStringVerifier.forClass(BeanProperty.class).ignore("$jacocoData").containsAllPrivateFields(sut);
 	}
 

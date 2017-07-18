@@ -230,6 +230,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type);
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
@@ -247,6 +248,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type);
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 		MethodUtils.invokeMethod(matcher, "withSimpleProp", equalTo("someValue"));
 
@@ -258,12 +260,52 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotEqualValueIsGiven_ShouldNotMatch()
+		throws Exception {
+
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type);
+
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSimpleProp", "someValue");
+
+		// Execution
+		final boolean matches = matcher.matches(new SimplePojo("someOtherValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(false));
+	}
+
+	@Test
+	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndEqualValueIsGiven_ShouldMatch()
+		throws Exception {
+
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+		classUnderTest.generateMatcherFor(type);
+
+		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
+		MethodUtils.invokeMethod(matcher, "withSimpleProp", "someValue");
+
+		// Execution
+		final boolean matches = matcher.matches(new SimplePojo("someValue"));
+
+		// Assertion
+		assertThat("Matcher matches matching class", matches, is(true));
+	}
+
+	// TODO test what happens, if the base is a "matcher" itself
+	// TODO test what happens, if the type is a base type
+
+	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
 		throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type);
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution
@@ -280,6 +322,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
 		classUnderTest.generateMatcherFor(type);
+
 		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
 
 		// Execution

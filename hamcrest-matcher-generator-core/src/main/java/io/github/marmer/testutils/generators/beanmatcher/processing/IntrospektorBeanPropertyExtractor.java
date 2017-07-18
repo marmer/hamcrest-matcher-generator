@@ -28,7 +28,7 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 		if (type != null) {
 			try {
 				return Arrays.stream(propertyDescriptorsOf(type)).map(descriptor ->
-							new BeanProperty(descriptor.getName()))
+							new BeanProperty(descriptor.getName(), descriptor.getPropertyType()))
 					.collect(
 						Collectors.toList());
 			} catch (IntrospectionException e) {
