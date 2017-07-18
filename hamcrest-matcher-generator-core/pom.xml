@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
 			<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-			<version>${project.parent.version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.squareup</groupId>
