@@ -15,6 +15,7 @@ import java.beans.IntrospectionException;
 
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -38,16 +39,19 @@ public class IntrospektorBeanPropertyExtractorTest {
 	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
 
 	@Test
-	public void testGetPropertiesOf_TypeWithSomeProperties_ShouldReturnThePropertiesWithItsNames() throws Exception {
+	public void testGetPropertiesOf_TypeWithSomeProperties_ShouldReturnTheCorrectlyInitializedValues()
+		throws Exception {
 		// Preparation
 
 		// Execution
-		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSingleProperty.class);
+		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSomeProperties.class);
 
 		// Assertion
 		assertThat("Properties", properties,
-			containsInAnyOrder(hasProperty("name", equalTo("firstProperty")),
-				hasProperty("name", equalTo("secondProperty"))));
+			containsInAnyOrder(
+				is(allOf(hasProperty("name", equalTo("firstProperty")), hasProperty("type", equalTo(String.class)))),
+				is(allOf(hasProperty("name", equalTo("secondProperty")),
+						hasProperty("type", equalTo(Integer.TYPE))))));
 	}
 
 	@Test
@@ -65,23 +69,23 @@ public class IntrospektorBeanPropertyExtractorTest {
 	public void testGetPropertiesOf_ErrorOnReadingTypeInformation_ShouldReturnAnEmptyList() throws Exception {
 
 		// Preparation
-		when(introspectorDelegate.getBeanInfo(ClassWithSingleProperty.class)).thenThrow(IntrospectionException.class);
+		when(introspectorDelegate.getBeanInfo(ClassWithSomeProperties.class)).thenThrow(IntrospectionException.class);
 
 		// Execution
-		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSingleProperty.class);
+		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSomeProperties.class);
 
 		// Assertion
 		assertThat("Properties", properties, is(empty()));
 	}
 
-	public static class ClassWithSingleProperty {
+	public static class ClassWithSomeProperties {
 		private String firstProperty;
 
 		public String getFirstProperty() {
 			return firstProperty;
 		}
 
-		public Integer getSecondProperty() {
+		public int getSecondProperty() {
 			return 42;
 		}
 

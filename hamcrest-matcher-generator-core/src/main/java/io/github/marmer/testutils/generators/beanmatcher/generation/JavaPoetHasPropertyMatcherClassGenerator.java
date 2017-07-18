@@ -12,12 +12,14 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 
 import org.apache.commons.lang3.StringUtils;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
 import java.io.IOException;
@@ -27,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -127,17 +130,31 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private List<MethodSpec> propertyMethods(final Class<?> type) {
-		return propertyExtractor.getPropertiesOf(type).stream().map(property ->
-					propertyMethodFor(property.getName(), type)).collect(Collectors.toList());
+		return propertyExtractor.getPropertiesOf(type).stream().flatMap(property ->
+					Stream.of(propertyMatcherMethodFor(property, type),
+						propertyMethodFor(property, type))).collect(Collectors.toList());
 	}
 
-	private MethodSpec propertyMethodFor(final String propertyName, final Class<?> type) {
-		return MethodSpec.methodBuilder(methodNameToGenerateFor(propertyName)).returns(
+	private MethodSpec propertyMatcherMethodFor(final BeanProperty property, final Class<?> type) {
+		return MethodSpec.methodBuilder(methodNameToGenerateFor(property.getName())).returns(
 				classNameOfGeneratedTypeFor(
 					type))
 			.addModifiers(
 				Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
-				"$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, propertyName).addStatement(
+				"$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, property.getName()).addStatement(
+				"return this")
+			.build();
+	}
+
+	private MethodSpec propertyMethodFor(final BeanProperty property, final Class<?> type) {
+		return MethodSpec.methodBuilder(methodNameToGenerateFor(property.getName())).returns(
+				classNameOfGeneratedTypeFor(
+					type))
+			.addModifiers(
+				Modifier.PUBLIC).addParameter(property.getType(), "value", Modifier.FINAL)
+			.addStatement(
+				"$L.with($S, $T.equalTo(value))", INNER_MATCHER_FIELD_NAME, property.getName(), Matchers.class)
+			.addStatement(
 				"return this")
 			.build();
 	}
