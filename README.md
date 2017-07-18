@@ -42,7 +42,7 @@ In addition, when you use the "both" or "allOf" matchers with a lot of propertie
 
 The expectation part is non atomic. It contains only the first failing matcher result.
 
-**TODO ... comming soon** This tool will show you all non matching properties in an atomic way (if the given matchers don't fail with an exception) so you don't have to run your tests over and over again for each non matching property.
+This tool will show you all non matching properties in an atomic way (if the given matchers don't fail with an exception) so you don't have to run your tests over and over again for each non matching property.
 
 ### How-To
 
