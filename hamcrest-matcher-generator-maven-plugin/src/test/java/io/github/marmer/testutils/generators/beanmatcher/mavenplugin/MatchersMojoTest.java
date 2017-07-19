@@ -2,11 +2,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.ClassLoaderFactory;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.DependencyValidator;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.DependencyValidatorFactory;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.MatchersMojo;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.PathToUrlDelegate;
+import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
@@ -114,10 +110,12 @@ public class MatchersMojoTest {
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
 			"allowMissingHamcrestDependency",
 			false);
+
 		final MojoFailureException buildBrakingException = new MojoFailureException("any needed dependency is missing");
 		doReturn(dependencyValidator).when(dependencyValidatorFactory).createBy(mavenProject,
 			projectDependenciesResolver, mavenSession);
 		doThrow(buildBrakingException).when(dependencyValidator).validateProjectHasNeededDependencies();
+
 		final MojoFailureException buildBrakingExceptionForMissingDependencies = buildBrakingException;
 
 		// Prüfung
@@ -234,7 +232,10 @@ public class MatchersMojoTest {
 
 	private void readyForGeneration() throws Exception {
 		classLoaderIsReady();
-		when(matcherGeneratorFactory.createBy(classLoader, outputDir.toPath())).thenReturn(
+
+		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
+				.classLoader(classLoader).outputPath(outputDir.toPath()).build();
+		when(matcherGeneratorFactory.createBy(matcherGeneratorConfiguration)).thenReturn(
 			matcherGenerator);
 	}
 

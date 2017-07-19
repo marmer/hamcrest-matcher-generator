@@ -2,7 +2,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.mavenplugin.NewOperatorMatcherGeneratorFactory;
+import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +34,9 @@ public class NewOperatorMatcherGeneratorFactoryTest {
 		final Path outputPath = temp.newFolder().toPath();
 
 		// Execution
-		final MatcherGenerator matcherGenerator = classUnderTest.createBy(classLoader, outputPath);
+		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
+				.classLoader(classLoader).outputPath(outputPath).build();
+		final MatcherGenerator matcherGenerator = classUnderTest.createBy(matcherGeneratorConfiguration);
 
 		// Assertion
 		assertThat(matcherGenerator, is(instanceOf(MatcherFileGenerator.class)));
