@@ -18,10 +18,18 @@ import org.mockito.quality.Strictness;
 import java.nio.file.Path;
 
 import java.util.Arrays;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+
+import static org.junit.Assert.assertThat;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
+import static java.util.Collections.singletonList;
 
 
 public class MatcherFileGeneratorTest {
@@ -59,12 +67,13 @@ public class MatcherFileGeneratorTest {
 	}
 
 	@Test
-	public void testGenerateHelperForClassesAllIn_MatchersHaveBeenGenerated_GeneratedMatcherFilesShouldBeLoad()
+	public void testGenerateHelperForClassesAllIn_MatchersHaveBeenGenerated_GeneratedMatcherFilesShouldBeReturned()
 		throws Exception {
 
 		// Preparation
 		final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
 		final Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
+		final List<Class<?>> generatedClasses = singletonList(String.class);
 
 		doReturn(Arrays.asList(SamplePojo1.class,
 				SamplePojo2.class)).when(potentialPojoClassFinder).findClasses(packageName);
@@ -72,13 +81,14 @@ public class MatcherFileGeneratorTest {
 			SamplePojo1.class);
 		doReturn(simplePojo2MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
 			SamplePojo2.class);
+		doReturn(generatedClasses).when(javaFileClassLoader).load(Arrays.asList(simplePojo1MatcherPath,
+				simplePojo2MatcherPath));
 
 		// Execution
-		classUnderTest.generateHelperForClassesAllIn(packageName);
+		final List<Class<?>> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
 
 		// Assertion
-		verify(javaFileClassLoader).load(Arrays.asList(simplePojo1MatcherPath,
-				simplePojo2MatcherPath));
+		assertThat(retVal, is(sameInstance(generatedClasses)));
 	}
 
 	private static class SamplePojo1 { }
