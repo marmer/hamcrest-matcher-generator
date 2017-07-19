@@ -357,6 +357,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 					.toList());
 	}
 
+	@SuppressWarnings("unchecked")
 	private Matcher<Method> matcherConsumingMethodWithReturntypeAndName(
 		final Class<?> generatedMatcherClass,
 		final String propertyName) {
@@ -366,6 +367,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 				hasProperty("returnType", is(generatedMatcherClass)));
 	}
 
+	@SuppressWarnings("unchecked")
 	private Matcher<Iterable<? extends String>> hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(
 		final Class<SimplePojo> type) {
 		return containsInRelativeOrder(startsWith(
