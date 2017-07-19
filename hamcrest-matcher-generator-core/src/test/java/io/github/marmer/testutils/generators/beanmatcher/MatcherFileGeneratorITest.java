@@ -58,7 +58,7 @@ public class MatcherFileGeneratorITest {
 
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
-				srcOutputDir);
+				srcOutputDir, false);
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
 				new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader));
 	}

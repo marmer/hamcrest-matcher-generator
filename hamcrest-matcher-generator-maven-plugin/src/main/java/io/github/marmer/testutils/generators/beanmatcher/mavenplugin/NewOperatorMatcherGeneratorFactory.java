@@ -28,7 +28,8 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
 			new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, matcherGeneratorConfiguration.getOutputPath());
+				propertyExtractor, matcherGeneratorConfiguration.getOutputPath(),
+				matcherGeneratorConfiguration.isIgnoreClassesWithoutProperties());
 		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(
 				matcherGeneratorConfiguration.getOutputPath(),
 				matcherGeneratorConfiguration.getClassLoader());

@@ -84,6 +84,12 @@ public class MatchersMojo extends AbstractMojo {
 	private ProjectDependenciesResolver projectDependenciesResolver;
 
 	@Parameter(
+		required = false,
+		defaultValue = "false"
+	)
+	private boolean ignoreClassesWithoutProperties;
+
+	@Parameter(
 		defaultValue = "${session}",
 		readonly = true
 	)
@@ -135,7 +141,8 @@ public class MatchersMojo extends AbstractMojo {
 		}
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader).outputPath(outputDir.toPath()).build();
+				.classLoader(classLoader).outputPath(outputDir.toPath()).ignoreClassesWithoutProperties(
+				ignoreClassesWithoutProperties).build();
 		return matcherGeneratorFactory.createBy(
 				matcherGeneratorConfiguration);
 	}

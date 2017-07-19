@@ -63,8 +63,9 @@
 				<configuration>
 					<matcherSources>
 						<matcherSource>some.pck.model</matcherSource>
-						<matcherSource>some.pck.model.SimpleModel</matcherSource>
+						<matcherSource>some.pck.model.SimpleModel</matcherSource>						
 					</matcherSources>
+					<ignoreClassesWithoutProperties>false</ignoreClassesWithoutProperties>
 					<outputDir>target/generated-test-sources</outputDir>
 				</configuration>
 				<executions>

@@ -100,6 +100,7 @@ public class MatchersMojoTest {
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
 			"allowMissingHamcrestDependency",
 			false);
+
 	}
 
 	@Test
@@ -233,8 +234,14 @@ public class MatchersMojoTest {
 	private void readyForGeneration() throws Exception {
 		classLoaderIsReady();
 
+		final boolean ignoreClassesWithoutProperties = true;
+		ReflectionUtils.setVariableValueInObject(classUnderTest,
+			"ignoreClassesWithoutProperties",
+			ignoreClassesWithoutProperties);
+
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader).outputPath(outputDir.toPath()).build();
+				.classLoader(classLoader).outputPath(outputDir.toPath()).ignoreClassesWithoutProperties(
+				ignoreClassesWithoutProperties).build();
 		when(matcherGeneratorFactory.createBy(matcherGeneratorConfiguration)).thenReturn(
 			matcherGenerator);
 	}
