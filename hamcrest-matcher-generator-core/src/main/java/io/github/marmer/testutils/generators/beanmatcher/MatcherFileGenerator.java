@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -35,11 +36,13 @@ public class MatcherFileGenerator implements MatcherGenerator {
 	}
 
 	@Override
-	public void generateHelperForClassesAllIn(final String... packageOrQualifiedClassNames) throws IOException {
+	public List<Class<?>> generateHelperForClassesAllIn(final String... packageOrQualifiedClassNames)
+		throws IOException {
 		final List<Class<?>> potentialPojoClasses = potentialPojoClassFinder.findClasses(packageOrQualifiedClassNames);
 		final List<Path> generatedMatcherPaths = generateMatchersFor(potentialPojoClasses,
 				packageOrQualifiedClassNames);
 		javaFileClassLoader.load(generatedMatcherPaths);
+		return Collections.emptyList();
 	}
 
 	private List<Path> generateMatchersFor(final List<Class<?>> potentialPojoClasses,

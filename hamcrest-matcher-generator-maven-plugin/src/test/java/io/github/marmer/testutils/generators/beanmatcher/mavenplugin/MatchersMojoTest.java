@@ -7,6 +7,7 @@ import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 
@@ -30,6 +31,7 @@ import org.mockito.quality.Strictness;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -210,6 +212,30 @@ public class MatchersMojoTest {
 
 		// Assertion
 		verify(matcherGenerator).generateHelperForClassesAllIn(matcherSources);
+	}
+
+	@Test
+	public void testExecute_MatchersHaveBeenGenerated_GeneratedMatchersAreLogged() throws Exception {
+
+		// Preparation
+		projectDependenceisAreValid();
+		readyForGeneration();
+
+		final Log log = mock(Log.class);
+		classUnderTest.setLog(log);
+
+		final Class<?> someHelper = String.class;
+		final Class<?> anotherHelper = Integer.class;
+		when(matcherGenerator.generateHelperForClassesAllIn(matcherSources)).thenReturn(Arrays.asList(
+				someHelper,
+				anotherHelper));
+
+		// Execution
+		classUnderTest.execute();
+
+		// Assertion
+		verify(log).info("Generated: " + someHelper);
+		verify(log).info("Generated: " + anotherHelper);
 	}
 
 	@Test

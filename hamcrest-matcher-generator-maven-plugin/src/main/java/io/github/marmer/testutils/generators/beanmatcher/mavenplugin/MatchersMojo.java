@@ -37,6 +37,8 @@ import org.apache.maven.project.ProjectDependenciesResolver;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
+
 
 /**
  * This goal is used to generate matchers based on classes in given packages or qualified names. Not
@@ -125,7 +127,8 @@ public class MatchersMojo extends AbstractMojo {
 		final MatcherGenerator matcherFileGenerator = prepareMatcherGenerator();
 
 		try {
-			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
+			final List<Class<?>> generatedMatchers = matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
+			generatedMatchers.forEach(generatedType -> getLog().info("Generated: " + generatedType));
 		} catch (IOException e) {
 			throw new MojoFailureException("Error on matcher generation", e);
 		}
