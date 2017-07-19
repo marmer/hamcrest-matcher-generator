@@ -12,8 +12,6 @@ import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClas
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 
-import java.nio.file.Path;
-
 
 /**
  * A factory for creating {@link MatcherGenerator} objects by connecting them manually.
@@ -24,15 +22,16 @@ import java.nio.file.Path;
 public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFactory {
 
 	@Override
-	public MatcherGenerator createBy(final ClassLoader classLoader, final Path outputPath) {
+	public MatcherGenerator createBy(final MatcherGeneratorConfiguration matcherGeneratorConfiguration) {
 		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
-				classLoader);
+				matcherGeneratorConfiguration.getClassLoader());
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
 			new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, outputPath);
-		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(outputPath,
-				classLoader);
+				propertyExtractor, matcherGeneratorConfiguration.getOutputPath());
+		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(
+				matcherGeneratorConfiguration.getOutputPath(),
+				matcherGeneratorConfiguration.getClassLoader());
 		return new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
 				javaFileClassLoader);
