@@ -25,4 +25,9 @@ public class SimpleInterfaceImplTest {
 			isSimpleModel().withSomeProperty(equalTo("someValue")));
 	}
 
+	@Test(expected = ClassNotFoundException.class)
+	public void testClassWithoutPropertyShouldNotExist() throws ClassNotFoundException {
+		getClass().getClassLoader().loadClass("some.pck.model.ClassWithoutPropertiesMatcher");
+	}
+
 }

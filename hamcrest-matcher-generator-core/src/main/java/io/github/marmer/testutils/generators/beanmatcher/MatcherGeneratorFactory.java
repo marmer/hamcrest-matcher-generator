@@ -30,5 +30,6 @@ public interface MatcherGeneratorFactory {
 	public static class MatcherGeneratorConfiguration {
 		private final ClassLoader classLoader;
 		private final Path outputPath;
+		private final boolean ignoreClassesWithoutProperties;
 	}
 }

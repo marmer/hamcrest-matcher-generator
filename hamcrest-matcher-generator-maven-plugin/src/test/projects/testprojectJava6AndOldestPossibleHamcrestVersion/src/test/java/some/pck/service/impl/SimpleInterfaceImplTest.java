@@ -2,6 +2,7 @@ package some.pck.service.impl;
 
 import org.junit.Test;
 
+import some.pck.model.ClassWithoutProperties;
 import some.pck.model.SimpleModel;
 import some.pck.model.SimpleModelMatcher;
 
@@ -10,6 +11,7 @@ import static org.hamcrest.Matchers.is;
 
 import static org.junit.Assert.assertThat;
 
+import static some.pck.model.ClassWithoutPropertiesMatcher.isClassWithoutProperties;
 import static some.pck.model.SimpleModelMatcher.isSimpleModel;
 
 
@@ -25,4 +27,9 @@ public class SimpleInterfaceImplTest {
 			isSimpleModel().withSomeProperty(equalTo("someValue")));
 	}
 
+	@Test
+	public void testMatchingWithStaticMethodOnNonPropertyClassShouldWorkHere() throws Exception {
+		assertThat(new ClassWithoutProperties(),
+			isClassWithoutProperties());
+	}
 }

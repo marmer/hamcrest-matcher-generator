@@ -46,7 +46,10 @@ public class MatcherFileGenerator implements MatcherGenerator {
 		final String... packageOrQualifiedClassNames) throws IOException {
 		final List<Path> generatedMatcherPaths = new ArrayList<>(ArrayUtils.getLength(packageOrQualifiedClassNames));
 		for (final Class<?> potentialPojoClass : potentialPojoClasses) {
-			generatedMatcherPaths.add(hasPropertyMatcherClassGenerator.generateMatcherFor(potentialPojoClass));
+			final Path generateMatcher = hasPropertyMatcherClassGenerator.generateMatcherFor(potentialPojoClass);
+			if (generateMatcher != null) {
+				generatedMatcherPaths.add(generateMatcher);
+			}
 		}
 		return generatedMatcherPaths;
 	}

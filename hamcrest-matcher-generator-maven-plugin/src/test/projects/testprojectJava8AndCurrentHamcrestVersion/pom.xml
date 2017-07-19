@@ -46,6 +46,7 @@
 						<matcherSource>some.pck.model</matcherSource>
 						<matcherSource>some.pck.model.SimpleModel</matcherSource>
 					</matcherSources>
+					<ignoreClassesWithoutProperties>true</ignoreClassesWithoutProperties>
 					<outputDir>target/generated-test-sources</outputDir>
 				</configuration>
 				<executions>
