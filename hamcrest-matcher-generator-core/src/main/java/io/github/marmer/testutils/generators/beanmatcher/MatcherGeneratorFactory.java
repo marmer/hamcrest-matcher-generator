@@ -1,6 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import lombok.Builder;
+import lombok.Generated;
 import lombok.Value;
 
 import java.nio.file.Path;
@@ -25,9 +26,9 @@ public interface MatcherGeneratorFactory {
 
 	@Value
 	@Builder
+	@Generated
 	public static class MatcherGeneratorConfiguration {
-		@Builder.Default
-		private final ClassLoader classLoader = MatcherGeneratorConfiguration.class.getClassLoader();
+		private final ClassLoader classLoader;
 		private final Path outputPath;
 	}
 }
