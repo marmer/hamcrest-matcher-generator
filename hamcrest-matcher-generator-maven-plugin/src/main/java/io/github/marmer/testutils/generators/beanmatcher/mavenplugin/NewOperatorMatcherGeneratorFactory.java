@@ -23,13 +23,14 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 
 	@Override
 	public MatcherGenerator createBy(final MatcherGeneratorConfiguration matcherGeneratorConfiguration) {
-		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
-				matcherGeneratorConfiguration.getClassLoader());
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
+				propertyExtractor,
+				matcherGeneratorConfiguration.isIgnoreClassesWithoutProperties(),
+				matcherGeneratorConfiguration.getClassLoader());
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
 			new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, matcherGeneratorConfiguration.getOutputPath(),
-				matcherGeneratorConfiguration.isIgnoreClassesWithoutProperties());
+				propertyExtractor, matcherGeneratorConfiguration.getOutputPath());
 		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(
 				matcherGeneratorConfiguration.getOutputPath(),
 				matcherGeneratorConfiguration.getClassLoader());

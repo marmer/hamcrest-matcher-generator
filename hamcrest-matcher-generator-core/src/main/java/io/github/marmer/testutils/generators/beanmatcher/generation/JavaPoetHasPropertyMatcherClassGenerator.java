@@ -50,28 +50,21 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
 	private final BeanPropertyExtractor propertyExtractor;
 	private final Path outputDir;
-	private boolean ignoreClassesWithoutProperties;
 
 	/**
 	 * Creates a new Instance.
 	 *
-	 * @param  propertyExtractor               the property extractor
-	 * @param  outputDir                       the output dir
-	 * @param  ignoreClassesWithoutProperties  the ignore classes without properties
+	 * @param  propertyExtractor  the property extractor
+	 * @param  outputDir          the output dir
 	 */
 	public JavaPoetHasPropertyMatcherClassGenerator(final BeanPropertyExtractor propertyExtractor,
-		final Path outputDir, final boolean ignoreClassesWithoutProperties) {
+		final Path outputDir) {
 		this.propertyExtractor = propertyExtractor;
 		this.outputDir = outputDir;
-		this.ignoreClassesWithoutProperties = ignoreClassesWithoutProperties;
 	}
 
 	@Override
 	public Path generateMatcherFor(final Class<?> type) throws IOException {
-		if (ignoreClassesWithoutProperties && !hasProperties(type)) {
-			return null;
-		}
-
 		final JavaFile javaFile = prepareJavaFile(type);
 		javaFile.writeTo(outputDir);
 		return outputDir.resolve(javaFile.toJavaFileObject().getName());
@@ -81,11 +74,6 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 		return JavaFile.builder(type.getPackage().getName(), generatedTypeFor(type)).indent("\t").skipJavaLangImports(
 				true)
 			.build();
-	}
-
-	private boolean hasProperties(final Class<?> type) {
-		final List<BeanProperty> properties = propertyExtractor.getPropertiesOf(type);
-		return !properties.isEmpty();
 	}
 
 	private String matcherNameFor(final Class<?> type) {

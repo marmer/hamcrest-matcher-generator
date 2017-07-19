@@ -54,11 +54,11 @@ public class MatcherFileGeneratorITest {
 	}
 
 	private void initClassUnderTest() {
-		potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder();
-
 		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+		potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false);
+
 		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
-				srcOutputDir, false);
+				srcOutputDir);
 		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
 				new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader));
 	}

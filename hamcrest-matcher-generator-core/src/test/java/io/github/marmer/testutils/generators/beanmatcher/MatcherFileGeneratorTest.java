@@ -81,27 +81,6 @@ public class MatcherFileGeneratorTest {
 				simplePojo2MatcherPath));
 	}
 
-	@Test
-	public void testGenerateHelperForClassesAllIn_MatchersForSomeButNotAllClassesHaveBeenGenerated_OnlyFilesForGeneratedMatchersShouldBeLoad()
-		throws Exception {
-
-		// Preparation
-		final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
-
-		doReturn(Arrays.asList(SamplePojo1.class,
-				SamplePojo2.class)).when(potentialPojoClassFinder).findClasses(packageName);
-		doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-			SamplePojo1.class);
-		doReturn(null).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-			SamplePojo2.class);
-
-		// Execution
-		classUnderTest.generateHelperForClassesAllIn(packageName);
-
-		// Assertion
-		verify(javaFileClassLoader).load(Arrays.asList(simplePojo1MatcherPath));
-	}
-
 	private static class SamplePojo1 { }
 
 	private static class SamplePojo2 { }

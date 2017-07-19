@@ -34,7 +34,6 @@ import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMa
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
@@ -42,12 +41,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
 
 import static org.hamcrest.io.FileMatchers.anExistingFile;
-import static org.hamcrest.io.FileMatchers.anExistingFileOrDirectory;
 
 import static org.junit.Assert.assertThat;
 
@@ -72,7 +69,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	private void initClassUnderTest() {
 		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, srcOutputDir, false);
+				propertyExtractor, srcOutputDir);
 	}
 
 	private void initCompiler() {
@@ -120,42 +117,10 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		throws Exception {
 
 		// Preparation
-		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, srcOutputDir, false);
 		classUnderTest.generateMatcherFor(ClassWithoutAnyProperty.class);
 
 		// Assertion
 		assertThat(generatedSourceFileFor(ClassWithoutAnyProperty.class), is(anExistingFile()));
-	}
-
-	@Test
-	public void testGenerateMatcherFor_SomeClassWithoutAnyPropertyWithIgnoringSuchClasses_ShouldCreateJavaFile()
-		throws Exception {
-
-		// Preparation
-		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, srcOutputDir, true);
-		classUnderTest.generateMatcherFor(ClassWithoutAnyProperty.class);
-
-		// Assertion
-		assertThat(generatedSourceFileFor(ClassWithoutAnyProperty.class), is(not(anExistingFileOrDirectory())));
-	}
-
-	@Test
-	public void testGenerateMatcherFor_SomeClassWithoutAnyPropertyWitIgnoringSuchClasses_ShouldReturnNothing()
-		throws Exception {
-
-		// Preparation
-		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, srcOutputDir, true);
-
-		// Execution
-		final Path pathOfGeneratedMatcher = classUnderTest.generateMatcherFor(ClassWithoutAnyProperty.class);
-		// TODO use an optional instead of null
-
-		// Assertion
-		assertThat("pathOfGeneratedMatcher", pathOfGeneratedMatcher,
-			is(nullValue(Path.class)));
 	}
 
 	@Test
