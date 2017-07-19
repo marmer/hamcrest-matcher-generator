@@ -172,6 +172,12 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>com.github.javaparser</groupId>
+				<artifactId>javaparser-core</artifactId>
+				<version>3.2.12</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>be.joengenduvel.java.verifiers</groupId>
 				<artifactId>to-string</artifactId>
 				<version>1.0.2</version>

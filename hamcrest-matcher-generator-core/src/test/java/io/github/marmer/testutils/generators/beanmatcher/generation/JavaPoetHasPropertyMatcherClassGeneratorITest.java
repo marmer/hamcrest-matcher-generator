@@ -1,10 +1,18 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.StringLiteralExpr;
+
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
@@ -21,13 +29,16 @@ import java.io.IOException;
 
 import java.lang.reflect.Method;
 
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import javax.annotation.Generated;
 
 import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
 
@@ -36,13 +47,11 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
 import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.containsInRelativeOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasToString;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.Matchers.startsWith;
 
 import static org.hamcrest.io.FileMatchers.anExistingFile;
 
@@ -185,6 +194,21 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	@Test
+	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedAnnotatedIsImported() throws Exception {
+
+		// Preparation
+		final Class<SimplePojo> type = SimplePojo.class;
+
+		// Execution
+		classUnderTest.generateMatcherFor(type);
+
+		// Assertion
+		final String source = readGeneratedSourceFileLines();
+		final CompilationUnit javaFile = JavaParser.parse(source);
+		assertThat(javaFile.getImports(), containsImportOf(Generated.class));
+	}
+
+	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeIsAnnotatedWithGenerated() throws Exception {
 
 		// Preparation
@@ -194,9 +218,22 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		classUnderTest.generateMatcherFor(type);
 
 		// Assertion
-		final List<String> sourceFileLines = readGeneratedSourceFileLines();
-		assertThat("Generated source file lines", sourceFileLines,
-			hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(type));
+		final String source = readGeneratedSourceFileLines();
+		final CompilationUnit javaFile = JavaParser.parse(source);
+
+		final TypeDeclaration<?> generatedClass = javaFile.getType(0);
+		final String annotationName = Generated.class.getSimpleName();
+		final Optional<AnnotationExpr> generatedAnnotation = generatedClass.getAnnotationByName(
+				annotationName);
+		final List<StringLiteralExpr> childNodesByType = generatedAnnotation.get().getChildNodesByType(
+				StringLiteralExpr.class);
+		final String generatedValue = childNodesByType.get(0).getValue();
+		assertThat("Value of Generated Annotation", generatedValue,
+			is(equalTo(JavaPoetHasPropertyMatcherClassGenerator.class.getName())));
+	}
+
+	private Matcher<Iterable<? super ImportDeclaration>> containsImportOf(final Class<Generated> importType) {
+		return hasItem(hasProperty("name", hasToString(equalTo(importType.getName()))));
 	}
 
 	@Test
@@ -378,16 +415,8 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 				hasProperty("returnType", is(generatedMatcherClass)));
 	}
 
-	@SuppressWarnings("unchecked")
-	private Matcher<Iterable<? extends String>> hasGeneratedAnnotationBeforeGeneratedClassDefinitionFor(
-		final Class<SimplePojo> type) {
-		return containsInRelativeOrder(startsWith(
-					"@Generated(\"" + JavaPoetHasPropertyMatcherClassGenerator.class.getName() + "\")"),
-				containsString("class " + compiler.getGeneratedMatcherClassNameFor(type)));
-	}
-
-	private List<String> readGeneratedSourceFileLines() throws IOException {
-		return Files.readAllLines(generatedSourceFileFor(SimplePojo.class).toPath());
+	private String readGeneratedSourceFileLines() throws IOException {
+		return FileUtils.readFileToString(generatedSourceFileFor(SimplePojo.class), StandardCharsets.UTF_8);
 	}
 
 	private File generatedSourceFileFor(final Class<?> type) {
