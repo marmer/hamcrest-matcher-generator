@@ -38,6 +38,7 @@ public class IntrospektorBeanPropertyExtractorTest {
 	@Spy
 	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetPropertiesOf_TypeWithSomeProperties_ShouldReturnTheCorrectlyInitializedValues()
 		throws Exception {
