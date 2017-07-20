@@ -6,6 +6,7 @@ import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasP
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;

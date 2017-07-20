@@ -1,6 +1,5 @@
 package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 
-import io.github.marmer.testutils.generators.beanmatcher.JavaInternalIllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
@@ -10,6 +9,7 @@ import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty
 import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 
