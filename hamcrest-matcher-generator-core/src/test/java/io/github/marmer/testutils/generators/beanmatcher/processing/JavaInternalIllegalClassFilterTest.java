@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher;
+package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
@@ -14,6 +14,7 @@ import org.mockito.junit.MockitoRule;
 
 import org.mockito.quality.Strictness;
 
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
 import sample.classes.SimpleSampleClass;
 
 import java.lang.annotation.Annotation;
