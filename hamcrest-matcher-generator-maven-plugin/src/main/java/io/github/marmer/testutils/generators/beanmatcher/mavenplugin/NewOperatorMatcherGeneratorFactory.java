@@ -1,5 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 
+import io.github.marmer.testutils.generators.beanmatcher.JavaInternalIllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
@@ -36,6 +37,6 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 				matcherGeneratorConfiguration.getClassLoader());
 		return new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				javaFileClassLoader);
+				javaFileClassLoader, new JavaInternalIllegalClassFilter());
 	}
 }

@@ -12,7 +12,14 @@ import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+
 import org.hamcrest.Matcher;
+
+import static org.hamcrest.Matchers.sameInstance;
+
+import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,143 +31,140 @@ import sample.classes.SimpleSampleClass;
 
 import java.nio.file.Path;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.sameInstance;
-
-import static org.junit.Assert.assertThat;
-
 
 public class MatcherFileGeneratorITest {
+    private PotentialPojoClassFinder potentialPojoClassFinder;
+    private MatcherGenerator classUnderTest;
+    private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 
-	private PotentialPojoClassFinder potentialPojoClassFinder;
-	private MatcherGenerator classUnderTest;
-	private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
+    @Rule
+    public final TemporaryFolder temp = new TemporaryFolder();
+    private Path srcOutputDir;
+    private Path classOutputDir;
+    private GeneratedFileCompiler compiler;
+    private final ClassLoader classLoader = getClass().getClassLoader();
 
-	@Rule
-	public final TemporaryFolder temp = new TemporaryFolder();
-	private Path srcOutputDir;
-	private Path classOutputDir;
-	private GeneratedFileCompiler compiler;
-	private final ClassLoader classLoader = getClass().getClassLoader();
+    @Before
+    public void setUp() throws Exception {
+        prepareSourceOutputDir();
+        prepareOutputDir();
+        initCompiler();
+        initClassUnderTest();
+    }
 
-	@Before
-	public void setUp() throws Exception {
-		prepareSourceOutputDir();
-		prepareOutputDir();
-		initCompiler();
-		initClassUnderTest();
-	}
+    private void initClassUnderTest() {
+        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+        potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false);
 
-	private void initClassUnderTest() {
-		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-		potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false);
+        hasPropertyMatcherClassGenerator =
+            new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir);
+        classUnderTest =
+            new MatcherFileGenerator(potentialPojoClassFinder,
+                hasPropertyMatcherClassGenerator,
+                new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader),
+                new JavaInternalIllegalClassFilter());
+    }
 
-		hasPropertyMatcherClassGenerator = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor,
-				srcOutputDir);
-		classUnderTest = new MatcherFileGenerator(potentialPojoClassFinder, hasPropertyMatcherClassGenerator,
-				new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader));
-	}
+    public void prepareOutputDir() throws Exception {
+        this.classOutputDir = temp.newFolder("target").toPath();
+    }
 
-	public void prepareOutputDir() throws Exception {
-		this.classOutputDir = temp.newFolder("target").toPath();
-	}
+    public void prepareSourceOutputDir() throws Exception {
+        this.srcOutputDir = temp.newFolder("src").toPath();
+    }
 
-	public void prepareSourceOutputDir() throws Exception {
-		this.srcOutputDir = temp.newFolder("src").toPath();
-	}
+    private void initCompiler() {
+        compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir);
+    }
 
-	private void initCompiler() {
-		compiler = new GeneratedFileCompiler(srcOutputDir, classOutputDir);
-	}
+    @Test
+    public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
+        throws Exception {
+        // Preparation
+        final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
 
-	@Test
-	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
-		throws Exception {
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
 
-		// Preparation
-		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
+        // Execution
+        final boolean matches = matcher.matches(new SimpleSampleClass("someOtherValue"));
 
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
+        // Assertion
+        assertThat("Matcher matches matching class", matches, is(false));
+    }
 
-		// Execution
-		final boolean matches = matcher.matches(new SimpleSampleClass("someOtherValue"));
+    @Test
+    public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
+        throws Exception {
+        // Preparation
+        final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
 
-		// Assertion
-		assertThat("Matcher matches matching class", matches, is(false));
-	}
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
 
-	@Test
-	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
-		throws Exception {
+        // Execution
+        final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
 
-		// Preparation
-		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
+        // Assertion
+        assertThat("Matcher matches matching class", matches, is(true));
+    }
 
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
+    @Test
+    public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndNotEqualValueIsGiven_ShouldNotMatch()
+        throws Exception {
+        // Preparation
+        final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
 
-		// Execution
-		final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
 
-		// Assertion
-		assertThat("Matcher matches matching class", matches, is(true));
-	}
+        // Execution
+        final boolean matches = matcher.matches(new SimpleSampleClass("someOtherValue"));
 
-	@Test
-	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndNotEqualValueIsGiven_ShouldNotMatch()
-		throws Exception {
+        // Assertion
+        assertThat("Matcher matches matching class", matches, is(false));
+    }
 
-		// Preparation
-		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
+    @Test
+    public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndEqualValueIsGiven_ShouldMatch()
+        throws Exception {
+        // Preparation
+        final Class<SimpleSampleClass> type = SimpleSampleClass.class;
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
 
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
 
-		// Execution
-		final boolean matches = matcher.matches(new SimpleSampleClass("someOtherValue"));
+        // Execution
+        final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
 
-		// Assertion
-		assertThat("Matcher matches matching class", matches, is(false));
-	}
+        // Assertion
+        assertThat("Matcher matches matching class", matches, is(true));
+    }
 
-	@Test
-	public void testGenerateHelperForClassesAllIn_GeneratedInstanceHasMatcherSetAndEqualValueIsGiven_ShouldMatch()
-		throws Exception {
+    @Test
+    public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
+        throws Exception {
+        // Preparation
+        final Class<?> type = SimpleSampleClass.class;
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
 
-		// Preparation
-		final Class<SimpleSampleClass> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
 
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-		MethodUtils.invokeMethod(matcher, "withSomeProperty", "someValue");
+        // Execution
+        final Object result = MethodUtils.invokeMethod(matcher,
+                "withSomeProperty",
+                equalTo("someValue"));
 
-		// Execution
-		final boolean matches = matcher.matches(new SimpleSampleClass("someValue"));
-
-		// Assertion
-		assertThat("Matcher matches matching class", matches, is(true));
-	}
-
-	@Test
-	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
-		throws Exception {
-
-		// Preparation
-		final Class<?> type = SimpleSampleClass.class;
-		classUnderTest.generateHelperForClassesAllIn(type.getName());
-
-		final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(type);
-
-		// Execution
-		final Object result = MethodUtils.invokeMethod(matcher, "withSomeProperty", equalTo("someValue"));
-
-		// Assertion
-		assertThat(result, is(sameInstance(matcher)));
-	}
+        // Assertion
+        assertThat(result, is(sameInstance(matcher)));
+    }
 }
