@@ -1,5 +1,40 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
+import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasToString;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.io.FileMatchers.anExistingFile;
+import static org.junit.Assert.assertThat;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.Generated;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.jci.compilers.CompilationResult;
+import org.apache.commons.lang3.reflect.MethodUtils;
+import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -11,52 +46,6 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.jci.compilers.CompilationResult;
-import org.apache.commons.lang3.reflect.MethodUtils;
-
-import org.hamcrest.Matcher;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.lang.reflect.Method;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.Generated;
-
-import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
-
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.hasToString;
-import static org.hamcrest.Matchers.sameInstance;
-
-import static org.hamcrest.io.FileMatchers.anExistingFile;
-
-import static org.junit.Assert.assertThat;
-
 
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String MATCHER_POSTFIX = "Matcher";
@@ -77,8 +66,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	private void initClassUnderTest() {
-		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(
-				propertyExtractor, srcOutputDir);
+		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir);
 	}
 
 	private void initCompiler() {
@@ -110,6 +98,25 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	@Test
+	public void testGenerateMatcherFor_SimplePojoClassGivenAndFileAllreadyExists_ShouldCreateJavaFile()
+			throws Exception {
+		// Preparation
+		createEmptyFileFor(SimplePojo.class);
+
+		// Preparation
+		classUnderTest.generateMatcherFor(SimplePojo.class);
+
+		// Assertion
+		assertThat(generatedSourceFileFor(SimplePojo.class), is(anExistingFile()));
+	}
+
+	private void createEmptyFileFor(Class<SimplePojo> type) throws IOException {
+		File f = generatedSourceFileFor(type);
+		f.getParentFile().mkdirs();
+		f.createNewFile();
+	}
+
+	@Test
 	public void testGenerateMatcherFor_SimplePojoClassGiven_ShouldReturnPathOfCreatedJavaFile() throws Exception {
 		// Preparation
 
@@ -118,12 +125,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Assertion
 		assertThat("pathOfGeneratedMatcher", pathOfGeneratedMatcher,
-			is(equalTo(compiler.getGeneratedSourcePathFor(SimplePojo.class))));
+				is(equalTo(compiler.getGeneratedSourcePathFor(SimplePojo.class))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_SomeClassWithoutAnyPropertyWithoutIgnoringSuchClasses_ShouldCreateJavaFile()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		classUnderTest.generateMatcherFor(ClassWithoutAnyProperty.class);
@@ -134,7 +141,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_CreatedJavaFileShouldBeCompilableWithoutAnyIssues()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -149,7 +156,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_FileHasBeanCreated_ShouldBeAbleToLoadAndInstanciateGeneratedClass()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -178,7 +185,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_InstanceOfGeneratedMatcherHasBeenCreated_GeneratedInstanceCanBeUsedToMatchRelatedInstances()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<ClassWithoutAnyProperty> type = ClassWithoutAnyProperty.class;
@@ -223,13 +230,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		final TypeDeclaration<?> generatedClass = javaFile.getType(0);
 		final String annotationName = Generated.class.getSimpleName();
-		final Optional<AnnotationExpr> generatedAnnotation = generatedClass.getAnnotationByName(
-				annotationName);
-		final List<StringLiteralExpr> childNodesByType = generatedAnnotation.get().getChildNodesByType(
-				StringLiteralExpr.class);
+		final Optional<AnnotationExpr> generatedAnnotation = generatedClass.getAnnotationByName(annotationName);
+		final List<StringLiteralExpr> childNodesByType = generatedAnnotation.get()
+				.getChildNodesByType(StringLiteralExpr.class);
 		final String generatedValue = childNodesByType.get(0).getValue();
 		assertThat("Value of Generated Annotation", generatedValue,
-			is(equalTo(JavaPoetHasPropertyMatcherClassGenerator.class.getName())));
+				is(equalTo(JavaPoetHasPropertyMatcherClassGenerator.class.getName())));
 	}
 
 	private Matcher<Iterable<? super ImportDeclaration>> containsImportOf(final Class<Generated> importType) {
@@ -238,7 +244,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreated_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -250,13 +256,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-			hasItem(
-				is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+				hasItem(is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_MatcherHasBeenCreatedWithChildTypeAndPropertiesAtParent_GeneratedTypeShouldHaveAMethodPerPropertyWhichTakesAnotherMatcher()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojoChild> type = SimplePojoChild.class;
@@ -268,13 +273,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 		// Assertion
 		assertThat("Declared matcher methods: ", nonSyntheticMethodsOf(generatedMatcherClass),
-			hasItem(
-				is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
+				hasItem(is(matcherConsumingMethodWithReturntypeAndName(generatedMatcherClass, "withSimpleProp"))));
 	}
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotMatchingValueIsGiven_ShouldNotMatch()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -292,7 +296,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndMatchingValueIsGiven_ShouldMatch()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -310,7 +314,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndNotEqualValueIsGiven_ShouldNotMatch()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -328,7 +332,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasMatcherSetAndEqualValueIsGiven_ShouldMatch()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -346,7 +350,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceHasBeenGenerated_NoConvenienceMethodShouldExist()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<PojoWithMatcherProperty> type = PojoWithMatcherProperty.class;
@@ -362,12 +366,12 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	private List<Method> getMethodsByName(final Matcher<PojoWithMatcherProperty> matcher, final String methodName) {
 		return Arrays.stream(matcher.getClass().getMethods()).filter(method -> methodName.equals(method.getName()))
-			.collect(Collectors.toList());
+				.collect(Collectors.toList());
 	}
 
 	@Test
 	public void testGenerateMatcherFor_GeneratedInstanceMatcherSettingMethodIsCalled_MethodShouldReturnIstanceOfItselfForConcatenationAbility()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -384,7 +388,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 
 	@Test
 	public void testGenerateMatcherFor_StaticMethodWithBaseTypeNameIsCalled_ShouldReturnAnInstanceOfTheMatcher()
-		throws Exception {
+			throws Exception {
 
 		// Preparation
 		final Class<SimplePojo> type = SimplePojo.class;
@@ -400,17 +404,14 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	private Collection<Method> nonSyntheticMethodsOf(final Class<?> generatedMatcherClass) {
-		return Arrays.stream(generatedMatcherClass.getDeclaredMethods()).filter(m -> !m.isSynthetic()).collect(
-				Collectors
-					.toList());
+		return Arrays.stream(generatedMatcherClass.getDeclaredMethods()).filter(m -> !m.isSynthetic())
+				.collect(Collectors.toList());
 	}
 
 	@SuppressWarnings("unchecked")
-	private Matcher<Method> matcherConsumingMethodWithReturntypeAndName(
-		final Class<?> generatedMatcherClass,
-		final String propertyName) {
-		return allOf(
-				hasProperty("name", equalTo(propertyName)),
+	private Matcher<Method> matcherConsumingMethodWithReturntypeAndName(final Class<?> generatedMatcherClass,
+			final String propertyName) {
+		return allOf(hasProperty("name", equalTo(propertyName)),
 				hasProperty("parameterTypes", arrayContaining(Matcher.class)),
 				hasProperty("returnType", is(generatedMatcherClass)));
 	}
@@ -424,7 +425,8 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	public static class ClassWithoutAnyProperty {
-		public void helloMyNameIsNobody() { }
+		public void helloMyNameIsNobody() {
+		}
 	}
 
 	public static class PojoWithMatcherProperty {
