@@ -9,6 +9,7 @@ import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty
 import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
+import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
 
@@ -36,6 +37,6 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 				matcherGeneratorConfiguration.getClassLoader());
 		return new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				javaFileClassLoader);
+				javaFileClassLoader, new JavaInternalIllegalClassFilter());
 	}
 }
