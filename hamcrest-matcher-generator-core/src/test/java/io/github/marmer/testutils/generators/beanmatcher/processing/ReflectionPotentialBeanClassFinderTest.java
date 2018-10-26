@@ -77,7 +77,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 						ExceptionWithProperties.class,
 						SampleWithoutAnyProperty.class,
 						SomeInterface.class,
-						SomeAnnotation.class));
+						SomeAnnotationX.class));
 	}
 
 	@Test
