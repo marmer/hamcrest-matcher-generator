@@ -3,47 +3,34 @@ package io.github.marmer.testutils.generators.beanmatcher;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGeneratorITest.SimplePojo;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
-import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
-import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
+import io.github.marmer.testutils.generators.beanmatcher.processing.*;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
-
 import org.apache.commons.lang3.reflect.MethodUtils;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-
 import org.hamcrest.Matcher;
-
-import static org.hamcrest.Matchers.sameInstance;
-
-import static org.junit.Assert.assertThat;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.junit.rules.TemporaryFolder;
-
 import sample.classes.SimpleSampleClass;
 
 import java.nio.file.Path;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThat;
+
 
 public class MatcherFileGeneratorITest {
+    @Rule
+    public final TemporaryFolder temp = new TemporaryFolder();
+    private final ClassLoader classLoader = getClass().getClassLoader();
     private PotentialPojoClassFinder potentialPojoClassFinder;
     private MatcherGenerator classUnderTest;
     private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
-
-    @Rule
-    public final TemporaryFolder temp = new TemporaryFolder();
     private Path srcOutputDir;
     private Path classOutputDir;
     private GeneratedFileCompiler compiler;
-    private final ClassLoader classLoader = getClass().getClassLoader();
 
     @Before
     public void setUp() throws Exception {
@@ -55,7 +42,7 @@ public class MatcherFileGeneratorITest {
 
     private void initClassUnderTest() {
         final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-        potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false);
+        potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false, false);
 
         hasPropertyMatcherClassGenerator =
             new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir);

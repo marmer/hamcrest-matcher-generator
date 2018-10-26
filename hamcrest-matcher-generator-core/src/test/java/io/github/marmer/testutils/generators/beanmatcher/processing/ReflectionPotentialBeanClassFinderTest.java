@@ -3,18 +3,11 @@ package io.github.marmer.testutils.generators.beanmatcher.processing;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.mockito.Mock;
-
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 import org.mockito.quality.Strictness;
-
-import sample.classes.ComplexSample;
-import sample.classes.SampleWithoutAnyProperty;
-import sample.classes.SimpleSampleClass;
-
+import sample.classes.*;
 import sample.classes.subpackage.ClassInSubPackage;
 import sample.classes.subpackage.ExceptionWithProperties;
 
@@ -23,13 +16,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-
 import static org.mockito.Mockito.when;
 
 
@@ -44,12 +32,12 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 	@Before
 	public void setUp() throws Exception {
-		this.classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, false);
+		this.classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, false, false);
 	}
 
 	@Test
 	public void testFindClasses_PackageWithClassesGiven_ShouldFindAllRelevantClassesInThePackageAndItsSubPackage()
-		throws Exception {
+			throws Exception {
 		// Preparation
 
 		// Execution
@@ -57,15 +45,39 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 		// Assertion
 		assertThat("Classes found",
-			classes,
-			containsInAnyOrder(SimpleSampleClass.class,
-				ClassInSubPackage.class,
-				sample.classes.subpackage2.ClassInSubPackage.class,
-				ComplexSample.class,
-				ComplexSample.InnerClass.class,
-				ComplexSample.InnerStaticClass.class,
-				ExceptionWithProperties.class,
-				SampleWithoutAnyProperty.class));
+				classes,
+				containsInAnyOrder(SimpleSampleClass.class,
+						ClassInSubPackage.class,
+						sample.classes.subpackage2.ClassInSubPackage.class,
+						ComplexSample.class,
+						ComplexSample.InnerClass.class,
+						ComplexSample.InnerStaticClass.class,
+						ExceptionWithProperties.class,
+						SampleWithoutAnyProperty.class));
+	}
+
+	@Test
+	public void testFindClasses_PackageWithClassesGivenAndInterfacesAreAllowed_ShouldFindAllRelevantClassesAndInterfacesInThePackageAndItsSubPackage()
+			throws Exception {
+		// Preparation
+		this.classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, false, true);
+
+		// Execution
+		final List<Class<?>> classes = classUnderTest.findClasses("sample.classes");
+
+		// Assertion
+		assertThat("Classes found",
+				classes,
+				containsInAnyOrder(SimpleSampleClass.class,
+						ClassInSubPackage.class,
+						sample.classes.subpackage2.ClassInSubPackage.class,
+						ComplexSample.class,
+						ComplexSample.InnerClass.class,
+						ComplexSample.InnerStaticClass.class,
+						ExceptionWithProperties.class,
+						SampleWithoutAnyProperty.class,
+						SomeInterface.class,
+						SomeAnnotation.class));
 	}
 
 	@Test
@@ -138,7 +150,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 		when(beanPropertyExtractor.getPropertiesOf(SampleWithoutAnyProperty.class)).thenReturn(Collections.emptyList());
 
 		final boolean ignoreClassesWithoutProperties = true;
-		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties);
+		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties, false);
 
 		// Execution
 		final List<Class<?>> classes = classUnderTest.findClasses(
@@ -156,7 +168,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 
 		// Preparation
 		final boolean ignoreClassesWithoutProperties = false;
-		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties);
+		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties, false);
 
 		// Execution
 		final List<Class<?>> classes = classUnderTest.findClasses(
@@ -176,7 +188,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 		final boolean ignoreClassesWithoutProperties = true;
 		when(beanPropertyExtractor.getPropertiesOf(ClassInSubPackage.class)).thenReturn(Arrays.asList(
 				new BeanProperty("someProperty", String.class)));
-		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties);
+		classUnderTest = new ReflectionPotentialBeanClassFinder(beanPropertyExtractor, ignoreClassesWithoutProperties, false);
 
 		// Execution
 		final List<Class<?>> classes = classUnderTest.findClasses(
