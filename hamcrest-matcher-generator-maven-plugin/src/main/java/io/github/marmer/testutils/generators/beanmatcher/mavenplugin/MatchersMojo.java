@@ -3,11 +3,19 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-
 import org.apache.commons.lang3.ArrayUtils;
-
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -21,23 +29,6 @@ import org.apache.maven.execution.MavenSession;
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectDependenciesResolver;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.util.List;
 
 
 /**
@@ -59,32 +50,27 @@ import java.util.List;
 @Execute(phase = LifecyclePhase.PROCESS_CLASSES)
 public class MatchersMojo extends AbstractMojo {
 
+	private final ClassLoaderFactory classloaderFactory = new ByClasspathStringPathElementURLClassLoaderFactory(getClass()
+			.getClassLoader());
+	private final MatcherGeneratorFactory matcherGeneratorFactory = new NewOperatorMatcherGeneratorFactory();
+	private final DependencyValidatorFactory dependencyValidatorFactory = new NewOperatorDependencyValidatorFactory();
 	/** The Project itself. */
 	@Parameter(
 		defaultValue = "${project}",
 		readonly = true
 	)
 	private MavenProject project;
-
 	/** Packages of classes or qualified class names used to generate matchers for. */
 	@Parameter(required = true)
 	private String[] matcherSources;
-
 	/** Location where to put the generated sources to. */
 	@Parameter(
 		required = true,
 		defaultValue = "${project.build.directory}/generated-test-sources"
 	)
 	private File outputDir;
-
-	private ClassLoaderFactory classloaderFactory = new ByClasspathStringPathElementURLClassLoaderFactory(getClass()
-			.getClassLoader());
-
-	private MatcherGeneratorFactory matcherGeneratorFactory = new NewOperatorMatcherGeneratorFactory();
-
 	@Component
 	private ProjectDependenciesResolver projectDependenciesResolver;
-
 	/**
 	 * Determines whether to generate matchers for all classes configured with {@link
 	 * #matcherSources} or only the ones with properties (which have getters). The matchers
@@ -95,13 +81,11 @@ public class MatchersMojo extends AbstractMojo {
 		defaultValue = "false"
 	)
 	private boolean ignoreClassesWithoutProperties;
-
 	@Parameter(
 		defaultValue = "${session}",
 		readonly = true
 	)
 	private MavenSession mavenSession;
-
 	/**
 	 * The build will break by default (with an appropriate error message), if this plugin is not
 	 * able to find all the needed dependencies. With this flag set to true, you can enforce the
@@ -113,8 +97,15 @@ public class MatchersMojo extends AbstractMojo {
 		property = "allowMissingHamcrestDependency"
 	)
 	private boolean allowMissingHamcrestDependency;
-
-	private DependencyValidatorFactory dependencyValidatorFactory = new NewOperatorDependencyValidatorFactory();
+	/**
+	 * Possibility to generate matchers for Interfaces as well.
+	 */
+	@Parameter(
+			required = true,
+			defaultValue = "false",
+			property = "allowInterfaces"
+	)
+	private boolean allowInterfaces;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -134,7 +125,7 @@ public class MatchersMojo extends AbstractMojo {
 		try {
 			final List<Class<?>> generatedMatchers = matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
 			generatedMatchers.forEach(generatedType -> getLog().info("Generated: " + generatedType));
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new MojoFailureException("Error on matcher generation", e);
 		}
 	}
@@ -144,13 +135,16 @@ public class MatchersMojo extends AbstractMojo {
 
 		try {
 			classLoader = classloaderFactory.creatClassloader(project.getTestClasspathElements());
-		} catch (DependencyResolutionRequiredException e) {
+		} catch (final DependencyResolutionRequiredException e) {
 			throw new MojoFailureException("Cannot access Dependencies", e);
 		}
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader).outputPath(outputDir.toPath()).ignoreClassesWithoutProperties(
-				ignoreClassesWithoutProperties).build();
+				.classLoader(classLoader)
+				.outputPath(outputDir.toPath())
+				.ignoreClassesWithoutProperties(
+						ignoreClassesWithoutProperties)
+				.allowInterfaces(allowInterfaces).build();
 		return matcherGeneratorFactory.createBy(
 				matcherGeneratorConfiguration);
 	}

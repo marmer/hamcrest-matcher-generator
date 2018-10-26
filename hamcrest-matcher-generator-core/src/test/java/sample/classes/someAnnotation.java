@@ -1,5 +1,5 @@
 package sample.classes;
 
-public @interface someAnnotation {
+public @interface SomeAnnotation {
 
 }
