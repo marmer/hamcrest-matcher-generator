@@ -6,7 +6,7 @@ services:
     - 1044:1044 # for debuggung if needed
     command: ./ci.sh
     volumes:
-    - "./:/h"
+    - "c:\\h:/h"
     - "$USERPROFILE/.m2:/root/.m2"
     working_dir: /h
 
