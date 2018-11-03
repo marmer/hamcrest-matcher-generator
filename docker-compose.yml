@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+  maven:
+    image: maven:3.6.0-ibmjava-8-alpine
+    ports:
+    - 1044:1044
+    command: ./ci.sh
+    volumes:
+    - "./:/h"
+    - "$USERPROFILE/.m2:/root/.m2"
+    working_dir: /h
+
