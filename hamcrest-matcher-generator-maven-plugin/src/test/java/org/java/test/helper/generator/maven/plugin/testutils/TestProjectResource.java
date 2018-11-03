@@ -105,7 +105,7 @@ public class TestProjectResource extends TestWatcher {
 			}
 
 			if (!mavenExecutable.exists()) {
-				mavenExecutable = new File(getenv, "mvn.bat");
+				mavenExecutable = new File(getenv, "mvn.cmd");
 			}
 
 			if (!mavenExecutable.exists()) {
