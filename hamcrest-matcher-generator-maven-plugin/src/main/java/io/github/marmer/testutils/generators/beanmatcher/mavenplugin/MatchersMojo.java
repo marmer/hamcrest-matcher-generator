@@ -50,10 +50,10 @@ import java.util.List;
 @Execute(phase = LifecyclePhase.PROCESS_CLASSES)
 public class MatchersMojo extends AbstractMojo {
 
-	private final ClassLoaderFactory classloaderFactory = new ByClasspathStringPathElementURLClassLoaderFactory(getClass()
-			.getClassLoader());
-	private final MatcherGeneratorFactory matcherGeneratorFactory = new NewOperatorMatcherGeneratorFactory();
-	private final DependencyValidatorFactory dependencyValidatorFactory = new NewOperatorDependencyValidatorFactory();
+	private ClassLoaderFactory classloaderFactory = new ByClasspathStringPathElementURLClassLoaderFactory(
+			getClass().getClassLoader());
+	private MatcherGeneratorFactory matcherGeneratorFactory = new NewOperatorMatcherGeneratorFactory();
+	private DependencyValidatorFactory dependencyValidatorFactory = new NewOperatorDependencyValidatorFactory();
 	/** The Project itself. */
 	@Parameter(
 		defaultValue = "${project}",
