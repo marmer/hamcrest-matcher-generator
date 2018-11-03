@@ -128,3 +128,5 @@ The generation happens at phase generate-test-sources by default because it need
 ###Changelog
 ####Incomming Version
 * Matchergeneration for Interfaces is alowed again
+* Better support for inner classes
+* Better hanling of private properties and members
