@@ -12,4 +12,4 @@ echo
 echo --- Testing ---
 echo
 cd hamcrest-matcher-generator-maven-plugin
-mvn clean verify -V -Dmaven.home=/usr/bin/mvn -Dtest=MatchersMojoTest
+mvn clean verify -V -Dmaven.home=/usr/bin/mvn
