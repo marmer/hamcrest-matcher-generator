@@ -125,8 +125,8 @@ run test phase once (or a later one)
 ------------------------------------
 The generation happens at phase generate-test-sources by default because it need's the compiled model classes. If you don't, your IDE won't be able to use the model classes in your ide, because they simply don't exist ;)
 
-###Changelog
-####Incomming Version
+### Changelog
+#### Incomming Version
 * Matchergeneration for Interfaces is alowed again
 * Better support for inner classes
 * Better hanling of private properties and members
