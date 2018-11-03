@@ -3,28 +3,24 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.junit.rules.TemporaryFolder;
 
 import java.net.URL;
 import java.net.URLClassLoader;
-
 import java.nio.file.Path;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertThat;
 
 
 public class NewOperatorMatcherGeneratorFactoryTest {
 
-	private NewOperatorMatcherGeneratorFactory classUnderTest = new NewOperatorMatcherGeneratorFactory();
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
+	private final NewOperatorMatcherGeneratorFactory classUnderTest = new NewOperatorMatcherGeneratorFactory();
 
 	@Test
 	public void testCreateBy_DependenciesGiven_ShouldReturnAnInstance() throws Exception {
@@ -35,7 +31,9 @@ public class NewOperatorMatcherGeneratorFactoryTest {
 
 		// Execution
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader).outputPath(outputPath).build();
+				.classLoader(classLoader)
+				.outputPath(outputPath)
+				.build();
 		final MatcherGenerator matcherGenerator = classUnderTest.createBy(matcherGeneratorConfiguration);
 
 		// Assertion
