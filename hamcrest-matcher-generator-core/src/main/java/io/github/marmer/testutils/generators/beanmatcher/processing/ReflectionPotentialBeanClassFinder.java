@@ -1,24 +1,15 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import com.google.common.base.Objects;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import org.reflections.Reflections;
-
 import org.reflections.scanners.SubTypesScanner;
-
 import org.reflections.util.ClasspathHelper;
 
 import java.net.URL;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -32,14 +23,16 @@ import java.util.stream.Collectors;
  */
 public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFinder {
 	private final Collection<URL> classLoaderURLs;
-	private ClassLoader[] classLoaders;
-	private boolean ignoreClassesWithoutProperties;
-	private BeanPropertyExtractor beanPropertyExtractor;
+	private final boolean allowInterfaecs;
+	private final ClassLoader[] classLoaders;
+	private final boolean ignoreClassesWithoutProperties;
+	private final BeanPropertyExtractor beanPropertyExtractor;
 
 	public ReflectionPotentialBeanClassFinder(final BeanPropertyExtractor beanPropertyExtractor,
-		final boolean ignoreClassesWithoutProperties, final ClassLoader... classLoaders) {
+											  final boolean ignoreClassesWithoutProperties, final boolean allowInterfaecs, final ClassLoader... classLoaders) {
 		this.beanPropertyExtractor = beanPropertyExtractor;
 		this.ignoreClassesWithoutProperties = ignoreClassesWithoutProperties;
+		this.allowInterfaecs = allowInterfaecs;
 		this.classLoaders = classLoaders;
 		this.classLoaderURLs = ClasspathHelper.forManifest(ClasspathHelper.forClassLoader(classLoaders));
 	}
@@ -111,7 +104,13 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 	}
 
 	private boolean isIrrelevantJavaArtifact(final Class<?> clazz) {
-		return isPackageInfo(clazz) || clazz.isInterface() || clazz.isAnonymousClass();
+		return isPackageInfo(clazz) ||
+				isNotAllowedInterface(clazz) ||
+				clazz.isAnonymousClass();
+	}
+
+	private boolean isNotAllowedInterface(final Class<?> clazz) {
+		return !allowInterfaecs && clazz.isInterface();
 	}
 
 	private boolean isPackageInfo(final Class<?> clazz) {

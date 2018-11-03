@@ -1,22 +1,13 @@
 package org.java.test.helper.generator.maven.plugin.testutils;
 
 import org.apache.maven.plugin.testing.resources.TestResources;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
-
+import org.apache.maven.shared.invoker.*;
 import org.codehaus.plexus.util.cli.CommandLineException;
-
 import org.junit.rules.TestWatcher;
-
 import org.junit.runner.Description;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Arrays;
 import java.util.function.Consumer;
 
@@ -42,7 +33,7 @@ public class TestProjectResource extends TestWatcher {
 				try {
 					super.starting(description);
 					baseDir = getBasedir(projectName);
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					throw new RuntimeException(e);
 				}
 			}
@@ -111,6 +102,14 @@ public class TestProjectResource extends TestWatcher {
 
 			if (!mavenExecutable.exists()) {
 				mavenExecutable = new File(getenv, "bin/mvn.bat");
+			}
+
+			if (!mavenExecutable.exists()) {
+				mavenExecutable = new File(getenv, "mvn.bat");
+			}
+
+			if (!mavenExecutable.exists()) {
+				mavenExecutable = new File(getenv, "mvn.bat");
 			}
 
 			invoker.setMavenExecutable(mavenExecutable);

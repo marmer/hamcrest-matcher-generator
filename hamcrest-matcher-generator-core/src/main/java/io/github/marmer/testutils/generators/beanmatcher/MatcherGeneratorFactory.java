@@ -31,5 +31,6 @@ public interface MatcherGeneratorFactory {
 		private final ClassLoader classLoader;
 		private final Path outputPath;
 		private final boolean ignoreClassesWithoutProperties;
+		private final boolean allowInterfaces;
 	}
 }

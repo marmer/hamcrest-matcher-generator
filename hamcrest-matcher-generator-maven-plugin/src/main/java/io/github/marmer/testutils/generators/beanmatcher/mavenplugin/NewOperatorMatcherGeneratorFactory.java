@@ -5,13 +5,7 @@ import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.CommonsJciJavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaInternalIllegalClassFilter;
-import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
-import io.github.marmer.testutils.generators.beanmatcher.processing.ReflectionPotentialBeanClassFinder;
+import io.github.marmer.testutils.generators.beanmatcher.processing.*;
 
 
 /**
@@ -28,7 +22,7 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
 				propertyExtractor,
 				matcherGeneratorConfiguration.isIgnoreClassesWithoutProperties(),
-				matcherGeneratorConfiguration.getClassLoader());
+				matcherGeneratorConfiguration.isAllowInterfaces(), matcherGeneratorConfiguration.getClassLoader());
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
 			new JavaPoetHasPropertyMatcherClassGenerator(
 				propertyExtractor, matcherGeneratorConfiguration.getOutputPath());
