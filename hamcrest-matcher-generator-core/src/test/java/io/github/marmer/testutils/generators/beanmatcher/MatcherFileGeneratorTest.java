@@ -4,35 +4,29 @@ import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyM
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.sameInstance;
-
-import static org.junit.Assert.assertThat;
-
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 import org.mockito.quality.Strictness;
 
+import java.io.IOException;
 import java.nio.file.Path;
-
 import java.util.Arrays;
-import static java.util.Collections.singletonList;
+import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.*;
 
 
 public class MatcherFileGeneratorTest {
+    private final String packageName = "packageName";
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
     @InjectMocks
@@ -41,8 +35,6 @@ public class MatcherFileGeneratorTest {
     private PotentialPojoClassFinder potentialPojoClassFinder;
     @Mock
     private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
-
-    private final String packageName = "packageName";
     @Mock
     private Path outputDir;
 
@@ -112,6 +104,35 @@ public class MatcherFileGeneratorTest {
             SamplePojo1.class);
         doReturn(generatedClasses).when(javaFileClassLoader).load(
             Arrays.asList(simplePojo1MatcherPath));
+
+        // Execution
+        final List<Class<?>> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
+
+        // Assertion
+        assertThat(retVal, is(sameInstance(generatedClasses)));
+    }
+
+    @Test
+    public void test_MixOfErrorCausingClassesAndGoodOnes_ShouldLoadNonErrorCausingClassesOnly()
+            throws Exception {
+        // Preparation
+        final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
+        final Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
+        final List<Class<?>> generatedClasses = singletonList(String.class);
+
+        final List<Class<?>> baseClassList = Arrays.asList(SamplePojo1.class, SamplePojo2.class);
+        final List<Class<?>> filteredBaseClassList = Arrays.asList(SamplePojo1.class,
+                SamplePojo2.class);
+
+        doReturn(baseClassList).when(potentialPojoClassFinder).findClasses(packageName);
+        doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
+        doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
+                SamplePojo1.class);
+        final IOException exception = new IOException("someError");
+        doThrow(exception).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
+                SamplePojo2.class);
+        doReturn(generatedClasses).when(javaFileClassLoader).load(
+                Collections.singletonList(simplePojo1MatcherPath));
 
         // Execution
         final List<Class<?>> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);

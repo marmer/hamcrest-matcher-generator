@@ -155,7 +155,9 @@ The generation happens at phase generate-test-sources by default because it need
 #### 1.3.0
 * Support for Matcher-Generation for Interfaces
 
+### 1.4.0
+
 ### Planed for future releases
 * Better support for inner classes
 * Better hanling of private properties and members
-* Documentation
+* Bugfix when running the build without cleaning before
