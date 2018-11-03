@@ -16,7 +16,7 @@ This library provides the generation of hamcrest matchers without the need to po
 Bean Property Matcher
 ---------------------
 
-Using Hamcrest's Matcher HasPropertyWithValue, better known as Matchers.hasProperty, is awesome if you don't have created the class you want to test yet. The Problem with that kind of Matcher is, the more test you have matching the same property the harder it is to change the property name.
+Using Hamcrest's Matcher HasPropertyWithValue, better known as Matchers.hasProperty, is nice if you don't have created the class you want to test yet. The Problem with that kind of Matcher is, the more test you have matching the same property the harder it is to change the property name.
 
 ### Negative example
 
@@ -83,10 +83,36 @@ For JDK6 you may use:
 		<scope>test</scope>
 	</dependency>`
 
+plugin setup
+------------
+````
+            <plugin>
+                <groupId>io.github.marmer.testutils</groupId>
+                <artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
+                <version>${version.hamcrest-matcher-generator}</version>
+                <configuration>
+                    <matcherSources>
+                        <matcherSource>com.some.package</matcherSource>
+                        <matcherSource>com.some.full.qualified.ClassName</matcherSource>
+                    </matcherSources>
+                    <ignoreClassesWithoutProperties>true</ignoreClassesWithoutProperties>
+                    <outputDir>target/generated-test-sources</outputDir>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>matchers</id>
+                        <goals>
+                            <goal>matchers</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+````
 
 hamcrest-matcher-generator-dependencies
 ---------------------------------------
-The generated sources need some classes 
+The generated sources need the folowing dependency to work correctly
 
 	<dependency>
 		<groupId>io.github.marmer.testutils</groupId>
