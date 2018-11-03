@@ -10,5 +10,5 @@ mvn clean install -DskipTests -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembl
 echo
 echo --- Testing ---
 echo
-mvn clean verify -V
+mvn clean verify -V -Dmaven.home=/usr/bin/mvn
 
