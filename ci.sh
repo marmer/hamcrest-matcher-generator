@@ -11,5 +11,5 @@ export JAVA_TOOL_OPTIONS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend
 echo
 echo --- Testing ---
 echo
-mvn clean verify -V -Dmaven.home=/usr/bin/mvn
-
+cd hamcrest-matcher-generator-maven-plugin
+mvn clean verify -V -Dmaven.home=/usr/bin/mvn -Dtest=MatchersMojoTest
