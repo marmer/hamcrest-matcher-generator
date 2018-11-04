@@ -6,13 +6,16 @@ import io.github.marmer.testutils.generators.beanmatcher.generation.PackageMatch
 import io.github.marmer.testutils.generators.beanmatcher.generation.ParentMatcherNamingStrategy;
 import io.github.marmer.testutils.generators.beanmatcher.generation.PlainMatcherNamingStrategy;
 
+import static io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy.Name.PARENT;
+import static io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy.Name.PLAIN;
+
 class MatcherNamingStrategyFactory {
     MatcherNamingStrategy strategyFor(final MatcherGeneratorFactory.MatcherGeneratorConfiguration matcherGeneratorConfiguration) {
         final MatcherNamingStrategy.Name namingStrategy = namingStrategyFrom(matcherGeneratorConfiguration);
 
-        if (MatcherNamingStrategy.Name.PARENT == namingStrategy) {
+        if (PARENT == namingStrategy) {
             return new ParentMatcherNamingStrategy();
-        } else if (MatcherNamingStrategy.Name.PLAIN == namingStrategy) {
+        } else if (PLAIN == namingStrategy) {
             return new PlainMatcherNamingStrategy();
         } else {
             return new PackageMatcherNamingStrategy();
