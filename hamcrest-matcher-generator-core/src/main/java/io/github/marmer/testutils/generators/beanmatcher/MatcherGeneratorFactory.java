@@ -1,6 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
-import io.github.marmer.testutils.generators.beanmatcher.generation.NamingStrategy;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy;
 import lombok.Builder;
 import lombok.Generated;
 import lombok.Value;
@@ -33,6 +33,6 @@ public interface MatcherGeneratorFactory {
 		private final Path outputPath;
 		private final boolean ignoreClassesWithoutProperties;
 		private final boolean allowInterfaces;
-		private final NamingStrategy.Name namingStrategy;
+		private final MatcherNamingStrategy.Name namingStrategy;
 	}
 }

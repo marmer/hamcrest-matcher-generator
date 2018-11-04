@@ -3,7 +3,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-import io.github.marmer.testutils.generators.beanmatcher.generation.NamingStrategy;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoFailureException;
@@ -238,13 +238,13 @@ public class MatchersMojoTest {
 				ignoreClassesWithoutProperties);
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
 				"namingStrategy",
-				NamingStrategy.Name.PLAIN);
+				MatcherNamingStrategy.Name.PLAIN);
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
 				.classLoader(classLoader)
 				.outputPath(outputDir.toPath())
 				.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
-				.namingStrategy(NamingStrategy.Name.PLAIN).build();
+				.namingStrategy(MatcherNamingStrategy.Name.PLAIN).build();
 		when(matcherGeneratorFactory.createBy(matcherGeneratorConfiguration)).thenReturn(
 			matcherGenerator);
 	}
