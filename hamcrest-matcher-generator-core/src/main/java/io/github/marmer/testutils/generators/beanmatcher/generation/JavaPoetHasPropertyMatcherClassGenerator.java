@@ -74,16 +74,22 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private TypeSpec generatedTypeFor(final Class<?> type) {
-		return TypeSpec.classBuilder(matcherNameFor(type)).addModifiers(Modifier.PUBLIC).superclass(
-				parameterizedTypesafeMatchertype(type)).addField(innerMatcherField(type))
-			.addMethod(constructor(type)).addAnnotations(generatedAnnotations(type)).addMethods(
-				propertyMethods(type)).addMethods(typesafeMatcherMethods(type)).addMethod(factoryMethod(type)).build();
+		return TypeSpec.classBuilder(matcherNameFor(type))
+				.addModifiers(Modifier.PUBLIC)
+				.superclass(parameterizedTypesafeMatchertype(type))
+				.addField(innerMatcherField(type))
+				.addMethod(constructor(type))
+				.addAnnotations(generatedAnnotations(type))
+				.addMethods(propertyMethods(type))
+				.addMethods(typesafeMatcherMethods(type))
+				.addMethod(factoryMethod(type)).build();
 	}
 
 	private MethodSpec factoryMethod(final Class<?> type) {
-		return MethodSpec.methodBuilder(FACTORY_METHOD_PREFIX + type.getSimpleName()).addStatement("return new $L()",
-				matcherNameFor(type)).returns(classNameOfGeneratedTypeFor(
-					type)).addModifiers(Modifier.STATIC, Modifier.PUBLIC).build();
+		return MethodSpec.methodBuilder(FACTORY_METHOD_PREFIX + type.getSimpleName())
+				.addStatement("return new $L()",
+						matcherNameFor(type)).returns(classNameOfGeneratedTypeFor(type))
+				.addModifiers(Modifier.STATIC, Modifier.PUBLIC).build();
 	}
 
 	private FieldSpec innerMatcherField(final Class<?> type) {
@@ -97,29 +103,33 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 
 	private MethodSpec describeToMethod() {
 		final String parameterName = PARAMETER_NAME_DESCRIPTION;
-		return MethodSpec.methodBuilder("describeTo").addAnnotation(Override.class).addParameter(Description.class,
-				parameterName, Modifier.FINAL).addStatement(
-				"$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName).addModifiers(Modifier.PUBLIC).build();
+		return MethodSpec.methodBuilder("describeTo")
+				.addAnnotation(Override.class)
+				.addParameter(Description.class, parameterName, Modifier.FINAL)
+				.addStatement("$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName)
+				.addModifiers(Modifier.PUBLIC).build();
 	}
 
 	private MethodSpec matchesSafelyMathod(final Class<?> type) {
 		final String parameterItem = PARAMETER_NAME_ITEM;
-		return MethodSpec.methodBuilder("matchesSafely").addAnnotation(Override.class).addModifiers(Modifier.PROTECTED)
-			.returns(
-				Boolean.TYPE).addParameter(type,
-				parameterItem, Modifier.FINAL).addStatement(
-				"return $L.matches($L)", INNER_MATCHER_FIELD_NAME, parameterItem).build();
+		return MethodSpec.methodBuilder("matchesSafely")
+				.addAnnotation(Override.class)
+				.addModifiers(Modifier.PROTECTED)
+				.returns(Boolean.TYPE)
+				.addParameter(type, parameterItem, Modifier.FINAL)
+				.addStatement("return $L.matches($L)", INNER_MATCHER_FIELD_NAME, parameterItem).build();
 	}
 
 	private MethodSpec describeMismatchSafelyMethod(final Class<?> type) {
 		final String parameterName = PARAMETER_NAME_ITEM;
 		final String parameterNameDescription = PARAMETER_NAME_DESCRIPTION;
-		return MethodSpec.methodBuilder("describeMismatchSafely").addAnnotation(Override.class).addParameter(type,
-				parameterName, Modifier.FINAL).addStatement(
-				"$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, parameterName, parameterNameDescription)
-			.addParameter(
-				Description.class,
-				parameterNameDescription, Modifier.FINAL).addModifiers(Modifier.PROTECTED).build();
+		return MethodSpec.methodBuilder("describeMismatchSafely")
+				.addAnnotation(Override.class)
+				.addParameter(type, parameterName, Modifier.FINAL)
+				.addStatement("$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, parameterName, parameterNameDescription)
+				.addParameter(Description.class,
+						parameterNameDescription, Modifier.FINAL)
+				.addModifiers(Modifier.PROTECTED).build();
 	}
 
 	private List<MethodSpec> propertyMethods(final Class<?> type) {
@@ -135,25 +145,22 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 
 	private MethodSpec propertyMatcherMethodFor(final BeanProperty property, final Class<?> type) {
 		return MethodSpec.methodBuilder(methodNameToGenerateFor(property.getName())).returns(
-				classNameOfGeneratedTypeFor(
-					type))
-			.addModifiers(
-				Modifier.PUBLIC).addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL).addStatement(
-				"$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, property.getName()).addStatement(
+				classNameOfGeneratedTypeFor(type))
+				.addModifiers(Modifier.PUBLIC)
+				.addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL)
+				.addStatement("$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, property.getName())
+				.addStatement(
 				"return this")
 			.build();
 	}
 
 	private MethodSpec propertyMethodFor(final BeanProperty property, final Class<?> type) {
 		return MethodSpec.methodBuilder(methodNameToGenerateFor(property.getName())).returns(
-				classNameOfGeneratedTypeFor(
-					type))
-			.addModifiers(
-				Modifier.PUBLIC).addParameter(property.getType(), "value", Modifier.FINAL)
-			.addStatement(
-				"$L.with($S, $T.equalTo(value))", INNER_MATCHER_FIELD_NAME, property.getName(), Matchers.class)
-			.addStatement(
-				"return this")
+				classNameOfGeneratedTypeFor(type))
+				.addModifiers(Modifier.PUBLIC)
+				.addParameter(property.getType(), "value", Modifier.FINAL)
+				.addStatement("$L.with($S, $T.equalTo(value))", INNER_MATCHER_FIELD_NAME, property.getName(), Matchers.class)
+				.addStatement("return this")
 			.build();
 	}
 
@@ -177,16 +184,19 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 
 	private List<AnnotationSpec> generatedAnnotations(final Class<?> type) {
 		final String annotationMemberName = "value";
-		return Arrays.asList(AnnotationSpec.builder(Generated.class).addMember(annotationMemberName, "$S",
+		return Arrays.asList(AnnotationSpec.builder(Generated.class)
+						.addMember(annotationMemberName, "$S",
 					getClass().getName())
 				.build(),
-				AnnotationSpec.builder(BasedOn.class).addMember(annotationMemberName, "$T.class", type)
+				AnnotationSpec.builder(BasedOn.class)
+						.addMember(annotationMemberName, "$T.class", type)
 					.build());
 	}
 
 	private MethodSpec constructor(final Class<?> type) {
-		return MethodSpec.constructorBuilder().addStatement(
-				"$L = new BeanPropertyMatcher<$T>($T.class)", INNER_MATCHER_FIELD_NAME, type, type).addModifiers(
+		return MethodSpec.constructorBuilder()
+				.addStatement("$L = new BeanPropertyMatcher<$T>($T.class)", INNER_MATCHER_FIELD_NAME, type, type)
+				.addModifiers(
 				Modifier.PUBLIC)
 			.build();
 	}
