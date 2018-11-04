@@ -32,7 +32,6 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
     private static final String PARAMETER_NAME_ITEM = "item";
 	private static final String PARAMETER_NAME_DESCRIPTION = "description";
 	private static final String FACTORY_METHOD_PREFIX = "is";
-	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
     private final BeanPropertyExtractor propertyExtractor;
 	private final Path outputDir;
@@ -51,10 +50,15 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
         this.matcherNamingStrategy = matcherNamingStrategy;
 	}
 
+	// TODO: static matcher method name
 	@Override
-	public Path generateMatcherFor(final Class<?> type) throws IOException {
+	public Path generateMatcherFor(final Class<?> type) throws MatcherGenerationException {
 		final JavaFile javaFile = prepareJavaFile(type);
-		javaFile.writeTo(outputDir);
+		try {
+			javaFile.writeTo(outputDir);
+		} catch (final IOException e) {
+			throw new MatcherGenerationException("Error on writing Matcher for " + type);
+		}
 		return outputDir.resolve(javaFile.toJavaFileObject().getName());
 	}
 
@@ -69,8 +73,8 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
         return matcherNamingStrategy.packageFor(type).orElse(NO_PACKAGE);
     }
 
-    private String matcherNameFor(final Class<?> type) {
-		return type.getSimpleName() + POSTFIX;
+	private String matcherNameFor(final Class<?> type) {
+		return matcherNamingStrategy.typeNameFor(type).orElseThrow(() -> new MatcherGenerationRuntimeException("Error on type name generation for the metcher for " + type));
 	}
 
 	private TypeSpec generatedTypeFor(final Class<?> type) {

@@ -10,9 +10,17 @@ public interface MatcherNamingStrategy {
      * Generates the package name for a matcher to the given type.
      *
      * @param type Type to generate the package for the Matcher for.
-     * @return The package name
+     * @return The matchers package name
      */
     Optional<String> packageFor(Class<?> type);
+
+    /**
+     * Generates a name for a matcher to the given type.
+     *
+     * @param type Type to generate the name for the Matcher for.
+     * @return Tha matcher name.
+     */
+    Optional<String> typeNameFor(Class<?> type);
 
     /**
      * Strategy of how to name generated matchers.

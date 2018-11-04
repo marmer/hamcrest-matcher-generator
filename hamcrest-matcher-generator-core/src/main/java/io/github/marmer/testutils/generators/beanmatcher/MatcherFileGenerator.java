@@ -1,11 +1,11 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherGenerationException;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +51,7 @@ public class MatcherFileGenerator implements MatcherGenerator {
                 .map(aClass -> {
                     try {
                         return hasPropertyMatcherClassGenerator.generateMatcherFor(aClass);
-                    } catch (IOException e) {
+                    } catch (MatcherGenerationException e) {
                         return null;
                     }
                 })
