@@ -109,10 +109,72 @@ public class MatchersMojo extends AbstractMojo {
 	 * Strategy of how to name generated classes.
 	 * <p>
 	 * Avoid PLAIN, if you generate matchers for inner classes.
+	 *
+	 * <ul>
+	 *     <li>
+	 *         <em>PACKAGE</em>
+	 *         The matcher is named exactly as the class it is generated for but added to a package which looks pretty much
+	 *         like the full qualified classname it was generated for.
+	 *         <p>
+	 *         E.g. This constellation
+	 *         some.package.OuterClass1.InnerClass
+	 *         some.package.OuterClass2.InnerClass
+	 *         </p>
+	 *         <p>
+	 *         ...would produce the following machers
+	 *         </p>
+	 *         <p>
+	 *         some.package.OuterClass1Matcher
+	 *         some.package.outerclass1.InnerClassMatcher
+	 *         some.package.OuterClass2Matcher
+	 *         some.package.outerclass2.InnerClassMatcher
+	 *         </p>
+	 *     </li>
+	 *     <li>
+	 *         <em>PARENT</em>
+	 *         The generated matcher contains the typename of the enclosing type(s) and lies in their package.
+	 *         <p>
+	 *         E.g. This constellation
+	 *         some.package.OuterClass1.InnerClass
+	 *         some.package.OuterClass2.InnerClass.InnerInnerClass
+	 *         </p>
+	 *         <p>
+	 *         ...would produce the following machers
+	 *         </p>
+	 *         <p>
+	 *         some.package.OuterClass1Matcher
+	 *         some.package.OuterClass1$InnerClassMatcher
+	 *         some.package.OuterClass2Matcher
+	 *         some.package.OuterClass2$InnerClassMatcher
+	 *         some.package.OuterClass2$InnerClass$InnerInnerClassMatcher
+	 *
+	 *         </p>
+	 *     </li>
+	 *     <li>
+	 *         <em>PLAIN</em>
+	 *         The matcher is named exactly as the class it is generate for with exactly the package it lies in.
+	 *         <p>
+	 *         This strategy can be used if no matchers are generated for inner classes or if there is always only one
+	 *         inner class in a package with a name.
+	 *         If you have two classes with each an inner class an both inner classes are named the same, only one wins.
+	 *         </p>
+	 *         <p>
+	 *         E.g. This constellation
+	 *         some.package.OuterClass1.InnerClass
+	 *         some.package.OuterClass2.InnerClass
+	 *         </p>
+	 *         <p>
+	 *         ...would produce the following Matchers:
+	 *         some.package.OuterClass1Matcher
+	 *         some.package.OuterClass2Matcher
+	 *         some.package.InnerClassMatcher
+	 *     </li>
+	 *
+	 * </ul>
 	 */
 	@Parameter(
 			required = true,
-			defaultValue = "PLAIN",
+			defaultValue = "PACKAGE",
 			property = "namingStrategy"
 	)
 	private Name namingStrategy;
