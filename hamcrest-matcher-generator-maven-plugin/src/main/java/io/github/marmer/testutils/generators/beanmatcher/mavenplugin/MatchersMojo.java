@@ -15,7 +15,6 @@ import org.apache.maven.project.ProjectDependenciesResolver;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -134,8 +133,8 @@ public class MatchersMojo extends AbstractMojo {
 		final MatcherGenerator matcherFileGenerator = prepareMatcherGenerator();
 
 		try {
-			final List<Class<?>> generatedMatchers = matcherFileGenerator.generateHelperForClassesAllIn(matcherSources);
-			generatedMatchers.forEach(generatedType -> getLog().info("Generated: " + generatedType));
+			matcherFileGenerator.generateHelperForClassesAllIn(matcherSources)
+					.forEach(generatedType -> getLog().info("Generated: " + generatedType));
 		} catch (final IOException e) {
 			throw new MojoFailureException("Error on matcher generation", e);
 		}

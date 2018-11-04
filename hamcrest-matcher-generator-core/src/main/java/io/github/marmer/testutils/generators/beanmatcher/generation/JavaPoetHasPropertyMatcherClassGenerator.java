@@ -1,39 +1,24 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
-
+import com.squareup.javapoet.*;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanProperty;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-
 import org.apache.commons.lang3.StringUtils;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
+import javax.annotation.Generated;
+import javax.lang.model.element.Modifier;
 import java.io.IOException;
-
 import java.nio.file.Path;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Generated;
-
-import javax.lang.model.element.Modifier;
 
 
 /**
@@ -50,17 +35,19 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
 	private final BeanPropertyExtractor propertyExtractor;
 	private final Path outputDir;
+	private final NamingStrategy namingStrategy;
 
 	/**
 	 * Creates a new Instance.
-	 *
 	 * @param  propertyExtractor  the property extractor
 	 * @param  outputDir          the output dir
+	 * @param namingStrategy Strategy of how to name generated classes and packages.
 	 */
 	public JavaPoetHasPropertyMatcherClassGenerator(final BeanPropertyExtractor propertyExtractor,
-		final Path outputDir) {
+													final Path outputDir, final NamingStrategy namingStrategy) {
 		this.propertyExtractor = propertyExtractor;
 		this.outputDir = outputDir;
+		this.namingStrategy = namingStrategy;
 	}
 
 	@Override
