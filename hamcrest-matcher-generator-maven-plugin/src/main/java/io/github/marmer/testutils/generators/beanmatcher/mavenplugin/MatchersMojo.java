@@ -3,12 +3,11 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration.NamingStrategy;
+import io.github.marmer.testutils.generators.beanmatcher.generation.NamingStrategy.Name;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
@@ -117,10 +116,10 @@ public class MatchersMojo extends AbstractMojo {
 			defaultValue = "PLAIN",
 			property = "namingStrategy"
 	)
-	private NamingStrategy namingStrategy;
+	private Name namingStrategy;
 
 	@Override
-	public void execute() throws MojoExecutionException, MojoFailureException {
+	public void execute() throws MojoFailureException {
 		validateNeededDependencies();
 		validateMatcherSourcesSet();
 		generateMatchers();
