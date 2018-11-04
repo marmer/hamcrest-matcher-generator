@@ -50,7 +50,6 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
         this.matcherNamingStrategy = matcherNamingStrategy;
 	}
 
-	// TODO: static matcher method name
 	@Override
 	public Path generateMatcherFor(final Class<?> type) throws MatcherGenerationException {
 		final JavaFile javaFile = prepareJavaFile(type);
