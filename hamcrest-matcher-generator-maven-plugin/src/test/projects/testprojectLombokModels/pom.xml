@@ -52,6 +52,7 @@
 						<matcherSource>some.pck.model</matcherSource>
 						<matcherSource>some.pck.model.SimpleModel</matcherSource>
 					</matcherSources>
+					<namingStrategy>PLAIN</namingStrategy>
 					<outputDir>target/generated-test-sources</outputDir>
 				</configuration>
 				<executions>
