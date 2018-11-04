@@ -51,6 +51,7 @@
 					<matcherSources>
 						<!-- It's empty to produce a build error -->
 					</matcherSources>
+					<namingStrategy>PLAIN</namingStrategy>
 					<outputDir>target/generated-test-sources</outputDir>
 				</configuration>
 				<executions>
