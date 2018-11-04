@@ -59,8 +59,9 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private JavaFile prepareJavaFile(final Class<?> type) {
-        return JavaFile.builder(packageNameFor(type), generatedTypeFor(type)).indent("\t").skipJavaLangImports(
-				true)
+		return JavaFile.builder(packageNameFor(type),
+				generatedTypeFor(type)).indent("\t")
+				.skipJavaLangImports(true)
 			.build();
 	}
 
@@ -171,7 +172,7 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private ClassName classNameOfGeneratedTypeFor(final Class<?> type) {
-		return ClassName.get(type.getPackage().getName(), matcherNameFor(type));
+		return ClassName.get(packageNameFor(type), matcherNameFor(type));
 	}
 
 	private List<AnnotationSpec> generatedAnnotations(final Class<?> type) {
