@@ -3,6 +3,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
+import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration.NamingStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
@@ -106,6 +107,17 @@ public class MatchersMojo extends AbstractMojo {
 			property = "allowInterfaces"
 	)
 	private boolean allowInterfaces;
+	/**
+	 * Strategy of how to name generated classes.
+	 * <p>
+	 * Avoid PLAIN, if you generate matchers for inner classes.
+	 */
+	@Parameter(
+			required = true,
+			defaultValue = "PLAIN",
+			property = "namingStrategy"
+	)
+	private NamingStrategy namingStrategy;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -142,9 +154,9 @@ public class MatchersMojo extends AbstractMojo {
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
 				.classLoader(classLoader)
 				.outputPath(outputDir.toPath())
-				.ignoreClassesWithoutProperties(
-						ignoreClassesWithoutProperties)
-				.allowInterfaces(allowInterfaces).build();
+				.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
+				.allowInterfaces(allowInterfaces)
+				.namingStrategy(namingStrategy).build();
 		return matcherGeneratorFactory.createBy(
 				matcherGeneratorConfiguration);
 	}
