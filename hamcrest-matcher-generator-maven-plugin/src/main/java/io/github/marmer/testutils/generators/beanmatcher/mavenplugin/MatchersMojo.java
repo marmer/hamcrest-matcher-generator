@@ -211,14 +211,13 @@ public class MatchersMojo extends AbstractMojo {
 			throw new MojoFailureException("Cannot access Dependencies", e);
 		}
 
-		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader)
-				.outputPath(outputDir.toPath())
-				.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
-				.allowInterfaces(allowInterfaces)
-				.namingStrategy(namingStrategy).build();
 		return matcherGeneratorFactory.createBy(
-				matcherGeneratorConfiguration);
+				MatcherGeneratorConfiguration.builder()
+						.classLoader(classLoader)
+						.outputPath(outputDir.toPath())
+						.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
+						.allowInterfaces(allowInterfaces)
+						.namingStrategy(namingStrategy).build());
 	}
 
 	private void validateNeededDependencies() throws MojoFailureException {

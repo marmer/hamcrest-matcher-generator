@@ -3,6 +3,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -17,7 +18,6 @@ import static org.junit.Assert.assertThat;
 
 
 public class NewOperatorMatcherGeneratorFactoryTest {
-
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
 	private final NewOperatorMatcherGeneratorFactory classUnderTest = new NewOperatorMatcherGeneratorFactory();
@@ -33,6 +33,7 @@ public class NewOperatorMatcherGeneratorFactoryTest {
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
 				.classLoader(classLoader)
 				.outputPath(outputPath)
+				.namingStrategy(MatcherNamingStrategy.Name.PLAIN)
 				.build();
 		final MatcherGenerator matcherGenerator = classUnderTest.createBy(matcherGeneratorConfiguration);
 
