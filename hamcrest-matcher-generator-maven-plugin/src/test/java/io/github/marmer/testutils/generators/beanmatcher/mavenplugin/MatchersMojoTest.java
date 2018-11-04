@@ -3,87 +3,58 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
-
 import org.codehaus.plexus.util.ReflectionUtils;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.junit.rules.ExpectedException;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.sameInstance;
-
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class MatchersMojoTest {
+	private final List<String> classpathElements = Collections.singletonList("anyClasspathElement");
+	private final ClassLoader classLoader = mock(ClassLoader.class);
+	private final MatcherGenerator matcherGenerator = mock(MatcherGenerator.class);
 	@Rule
 	public MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
-
-	@InjectMocks
-	private MatchersMojo classUnderTest;
-
-	@Mock
-	private MavenProject mavenProject;
-
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
-
+	@InjectMocks
+	private MatchersMojo classUnderTest;
+	@Mock
+	private MavenProject mavenProject;
 	@Spy
 	private File outputDir = new File("outputDir");
-
 	@Spy
 	private PathToUrlDelegate pathToUrlDelegate = new PathToUrlDelegate();
-
 	private String[] matcherSources = new String[] {
 		"some.package"
 	};
-
 	@Mock
 	private ClassLoaderFactory classloaderFactory;
-
 	@Mock
 	private MatcherGeneratorFactory matcherGeneratorFactory;
-
-	private final List<String> classpathElements = Collections.singletonList("anyClasspathElement");
-
-	private final ClassLoader classLoader = mock(ClassLoader.class);
-
-	private final MatcherGenerator matcherGenerator = mock(MatcherGenerator.class);
-
 	@Mock
 	private ProjectDependenciesResolver projectDependenciesResolver;
 
@@ -262,12 +233,17 @@ public class MatchersMojoTest {
 
 		final boolean ignoreClassesWithoutProperties = true;
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
-			"ignoreClassesWithoutProperties",
-			ignoreClassesWithoutProperties);
+				"ignoreClassesWithoutProperties",
+				ignoreClassesWithoutProperties);
+		ReflectionUtils.setVariableValueInObject(classUnderTest,
+				"namingStrategy",
+				MatcherGeneratorConfiguration.NamingStrategy.PLAIN);
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
-				.classLoader(classLoader).outputPath(outputDir.toPath()).ignoreClassesWithoutProperties(
-				ignoreClassesWithoutProperties).build();
+				.classLoader(classLoader)
+				.outputPath(outputDir.toPath())
+				.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
+				.namingStrategy(MatcherGeneratorConfiguration.NamingStrategy.PLAIN).build();
 		when(matcherGeneratorFactory.createBy(matcherGeneratorConfiguration)).thenReturn(
 			matcherGenerator);
 	}
