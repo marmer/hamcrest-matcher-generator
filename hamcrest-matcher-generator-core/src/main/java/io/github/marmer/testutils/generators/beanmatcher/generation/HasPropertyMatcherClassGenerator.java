@@ -1,11 +1,8 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
 import org.hamcrest.beans.HasProperty;
-
 import org.hamcrest.core.AllOf;
 import org.hamcrest.core.IsInstanceOf;
-
-import java.io.IOException;
 
 import java.nio.file.Path;
 
@@ -44,8 +41,8 @@ public interface HasPropertyMatcherClassGenerator {
 	 *
 	 * @return  Paths of generated matchers.
 	 *
-	 * @throws  IOException  Signals that an I/O exception has occurred.
+	 * @throws MatcherGenerationException  Signals that something went wrong while matchers are created.
 	 */
-	Path generateMatcherFor(Class<?> type) throws IOException;
+	Path generateMatcherFor(Class<?> type) throws MatcherGenerationException;
 
 }

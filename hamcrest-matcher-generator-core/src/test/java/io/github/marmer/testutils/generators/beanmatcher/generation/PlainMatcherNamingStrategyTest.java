@@ -43,4 +43,16 @@ public class PlainMatcherNamingStrategyTest {
         result.ifPresent(Assert::fail);
     }
 
+    @Test
+    public void testTypeNameFor_TypeGiven_ShouldSimplyAddThePostfixToTheGivenTypeName()
+            throws Exception {
+        // Preparation
+
+        // Execution
+        final Optional<String> result = underTest.typeNameFor(sample.classes.subpackage2.ClassInSubPackage.class);
+
+        // Assertion
+        assertThat(result.get(), is("ClassInSubPackageMatcher"));
+    }
+
 }

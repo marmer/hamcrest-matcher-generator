@@ -11,4 +11,11 @@ public class PlainMatcherNamingStrategy implements MatcherNamingStrategy {
         return Optional.ofNullable(type)
                 .map(t -> type.getPackage().getName());
     }
+
+    @Override
+    public Optional<String> typeNameFor(final Class<?> type) {
+
+        return Optional.of(type.getSimpleName() + "Matcher");
+
+    }
 }
