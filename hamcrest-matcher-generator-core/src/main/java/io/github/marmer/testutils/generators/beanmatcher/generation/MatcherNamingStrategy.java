@@ -85,7 +85,6 @@ public interface MatcherNamingStrategy {
          * some.package.OuterClass2$InnerClass$InnerInnerClassMatcher
          * </p>
          */
-        // TODO: marmer 04.11.2018 comming soon
         PARENT
     }
 }
