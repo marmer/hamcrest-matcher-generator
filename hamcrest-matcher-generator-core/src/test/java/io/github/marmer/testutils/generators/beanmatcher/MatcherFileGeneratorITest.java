@@ -2,6 +2,7 @@ package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.PlainNamingStrategy;
 import io.github.marmer.testutils.generators.beanmatcher.processing.*;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -45,7 +46,7 @@ public class MatcherFileGeneratorITest {
         potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false, false);
 
         hasPropertyMatcherClassGenerator =
-            new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir);
+                new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir, new PlainNamingStrategy());
         classUnderTest =
             new MatcherFileGenerator(potentialPojoClassFinder,
                 hasPropertyMatcherClassGenerator,
