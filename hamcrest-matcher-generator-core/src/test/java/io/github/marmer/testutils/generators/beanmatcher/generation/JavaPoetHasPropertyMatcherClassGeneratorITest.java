@@ -64,7 +64,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	}
 
 	private void initClassUnderTest() {
-		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir, new PlainNamingStrategy());
+		classUnderTest = new JavaPoetHasPropertyMatcherClassGenerator(propertyExtractor, srcOutputDir, new PlainMatcherNamingStrategy());
 	}
 
 	private void initCompiler() {

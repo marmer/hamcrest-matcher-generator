@@ -28,26 +28,27 @@ import java.util.stream.Stream;
  * @since   17.06.2017
  */
 public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatcherClassGenerator {
-	private static final String PARAMETER_NAME_ITEM = "item";
+    private static final String NO_PACKAGE = "";
+    private static final String PARAMETER_NAME_ITEM = "item";
 	private static final String PARAMETER_NAME_DESCRIPTION = "description";
 	private static final String FACTORY_METHOD_PREFIX = "is";
 	private static final String POSTFIX = "Matcher";
 	private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
-	private final BeanPropertyExtractor propertyExtractor;
+    private final BeanPropertyExtractor propertyExtractor;
 	private final Path outputDir;
-	private final NamingStrategy namingStrategy;
+    private final MatcherNamingStrategy matcherNamingStrategy;
 
 	/**
 	 * Creates a new Instance.
 	 * @param  propertyExtractor  the property extractor
 	 * @param  outputDir          the output dir
-	 * @param namingStrategy Strategy of how to name generated classes and packages.
+     * @param matcherNamingStrategy Strategy of how to name generated classes and packages.
 	 */
 	public JavaPoetHasPropertyMatcherClassGenerator(final BeanPropertyExtractor propertyExtractor,
-													final Path outputDir, final NamingStrategy namingStrategy) {
+                                                    final Path outputDir, final MatcherNamingStrategy matcherNamingStrategy) {
 		this.propertyExtractor = propertyExtractor;
 		this.outputDir = outputDir;
-		this.namingStrategy = namingStrategy;
+        this.matcherNamingStrategy = matcherNamingStrategy;
 	}
 
 	@Override
@@ -58,12 +59,16 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	private JavaFile prepareJavaFile(final Class<?> type) {
-		return JavaFile.builder(type.getPackage().getName(), generatedTypeFor(type)).indent("\t").skipJavaLangImports(
+        return JavaFile.builder(packageNameFor(type), generatedTypeFor(type)).indent("\t").skipJavaLangImports(
 				true)
 			.build();
 	}
 
-	private String matcherNameFor(final Class<?> type) {
+    private String packageNameFor(final Class<?> type) {
+        return matcherNamingStrategy.packageFor(type).orElse(NO_PACKAGE);
+    }
+
+    private String matcherNameFor(final Class<?> type) {
 		return type.getSimpleName() + POSTFIX;
 	}
 

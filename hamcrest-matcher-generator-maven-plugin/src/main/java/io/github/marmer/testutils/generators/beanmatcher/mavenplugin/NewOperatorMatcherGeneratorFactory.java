@@ -5,7 +5,7 @@ import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.PlainNamingStrategy;
+import io.github.marmer.testutils.generators.beanmatcher.generation.PlainMatcherNamingStrategy;
 import io.github.marmer.testutils.generators.beanmatcher.processing.*;
 
 
@@ -29,7 +29,7 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 			new JavaPoetHasPropertyMatcherClassGenerator(
 					propertyExtractor,
 					matcherGeneratorConfiguration.getOutputPath(),
-					new PlainNamingStrategy());
+					new PlainMatcherNamingStrategy());
 		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(
 				matcherGeneratorConfiguration.getOutputPath(),
 				matcherGeneratorConfiguration.getClassLoader());

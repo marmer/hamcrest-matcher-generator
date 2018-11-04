@@ -3,7 +3,7 @@ package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
-import io.github.marmer.testutils.generators.beanmatcher.generation.NamingStrategy.Name;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherNamingStrategy.Name;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;

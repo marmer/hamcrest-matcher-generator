@@ -1,6 +1,19 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
-public interface NamingStrategy {
+import java.util.Optional;
+
+/**
+ * Naming strategy for Matchers.
+ */
+public interface MatcherNamingStrategy {
+    /**
+     * Generates the package name for a matcher to the given type.
+     *
+     * @param type Type to generate the package for the Matcher for.
+     * @return The package name
+     */
+    Optional<String> packageFor(Class<?> type);
+
     /**
      * Strategy of how to name generated matchers.
      */

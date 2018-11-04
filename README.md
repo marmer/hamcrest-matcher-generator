@@ -161,3 +161,4 @@ The generation happens at phase generate-test-sources by default because it need
 * Better support for inner classes
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
+* Support for Optionals
