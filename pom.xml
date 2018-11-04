@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.marmer.testutils</groupId>
 	<artifactId>hamcrest-matcher-generator</artifactId>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.3.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>hamcrest-matcher-generator</name>
 	<description>A tool to generate hamcrest matchers based on any model classes (or other classes with property getters)</description>
