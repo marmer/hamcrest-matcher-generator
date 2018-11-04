@@ -2,7 +2,6 @@ package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.JavaPoetHasPropertyMatcherClassGeneratorITest.SimplePojo;
 import io.github.marmer.testutils.generators.beanmatcher.processing.*;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -12,6 +11,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import sample.classes.SimpleSampleClass;
+import sample2.classes.SimplePojo;
 
 import java.nio.file.Path;
 

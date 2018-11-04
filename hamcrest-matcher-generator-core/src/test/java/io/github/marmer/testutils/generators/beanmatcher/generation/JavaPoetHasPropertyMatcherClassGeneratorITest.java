@@ -1,18 +1,29 @@
 package io.github.marmer.testutils.generators.beanmatcher.generation;
 
-import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.hasToString;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.io.FileMatchers.anExistingFile;
-import static org.junit.Assert.assertThat;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.StringLiteralExpr;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
+import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
+import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.jci.compilers.CompilationResult;
+import org.apache.commons.lang3.reflect.MethodUtils;
+import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import sample2.classes.ClassWithoutAnyProperty;
+import sample2.classes.PojoWithMatcherProperty;
+import sample2.classes.SimplePojo;
+import sample2.classes.SimplePojoChild;
 
+import javax.annotation.Generated;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -24,35 +35,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.annotation.Generated;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.jci.compilers.CompilationResult;
-import org.apache.commons.lang3.reflect.MethodUtils;
-import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.ImportDeclaration;
-import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.expr.StringLiteralExpr;
-
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
-import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
-import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
-import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
+import static io.github.marmer.testutils.utils.matchers.CleanCompilationResultMatcher.hasNoErrorsOrWarnings;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.io.FileMatchers.anExistingFile;
+import static org.junit.Assert.assertThat;
 
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String MATCHER_POSTFIX = "Matcher";
-	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
-	private HasPropertyMatcherClassGenerator classUnderTest;
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
+	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+	private HasPropertyMatcherClassGenerator classUnderTest;
 	private Path srcOutputDir;
 	private Path classOutputDir;
 	private GeneratedFileCompiler compiler;
@@ -110,8 +108,8 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 		assertThat(generatedSourceFileFor(SimplePojo.class), is(anExistingFile()));
 	}
 
-	private void createEmptyFileFor(Class<SimplePojo> type) throws IOException {
-		File f = generatedSourceFileFor(type);
+	private void createEmptyFileFor(final Class<SimplePojo> type) throws IOException {
+		final File f = generatedSourceFileFor(type);
 		f.getParentFile().mkdirs();
 		f.createNewFile();
 	}
@@ -423,44 +421,4 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private File generatedSourceFileFor(final Class<?> type) {
 		return compiler.getGeneratedSourcePathFor(type).toFile();
 	}
-
-	public static class ClassWithoutAnyProperty {
-		public void helloMyNameIsNobody() {
-		}
-	}
-
-	public static class PojoWithMatcherProperty {
-		private Matcher<?> someProperty;
-
-		private PojoWithMatcherProperty(final Matcher<?> someProperty) {
-			this.someProperty = someProperty;
-		}
-
-		public Matcher<?> getSomeProperty() {
-			return someProperty;
-		}
-	}
-
-	public static class SimplePojo {
-		private final String simpleProp;
-
-		public SimplePojo(final String simpleProp) {
-			this.simpleProp = simpleProp;
-		}
-
-		public String anotherNonPropertyMethod() {
-			return "someNonPropertyValue";
-		}
-
-		public String getSimpleProp() {
-			return simpleProp;
-		}
-	}
-
-	public static class SimplePojoChild extends SimplePojo {
-		public SimplePojoChild(final String simpleProp) {
-			super(simpleProp);
-		}
-	}
-
 }
