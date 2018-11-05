@@ -5,9 +5,16 @@ import java.util.Optional;
 public class PackageMatcherNamingStrategy implements MatcherNamingStrategy {
     @Override
     public Optional<String> packageFor(final Class<?> type) {
-        // TODO: marmer 04.11.2018 implement} me
-        return Optional.empty();
+        return type == null
+                ? Optional.empty()
+                : Optional.of(type.getPackage().getName() + enclosingPartsOf(type));
 
+    }
+
+    private String enclosingPartsOf(final Class<?> type) {
+        return !type.isMemberClass()
+                ? ""
+                : "." + type.getEnclosingClass().getSimpleName().toLowerCase();
     }
 
     @Override
