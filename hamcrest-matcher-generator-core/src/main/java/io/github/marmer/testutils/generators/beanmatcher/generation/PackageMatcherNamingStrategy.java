@@ -14,7 +14,7 @@ public class PackageMatcherNamingStrategy implements MatcherNamingStrategy {
     private String enclosingPartsOf(final Class<?> type) {
         return !type.isMemberClass()
                 ? ""
-                : "." + type.getEnclosingClass().getSimpleName().toLowerCase();
+                : enclosingPartsOf(type.getEnclosingClass()) + "." + type.getEnclosingClass().getSimpleName().toLowerCase();
     }
 
     @Override

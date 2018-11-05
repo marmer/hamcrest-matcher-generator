@@ -70,8 +70,6 @@ public class PackageMatcherNamingStrategyTest {
         assertThat(result, isPresentAndIs("sample2.classes"));
     }
 
-    // TODO: marmer 05.11.2018 Inner inner classes ...
-
     @Test
     public void testPackageFor_InnerClassTypeGiven_ShouldReturnPackageOfSuperTypeWithEndpackageNamedLikesEnclosingClass()
             throws Exception {
@@ -82,6 +80,18 @@ public class PackageMatcherNamingStrategyTest {
 
         // Assertion
         assertThat(result, isPresentAndIs("sample.classes.complexsample"));
+    }
+
+    @Test
+    public void testPackageFor_InnerInnerClassTypeGiven_ShouldReturnPackageOfSuperTypesWithEndpackageNamedLikesEnclosingClass()
+            throws Exception {
+        // Preparation
+
+        // Execution
+        final Optional<String> result = underTest.packageFor(sample2.classes.ContainerClass.InnerClass.InnerInnerClass.class);
+
+        // Assertion
+        assertThat(result, isPresentAndIs("sample2.classes.containerclass.innerclass"));
     }
 
     @Test
