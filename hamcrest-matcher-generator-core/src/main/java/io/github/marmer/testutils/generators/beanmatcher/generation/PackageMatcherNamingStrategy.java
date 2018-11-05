@@ -12,8 +12,9 @@ public class PackageMatcherNamingStrategy implements MatcherNamingStrategy {
 
     @Override
     public Optional<String> typeNameFor(final Class<?> type) {
-        // TODO: marmer 04.11.2018 implement} me
-        return Optional.empty();
+        return type == null
+                ? Optional.empty()
+                : Optional.of(type.getSimpleName());
 
     }
 }
