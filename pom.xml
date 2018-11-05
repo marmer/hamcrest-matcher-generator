@@ -229,7 +229,7 @@
 							<goal>sign</goal>
 						</goals>
 						<configuration>
-                            <skip>false</skip>
+                            <skip>true</skip>
 							<useAgent>true</useAgent>
 						</configuration>
 					</execution>
