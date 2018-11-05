@@ -11,9 +11,9 @@ import sample2.classes.SimplePojo;
 
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.is;
+import static com.github.npathai.hamcrestopt.OptionalMatchers.isEmpty;
+import static com.github.npathai.hamcrestopt.OptionalMatchers.isPresentAndIs;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 public class PackageMatcherNamingStrategyTest {
     @Rule
@@ -31,7 +31,7 @@ public class PackageMatcherNamingStrategyTest {
         final Optional<String> result = underTest.typeNameFor(SimplePojo.class);
 
         // Assertion
-        assertThat(result.get(), is("SimplePojo"));
+        assertThat(result, isPresentAndIs("SimplePojo"));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class PackageMatcherNamingStrategyTest {
         final Optional<String> result = underTest.typeNameFor(ComplexSample.InnerClass.class);
 
         // Assertion
-        assertThat(result.get(), is("InnerClass"));
+        assertThat(result, isPresentAndIs("InnerClass"));
     }
 
     @Test
@@ -55,7 +55,44 @@ public class PackageMatcherNamingStrategyTest {
         final Optional<String> result = underTest.typeNameFor(null);
 
         // Assertion
-        result.ifPresent(s -> fail("empty optional expected"));
+        assertThat(result, isEmpty());
     }
 
+    @Test
+    public void testPackageFor_TypeGiven_ShouldReturnPackageOfType()
+            throws Exception {
+        // Preparation
+
+        // Execution
+        final Optional<String> result = underTest.packageFor(SimplePojo.class);
+
+        // Assertion
+        assertThat(result, isPresentAndIs("sample2.classes"));
+    }
+
+    // TODO: marmer 05.11.2018 Inner inner classes ...
+
+    @Test
+    public void testPackageFor_InnerClassTypeGiven_ShouldReturnPackageOfSuperTypeWithEndpackageNamedLikesEnclosingClass()
+            throws Exception {
+        // Preparation
+
+        // Execution
+        final Optional<String> result = underTest.packageFor(ComplexSample.InnerClass.class);
+
+        // Assertion
+        assertThat(result, isPresentAndIs("sample.classes.complexsample"));
+    }
+
+    @Test
+    public void testPackageFor_NothingGiven_ShouldReturnNothing()
+            throws Exception {
+        // Preparation
+
+        // Execution
+        final Optional<String> result = underTest.packageFor(null);
+
+        // Assertion
+        assertThat(result, isEmpty());
+    }
 }
