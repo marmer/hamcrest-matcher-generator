@@ -152,13 +152,19 @@ run test phase once (or a later one)
 The generation happens at phase generate-test-sources by default because it need's the compiled model classes. If you don't, your IDE won't be able to use the model classes in your ide, because they simply don't exist ;)
 
 ### Changelog
+This project uses semantic versioning. See https://semver.org/
+
 #### 1.3.0
 * Support for Matcher-Generation for Interfaces
 
-### 1.4.0
+### 2.0.0
+* Support for multiple inner classes with the same name added by using different naming strategies. For backwart compatibility use <namingStrategy>PLAIN</namingStrategy> which is the old strategy
+
+### 3.0.0 
+* Matchers generated with the package naming strategy will and with the postfix "Matcher" again.
 
 ### Planed for future releases
-* Better support for inner classes
+* Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
 * Support for Optionals
