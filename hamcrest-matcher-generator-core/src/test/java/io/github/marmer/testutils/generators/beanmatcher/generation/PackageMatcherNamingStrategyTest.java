@@ -31,7 +31,7 @@ public class PackageMatcherNamingStrategyTest {
         final Optional<String> result = underTest.typeNameFor(SimplePojo.class);
 
         // Assertion
-        assertThat(result, isPresentAndIs("SimplePojo"));
+        assertThat(result, isPresentAndIs("SimplePojoMatcher"));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class PackageMatcherNamingStrategyTest {
         final Optional<String> result = underTest.typeNameFor(ComplexSample.InnerClass.class);
 
         // Assertion
-        assertThat(result, isPresentAndIs("InnerClass"));
+        assertThat(result, isPresentAndIs("InnerClassMatcher"));
     }
 
     @Test
