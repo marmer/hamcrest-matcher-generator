@@ -168,3 +168,27 @@ This project uses semantic versioning. See https://semver.org/
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
 * Support for Optionals
+* Bug: does not produce a matcher anything for :
+```
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Component
+@JacksonXmlRootElement(localName = "fehler")
+public class FehlerDTO extends DefaultErrorAttributes {
+    private int status;
+    private String fehler;
+    private String stacktrace;
+
+    @Override
+    public Map<String, Object> getErrorAttributes(final WebRequest webRequest, final boolean includeStackTrace) {
+        final Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest, includeStackTrace);
+        errorAttributes.computeIfAbsent("fehler", s ->
+                errorAttributes.getOrDefault("error",
+                        errorAttributes.getOrDefault("message",
+                                "Unbekannter Fehler ist aufgetreten")));
+        return errorAttributes;
+    }
+}
+```
