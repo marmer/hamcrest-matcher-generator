@@ -21,7 +21,7 @@ public class PackageMatcherNamingStrategy implements MatcherNamingStrategy {
     public Optional<String> typeNameFor(final Class<?> type) {
         return type == null
                 ? Optional.empty()
-                : Optional.of(type.getSimpleName());
+                : Optional.of(type.getSimpleName() + "Matcher");
 
     }
 }
