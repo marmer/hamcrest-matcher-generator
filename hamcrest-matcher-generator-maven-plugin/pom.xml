@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>hamcrest-matcher-generator</artifactId>
 		<groupId>io.github.marmer.testutils</groupId>
-		<version>2.1.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>io.github.marmer.testutils</groupId>
 			<artifactId>hamcrest-matcher-generator-core</artifactId>
-			<version>2.1.0-SNAPSHOT</version>
+			<version>3.0.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
