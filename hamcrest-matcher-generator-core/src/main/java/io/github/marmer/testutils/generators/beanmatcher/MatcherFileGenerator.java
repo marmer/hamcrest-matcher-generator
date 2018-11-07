@@ -22,13 +22,16 @@ public class MatcherFileGenerator implements MatcherGenerator {
     private final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 
     private final IllegalClassFilter illegalClassFilter;
+    private final Log log;
 
     public MatcherFileGenerator(final PotentialPojoClassFinder potentialPojoClassFinder,
                                 final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator,
-                                final IllegalClassFilter illegalClassFilter) {
+                                final IllegalClassFilter illegalClassFilter,
+                                final Log log) {
         this.potentialPojoClassFinder = potentialPojoClassFinder;
         this.hasPropertyMatcherClassGenerator = hasPropertyMatcherClassGenerator;
         this.illegalClassFilter = illegalClassFilter;
+        this.log = log;
     }
 
     @Override
