@@ -34,5 +34,6 @@ public interface MatcherGeneratorFactory {
 		private final boolean ignoreClassesWithoutProperties;
 		private final boolean allowInterfaces;
 		private final MatcherNamingStrategy.Name namingStrategy;
+		private final Log log;
 	}
 }
