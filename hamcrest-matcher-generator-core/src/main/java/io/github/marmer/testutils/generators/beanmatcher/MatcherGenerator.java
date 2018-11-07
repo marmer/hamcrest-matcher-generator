@@ -1,7 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import java.io.IOException;
-
+import java.nio.file.Path;
 import java.util.List;
 
 
@@ -22,5 +22,5 @@ public interface MatcherGenerator {
 	 *
 	 * @throws  IOException  Signals that an I/O exception has occurred.
 	 */
-	List<Class<?>> generateHelperForClassesAllIn(String... packageOrQualifiedClassNames) throws IOException;
+	List<Path> generateHelperForClassesAllIn(String... packageOrQualifiedClassNames) throws IOException;
 }

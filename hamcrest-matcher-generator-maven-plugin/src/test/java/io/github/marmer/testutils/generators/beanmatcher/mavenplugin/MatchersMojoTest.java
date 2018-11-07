@@ -24,17 +24,18 @@ import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
 public class MatchersMojoTest {
-	private final List<String> classpathElements = Collections.singletonList("anyClasspathElement");
+	private final List<String> classpathElements = singletonList("anyClasspathElement");
 	private final ClassLoader classLoader = mock(ClassLoader.class);
 	private final MatcherGenerator matcherGenerator = mock(MatcherGenerator.class);
 	@Rule
@@ -91,10 +92,8 @@ public class MatchersMojoTest {
 			projectDependenciesResolver, mavenSession);
 		doThrow(buildBrakingException).when(dependencyValidator).validateProjectHasNeededDependencies();
 
-		final MojoFailureException buildBrakingExceptionForMissingDependencies = buildBrakingException;
-
 		// Prüfung
-		exception.expect(is(buildBrakingExceptionForMissingDependencies));
+		exception.expect(is(buildBrakingException));
 
 		// Ausführung
 		classUnderTest.execute();
@@ -196,18 +195,15 @@ public class MatchersMojoTest {
 		final Log log = mock(Log.class);
 		classUnderTest.setLog(log);
 
-		final Class<?> someHelper = String.class;
-		final Class<?> anotherHelper = Integer.class;
-		when(matcherGenerator.generateHelperForClassesAllIn(matcherSources)).thenReturn(Arrays.asList(
-				someHelper,
-				anotherHelper));
+		final Path someHelper = Paths.get("some", "path");
+		when(matcherGenerator.generateHelperForClassesAllIn(matcherSources)).thenReturn(singletonList(
+				someHelper));
 
 		// Execution
 		classUnderTest.execute();
 
 		// Assertion
 		verify(log).info("Generated: " + someHelper);
-		verify(log).info("Generated: " + anotherHelper);
 	}
 
 	@Test
