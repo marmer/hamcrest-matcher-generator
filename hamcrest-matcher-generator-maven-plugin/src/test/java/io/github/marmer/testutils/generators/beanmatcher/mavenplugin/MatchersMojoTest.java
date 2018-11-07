@@ -235,12 +235,15 @@ public class MatchersMojoTest {
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
 				"namingStrategy",
 				MatcherNamingStrategy.Name.PLAIN);
+		final Log log = mock(Log.class);
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
 				.classLoader(classLoader)
 				.outputPath(outputDir.toPath())
 				.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
-				.namingStrategy(MatcherNamingStrategy.Name.PLAIN).build();
+				.namingStrategy(MatcherNamingStrategy.Name.PLAIN)
+				.log(new MojoLog(log))
+				.build();
 		when(matcherGeneratorFactory.createBy(matcherGeneratorConfiguration)).thenReturn(
 			matcherGenerator);
 	}
