@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 public class MatcherFileGeneratorITest {
@@ -50,7 +51,7 @@ public class MatcherFileGeneratorITest {
         classUnderTest =
             new MatcherFileGenerator(potentialPojoClassFinder,
                 hasPropertyMatcherClassGenerator,
-                new JavaInternalIllegalClassFilter());
+                    new JavaInternalIllegalClassFilter(), mock(Log.class));
     }
 
     public void prepareOutputDir() throws Exception {
