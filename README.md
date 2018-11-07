@@ -163,14 +163,14 @@ This project uses semantic versioning. See https://semver.org/
 ### 3.0.0 
 * Matchers generated with the package naming strategy will and with the postfix "Matcher" again.
 
-### Upcomming
+### 3.0.1
 * Bigfix: useless class compilation at the end of the generation process removed.
 
 ### Planed for future releases and known issues
 * Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
-* Support for Optionals
+* Errorlogging
 * Bug: does not produce a matcher anything for :
 ```
 @Data
