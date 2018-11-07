@@ -50,7 +50,6 @@ public class MatcherFileGeneratorITest {
         classUnderTest =
             new MatcherFileGenerator(potentialPojoClassFinder,
                 hasPropertyMatcherClassGenerator,
-                new CommonsJciJavaFileClassLoader(srcOutputDir, classLoader),
                 new JavaInternalIllegalClassFilter());
     }
 

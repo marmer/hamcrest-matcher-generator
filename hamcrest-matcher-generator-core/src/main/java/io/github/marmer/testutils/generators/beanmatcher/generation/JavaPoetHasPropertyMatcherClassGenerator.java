@@ -51,13 +51,9 @@ public class JavaPoetHasPropertyMatcherClassGenerator implements HasPropertyMatc
 	}
 
 	@Override
-	public Path generateMatcherFor(final Class<?> type) throws MatcherGenerationException {
+	public Path generateMatcherFor(final Class<?> type) throws IOException {
 		final JavaFile javaFile = prepareJavaFile(type);
-		try {
 			javaFile.writeTo(outputDir);
-		} catch (final IOException e) {
-			throw new MatcherGenerationException("Error on writing Matcher for " + type);
-		}
 		return outputDir.resolve(javaFile.toJavaFileObject().getName());
 	}
 
