@@ -166,11 +166,13 @@ This project uses semantic versioning. See https://semver.org/
 ### 3.0.1
 * Bigfix: useless class compilation at the end of the generation process removed.
 
+### Upcomming
+* Errorlogging
+
 ### Planed for future releases and known issues
 * Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
-* Errorlogging
 * Bug: does not produce a matcher anything for :
 ```
 @Data
