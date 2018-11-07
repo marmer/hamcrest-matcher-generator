@@ -26,12 +26,13 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 				matcherGeneratorConfiguration.isAllowInterfaces(),
 				matcherGeneratorConfiguration.getClassLoader());
 		final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator =
-			new JavaPoetHasPropertyMatcherClassGenerator(
-					propertyExtractor,
-					matcherGeneratorConfiguration.getOutputPath(),
-					matcherNamingStrategyFactory.strategyFor(matcherGeneratorConfiguration));
+				new JavaPoetHasPropertyMatcherClassGenerator(
+						propertyExtractor,
+						matcherGeneratorConfiguration.getOutputPath(),
+						matcherNamingStrategyFactory.strategyFor(matcherGeneratorConfiguration));
 		return new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				new JavaInternalIllegalClassFilter());
+				new JavaInternalIllegalClassFilter(),
+				matcherGeneratorConfiguration.getLog());
 	}
 }

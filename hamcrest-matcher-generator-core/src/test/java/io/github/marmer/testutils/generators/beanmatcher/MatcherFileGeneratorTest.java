@@ -36,13 +36,15 @@ public class MatcherFileGeneratorTest {
     private HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
     @Mock
     private Path outputDir;
+    @Mock
+    private Log log;
 
     @Mock
     private IllegalClassFilter illegalClassFilter;
 
     @Test
     public void testGenerateHelperForClassesAllIn_PackageGiven_ClassesOfPackageShouldBeUsedToGenerateMatchersPerClassFound()
-        throws Exception {
+            throws Exception {
         // Preparation
         final List<Class<?>> baseClassList = asList(SamplePojo1.class,
                 SamplePojo2.class);
@@ -59,7 +61,7 @@ public class MatcherFileGeneratorTest {
 
     @Test
     public void testGenerateHelperForClassesAllIn_MatchersHaveBeenGenerated_GeneratedMatcherFilesShouldBeGeneratedAndReturned()
-        throws Exception {
+            throws Exception {
         // Preparation
         final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
         final Path simplePojo2MatcherPath = mock(Path.class, "simplePojo2MatcherPath");
@@ -71,9 +73,9 @@ public class MatcherFileGeneratorTest {
         doReturn(baseClassList).when(potentialPojoClassFinder).findClasses(packageName);
         doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
         doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-            SamplePojo1.class);
+                SamplePojo1.class);
         doReturn(simplePojo2MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-            SamplePojo2.class);
+                SamplePojo2.class);
 
         // Execution
         final List<Path> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
@@ -84,7 +86,7 @@ public class MatcherFileGeneratorTest {
 
     @Test
     public void testGenerateHelperForClassesAllIn_SomeClassesAreIllegal_GeneratedMatcherFilesShouldOnlyForNonIllegalClassesBeGeneratedAndReturned()
-        throws Exception {
+            throws Exception {
         // Preparation
         final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
 
@@ -94,7 +96,7 @@ public class MatcherFileGeneratorTest {
         doReturn(baseClassList).when(potentialPojoClassFinder).findClasses(packageName);
         doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
         doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
-            SamplePojo1.class);
+                SamplePojo1.class);
 
         // Execution
         final List<Path> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
@@ -126,6 +128,32 @@ public class MatcherFileGeneratorTest {
 
         // Assertion
         assertThat(retVal, is(contains(simplePojo1MatcherPath)));
+    }
+
+    @Test
+    public void test_MixOfErrorCausingClassesAndGoodOnes_ShouldLogSuccessAndFailureOnAppropriateLogLevels()
+            throws Exception {
+        // Preparation
+        final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
+
+        final List<Class<?>> baseClassList = asList(SamplePojo1.class, SamplePojo2.class);
+        final List<Class<?>> filteredBaseClassList = asList(SamplePojo1.class,
+                SamplePojo2.class);
+
+        doReturn(baseClassList).when(potentialPojoClassFinder).findClasses(packageName);
+        doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
+        doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
+                SamplePojo1.class);
+        final IOException exception = new IOException("someError");
+        doThrow(exception).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
+                SamplePojo2.class);
+
+        // Execution
+        final List<Path> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
+
+        // Assertion
+        verify(log).info("Matcher generated for " + SamplePojo2.class);
+        verify(log).error("Error on Matchergeneration for " + SamplePojo2.class, exception);
     }
 
     private static class SamplePojo1 {

@@ -1,5 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher.mavenplugin;
 
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherFileGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.MatcherGeneratorFactory.MatcherGeneratorConfiguration;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 public class NewOperatorMatcherGeneratorFactoryTest {
@@ -34,6 +36,7 @@ public class NewOperatorMatcherGeneratorFactoryTest {
 				.classLoader(classLoader)
 				.outputPath(outputPath)
 				.namingStrategy(MatcherNamingStrategy.Name.PLAIN)
+				.log(mock(Log.class))
 				.build();
 		final MatcherGenerator matcherGenerator = classUnderTest.createBy(matcherGeneratorConfiguration);
 
