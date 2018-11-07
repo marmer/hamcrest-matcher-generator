@@ -3,7 +3,6 @@ package io.github.marmer.testutils.generators.beanmatcher;
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
 import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherGenerationException;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
-import io.github.marmer.testutils.generators.beanmatcher.processing.JavaFileClassLoader;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 
 import java.nio.file.Path;
@@ -22,28 +21,22 @@ public class MatcherFileGenerator implements MatcherGenerator {
     private final PotentialPojoClassFinder potentialPojoClassFinder;
     private final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator;
 
-    private final JavaFileClassLoader javaFileClassLoader;
     private final IllegalClassFilter illegalClassFilter;
 
     public MatcherFileGenerator(final PotentialPojoClassFinder potentialPojoClassFinder,
-        final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator,
-        final JavaFileClassLoader javaFileClassLoader,
-        final IllegalClassFilter illegalClassFilter) {
+                                final HasPropertyMatcherClassGenerator hasPropertyMatcherClassGenerator,
+                                final IllegalClassFilter illegalClassFilter) {
         this.potentialPojoClassFinder = potentialPojoClassFinder;
         this.hasPropertyMatcherClassGenerator = hasPropertyMatcherClassGenerator;
-        this.javaFileClassLoader = javaFileClassLoader;
         this.illegalClassFilter = illegalClassFilter;
     }
 
     @Override
-    public List<Class<?>> generateHelperForClassesAllIn(
+    public List<Path> generateHelperForClassesAllIn(
             final String... packageOrQualifiedClassNames) {
         final List<Class<?>> potentialPojoClasses = illegalClassFilter.filter(
                 potentialPojoClassFinder.findClasses(packageOrQualifiedClassNames));
-        final List<Path> generatedMatcherPaths = generateMatchersFor(potentialPojoClasses
-        );
-
-        return javaFileClassLoader.load(generatedMatcherPaths);
+        return generateMatchersFor(potentialPojoClasses);
     }
 
     private List<Path> generateMatchersFor(final List<Class<?>> potentialPojoClasses) {

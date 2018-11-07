@@ -14,6 +14,7 @@ public interface IllegalClassFilter {
      * Filter.
      *
      * @param baseClassList the base class list
+     * @return returns only non illegal classes
      */
     List<Class<?>> filter(List<Class<?>> baseClassList);
 }

@@ -30,12 +30,8 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 					propertyExtractor,
 					matcherGeneratorConfiguration.getOutputPath(),
 					matcherNamingStrategyFactory.strategyFor(matcherGeneratorConfiguration));
-		final JavaFileClassLoader javaFileClassLoader = new CommonsJciJavaFileClassLoader(
-				matcherGeneratorConfiguration.getOutputPath(),
-				matcherGeneratorConfiguration.getClassLoader());
 		return new MatcherFileGenerator(potentialPojoClassFinder,
 				hasPropertyMatcherClassGenerator,
-				javaFileClassLoader,
 				new JavaInternalIllegalClassFilter());
 	}
 }
