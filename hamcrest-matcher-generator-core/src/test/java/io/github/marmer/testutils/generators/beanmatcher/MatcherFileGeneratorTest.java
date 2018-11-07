@@ -1,7 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
-import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherGenerationException;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import org.junit.Rule;
@@ -12,6 +11,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -117,7 +117,7 @@ public class MatcherFileGeneratorTest {
         doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
         doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
                 SamplePojo1.class);
-        final MatcherGenerationException exception = new MatcherGenerationException("someError");
+        final IOException exception = new IOException("someError");
         doThrow(exception).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
                 SamplePojo2.class);
 
