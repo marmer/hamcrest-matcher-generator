@@ -131,7 +131,7 @@ public class MatcherFileGeneratorTest {
     }
 
     @Test
-    public void test_MixOfErrorCausingClassesAndGoodOnes_ShouldLogSuccessAndFailureOnAppropriateLogLevels()
+    public void test_MixOfErrorCausingClassesAndGoodOnes_ShouldLogFailureOnAppropriateLogLevels()
             throws Exception {
         // Preparation
         final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
@@ -152,8 +152,7 @@ public class MatcherFileGeneratorTest {
         final List<Path> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
 
         // Assertion
-        verify(log).info("Matcher generated for " + SamplePojo2.class);
-        verify(log).error("Error on Matchergeneration for " + SamplePojo2.class, exception);
+        verify(log).error("Error on matcher generation for " + SamplePojo2.class, exception);
     }
 
     private static class SamplePojo1 {

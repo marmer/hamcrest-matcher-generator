@@ -48,6 +48,7 @@ public class MatcherFileGenerator implements MatcherGenerator {
                     try {
                         return hasPropertyMatcherClassGenerator.generateMatcherFor(aClass);
                     } catch (IOException e) {
+                        log.error("Error on matcher generation for " + aClass, e);
                         return null;
                     }
                 })

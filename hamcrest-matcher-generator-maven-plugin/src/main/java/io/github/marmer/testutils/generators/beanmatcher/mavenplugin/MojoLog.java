@@ -10,4 +10,9 @@ public class MojoLog implements io.github.marmer.testutils.generators.beanmatche
     public MojoLog(final Log log) {
         this.log = log;
     }
+
+    @Override
+    public void error(final String message, final Exception cause) {
+        log.error(message, cause);
+    }
 }
