@@ -69,6 +69,8 @@ public class MatchersMojoTest {
 	@Mock
 	private DependencyValidator dependencyValidator;
 
+	@Mock
+	private Log log;
 	@Before
 	public void setUp() throws Exception {
 		ReflectionUtils.setVariableValueInObject(classUnderTest, "matcherSources", matcherSources);
@@ -192,9 +194,6 @@ public class MatchersMojoTest {
 		projectDependenceisAreValid();
 		readyForGeneration();
 
-		final Log log = mock(Log.class);
-		classUnderTest.setLog(log);
-
 		final Path someHelper = Paths.get("some", "path");
 		when(matcherGenerator.generateHelperForClassesAllIn(matcherSources)).thenReturn(singletonList(
 				someHelper));
@@ -235,7 +234,6 @@ public class MatchersMojoTest {
 		ReflectionUtils.setVariableValueInObject(classUnderTest,
 				"namingStrategy",
 				MatcherNamingStrategy.Name.PLAIN);
-		final Log log = mock(Log.class);
 
 		final MatcherGeneratorConfiguration matcherGeneratorConfiguration = MatcherGeneratorConfiguration.builder()
 				.classLoader(classLoader)
