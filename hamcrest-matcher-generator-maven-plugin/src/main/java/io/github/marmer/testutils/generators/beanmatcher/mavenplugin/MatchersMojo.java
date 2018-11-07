@@ -217,7 +217,9 @@ public class MatchersMojo extends AbstractMojo {
 						.outputPath(outputDir.toPath())
 						.ignoreClassesWithoutProperties(ignoreClassesWithoutProperties)
 						.allowInterfaces(allowInterfaces)
-						.namingStrategy(namingStrategy).build());
+						.namingStrategy(namingStrategy)
+						.log(new MojoLog(getLog()))
+						.build());
 	}
 
 	private void validateNeededDependencies() throws MojoFailureException {
