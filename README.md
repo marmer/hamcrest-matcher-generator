@@ -166,8 +166,8 @@ This project uses semantic versioning. See https://semver.org/
 ### 3.0.1
 * Bigfix: useless class compilation at the end of the generation process removed.
 
-### Upcomming
-* Errorlogging
+### 3.1.0
+* Added errorlogging for (some) code errors
 
 ### Planed for future releases and known issues
 * Naming Strategy for classnames instead of package names
