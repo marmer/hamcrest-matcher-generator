@@ -5,7 +5,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +30,8 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 							new BeanProperty(descriptor.getName(), descriptor.getPropertyType()))
 					.collect(
 						Collectors.toList());
-			} catch (IntrospectionException e) {
+            } catch (final IntrospectionException e) {
+                // TODO: marmer 08.11.2018 Use new introduced Log
 				log.error("Failed to read properties of " + type, e);
 			}
 		}
