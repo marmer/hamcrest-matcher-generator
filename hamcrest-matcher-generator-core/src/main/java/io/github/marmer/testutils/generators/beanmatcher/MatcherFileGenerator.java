@@ -1,6 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherGenerationRuntimeException;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 
@@ -43,11 +44,11 @@ public class MatcherFileGenerator implements MatcherGenerator {
     }
 
     private List<Path> generateMatchersFor(final List<Class<?>> potentialPojoClasses) {
-        return potentialPojoClasses.parallelStream()
+        return potentialPojoClasses.stream()
                 .map(aClass -> {
                     try {
                         return hasPropertyMatcherClassGenerator.generateMatcherFor(aClass);
-                    } catch (IOException e) {
+                    } catch (MatcherGenerationRuntimeException | IOException e) {
                         log.error("Error on matcher generation for " + aClass, e);
                         return null;
                     }

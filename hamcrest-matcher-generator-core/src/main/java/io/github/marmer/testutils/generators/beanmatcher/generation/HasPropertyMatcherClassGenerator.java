@@ -43,6 +43,7 @@ public interface HasPropertyMatcherClassGenerator {
 	 * @return  Paths of generated matchers.
 	 *
 	 * @throws IOException  Signals that something went wrong while matchers are created.
+	 * @throws MatcherGenerationRuntimeException  Is thrown on unexpected expectable errors.
 	 */
 	Path generateMatcherFor(Class<?> type) throws IOException;
 
