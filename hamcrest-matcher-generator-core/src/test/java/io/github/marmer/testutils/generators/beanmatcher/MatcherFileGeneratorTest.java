@@ -1,6 +1,7 @@
 package io.github.marmer.testutils.generators.beanmatcher;
 
 import io.github.marmer.testutils.generators.beanmatcher.generation.HasPropertyMatcherClassGenerator;
+import io.github.marmer.testutils.generators.beanmatcher.generation.MatcherGenerationRuntimeException;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IllegalClassFilter;
 import io.github.marmer.testutils.generators.beanmatcher.processing.PotentialPojoClassFinder;
 import org.junit.Rule;
@@ -136,28 +137,35 @@ public class MatcherFileGeneratorTest {
         // Preparation
         final Path simplePojo1MatcherPath = mock(Path.class, "simplePojo1MatcherPath");
 
-        final List<Class<?>> baseClassList = asList(SamplePojo1.class, SamplePojo2.class);
+        final List<Class<?>> baseClassList = asList(SamplePojo1.class, SamplePojo2.class, SamplePojo3.class);
         final List<Class<?>> filteredBaseClassList = asList(SamplePojo1.class,
-                SamplePojo2.class);
+                SamplePojo2.class, SamplePojo3.class);
 
         doReturn(baseClassList).when(potentialPojoClassFinder).findClasses(packageName);
         doReturn(filteredBaseClassList).when(illegalClassFilter).filter(baseClassList);
         doReturn(simplePojo1MatcherPath).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
                 SamplePojo1.class);
-        final IOException exception = new IOException("someError");
+        final IOException exception = new IOException("some error");
         doThrow(exception).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
                 SamplePojo2.class);
+        final MatcherGenerationRuntimeException exception2 = new MatcherGenerationRuntimeException("another error");
+        doThrow(exception2).when(hasPropertyMatcherClassGenerator).generateMatcherFor(
+                SamplePojo3.class);
 
         // Execution
         final List<Path> retVal = classUnderTest.generateHelperForClassesAllIn(packageName);
 
         // Assertion
         verify(log).error("Error on matcher generation for " + SamplePojo2.class, exception);
+        verify(log).error("Error on matcher generation for " + SamplePojo3.class, exception2);
     }
 
     private static class SamplePojo1 {
     }
 
     private static class SamplePojo2 {
+    }
+
+    private static class SamplePojo3 {
     }
 }
