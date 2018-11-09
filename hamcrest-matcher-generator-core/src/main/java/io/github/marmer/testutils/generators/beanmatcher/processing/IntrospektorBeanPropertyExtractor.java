@@ -36,7 +36,6 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 					.collect(
 						Collectors.toList());
             } catch (final IntrospectionException e) {
-                // TODO: marmer 08.11.2018 Use new introduced Log
 				log.error("Failed to read properties of " + type, e);
 			}
 		}
