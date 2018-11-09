@@ -6,6 +6,7 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospectorDelegate;
@@ -45,12 +46,13 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String MATCHER_POSTFIX = "Matcher";
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
-	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
+	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate(), mock(Log.class));
 	private HasPropertyMatcherClassGenerator classUnderTest;
 	private Path srcOutputDir;
 	private Path classOutputDir;

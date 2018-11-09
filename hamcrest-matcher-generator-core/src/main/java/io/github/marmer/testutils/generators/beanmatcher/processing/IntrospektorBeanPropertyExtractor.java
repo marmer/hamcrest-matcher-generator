@@ -1,6 +1,6 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
-import lombok.extern.apachecommons.CommonsLog;
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -17,13 +17,14 @@ import java.util.stream.Collectors;
  * @author  marmer
  * @since   01.07.2017
  */
-@CommonsLog
 public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor {
 
+	private final Log log;
     private IntrospectorDelegate introspectorDelegate;
 
-    public IntrospektorBeanPropertyExtractor(final IntrospectorDelegate introspectorDelegate) {
+	public IntrospektorBeanPropertyExtractor(final IntrospectorDelegate introspectorDelegate, final Log log) {
         this.introspectorDelegate = introspectorDelegate;
+		this.log = log;
     }
 
 	@Override
