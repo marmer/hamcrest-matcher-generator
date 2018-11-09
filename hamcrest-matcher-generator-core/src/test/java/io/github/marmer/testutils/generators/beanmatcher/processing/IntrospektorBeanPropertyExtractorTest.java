@@ -1,8 +1,10 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -24,10 +26,12 @@ public class IntrospektorBeanPropertyExtractorTest {
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
 	@InjectMocks
-	private BeanPropertyExtractor classUnderTest = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
+	private IntrospektorBeanPropertyExtractor classUnderTest;
 
 	@Spy
 	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
+	@Mock
+	private Log log;
 
 	@SuppressWarnings("unchecked")
 	@Test

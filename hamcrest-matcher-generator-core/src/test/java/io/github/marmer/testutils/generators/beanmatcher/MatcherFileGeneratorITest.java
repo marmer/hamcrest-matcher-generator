@@ -43,7 +43,8 @@ public class MatcherFileGeneratorITest {
     }
 
     private void initClassUnderTest() {
-        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
+        final Log logger = mock(Log.class);
+        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate(), logger);
         potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false, false);
 
         hasPropertyMatcherClassGenerator =
@@ -51,7 +52,7 @@ public class MatcherFileGeneratorITest {
         classUnderTest =
             new MatcherFileGenerator(potentialPojoClassFinder,
                 hasPropertyMatcherClassGenerator,
-                    new JavaInternalIllegalClassFilter(), mock(Log.class));
+                    new JavaInternalIllegalClassFilter(), logger);
     }
 
     public void prepareOutputDir() throws Exception {

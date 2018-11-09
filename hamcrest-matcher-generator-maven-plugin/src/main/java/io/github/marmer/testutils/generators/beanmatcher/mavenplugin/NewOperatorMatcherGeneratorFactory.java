@@ -19,7 +19,7 @@ public class NewOperatorMatcherGeneratorFactory implements MatcherGeneratorFacto
 
 	@Override
 	public MatcherGenerator createBy(final MatcherGeneratorConfiguration matcherGeneratorConfiguration) {
-		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
+		final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate(), matcherGeneratorConfiguration.getLog());
 		final PotentialPojoClassFinder potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(
 				propertyExtractor,
 				matcherGeneratorConfiguration.isIgnoreClassesWithoutProperties(),
