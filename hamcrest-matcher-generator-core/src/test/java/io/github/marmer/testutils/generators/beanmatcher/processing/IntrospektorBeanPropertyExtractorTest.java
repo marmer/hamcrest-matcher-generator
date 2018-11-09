@@ -2,29 +2,20 @@ package io.github.marmer.testutils.generators.beanmatcher.processing;
 
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
-
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 import org.mockito.quality.Strictness;
 
 import java.beans.IntrospectionException;
-
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasProperty;
-
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-
 import static org.mockito.Mockito.when;
 
 
@@ -33,7 +24,7 @@ public class IntrospektorBeanPropertyExtractorTest {
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
 	@InjectMocks
-	private BeanPropertyExtractor classUnderTest = new IntrospektorBeanPropertyExtractor();
+	private BeanPropertyExtractor classUnderTest = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
 
 	@Spy
 	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();

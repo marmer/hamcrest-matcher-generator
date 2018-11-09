@@ -20,7 +20,11 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor {
 
-	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
+    private IntrospectorDelegate introspectorDelegate;
+
+    public IntrospektorBeanPropertyExtractor(final IntrospectorDelegate introspectorDelegate) {
+        this.introspectorDelegate = introspectorDelegate;
+    }
 
 	@Override
 	public List<BeanProperty> getPropertiesOf(final Class<?> type) {
