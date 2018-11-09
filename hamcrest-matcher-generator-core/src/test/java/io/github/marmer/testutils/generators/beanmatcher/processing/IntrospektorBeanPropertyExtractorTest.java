@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -72,6 +73,20 @@ public class IntrospektorBeanPropertyExtractorTest {
 
 		// Assertion
 		assertThat("Properties", properties, is(empty()));
+	}
+
+	@Test
+	public void testGetPropertiesOf_ErrorOnReadingTypeInformation_ShouldLogTheError() throws Exception {
+
+		// Preparation
+		final IntrospectionException cause = new IntrospectionException("boooom");
+		when(introspectorDelegate.getBeanInfo(ClassWithSomeProperties.class)).thenThrow(cause);
+
+		// Execution
+		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSomeProperties.class);
+
+		// Assertion
+		verify(log).error("Failed to read properties of " + ClassWithSomeProperties.class, cause);
 	}
 
 	public static class ClassWithSomeProperties {
