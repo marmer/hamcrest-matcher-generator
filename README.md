@@ -154,20 +154,23 @@ The generation happens at phase generate-test-sources by default because it need
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-#### 1.3.0
-* Support for Matcher-Generation for Interfaces
+### Incomming
+* A little more logging
 
-### 2.0.0
-* Support for multiple inner classes with the same name added by using different naming strategies. For backwart compatibility use <namingStrategy>PLAIN</namingStrategy> which is the old strategy
-
-### 3.0.0 
-* Matchers generated with the package naming strategy will and with the postfix "Matcher" again.
+### 3.1.0
+* Added errorlogging for (some) code errors
 
 ### 3.0.1
 * Bigfix: useless class compilation at the end of the generation process removed.
 
-### 3.1.0
-* Added errorlogging for (some) code errors
+### 3.0.0 
+* Matchers generated with the package naming strategy will and with the postfix "Matcher" again.
+
+### 2.0.0
+* Support for multiple inner classes with the same name added by using different naming strategies. For backwart compatibility use <namingStrategy>PLAIN</namingStrategy> which is the old strategy
+
+### 1.3.0
+* Support for Matcher-Generation for Interfaces
 
 ### Planed for future releases and known issues
 * Naming Strategy for classnames instead of package names
