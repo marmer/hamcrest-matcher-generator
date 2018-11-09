@@ -11,7 +11,9 @@ import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
 import java.beans.IntrospectionException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -46,9 +48,15 @@ public class IntrospektorBeanPropertyExtractorTest {
 		// Assertion
 		assertThat("Properties", properties,
 			containsInAnyOrder(
-				is(allOf(hasProperty("name", equalTo("firstProperty")), hasProperty("type", equalTo(String.class)))),
-				is(allOf(hasProperty("name", equalTo("secondProperty")),
-						hasProperty("type", equalTo(Integer.TYPE))))));
+					is(allOf(
+							hasProperty("name", equalTo("firstProperty")),
+							hasProperty("type", equalTo(String.class)))),
+					is(allOf(
+							hasProperty("name", equalTo("secondProperty")),
+							hasProperty("type", equalTo(Integer.TYPE)))),
+					is(allOf(
+							hasProperty("name", equalTo("thirdProperty")),
+							hasProperty("type", equalTo(Map.class))))));
 	}
 
 	@Test
@@ -61,7 +69,6 @@ public class IntrospektorBeanPropertyExtractorTest {
 		// Assertion
 		assertThat("Properties", properties, is(empty()));
 	}
-
 	@Test
 	public void testGetPropertiesOf_ErrorOnReadingTypeInformation_ShouldReturnAnEmptyList() throws Exception {
 
@@ -100,8 +107,16 @@ public class IntrospektorBeanPropertyExtractorTest {
 			return 42;
 		}
 
+		public Map<String, Object> getThirdProperty() {
+			return new HashMap<>();
+		}
+
 		public String nonPropertyAccessorMethod() {
 			return "iAmNotAProperty";
+		}
+
+		public String getNonPropertyGetter(final String someParameter) {
+			return null;
 		}
 	}
 }
