@@ -43,7 +43,7 @@ public class MatcherFileGeneratorITest {
     }
 
     private void initClassUnderTest() {
-        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
         potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false, false);
 
         hasPropertyMatcherClassGenerator =

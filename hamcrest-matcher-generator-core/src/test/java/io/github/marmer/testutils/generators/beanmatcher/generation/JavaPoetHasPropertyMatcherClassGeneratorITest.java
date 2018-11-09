@@ -8,6 +8,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.processing.BeanPropertyExtractor;
+import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospectorDelegate;
 import io.github.marmer.testutils.generators.beanmatcher.processing.IntrospektorBeanPropertyExtractor;
 import io.github.marmer.testutils.utils.matchers.GeneratedFileCompiler;
 import org.apache.commons.io.FileUtils;
@@ -49,7 +50,7 @@ public class JavaPoetHasPropertyMatcherClassGeneratorITest {
 	private static final String MATCHER_POSTFIX = "Matcher";
 	@Rule
 	public final TemporaryFolder temp = new TemporaryFolder();
-	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+	private final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate());
 	private HasPropertyMatcherClassGenerator classUnderTest;
 	private Path srcOutputDir;
 	private Path classOutputDir;
