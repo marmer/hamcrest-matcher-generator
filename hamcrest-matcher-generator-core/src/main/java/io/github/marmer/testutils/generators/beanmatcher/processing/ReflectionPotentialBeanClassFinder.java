@@ -12,6 +12,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
+
 
 /**
  * A {@link PotentialPojoClassFinder} using reflection to find classes.
@@ -69,29 +71,32 @@ public class ReflectionPotentialBeanClassFinder implements PotentialPojoClassFin
 		return results;
 	}
 
-	private Set<Class<? extends Object>> classesByClassLoaderUrlsFor(final String packageName) {
-		final Set<Class<? extends Object>> classesByClassLoaderUrls = new HashSet<>();
-		classesByClassLoaderUrls.addAll(new Reflections(packageName, classLoaderURLs, new SubTypesScanner(false))
-			.getSubTypesOf(
-				Object.class));
-		classesByClassLoaderUrls.addAll(new Reflections(packageName, classLoaderURLs, new SubTypesScanner(false))
-			.getSubTypesOf(
-				Exception.class));
-
-		return classesByClassLoaderUrls;
+	private Set<Class<?>> classesByClassLoaderUrlsFor(final String packageNameOrClassName) {
+		return classesFor(packageNameOrClassName, this.classLoaderURLs);
 	}
 
-	private Set<Class<? extends Object>> classesByClassloaderFor(final String packageName) {
-		final Set<Class<? extends Object>> classesByClassLoader = new HashSet<>();
+	private Set<Class<?>> classesByClassloaderFor(final String packageNameOrClassName) {
+		return classesFor(packageNameOrClassName, this.classLoaders);
+	}
 
-		classesByClassLoader.addAll(new Reflections(packageName, classLoaders, new SubTypesScanner(false))
-			.getSubTypesOf(
-				Object.class));
-		classesByClassLoader.addAll(new Reflections(packageName, classLoaders, new SubTypesScanner(false))
-			.getSubTypesOf(
-				Exception.class));
+	private Set<Class<?>> classesFor(final String packageNameOrClassName, final Object classLoaderURLs) {
+		final Set<Class<?>> classesByClassLoaderUrls = new HashSet<>();
+		final Reflections reflections = new Reflections(packageNameOrClassName, classLoaderURLs, new SubTypesScanner(false));
 
-		return classesByClassLoader;
+		try {
+			classesByClassLoaderUrls.addAll(singletonList(Class.forName(packageNameOrClassName)));
+		} catch (final ClassNotFoundException e) {
+			//This will happen if a packages was given and is handled in the following lines
+		}
+
+		classesByClassLoaderUrls.addAll(reflections
+				.getSubTypesOf(
+						Object.class));
+		classesByClassLoaderUrls.addAll(reflections
+				.getSubTypesOf(
+						Exception.class));
+
+		return classesByClassLoaderUrls;
 	}
 
 	private boolean isRelevant(final Class<?> clazz) {
