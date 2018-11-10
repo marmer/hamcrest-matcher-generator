@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SomeSoperSuperClass {
+public class SomeSuperSuperClass {
     private int superProp;
 }

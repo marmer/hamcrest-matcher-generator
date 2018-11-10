@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class SomeSuperClass extends SomeSoperSuperClass {
+public class SomeSuperClass extends SomeSuperSuperClass {
     private String someProp;
 
 }

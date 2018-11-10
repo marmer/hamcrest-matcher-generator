@@ -14,6 +14,8 @@ import org.junit.rules.TemporaryFolder;
 import sample.classes.SimpleSampleClass;
 import sample2.classes.SimplePojo;
 import sample2.classes.inheritance.SomeSubClass;
+import sample2.classes.inheritance.SomeSuperClass;
+import sample2.classes.inheritance.SomeSuperSuperClass;
 
 import java.nio.file.Path;
 
@@ -173,7 +175,25 @@ public class MatcherFileGeneratorITest {
         final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
                 type);
         assertThat(matcher, is(notNullValue()));
+    }
 
-        // TODO: marmer 10.11.2018 do the same here with the whole package ;)
+    @Test
+    public void testGenerateHelperForClassesAllIn_PackageWithSubAndSupertypesGiven_AllClassesShuoldBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> subType = SomeSubClass.class;
+        final Class<SomeSuperClass> superType = SomeSuperClass.class;
+        final Class<SomeSuperSuperClass> superSuperType = SomeSuperSuperClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+
+        // Assertion
+        assertThat(compiler.<Matcher<SimplePojo>>compileAndLoadInstanceOfGeneratedClassFor(subType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superSuperType),
+                is(notNullValue()));
     }
 }
