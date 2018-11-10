@@ -196,4 +196,25 @@ public class MatcherFileGeneratorITest {
         assertThat(compiler.<Matcher<SomeSuperSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superSuperType),
                 is(notNullValue()));
     }
+
+    @Test
+    public void testGenerateHelperForClassesAllIn_MultipleEecutionsWithoutRemovingThePreveouselyGeneratedClassesBefore_AllClassesShuoldStillBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> subType = SomeSubClass.class;
+        final Class<SomeSuperClass> superType = SomeSuperClass.class;
+        final Class<SomeSuperSuperClass> superSuperType = SomeSuperSuperClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+
+        // Assertion
+        assertThat(compiler.<Matcher<SimplePojo>>compileAndLoadInstanceOfGeneratedClassFor(subType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superSuperType),
+                is(notNullValue()));
+    }
 }
