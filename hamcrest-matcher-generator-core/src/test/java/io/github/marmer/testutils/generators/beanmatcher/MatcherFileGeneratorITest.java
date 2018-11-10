@@ -13,11 +13,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import sample.classes.SimpleSampleClass;
 import sample2.classes.SimplePojo;
+import sample2.classes.inheritance.SomeSubClass;
 
 import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -156,5 +158,22 @@ public class MatcherFileGeneratorITest {
 
         // Assertion
         assertThat(result, is(sameInstance(matcher)));
+    }
+
+    @Test
+    public void testGenerateHelperForClassesAllIn_GenerationSingleInheritingClass_ClassShouldBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> type = SomeSubClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
+
+        // Assertion
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        assertThat(matcher, is(notNullValue()));
+
+        // TODO: marmer 10.11.2018 do the same here with the whole package ;)
     }
 }
