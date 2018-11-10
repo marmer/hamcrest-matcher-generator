@@ -179,3 +179,6 @@ This project uses semantic versioning. See https://semver.org/
 * Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
+* Some Javadoc for generated methods
+* Gradle plugin
+* IntelliJ Plugin
