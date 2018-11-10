@@ -154,6 +154,9 @@ The generation happens at phase generate-test-sources by default because it need
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
+### 3.1.2
+* Bug fixed with the generation of some kind of subclasses
+
 ### 3.1.1
 * A little more logging
 
@@ -176,27 +179,3 @@ This project uses semantic versioning. See https://semver.org/
 * Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
-* Bug: does not produce a matcher anything for :
-```
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Component
-@JacksonXmlRootElement(localName = "fehler")
-public class FehlerDTO extends DefaultErrorAttributes {
-    private int status;
-    private String fehler;
-    private String stacktrace;
-
-    @Override
-    public Map<String, Object> getErrorAttributes(final WebRequest webRequest, final boolean includeStackTrace) {
-        final Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest, includeStackTrace);
-        errorAttributes.computeIfAbsent("fehler", s ->
-                errorAttributes.getOrDefault("error",
-                        errorAttributes.getOrDefault("message",
-                                "Unbekannter Fehler ist aufgetreten")));
-        return errorAttributes;
-    }
-}
-```
