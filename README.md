@@ -154,6 +154,9 @@ The generation happens at phase generate-test-sources by default because it need
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
+### 3.2.0
+* Naming Strategy for classnames instead of package names implemented (PARENT)
+
 ### 3.1.2
 * Bug fixed with the generation of some kind of subclasses
 
@@ -176,7 +179,6 @@ This project uses semantic versioning. See https://semver.org/
 * Support for Matcher-Generation for Interfaces
 
 ### Planed for future releases and known issues
-* Naming Strategy for classnames instead of package names
 * Better hanling of private properties and members
 * Bugfix when running the build without cleaning before
 * Some Javadoc for generated methods
