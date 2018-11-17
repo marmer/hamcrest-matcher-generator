@@ -1,30 +1,26 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 import org.junit.Rule;
 import org.junit.Test;
-
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
-
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
 import org.mockito.quality.Strictness;
 
 import java.beans.IntrospectionException;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasProperty;
-
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -33,10 +29,12 @@ public class IntrospektorBeanPropertyExtractorTest {
 	public final MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
 	@InjectMocks
-	private BeanPropertyExtractor classUnderTest = new IntrospektorBeanPropertyExtractor();
+	private IntrospektorBeanPropertyExtractor classUnderTest;
 
 	@Spy
 	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
+	@Mock
+	private Log log;
 
 	@SuppressWarnings("unchecked")
 	@Test
@@ -50,9 +48,15 @@ public class IntrospektorBeanPropertyExtractorTest {
 		// Assertion
 		assertThat("Properties", properties,
 			containsInAnyOrder(
-				is(allOf(hasProperty("name", equalTo("firstProperty")), hasProperty("type", equalTo(String.class)))),
-				is(allOf(hasProperty("name", equalTo("secondProperty")),
-						hasProperty("type", equalTo(Integer.TYPE))))));
+					is(allOf(
+							hasProperty("name", equalTo("firstProperty")),
+							hasProperty("type", equalTo(String.class)))),
+					is(allOf(
+							hasProperty("name", equalTo("secondProperty")),
+							hasProperty("type", equalTo(Integer.TYPE)))),
+					is(allOf(
+							hasProperty("name", equalTo("thirdProperty")),
+							hasProperty("type", equalTo(Map.class))))));
 	}
 
 	@Test
@@ -65,7 +69,6 @@ public class IntrospektorBeanPropertyExtractorTest {
 		// Assertion
 		assertThat("Properties", properties, is(empty()));
 	}
-
 	@Test
 	public void testGetPropertiesOf_ErrorOnReadingTypeInformation_ShouldReturnAnEmptyList() throws Exception {
 
@@ -79,6 +82,20 @@ public class IntrospektorBeanPropertyExtractorTest {
 		assertThat("Properties", properties, is(empty()));
 	}
 
+	@Test
+	public void testGetPropertiesOf_ErrorOnReadingTypeInformation_ShouldLogTheError() throws Exception {
+
+		// Preparation
+		final IntrospectionException cause = new IntrospectionException("boooom");
+		when(introspectorDelegate.getBeanInfo(ClassWithSomeProperties.class)).thenThrow(cause);
+
+		// Execution
+		final List<BeanProperty> properties = classUnderTest.getPropertiesOf(ClassWithSomeProperties.class);
+
+		// Assertion
+		verify(log).error("Failed to read properties of " + ClassWithSomeProperties.class, cause);
+	}
+
 	public static class ClassWithSomeProperties {
 		private String firstProperty;
 
@@ -90,8 +107,16 @@ public class IntrospektorBeanPropertyExtractorTest {
 			return 42;
 		}
 
+		public Map<String, Object> getThirdProperty() {
+			return new HashMap<>();
+		}
+
 		public String nonPropertyAccessorMethod() {
 			return "iAmNotAProperty";
+		}
+
+		public String getNonPropertyGetter(final String someParameter) {
+			return null;
 		}
 	}
 }

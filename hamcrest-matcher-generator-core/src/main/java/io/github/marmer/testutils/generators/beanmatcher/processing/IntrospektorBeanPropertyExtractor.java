@@ -1,11 +1,10 @@
 package io.github.marmer.testutils.generators.beanmatcher.processing;
 
-import lombok.extern.apachecommons.CommonsLog;
+import io.github.marmer.testutils.generators.beanmatcher.Log;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,10 +17,15 @@ import java.util.stream.Collectors;
  * @author  marmer
  * @since   01.07.2017
  */
-@CommonsLog
 public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor {
 
-	private IntrospectorDelegate introspectorDelegate = new IntrospectorDelegate();
+	private final Log log;
+    private IntrospectorDelegate introspectorDelegate;
+
+	public IntrospektorBeanPropertyExtractor(final IntrospectorDelegate introspectorDelegate, final Log log) {
+        this.introspectorDelegate = introspectorDelegate;
+		this.log = log;
+    }
 
 	@Override
 	public List<BeanProperty> getPropertiesOf(final Class<?> type) {
@@ -31,7 +35,7 @@ public class IntrospektorBeanPropertyExtractor implements BeanPropertyExtractor 
 							new BeanProperty(descriptor.getName(), descriptor.getPropertyType()))
 					.collect(
 						Collectors.toList());
-			} catch (IntrospectionException e) {
+            } catch (final IntrospectionException e) {
 				log.error("Failed to read properties of " + type, e);
 			}
 		}
