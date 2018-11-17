@@ -13,11 +13,15 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import sample.classes.SimpleSampleClass;
 import sample2.classes.SimplePojo;
+import sample2.classes.inheritance.SomeSubClass;
+import sample2.classes.inheritance.SomeSuperClass;
+import sample2.classes.inheritance.SomeSuperSuperClass;
 
 import java.nio.file.Path;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -43,7 +47,8 @@ public class MatcherFileGeneratorITest {
     }
 
     private void initClassUnderTest() {
-        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor();
+        final Log logger = mock(Log.class);
+        final BeanPropertyExtractor propertyExtractor = new IntrospektorBeanPropertyExtractor(new IntrospectorDelegate(), logger);
         potentialPojoClassFinder = new ReflectionPotentialBeanClassFinder(propertyExtractor, false, false);
 
         hasPropertyMatcherClassGenerator =
@@ -51,7 +56,7 @@ public class MatcherFileGeneratorITest {
         classUnderTest =
             new MatcherFileGenerator(potentialPojoClassFinder,
                 hasPropertyMatcherClassGenerator,
-                    new JavaInternalIllegalClassFilter(), mock(Log.class));
+                    new JavaInternalIllegalClassFilter(), logger);
     }
 
     public void prepareOutputDir() throws Exception {
@@ -155,5 +160,61 @@ public class MatcherFileGeneratorITest {
 
         // Assertion
         assertThat(result, is(sameInstance(matcher)));
+    }
+
+    @Test
+    public void testGenerateHelperForClassesAllIn_GenerationSingleInheritingClass_ClassShouldBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> type = SomeSubClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(type.getName());
+
+        // Assertion
+        final Matcher<SimplePojo> matcher = compiler.compileAndLoadInstanceOfGeneratedClassFor(
+                type);
+        assertThat(matcher, is(notNullValue()));
+    }
+
+    @Test
+    public void testGenerateHelperForClassesAllIn_PackageWithSubAndSupertypesGiven_AllClassesShuoldBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> subType = SomeSubClass.class;
+        final Class<SomeSuperClass> superType = SomeSuperClass.class;
+        final Class<SomeSuperSuperClass> superSuperType = SomeSuperSuperClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+
+        // Assertion
+        assertThat(compiler.<Matcher<SimplePojo>>compileAndLoadInstanceOfGeneratedClassFor(subType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superSuperType),
+                is(notNullValue()));
+    }
+
+    @Test
+    public void testGenerateHelperForClassesAllIn_MultipleEecutionsWithoutRemovingThePreveouselyGeneratedClassesBefore_AllClassesShuoldStillBeGenerated()
+            throws Exception {
+        // Preparation
+        final Class<SomeSubClass> subType = SomeSubClass.class;
+        final Class<SomeSuperClass> superType = SomeSuperClass.class;
+        final Class<SomeSuperSuperClass> superSuperType = SomeSuperSuperClass.class;
+
+        // Execution
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+        classUnderTest.generateHelperForClassesAllIn(subType.getPackage().getName());
+
+        // Assertion
+        assertThat(compiler.<Matcher<SimplePojo>>compileAndLoadInstanceOfGeneratedClassFor(subType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superType),
+                is(notNullValue()));
+        assertThat(compiler.<Matcher<SomeSuperSuperClass>>compileAndLoadInstanceOfGeneratedClassFor(superSuperType),
+                is(notNullValue()));
     }
 }
