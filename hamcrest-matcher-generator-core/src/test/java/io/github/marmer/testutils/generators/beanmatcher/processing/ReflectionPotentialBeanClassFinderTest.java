@@ -53,6 +53,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 						ComplexSample.InnerClass.class,
 						ComplexSample.InnerStaticClass.class,
 						ExceptionWithProperties.class,
+						SomeEnum.class,
 						SampleWithoutAnyProperty.class));
 	}
 
@@ -77,6 +78,7 @@ public class ReflectionPotentialBeanClassFinderTest {
 						ExceptionWithProperties.class,
 						SampleWithoutAnyProperty.class,
 						SomeInterface.class,
+						SomeEnum.class,
                         SomeAnnotation.class));
 	}
 
