@@ -20,15 +20,23 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Line Loc 0: ");
+        if (roundEnv.processingOver()) {
+            return true;
+        }
+
         processingEnv.getElementUtils().getPackageElement("org.hamcrest")
                 .getEnclosedElements()
                 .forEach(o -> {
                     final JavaFileManager.Location location = StandardLocation.SOURCE_OUTPUT;
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Line Loc 1: ", o);
                     try {
                         final FileObject resource = processingEnv.getFiler().createResource(location, processingEnv.getElementUtils().getPackageOf(o).getQualifiedName().toString(), o.getSimpleName() + ".txt", o);
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Line Loc 2: ", o);
                         try (final Writer writer = resource.openWriter()) {
                             writer.write("bla " + System.currentTimeMillis());
                         }
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Line Loc 3: ", o);
 
                     } catch (final IOException e) {
                         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Error on filecreation: " + e.getMessage(), o);
