@@ -25,6 +25,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
         // TODO: marmer 24.01.2019 find all methods of a type
         // TODO: marmer 24.01.2019 find all parameter types
+        // TODO: marmer 25.01.2019 find a way to execute the annotation processor after lombok (and possibly other processors) have been executed
 
         if (roundEnv.processingOver()) {
             return true;
@@ -33,7 +34,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         final Class<MatcherConfigurations> annotationType = MatcherConfigurations.class;
         final List<MatcherConfigurations> annotation = getAnnotation(roundEnv, annotationType);
 
-        final PackageElement requestedPackage = processingEnv.getElementUtils().getPackageElement("io.github.marmer.annotationprocessing");
+        final TypeElement requestedPackage = processingEnv.getElementUtils().getTypeElement("io.github.marmer.annotationprocessing.samples.SimplePojo");
 
         final List<? extends Element> packageElements = requestedPackage
                 .getEnclosedElements();
