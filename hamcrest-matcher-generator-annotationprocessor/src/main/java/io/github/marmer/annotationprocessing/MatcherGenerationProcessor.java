@@ -24,7 +24,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         // TODO: marmer 24.01.2019 find all types of a package recursively
 
         // TODO: marmer 24.01.2019 find all methods of a type
-        // TODO: marmer 24.01.2019 find all parameter types (and names if possible) of a method
+        // TODO: marmer 24.01.2019 find all parameter types
 
         if (roundEnv.processingOver()) {
             return true;
@@ -34,7 +34,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         final List<MatcherConfigurations> annotation = getAnnotation(roundEnv, annotationType);
 
         final PackageElement requestedPackage = processingEnv.getElementUtils().getPackageElement("io.github.marmer.annotationprocessing");
-        
+
         final List<? extends Element> packageElements = requestedPackage
                 .getEnclosedElements();
         packageElements.stream().forEach(this::print);
