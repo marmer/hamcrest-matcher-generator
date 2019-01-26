@@ -154,9 +154,6 @@ The generation happens at phase generate-test-sources by default because it need
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### Upcomming
-* Class and package scanning is done by "fast-classpath-scanner" instead of the reflections lib in Preparation for some Annotation processing
-
 ### 3.2.0
 * Naming Strategy for classnames instead of package names implemented (PARENT)
 
@@ -186,4 +183,4 @@ This project uses semantic versioning. See https://semver.org/
 * Some Javadoc for generated methods
 * Gradle plugin
 * IntelliJ Plugin
-* Replace Classfinding by something not so much bound to the maven lifecycle. Maybe Annotation Processing... 
+* Replace Classfinding by something not so much bound to the maven lifecycle. Maybe Annotation Processing... maybe with https://github.com/qinglinyi/fast-classpath-scanner
