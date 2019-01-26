@@ -10,8 +10,4 @@ public class SimplePojo {
     public String testMethod() {
         return "blubba";
     }
-
-    public int getAnotherGetterValue() {
-        return 42;
-    }
 }
