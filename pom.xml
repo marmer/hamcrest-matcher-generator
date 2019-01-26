@@ -32,7 +32,6 @@
 	</licenses>
 
 	<modules>
-		<module>hamcrest-matcher-generator-annotationprocessor</module>
 		<module>hamcrest-matcher-generator-dependencies</module>
 		<module>hamcrest-matcher-generator-core</module>
 		<module>hamcrest-matcher-generator-maven-plugin</module>
