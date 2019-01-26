@@ -67,7 +67,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
                         "}");
             }
         } catch (final IOException e) {
-            printError("bot able to create bla: " + e);
+            printError("unable to create bla: " + e);
         }
 
         roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream().forEach(this::printWarning);
