@@ -7,6 +7,10 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
+import javax.tools.StandardLocation;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +35,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
             return true;
         }
 
+
+        print(StandardLocation.SOURCE_OUTPUT);
         final Class<MatcherConfigurations> annotationType = MatcherConfigurations.class;
         final List<MatcherConfigurations> annotation = getAnnotation(roundEnv, annotationType);
 
@@ -42,6 +48,22 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         packageElements.stream().forEach(this::print);
 
         return false;
+    }
+
+    private void print(final JavaFileManager.Location location) {
+        print("-------------------------");
+        final Filer filer = processingEnv.getFiler();
+
+        final String pck = "io.github.marmer.annotationprocessing.samples";
+        final String relativeName = "SimplePojo";
+        try {
+            final FileObject resource = filer.getResource(location, pck, relativeName);
+            print(resource.getName());
+        } catch (final IOException e) {
+            print("Foo: " + e);
+        }
+
+        print("-------------------------");
     }
 
     private <T extends Annotation> List<T> getAnnotation(final RoundEnvironment roundEnv, final Class<T> annotationType) {
