@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import static javax.lang.model.element.ElementKind.METHOD;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfiguration", "io.github.marmer.annotationprocessing.MatcherConfigurations"})
+@SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfiguration", "io.github.marmer.annotationprocessing.MatcherConfigurations", "io.github.marmer.annotationprocessing.MatcherClassConfiguration"})
 @AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
@@ -31,8 +31,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
             return true;
         }
 
-        final Class<MatcherConfigurations> annotationType = MatcherConfigurations.class;
-        final List<MatcherConfigurations> annotation = getAnnotation(roundEnv, annotationType);
+        final Class<MatcherConfiguration> annotationType = MatcherConfiguration.class;
+        final List<MatcherConfiguration> annotation = getAnnotation(roundEnv, annotationType);
 
         final PackageElement requestedPackage = processingEnv.getElementUtils().getPackageElement("io.github.marmer.annotationprocessingtest.sample");
         final TypeElement requestedType = processingEnv.getElementUtils().getTypeElement("io.github.marmer.annotationprocessingtest.sample.SamplePojo");
@@ -40,6 +40,18 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         final List<? extends Element> packageElements = requestedType
                 .getEnclosedElements();
         packageElements.stream().forEach(this::print);
+
+
+        // a way to test whether lombok (or any other lib) is on classpath
+        try {
+            final Class<?> aClass = getClass().forName("lombok.Data");
+
+            print(aClass);
+            print("Lombok class found:D :D :D");
+        } catch (final ClassNotFoundException e) {
+            print("Lombok class not found :( :( :(");
+            e.printStackTrace();
+        }
 
         return false;
     }
