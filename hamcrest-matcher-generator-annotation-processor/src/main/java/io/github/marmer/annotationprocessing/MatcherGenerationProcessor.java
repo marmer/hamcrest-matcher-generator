@@ -7,6 +7,9 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -40,18 +43,31 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         if (requestedType != null) {
             final List<? extends Element> packageElements = requestedType
                     .getEnclosedElements();
-            packageElements.stream().forEach(this::print);
+            packageElements.stream().forEach(this::printWarning);
         }
 
         // a way to test whether lombok (or any other lib) is on classpath
         try {
             final Class<?> aClass = getClass().forName("lombok.Getter");
 
-            print(aClass);
-            print("Lombok class found:D :D :D");
+            printWarning(aClass);
+            printWarning("Lombok class found:D :D :D");
         } catch (final ClassNotFoundException e) {
-            print("Lombok class not found :( :( :(");
+            printWarning("Lombok class not found :( :( :(");
             e.printStackTrace();
+        }
+
+        try {
+            final JavaFileObject outFile = processingEnv.getFiler().createSourceFile("sample.output.OutputClass");
+            try (final Writer writer = outFile.openWriter()) {
+                writer.write("package sample.output;\n" +
+                        "\n" +
+                        "public class OutputClass{\n" +
+                        "    \n" +
+                        "}");
+            }
+        } catch (final IOException e) {
+            printWarning("bot able to create bla: " + e);
         }
 
         return false;
@@ -67,8 +83,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         return processingEnv.getElementUtils().getPackageOf(element);
     }
 
-    private void print(final Object value) {
-        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "##### -> " + value);
+    private void printWarning(final Object value) {
+        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "##### -> " + value);
     }
 
     private List<? extends VariableElement> getMethodParametersOf(final ExecutableElement element) {
