@@ -12,5 +12,13 @@
 
     <artifactId>hamcrest-matcher-generator-annotation-processor-tests</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+            <version>3.2.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
