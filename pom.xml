@@ -33,6 +33,7 @@
 
 	<modules>
 		<module>hamcrest-matcher-generator-annotation-processor</module>
+		<module>hamcrest-matcher-generator-annotation-processor-tests</module>
 		<module>hamcrest-matcher-generator-dependencies</module>
 		<module>hamcrest-matcher-generator-core</module>
 		<module>hamcrest-matcher-generator-maven-plugin</module>
