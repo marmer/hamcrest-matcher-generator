@@ -35,16 +35,20 @@ public class MatcherGenerationProcessorTest {
                 "    }\n" +
                 "}");
 
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.output.OutputClass", "package sample.output;\n" +
+                "public class OutputClass{\n" +
+                "}");
+
         // Execution
+        // Assertion
         Truth.assert_()
                 .about(JavaSourcesSubjectFactory.javaSources())
                 .that(List.of(configuration, javaFileObject))
                 .processedWith(new MatcherGenerationProcessor())
                 .compilesWithoutError()
-//                .and()
-//                .generatesSources(OUTPUT_FILES)
+                .and()
+                .generatesSources(expectedOutput)
         ;
 
-        // Assertion
     }
 }
