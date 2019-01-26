@@ -37,14 +37,15 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         final PackageElement requestedPackage = processingEnv.getElementUtils().getPackageElement("io.github.marmer.annotationprocessingtest.sample");
         final TypeElement requestedType = processingEnv.getElementUtils().getTypeElement("io.github.marmer.annotationprocessingtest.sample.SamplePojo");
 
-        final List<? extends Element> packageElements = requestedType
-                .getEnclosedElements();
-        packageElements.stream().forEach(this::print);
-
+        if (requestedType != null) {
+            final List<? extends Element> packageElements = requestedType
+                    .getEnclosedElements();
+            packageElements.stream().forEach(this::print);
+        }
 
         // a way to test whether lombok (or any other lib) is on classpath
         try {
-            final Class<?> aClass = getClass().forName("lombok.Data");
+            final Class<?> aClass = getClass().forName("lombok.Getter");
 
             print(aClass);
             print("Lombok class found:D :D :D");
