@@ -34,10 +34,9 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         final Class<MatcherConfigurations> annotationType = MatcherConfigurations.class;
         final List<MatcherConfigurations> annotation = getAnnotation(roundEnv, annotationType);
 
-        final PackageElement requestedPackage = processingEnv.getElementUtils().getPackageElement("io.github.marmer.annotationprocessing.samples");
-        final TypeElement requestedType = processingEnv.getElementUtils().getTypeElement("io.github.marmer.annotationprocessing.samples.SimplePojo");
+        final TypeElement requestedPackage = processingEnv.getElementUtils().getTypeElement("io.github.marmer.annotationprocessing.samples.SimplePojo");
 
-        final List<? extends Element> packageElements = requestedType
+        final List<? extends Element> packageElements = requestedPackage
                 .getEnclosedElements();
         packageElements.stream().forEach(this::print);
 
