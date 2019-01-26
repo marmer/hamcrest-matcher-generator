@@ -67,8 +67,14 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
                         "}");
             }
         } catch (final IOException e) {
-            printWarning("bot able to create bla: " + e);
+            printError("bot able to create bla: " + e);
         }
+
+        roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream().forEach(this::printWarning);
+        printWarning("----");
+        // would be a way to find all elements within a package of the current project
+        // packages outside ot the project should be found via reflections
+        roundEnv.getRootElements().stream().forEach(this::printWarning);
 
         return false;
     }
@@ -85,6 +91,10 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private void printWarning(final Object value) {
         this.processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "##### -> " + value);
+    }
+
+    private void printError(final Object value) {
+        this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "##### -> " + value);
     }
 
     private List<? extends VariableElement> getMethodParametersOf(final ExecutableElement element) {
