@@ -13,16 +13,25 @@ public interface MatcherGenerator {
     @Builder
     @Wither
     class PojoMatcherDescriptor {
-        String typeName;
-        String packageName;
-        Set<PropertyDescriptor> properties;
+        private BaseDescriptor baseDescriptor;
+        private String typeName;
+        private String packageName;
+        private Set<PropertyDescriptor> properties;
     }
 
     @Value
     @Builder
     @Wither
     class PropertyDescriptor {
-        String typeName;
-        String typePackage;
+        private String typeName;
+        private String typePackage;
+    }
+
+    @Value
+    @Wither
+    @Builder
+    class BaseDescriptor {
+        private String condigurationClassNameFullQualified;
+        private String pojoClassNameFullQualified;
     }
 }
