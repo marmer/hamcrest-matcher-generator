@@ -24,16 +24,12 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+
+
         return spike(annotations, roundEnv);
     }
 
     public boolean spike(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        // TODO: marmer 24.01.2019 find all types of a package recursively
-
-        // TODO: marmer 24.01.2019 find all methods of a type
-        // TODO: marmer 24.01.2019 find all parameter types
-        // TODO: marmer 25.01.2019 find a way to execute the annotation processor after lombok (and possibly other processors) have been executed
-
         if (roundEnv.processingOver()) {
             return true;
         }
