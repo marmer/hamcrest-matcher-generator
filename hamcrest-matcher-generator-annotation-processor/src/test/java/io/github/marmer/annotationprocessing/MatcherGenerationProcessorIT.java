@@ -4,7 +4,7 @@ import com.google.common.truth.Truth;
 import com.google.testing.compile.JavaFileObjects;
 import com.google.testing.compile.JavaSourcesSubjectFactory;
 import com.sun.tools.javac.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.tools.JavaFileObject;
 
