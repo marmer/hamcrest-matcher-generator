@@ -7,7 +7,7 @@ import lombok.experimental.Wither;
 import java.util.Set;
 
 public interface MatcherGenerator {
-    String generateMatcherFor(PojoMatcherDescriptor descroptor);
+    String generateMatcherFor(PojoMatcherDescriptor descriptor);
 
     @Value
     @Builder
