@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import javax.tools.JavaFileObject;
 
-public class MatcherGenerationProcessorTest {
+public class MatcherGenerationProcessorIT {
     @Test
     public void testSpikeTest()
             throws Exception {
@@ -35,20 +35,6 @@ public class MatcherGenerationProcessorTest {
                 "    }\n" +
                 "}");
 
-        final JavaFileObject anotherFavaFileObjectInSubPackage = JavaFileObjects.forSourceLines("de.bla.subpackage.SampleClass", "package de.bla.subpackage;\n" +
-                "\n" +
-                "public class SampleClass {\n" +
-                "    public String someProperty;\n" +
-                "\n" +
-                "    public String getSomeProperty() {\n" +
-                "        return someProperty;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setSomeProperty(String someProperty) {\n" +
-                "        this.someProperty = someProperty;\n" +
-                "    }\n" +
-                "}");
-
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.output.OutputClass", "package sample.output;\n" +
                 "public class OutputClass{\n" +
                 "}");
@@ -57,7 +43,7 @@ public class MatcherGenerationProcessorTest {
         // Assertion
         Truth.assert_()
                 .about(JavaSourcesSubjectFactory.javaSources())
-                .that(List.of(configuration, javaFileObject, anotherFavaFileObjectInSubPackage))
+                .that(List.of(configuration, javaFileObject))
                 .processedWith(new MatcherGenerationProcessor())
                 .compilesWithoutError()
                 .and()
