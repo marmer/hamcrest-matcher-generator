@@ -24,6 +24,10 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+        return spike(annotations, roundEnv);
+    }
+
+    public boolean spike(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         // TODO: marmer 24.01.2019 find all types of a package recursively
 
         // TODO: marmer 24.01.2019 find all methods of a type
