@@ -1,6 +1,8 @@
 package io.github.marmer.annotationprocessing;
 
 import com.google.auto.service.AutoService;
+import io.github.marmer.annotationprocessing.generation.JavaPoetMatcherGenerator;
+import io.github.marmer.annotationprocessing.generation.MatcherGenerator;
 
 import java.util.Set;
 
@@ -16,6 +18,15 @@ import javax.lang.model.element.TypeElement;
 @SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfiguration", "io.github.marmer.annotationprocessing.MatcherConfigurations"})
 @AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
+    private final MatcherGenerator matcherGenerator;
+
+    public MatcherGenerationProcessor(final MatcherGenerator matcherGenerator) {
+        this.matcherGenerator = matcherGenerator;
+    }
+
+    public MatcherGenerationProcessor() {
+        this.matcherGenerator = new JavaPoetMatcherGenerator();
+    }
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {

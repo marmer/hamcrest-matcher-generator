@@ -21,21 +21,20 @@ class MatcherGenerationProcessorIT {
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
-                "import some.other.pck;\n" +
                 "\n" +
-                "@MatcherConfiguration(SimplePojo.class)\n" +
+                "@MatcherConfiguration(\"some.other.pck.SimplePojo\")\n" +
                 "public final class SomeConfiguration{\n" +
                 "    \n" +
                 "}");
 
-        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.PojoWithoutProperties", "package some.other.pck;\n" +
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public class SimplePojoMatcher{\n" +
+                "public class SimplePojo{\n" +
                 "}");
 
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
-                "public class SimplePojo{\n" +
+                "public class SimplePojoMatcher{\n" +
                 "}");
 
         // Execution
