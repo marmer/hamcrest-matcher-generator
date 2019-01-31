@@ -31,7 +31,7 @@ public interface MatcherGenerator {
     @Wither
     @Builder
     class BaseDescriptor {
-        private String condigurationClassNameFullQualified;
+        private String configurationClassNameFullQualified;
         private String pojoClassNameFullQualified;
     }
 }
