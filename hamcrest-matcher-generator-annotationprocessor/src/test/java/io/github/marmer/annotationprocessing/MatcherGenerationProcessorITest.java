@@ -1,7 +1,6 @@
 package io.github.marmer.annotationprocessing;
 
 import com.google.common.truth.Truth;
-import com.google.testing.compile.CompileTester;
 import com.google.testing.compile.JavaFileObjects;
 import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
@@ -11,7 +10,7 @@ import javax.tools.JavaFileObject;
 
 import static java.util.Arrays.asList;
 
-class MatcherGenerationProcessorIT {
+class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
@@ -22,7 +21,7 @@ class MatcherGenerationProcessorIT {
                 "\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
                 "\n" +
-                "@MatcherConfiguration(\"some.other.pck.SimplePojo\")\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SimplePojo\"))\n" +
                 "public final class SomeConfiguration{\n" +
                 "    \n" +
                 "}");
@@ -38,16 +37,15 @@ class MatcherGenerationProcessorIT {
                 "}");
 
         // Execution
-        final CompileTester compileTester = Truth.assert_()
+        Truth.assert_()
                 .about(JavaSourcesSubjectFactory.javaSources())
                 .that(asList(configuration, javaFileObject))
-                .processedWith(new MatcherGenerationProcessor());
+                .processedWith(new MatcherGenerationProcessor())
 
-        // Assertion
-        compileTester.compilesWithoutError()
+                // Assertion
+                .compilesWithoutError()
                 .and()
-                .generatesSources(expectedOutput)
-        ;
+                .generatesSources(expectedOutput);
 
     }
 }

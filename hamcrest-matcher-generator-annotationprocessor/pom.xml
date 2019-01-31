@@ -102,6 +102,12 @@
             <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
             <version>3.2.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.glytching</groupId>
+            <artifactId>junit-extensions</artifactId>
+            <version>2.3.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
