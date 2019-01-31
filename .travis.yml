@@ -24,6 +24,6 @@ before_install:
 install:
 - mvn clean install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
 script:
-- mvn jacoco:prepare-agent package sonar:sonar -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -V
+  - mvn org.jacoco:jacoco-maven-plugin:0.8.3:prepare-agent package sonar:sonar -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -V
 after_success:
 - mvn clean deploy -Dmaven.test.skip --settings server-settings.xml
