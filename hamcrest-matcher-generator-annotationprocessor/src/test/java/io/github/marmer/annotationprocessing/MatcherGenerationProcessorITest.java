@@ -20,6 +20,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
                 "\n" +
                 "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SimplePojo\"))\n" +
                 "public final class SomeConfiguration{\n" +
