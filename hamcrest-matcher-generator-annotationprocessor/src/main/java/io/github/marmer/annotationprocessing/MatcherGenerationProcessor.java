@@ -47,8 +47,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
             return true;
         }
 
-        final Set<? extends Element> configurationsElement = roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class);
-        configurationsElement.stream()
+        roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
                 .map(toAnnotationConfiguration())
                 .flatMap(toMatcherBaseDescriptorStream()
                 ).map(matcherGenerator::generateMatcherFor)
