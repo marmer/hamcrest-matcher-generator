@@ -11,7 +11,6 @@ public class SourceWriter {
     public void create(final Filer filer, final MatcherSourceDescriptor matcherSourceDescriptor) {
         // TODO: marmer 31.01.2019 implement me.
 
-        // TODO: marmer 31.01.2019 implement me. This is just some dummy code
         try {
             final JavaFileObject sourceFile = filer.createSourceFile(matcherSourceDescriptor.getType().getPackageName() + "." + matcherSourceDescriptor.getType().getTypeName());
             try (final Writer writer = sourceFile
@@ -20,6 +19,7 @@ public class SourceWriter {
                 writer.flush();
             }
         } catch (final IOException e) {
+            // TODO: marmer 07.02.2019 don't forget to log (somehow)
             e.printStackTrace();
         }
     }
