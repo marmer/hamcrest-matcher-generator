@@ -47,6 +47,10 @@ class MatcherGenerationProcessorITest {
                 "    public SimplePojoMatcher() {\n" +
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
                 "    }\n" +
+                "\n" +
+                "    public static SimplePojoMatcher isSimplePojo() {\n" +
+                "        return new SimplePojoMatcher();\n" +
+                "    }\n" +
                 "}");
 
         // Execution
