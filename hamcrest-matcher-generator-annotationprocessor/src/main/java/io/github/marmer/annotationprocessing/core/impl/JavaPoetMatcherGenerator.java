@@ -33,10 +33,23 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addField(innerMatcherField(descriptor))
                 .addMethod(constructor(descriptor))
+                .addMethod(factoryMethod(descriptor))
                 .addAnnotation(generatedAnnotationFor())
                 .build();
 
         return JavaFile.builder(packageFrom(descriptor), typeSpec).skipJavaLangImports(true).indent("    ").build();
+    }
+
+    private MethodSpec factoryMethod(final MatcherBaseDescriptor descriptor) {
+        return MethodSpec.methodBuilder("is" + descriptor.getBase().getTypeName())
+                .addStatement("return new $L()",
+                        matcherNameFrom(descriptor))
+                .returns(classNameOfGeneratedTypeFor(descriptor))
+                .addModifiers(Modifier.STATIC, Modifier.PUBLIC).build();
+    }
+
+    private ClassName classNameOfGeneratedTypeFor(final MatcherBaseDescriptor descriptor) {
+        return ClassName.get(descriptor.getBase().getPackageName(), matcherNameFrom(descriptor));
     }
 
     private FieldSpec innerMatcherField(final MatcherBaseDescriptor descriptor) {
