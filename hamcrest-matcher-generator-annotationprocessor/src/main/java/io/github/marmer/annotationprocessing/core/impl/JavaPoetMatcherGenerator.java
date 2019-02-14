@@ -6,14 +6,18 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
 
 import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.time.LocalDate;
+import java.util.Arrays;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
-
-    private static final String INNER_FIELD_NAME = "beanPropertyMatcher";
+    private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
+    private static final String PARAMETER_NAME_DESCRIPTION = "description";
+    private static final String PARAMETER_NAME_ITEM = "item";
 
     @Override
     public MatcherSourceDescriptor generateMatcherFor(final MatcherBaseDescriptor descriptor) {
@@ -31,13 +35,55 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         final ClassName className = ClassName.get(packageFrom(descriptor), matcherNameFrom(descriptor));
         final TypeSpec typeSpec = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC)
+                .superclass(parameterizedTypesafeMatchertype(descriptor))
                 .addField(innerMatcherField(descriptor))
                 .addMethod(constructor(descriptor))
                 .addMethod(factoryMethod(descriptor))
+                .addMethods(typesafeMatcherMethods(descriptor))
                 .addAnnotation(generatedAnnotationFor())
                 .build();
 
         return JavaFile.builder(packageFrom(descriptor), typeSpec).skipJavaLangImports(true).indent("    ").build();
+    }
+
+    private ParameterizedTypeName parameterizedTypesafeMatchertype(final MatcherBaseDescriptor descriptor) {
+        return ParameterizedTypeName.get(ClassName.get(TypeSafeMatcher.class), getClassNameFor(descriptor.getBase()));
+    }
+
+    private Iterable<MethodSpec> typesafeMatcherMethods(final MatcherBaseDescriptor descriptor) {
+        return Arrays.asList(describeToMethod(), matchesSafelyMathod(descriptor), describeMismatchSafelyMethod(descriptor));
+    }
+
+    private MethodSpec describeToMethod() {
+        final String parameterName = PARAMETER_NAME_DESCRIPTION;
+        return MethodSpec.methodBuilder("describeTo")
+                .addAnnotation(Override.class)
+                .addParameter(Description.class, parameterName, Modifier.FINAL)
+                .addStatement("$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName)
+                .addModifiers(Modifier.PUBLIC).build();
+    }
+
+    private MethodSpec matchesSafelyMathod(final MatcherBaseDescriptor type) {
+        return MethodSpec.methodBuilder("matchesSafely")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .returns(Boolean.TYPE)
+                .addParameter(getClassNameFor(type.getBase()), PARAMETER_NAME_ITEM, Modifier.FINAL)
+                .addStatement("return $L.matches($L)", INNER_MATCHER_FIELD_NAME, PARAMETER_NAME_ITEM).build();
+    }
+
+    private ClassName getClassNameFor(final TypeDescriptor base) {
+        return ClassName.get(base.getPackageName(), base.getTypeName());
+    }
+
+    private MethodSpec describeMismatchSafelyMethod(final MatcherBaseDescriptor type) {
+        return MethodSpec.methodBuilder("describeMismatchSafely")
+                .addAnnotation(Override.class)
+                .addParameter(getClassNameFor(type.getBase()), PARAMETER_NAME_ITEM, Modifier.FINAL)
+                .addStatement("$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, PARAMETER_NAME_ITEM, PARAMETER_NAME_DESCRIPTION)
+                .addParameter(Description.class,
+                        PARAMETER_NAME_DESCRIPTION, Modifier.FINAL)
+                .addModifiers(Modifier.PROTECTED).build();
     }
 
     private MethodSpec factoryMethod(final MatcherBaseDescriptor descriptor) {
@@ -53,14 +99,14 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private FieldSpec innerMatcherField(final MatcherBaseDescriptor descriptor) {
-        final ParameterizedTypeName fieldType = ParameterizedTypeName.get(ClassName.get(BeanPropertyMatcher.class), ClassName.get(descriptor.getBase().getPackageName(), descriptor.getBase().getTypeName()));
-        return FieldSpec.builder(fieldType, INNER_FIELD_NAME, Modifier.PRIVATE, Modifier.FINAL).build();
+        final ParameterizedTypeName fieldType = ParameterizedTypeName.get(ClassName.get(BeanPropertyMatcher.class), getClassNameFor(descriptor.getBase()));
+        return FieldSpec.builder(fieldType, INNER_MATCHER_FIELD_NAME, Modifier.PRIVATE, Modifier.FINAL).build();
     }
 
     private MethodSpec constructor(final MatcherBaseDescriptor descriptor) {
         final TypeDescriptor base = descriptor.getBase();
         return MethodSpec.constructorBuilder()
-                .addStatement("$L = new BeanPropertyMatcher<$T>($T.class)", INNER_FIELD_NAME, ClassName.get(base.getPackageName(), base.getTypeName()), ClassName.get(base.getPackageName(), base.getTypeName()))
+                .addStatement("$L = new BeanPropertyMatcher<$T>($T.class)", INNER_MATCHER_FIELD_NAME, getClassNameFor(base), getClassNameFor(base))
                 .addModifiers(
                         Modifier.PUBLIC)
                 .build();
