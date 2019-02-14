@@ -1,5 +1,6 @@
 package io.github.marmer.annotationprocessing.core.impl;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
@@ -8,6 +9,7 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
+import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
@@ -27,9 +29,16 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         final ClassName className = ClassName.get(packageFrom(descriptor), matcherNameFrom(descriptor));
         final TypeSpec typeSpec = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(generatedAnnotation())
                 .build();
 
         return JavaFile.builder(packageFrom(descriptor), typeSpec).skipJavaLangImports(true).indent("    ").build();
+    }
+
+    private AnnotationSpec generatedAnnotation() {
+        return AnnotationSpec.builder(Generated.class)
+                .addMember("value", "$S", getClass().getName())
+                .build();
     }
 
     private String matcherNameFrom(final MatcherBaseDescriptor descriptor) {

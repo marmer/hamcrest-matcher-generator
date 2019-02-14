@@ -34,6 +34,9 @@ class MatcherGenerationProcessorITest {
 
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "@Generated(\"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\")\n" +
                 "public class SimplePojoMatcher{\n" +
                 "}");
 
