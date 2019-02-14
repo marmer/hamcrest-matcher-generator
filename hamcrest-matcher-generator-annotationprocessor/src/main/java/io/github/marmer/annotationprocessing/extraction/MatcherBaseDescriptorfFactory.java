@@ -35,14 +35,14 @@ public class MatcherBaseDescriptorfFactory {
     /**
      * Creates Matcher descriptions.
      *
-     * @param configurations Configuration for what to create {@link MatcherBaseDescriptor}s for.
-     * @param processingEnv  environment used to find details based on the configurations.
+     * @param configuration Configuration for what to create {@link MatcherBaseDescriptor}s for.
+     * @param processingEnv environment used to find details based on the configurations.
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
-    public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configurations, final ProcessingEnvironment processingEnv) {
+    public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration, final ProcessingEnvironment processingEnv) {
 
         // TODO: marmer 01.02.2019 Type does not exist -> warn
-        return Stream.of(configurations.value())
+        return Stream.of(configuration.value())
                 .map(t -> processingEnv.getElementUtils().getTypeElement(t))
                 .map(typeElement -> typeDescriptorFor(processingEnv, typeElement))
                 .collect(Collectors.toSet());
@@ -52,7 +52,8 @@ public class MatcherBaseDescriptorfFactory {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
                         .packageName(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString())
-                        .typeName(type.getSimpleName().toString()).build()).build();
+                        .typeName(type.getSimpleName().toString())
+                        .fullQualifiedName(type.getQualifiedName().toString()).build()).build();
     }
 
 

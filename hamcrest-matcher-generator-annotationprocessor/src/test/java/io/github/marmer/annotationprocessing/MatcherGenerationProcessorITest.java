@@ -6,6 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+
 import javax.tools.JavaFileObject;
 
 import static java.util.Arrays.asList;
@@ -32,11 +34,12 @@ class MatcherGenerationProcessorITest {
                 "public class SimplePojo{\n" +
                 "}");
 
+        final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
                 "\n" +
-                "@Generated(\"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\")\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "public class SimplePojoMatcher{\n" +
                 "}");
 
