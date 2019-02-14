@@ -32,6 +32,9 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo{\n" +
+                "    public String getSomeStringProperty(){\n" +
+                "        return \"someValue\";\n" +
+                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -40,6 +43,8 @@ class MatcherGenerationProcessorITest {
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
@@ -49,6 +54,17 @@ class MatcherGenerationProcessorITest {
                 "    public SimplePojoMatcher() {\n" +
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
                 "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeStringProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeStringProperty(final String value) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "    \n" +
                 "    @Override\n" +
                 "    public void describeTo(final Description description) {\n" +
                 "        beanPropertyMatcher.describeTo(description);\n" +
@@ -63,6 +79,7 @@ class MatcherGenerationProcessorITest {
                 "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
+                "    \n" +
                 "    public static SimplePojoMatcher isSimplePojo() {\n" +
                 "        return new SimplePojoMatcher();\n" +
                 "    }\n" +
@@ -78,6 +95,17 @@ class MatcherGenerationProcessorITest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expectedOutput);
-
     }
+
+    // TODO: marmer 14.02.2019 Handle Lombok @Data
+    // TODO: marmer 14.02.2019 Handle Lombok @Value
+    // TODO: marmer 14.02.2019 Handle Lombok @Getter
+    // TODO: marmer 14.02.2019 Handle Interfaces
+    // TODO: marmer 14.02.2019 Handle Matcher Property
+    // TODO: marmer 14.02.2019 handle non Public getter
+    // TODO: marmer 14.02.2019 handle inner classes
+    // TODO: marmer 14.02.2019 handle inner inner classes
+    // TODO: marmer 14.02.2019 Inheritance (properties of superclasses/-interfaces)
+    // TODO: marmer 14.02.2019 properties of enum classes?
+
 }
