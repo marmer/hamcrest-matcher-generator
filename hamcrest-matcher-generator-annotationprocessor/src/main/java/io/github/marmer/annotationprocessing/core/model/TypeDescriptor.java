@@ -10,4 +10,5 @@ import lombok.experimental.Wither;
 public class TypeDescriptor {
     private String typeName;
     private String packageName;
+    private String fullQualifiedName;
 }

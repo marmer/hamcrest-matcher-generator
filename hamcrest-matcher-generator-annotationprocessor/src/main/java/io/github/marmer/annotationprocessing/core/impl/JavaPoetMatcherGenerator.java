@@ -9,6 +9,8 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
+import java.time.LocalDate;
+
 import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 
@@ -29,15 +31,16 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         final ClassName className = ClassName.get(packageFrom(descriptor), matcherNameFrom(descriptor));
         final TypeSpec typeSpec = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(generatedAnnotation())
+                .addAnnotation(generatedAnnotationFor(descriptor))
                 .build();
 
         return JavaFile.builder(packageFrom(descriptor), typeSpec).skipJavaLangImports(true).indent("    ").build();
     }
 
-    private AnnotationSpec generatedAnnotation() {
+    private AnnotationSpec generatedAnnotationFor(final MatcherBaseDescriptor descriptor) {
         return AnnotationSpec.builder(Generated.class)
                 .addMember("value", "$S", getClass().getName())
+                .addMember("date", "$S", LocalDate.now())
                 .build();
     }
 
