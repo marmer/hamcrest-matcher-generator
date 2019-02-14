@@ -1,6 +1,12 @@
 package io.github.marmer.annotationprocessing.core.impl;
 
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
@@ -9,10 +15,11 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanProper
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
-import javax.annotation.Generated;
-import javax.lang.model.element.Modifier;
 import java.time.LocalDate;
 import java.util.Arrays;
+
+import javax.annotation.Generated;
+import javax.lang.model.element.Modifier;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
@@ -38,8 +45,8 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .superclass(parameterizedTypesafeMatchertype(descriptor))
                 .addField(innerMatcherField(descriptor))
                 .addMethod(constructor(descriptor))
-                .addMethod(factoryMethod(descriptor))
                 .addMethods(typesafeMatcherMethods(descriptor))
+                .addMethod(factoryMethod(descriptor))
                 .addAnnotation(generatedAnnotationFor())
                 .build();
 

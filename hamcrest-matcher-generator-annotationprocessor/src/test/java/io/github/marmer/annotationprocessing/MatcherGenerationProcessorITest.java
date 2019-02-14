@@ -6,8 +6,9 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaFileObject;
 import java.time.LocalDate;
+
+import javax.tools.JavaFileObject;
 
 import static java.util.Arrays.asList;
 
@@ -37,10 +38,9 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
-                "\n" +
-                "import javax.annotation.Generated;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
