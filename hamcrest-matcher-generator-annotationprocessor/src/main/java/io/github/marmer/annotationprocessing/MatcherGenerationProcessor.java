@@ -8,19 +8,14 @@ import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.creation.SourceWriter;
 import io.github.marmer.annotationprocessing.extraction.MatcherBaseDescriptorfFactory;
 
+import javax.annotation.processing.*;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfigurations"})
@@ -49,8 +44,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
         roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
                 .map(toAnnotationConfiguration())
-                .flatMap(toMatcherBaseDescriptorStream()
-                ).map(matcherGenerator::generateMatcherFor)
+                .flatMap(toMatcherBaseDescriptorStream())
+                .map(matcherGenerator::generateMatcherFor)
                 .forEach(createSources());
 
         return true;
