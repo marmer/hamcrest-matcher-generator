@@ -37,17 +37,32 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
-                "public class SimplePojoMatcher {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
                 "    }\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
                 "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
                 "    public static SimplePojoMatcher isSimplePojo() {\n" +
                 "        return new SimplePojoMatcher();\n" +
                 "    }\n" +
