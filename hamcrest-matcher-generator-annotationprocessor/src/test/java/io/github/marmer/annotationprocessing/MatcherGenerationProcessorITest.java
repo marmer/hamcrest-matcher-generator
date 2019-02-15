@@ -35,6 +35,14 @@ class MatcherGenerationProcessorITest {
                 "    public String getSomeStringProperty(){\n" +
                 "        return \"someValue\";\n" +
                 "    }\n" +
+                "\n" +
+                "    public boolean isSomeBooleanProperty(){\n" +
+                "        return false;\n" +
+                "    }\n" +
+                "    \n" +
+                "    public boolean getSomePropertyLike(){\n" +
+                "        return true;\n" +
+                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -62,6 +70,16 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoMatcher withSomeStringProperty(final String value) {\n" +
                 "        beanPropertyMatcher.with(\"someStringProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeBooleanProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someBooleanProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeBooleanProperty(final boolean value) {\n" +
+                "        beanPropertyMatcher.with(\"someBooleanProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "    \n" +
@@ -107,5 +125,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 handle inner inner classes
     // TODO: marmer 14.02.2019 Inheritance (properties of superclasses/-interfaces)
     // TODO: marmer 14.02.2019 properties of enum classes?
+    // TODO: marmer 15.02.2019 Wrappertype boolean
 
 }
