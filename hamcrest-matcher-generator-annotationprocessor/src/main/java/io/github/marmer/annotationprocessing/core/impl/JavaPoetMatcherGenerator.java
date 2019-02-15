@@ -23,7 +23,6 @@ import org.hamcrest.TypeSafeMatcher;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,7 +63,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private List<MethodSpec> propertyMethods(final MatcherBaseDescriptor descriptor) {
-        final Set<PropertyDescriptor> properties = descriptor.getProperties();
+        final List<PropertyDescriptor> properties = descriptor.getProperties();
         return properties.stream()
                 .flatMap(property -> Stream.of(propertyMatcherMethodFor(property, descriptor),
                         propertyMethodFor(property, descriptor))).collect(Collectors.toList());
@@ -127,7 +126,10 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private ClassName getClassNameFor(final TypeDescriptor base) {
-        return ClassName.get(base.getPackageName(), base.getTypeName());
+
+        return base.isPrimitive() ?
+                ClassName.get("", base.getTypeName()) :
+                ClassName.get(base.getPackageName(), base.getTypeName());
     }
 
     private MethodSpec describeMismatchSafelyMethod(final MatcherBaseDescriptor type) {

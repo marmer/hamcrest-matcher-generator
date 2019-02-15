@@ -8,6 +8,7 @@ import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,6 +18,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Factory to create some matcher descriptions.
@@ -58,11 +60,12 @@ public class MatcherBaseDescriptorfFactory {
                 .base(TypeDescriptor.builder()
                         .packageName(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString())
                         .typeName(type.getSimpleName().toString())
-                        .fullQualifiedName(type.getQualifiedName().toString()).build())
+                        .fullQualifiedName(type.getQualifiedName().toString())
+                        .primitive(false).build())
                 .properties(propertiesFor(processingEnv, type)).build();
     }
 
-    private Set<PropertyDescriptor> propertiesFor(final ProcessingEnvironment processingEnv, final TypeElement type) {
+    private List<PropertyDescriptor> propertiesFor(final ProcessingEnvironment processingEnv, final TypeElement type) {
         return type.getEnclosedElements().stream()
                 .filter(enclosedElement -> enclosedElement.getKind().equals(ElementKind.METHOD))
                 // TODO: marmer 15.02.2019 no non property methods
@@ -70,24 +73,44 @@ public class MatcherBaseDescriptorfFactory {
                 // TODO: marmer 15.02.2019 no void property methods (so no unreal "property methods")
                 .map(e -> (ExecutableElement) e)
                 .map(element -> toPropertyDescriptor(processingEnv, element))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     private PropertyDescriptor toPropertyDescriptor(final ProcessingEnvironment processingEnv, final ExecutableElement element) {
-        final TypeElement returnType = (TypeElement) processingEnv.getTypeUtils().asElement(element.getReturnType());
+        final TypeMirror returnType = element.getReturnType();
+
+        final String packageName = isPrimitive(returnType) ? null : processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(returnType)).toString();
+        final String typeName = isPrimitive(returnType) ? returnType.toString() : processingEnv.getTypeUtils().asElement(returnType).getSimpleName().toString();
+        final String fullQualifiedName = returnType.toString();
+
 
         return PropertyDescriptor.builder()
-                .property(toPropertyName(element.getSimpleName()))
+                .property(toPropertyName(element))
                 .returnValue(TypeDescriptor.builder()
-                        .packageName(processingEnv.getElementUtils().getPackageOf(returnType).getQualifiedName().toString())
-                        .typeName(returnType.getSimpleName().toString())
-                        .fullQualifiedName(returnType.getQualifiedName().toString()).build())
+                        .packageName(packageName)
+                        .typeName(typeName)
+                        .fullQualifiedName(fullQualifiedName)
+                        .primitive(isPrimitive(returnType))
+                        .build())
                 .build();
     }
 
-    private String toPropertyName(final Name simpleName) {
-        // TODO: marmer 15.02.2019 boolean properties
-        return StringUtils.uncapitalize(simpleName.toString().replaceFirst("get", ""));
+    private boolean isPrimitive(final TypeMirror returnType) {
+        return returnType.getKind().isPrimitive();
+    }
+
+    private String toPropertyName(final ExecutableElement element) {
+        final Name simpleName = element.getSimpleName();
+
+        final String capitalizedPropertyName = simpleName.toString().replaceFirst(
+                isPrimitiveBoolean(element.getReturnType()) ?
+                        "is" :
+                        "get", "");
+        return StringUtils.uncapitalize(capitalizedPropertyName);
+    }
+
+    private boolean isPrimitiveBoolean(final TypeMirror returnType) {
+        return returnType.getKind().isPrimitive() && "boolean".equals(returnType.toString());
     }
 
     // TODO: marmer 15.02.2019 create another module which uses some of those generated matchers to know whether they really work (or even exist^^)
