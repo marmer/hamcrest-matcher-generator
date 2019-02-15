@@ -36,7 +36,11 @@ class MatcherGenerationProcessorITest {
                 "        return \"someValue\";\n" +
                 "    }\n" +
                 "\n" +
-                "    public boolean isSomeBooleanProperty(){\n" +
+                "    public boolean isSomePrimitiveBooleanProperty(){\n" +
+                "        return true;\n" +
+                "    }\n" +
+                "\n" +
+                "    public Boolean getSomeNonePrimitiveBooleanProperty(){\n" +
                 "        return false;\n" +
                 "    }\n" +
                 "\n" +
@@ -74,13 +78,23 @@ class MatcherGenerationProcessorITest {
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withSomeBooleanProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"someBooleanProperty\", matcher);\n" +
+                "    public SimplePojoMatcher withSomePrimitiveBooleanProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"somePrimitiveBooleanProperty\", matcher);\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withSomeBooleanProperty(final boolean value) {\n" +
-                "        beanPropertyMatcher.with(\"someBooleanProperty\", Matchers.equalTo(value));\n" +
+                "    public SimplePojoMatcher withSomePrimitiveBooleanProperty(final boolean value) {\n" +
+                "        beanPropertyMatcher.with(\"somePrimitiveBooleanProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someNonePrimitiveBooleanProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Boolean value) {\n" +
+                "        beanPropertyMatcher.with(\"someNonePrimitiveBooleanProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "    \n" +
