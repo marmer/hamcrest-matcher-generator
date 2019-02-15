@@ -11,4 +11,5 @@ public class TypeDescriptor {
     private String typeName;
     private String packageName;
     private String fullQualifiedName;
+    private boolean primitive;
 }

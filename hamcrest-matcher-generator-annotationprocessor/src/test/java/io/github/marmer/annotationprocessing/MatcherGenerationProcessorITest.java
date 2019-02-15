@@ -39,10 +39,11 @@ class MatcherGenerationProcessorITest {
                 "    public boolean isSomeBooleanProperty(){\n" +
                 "        return false;\n" +
                 "    }\n" +
-                "    \n" +
-                "    public boolean getSomePropertyLike(){\n" +
-                "        return true;\n" +
-                "    }\n" +
+                "\n" +
+                "    // TODO: marmer 15.02.2019 This may come next \n" +
+                "//    public boolean getSomePropertyLike(){\n" +
+                "//        return true;\n" +
+                "//    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();

@@ -4,12 +4,12 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
 
-import java.util.Set;
+import java.util.List;
 
 @Value
 @Builder
 @Wither
 public class MatcherBaseDescriptor {
     private TypeDescriptor base;
-    private Set<PropertyDescriptor> properties;
+    private List<PropertyDescriptor> properties;
 }
