@@ -6,9 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-
 import javax.tools.JavaFileObject;
+import java.time.LocalDate;
 
 import static java.util.Arrays.asList;
 
@@ -32,6 +31,9 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo{\n" +
+                "    private String nonPropertyField;\n" +
+                "    private static String staticNonPropertyField;\n" +
+                "    \n" +
                 "    public String getSomeStringProperty(){\n" +
                 "        return \"someValue\";\n" +
                 "    }\n" +
