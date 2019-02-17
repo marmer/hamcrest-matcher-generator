@@ -12,6 +12,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,11 +66,26 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private List<PropertyDescriptor> propertiesFor(final ProcessingEnvironment processingEnv, final TypeElement type) {
-        return type.getEnclosedElements().stream()
-                .filter(this::isPropertyMethod)
-                .map(e -> (ExecutableElement) e)
-                .map(element -> toPropertyDescriptor(processingEnv, element))
+        if (type == null) {
+            return Collections.emptyList();
+        }
+        return Stream.concat(
+                type.getEnclosedElements().stream()
+                        .filter(this::isPropertyMethod)
+                        .map(e -> (ExecutableElement) e)
+                        .map(element -> toPropertyDescriptor(processingEnv, element)),
+                propertiesFor(processingEnv, getSupertype(processingEnv, type)).stream()
+        )
                 .collect(Collectors.toList());
+
+        // TODO: marmer 17.02.2019 Same Property on multiple levels of inheritence
+    }
+
+    private TypeElement getSupertype(final ProcessingEnvironment processingEnv, final TypeElement type) {
+        final TypeMirror superclass = type.getSuperclass();
+        return superclass == null ?
+                null :
+                processingEnv.getElementUtils().getTypeElement(superclass.toString());
     }
 
     private boolean isPropertyMethod(final Element element) {
