@@ -8,10 +8,7 @@ import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
@@ -79,7 +76,9 @@ public class MatcherBaseDescriptorfFactory {
         if (!isMethod(element)) {
             return false;
         }
-        if (hasVoidReturnType((ExecutableElement) element) || hasParameters((ExecutableElement) element)) {
+        if (hasVoidReturnType((ExecutableElement) element) ||
+                hasParameters((ExecutableElement) element) ||
+                isStatic(element)) {
             return false;
         }
 
@@ -88,6 +87,10 @@ public class MatcherBaseDescriptorfFactory {
                 ||
                 (hasPrimitiveBooleanReturnType((ExecutableElement) element) &&
                         hasPrimitiveBooleanPropertyMethodName(element));
+    }
+
+    private boolean isStatic(final Element element) {
+        return element.getModifiers().contains(Modifier.STATIC);
     }
 
     private boolean hasParameters(final ExecutableElement element) {
