@@ -80,7 +80,7 @@ public class MatcherBaseDescriptorfFactory {
         if (!isMethod(element)) {
             return false;
         }
-        if (hasVoidReturnType((ExecutableElement) element)) {
+        if (hasVoidReturnType((ExecutableElement) element) || hasParameters((ExecutableElement) element)) {
             return false;
         }
 
@@ -89,6 +89,10 @@ public class MatcherBaseDescriptorfFactory {
                 ||
                 (hasPrimitiveBooleanReturnType((ExecutableElement) element) &&
                         hasPrimitiveBooleanPropertyMethodName(element));
+    }
+
+    private boolean hasParameters(final ExecutableElement element) {
+        return !element.getParameters().isEmpty();
     }
 
     private boolean hasVoidReturnType(final ExecutableElement element) {
