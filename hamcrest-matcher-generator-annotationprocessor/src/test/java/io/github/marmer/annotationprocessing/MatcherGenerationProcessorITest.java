@@ -53,6 +53,10 @@ class MatcherGenerationProcessorITest {
                 "    public void getPropertyLikeVoidMethod(){\n" +
                 "    }\n" +
                 "    \n" +
+                "    public String getSomePropertyLikeMethodWithParameters(int param){\n" +
+                "        return String.valueOf(param);\n" +
+                "    }\n" +
+                "    \n" +
                 "    public boolean getSomePropertyLike(){\n" +
                 "        return true;\n" +
                 "    }\n" +
