@@ -12,6 +12,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
 import java.util.List;
@@ -75,10 +76,11 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean isPropertyMethod(final Element element) {
-        // TODO: marmer 15.02.2019 no non property methods
         // TODO: marmer 15.02.2019 no non property methods with parameters (so no unreal "property methods")
-        // TODO: marmer 15.02.2019 no void property methods (so no unreal "property methods")
         if (!isMethod(element)) {
+            return false;
+        }
+        if (hasVoidReturnType((ExecutableElement) element)) {
             return false;
         }
 
@@ -87,6 +89,10 @@ public class MatcherBaseDescriptorfFactory {
                 ||
                 (hasPrimitiveBooleanReturnType((ExecutableElement) element) &&
                         hasPrimitiveBooleanPropertyMethodName(element));
+    }
+
+    private boolean hasVoidReturnType(final ExecutableElement element) {
+        return TypeKind.VOID.equals(element.getReturnType().getKind());
     }
 
     private boolean hasAnyPropertyMethodName(final Element element) {

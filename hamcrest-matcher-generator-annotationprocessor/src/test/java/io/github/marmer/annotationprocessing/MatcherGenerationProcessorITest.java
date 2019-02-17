@@ -49,7 +49,10 @@ class MatcherGenerationProcessorITest {
                 "    public String someNonPropertyMethod(){\n" +
                 "        return \">o.O<\";\n" +
                 "    }\n" +
-                "\n" +
+                "    \n" +
+                "    public void getPropertyLikeVoidMethod(){\n" +
+                "    }\n" +
+                "    \n" +
                 "    public boolean getSomePropertyLike(){\n" +
                 "        return true;\n" +
                 "    }\n" +
