@@ -76,7 +76,6 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean isPropertyMethod(final Element element) {
-        // TODO: marmer 15.02.2019 no non property methods with parameters (so no unreal "property methods")
         if (!isMethod(element)) {
             return false;
         }
