@@ -319,5 +319,4 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 handle inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
     // TODO: marmer 14.02.2019 Inheritance (properties of superclasses/-interfaces)
-    // TODO: marmer 14.02.2019 properties of enum classes?
 }
