@@ -147,11 +147,8 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
     // TODO: marmer 14.02.2019 Handle Interfaces
     // TODO: marmer 14.02.2019 Handle Matcher Property
-    // TODO: marmer 14.02.2019 handle non Public getter
     // TODO: marmer 14.02.2019 handle inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
     // TODO: marmer 14.02.2019 Inheritance (properties of superclasses/-interfaces)
     // TODO: marmer 14.02.2019 properties of enum classes?
-    // TODO: marmer 15.02.2019 Wrappertype boolean
-
 }
