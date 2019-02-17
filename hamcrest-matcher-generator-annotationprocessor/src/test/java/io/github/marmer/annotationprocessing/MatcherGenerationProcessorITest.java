@@ -45,7 +45,11 @@ class MatcherGenerationProcessorITest {
                 "    public Boolean getSomeNonePrimitiveBooleanProperty(){\n" +
                 "        return false;\n" +
                 "    }\n" +
-                "\n" +
+                "    \n" +
+                "//    public String someNonPropertyMethod(){\n" +
+                "//        return \">o.O<\";\n" +
+                "//    }\n" +
+                "    \n" +
                 "    // TODO: marmer 15.02.2019 This may come next \n" +
                 "//    public boolean getSomePropertyLike(){\n" +
                 "//        return true;\n" +
