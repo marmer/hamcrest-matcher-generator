@@ -60,7 +60,7 @@ public class MatcherBaseDescriptorfFactory {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
                         .packageName(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString())
-                        .typeName(type.getSimpleName().toString())
+                        .typeName(simpleNameOf(type))
                         .fullQualifiedName(type.getQualifiedName().toString())
                         .primitive(false).build())
                 .properties(propertiesFor(processingEnv, type)).build();
@@ -88,11 +88,15 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean hasAnyPropertyMethodName(final Element element) {
-        return element.getSimpleName().toString().startsWith(ANY_PROPERTY_METHOD_PREFIX);
+        return simpleNameOf(element).startsWith(ANY_PROPERTY_METHOD_PREFIX);
+    }
+
+    private String simpleNameOf(final Element element) {
+        return element.getSimpleName().toString();
     }
 
     private boolean hasPrimitiveBooleanPropertyMethodName(final Element element) {
-        return element.getSimpleName().toString().startsWith(PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX);
+        return simpleNameOf(element).startsWith(PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX);
     }
 
     private boolean hasPrimitiveBooleanReturnType(final ExecutableElement element) {
@@ -122,7 +126,7 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private String extractTypename(final ProcessingEnvironment processingEnv, final TypeMirror returnType) {
-        return isPrimitive(returnType) ? returnType.toString() : processingEnv.getTypeUtils().asElement(returnType).getSimpleName().toString();
+        return isPrimitive(returnType) ? returnType.toString() : simpleNameOf(processingEnv.getTypeUtils().asElement(returnType));
     }
 
     private boolean isPrimitive(final TypeMirror returnType) {
@@ -130,7 +134,7 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private String toPropertyName(final ExecutableElement element) {
-        final String capitalizedPropertyName = element.getSimpleName().toString().replaceFirst(
+        final String capitalizedPropertyName = simpleNameOf(element).replaceFirst(
                 isPrimitiveBoolean(element.getReturnType()) ?
                         PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX :
                         ANY_PROPERTY_METHOD_PREFIX, "");
