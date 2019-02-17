@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 
 class MatcherGenerationProcessorITest {
 
+
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
     void testGenerate_MatcherShouldHaveBeenGeneratedForPojoFromSourceFile()
@@ -142,6 +143,88 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
+    @Test
+    @DisplayName("Matcher should be generated for Interfaces with property methods")
+    void testGenerate_MatcherShouldBeGeneratedForInterfacesWithPropertyMethods()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SimplePojoInterface\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojoInterface", "package some.other.pck;\n" +
+                "\n" +
+                "public interface SimplePojoInterface{\n" +
+                "    public String getSomeStringProperty();\n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "import javax.annotation.Generated;\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeStringProperty(final String value) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "    \n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojoInterface item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojoInterface item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "    \n" +
+                "    public static SimplePojoInterfaceMatcher isSimplePojoInterface() {\n" +
+                "        return new SimplePojoInterfaceMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
+    // TODO: marmer 17.02.2019 static "property method"
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
