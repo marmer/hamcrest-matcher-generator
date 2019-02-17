@@ -341,6 +341,10 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject parentPojo = JavaFileObjects.forSourceLines("some.other.pck.ParentPojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class ParentPojo{\n" +
+                "    public String getPropertyOfBothClasses(){\n" +
+                "        return \"someFancyValue\";\n" +
+                "    }\n" +
+                "    \n" +
                 "    public String getParentPojoProperty(){\n" +
                 "        return \"someValue\";\n" +
                 "    }\n" +
@@ -349,6 +353,9 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo extends ParentPojo{\n" +
+                "    public String getPropertyOfBothClasses(){\n" +
+                "        return \"someFancyValue\";\n" +
+                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -367,6 +374,16 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withPropertyOfBothClasses(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"propertyOfBothClasses\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withPropertyOfBothClasses(final String value) {\n" +
+                "        beanPropertyMatcher.with(\"propertyOfBothClasses\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
                 "    }\n" +
                 "\n" +
                 "    public SimplePojoMatcher withParentPojoProperty(final Matcher<?> matcher) {\n" +

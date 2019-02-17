@@ -74,11 +74,9 @@ public class MatcherBaseDescriptorfFactory {
                         .filter(this::isPropertyMethod)
                         .map(e -> (ExecutableElement) e)
                         .map(element -> toPropertyDescriptor(processingEnv, element)),
-                propertiesFor(processingEnv, getSupertype(processingEnv, type)).stream()
-        )
+                propertiesFor(processingEnv, getSupertype(processingEnv, type)).stream())
+                .distinct()
                 .collect(Collectors.toList());
-
-        // TODO: marmer 17.02.2019 Same Property on multiple levels of inheritence
     }
 
     private TypeElement getSupertype(final ProcessingEnvironment processingEnv, final TypeElement type) {
