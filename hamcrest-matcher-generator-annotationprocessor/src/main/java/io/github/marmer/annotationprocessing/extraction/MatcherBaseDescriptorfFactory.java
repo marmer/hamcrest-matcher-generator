@@ -82,9 +82,11 @@ public class MatcherBaseDescriptorfFactory {
             return false;
         }
 
-        return (hasPrimitiveBooleanReturnType((ExecutableElement) element) &&
-                hasPrimitiveBooleanPropertyMethodName(element)) ||
-                hasAnyPropertyMethodName(element);
+        return (hasAnyPropertyMethodName(element) &&
+                !hasPrimitiveBooleanReturnType((ExecutableElement) element))
+                ||
+                (hasPrimitiveBooleanReturnType((ExecutableElement) element) &&
+                        hasPrimitiveBooleanPropertyMethodName(element));
     }
 
     private boolean hasAnyPropertyMethodName(final Element element) {
