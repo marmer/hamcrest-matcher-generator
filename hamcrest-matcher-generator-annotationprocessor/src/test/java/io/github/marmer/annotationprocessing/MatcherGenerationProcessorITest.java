@@ -61,6 +61,10 @@ class MatcherGenerationProcessorITest {
                 "    public boolean getSomePropertyLike(){\n" +
                 "        return true;\n" +
                 "    }\n" +
+                "    \n" +
+                "    public static String getStaticPropertyLikeReturnValue(){\n" +
+                "        return \"nope\";\n" +
+                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -308,11 +312,9 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
-    // TODO: marmer 17.02.2019 static "property method"
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
-    // TODO: marmer 14.02.2019 Handle Interfaces
     // TODO: marmer 14.02.2019 Handle Matcher Property
     // TODO: marmer 14.02.2019 handle inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
