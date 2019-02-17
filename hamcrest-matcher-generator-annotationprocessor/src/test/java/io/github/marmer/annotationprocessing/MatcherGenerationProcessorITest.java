@@ -224,6 +224,90 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
+    @Test
+    @DisplayName("Matcher should be generated for Enums with property methods")
+    void testGenerate_MatcherShouldBeGeneratedForEnumsWithPropertyMethods()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SimplePojoEnum\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojoEnum", "package some.other.pck;\n" +
+                "\n" +
+                "public enum SimplePojoEnum{\n" +
+                "    SOME_ENUM_CONSTANT;\n" +
+                "    public String getSomeStringProperty(){\n" +
+                "        return \"someValue\";\n" +
+                "    }\n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "import javax.annotation.Generated;\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoEnum>(SimplePojoEnum.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withSomeStringProperty(final String value) {\n" +
+                "        beanPropertyMatcher.with(\"someStringProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "    \n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojoEnum item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojoEnum item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "    \n" +
+                "    public static SimplePojoEnumMatcher isSimplePojoEnum() {\n" +
+                "        return new SimplePojoEnumMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
     // TODO: marmer 17.02.2019 static "property method"
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
