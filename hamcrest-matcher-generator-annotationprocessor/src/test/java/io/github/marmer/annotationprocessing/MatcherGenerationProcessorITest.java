@@ -114,6 +114,16 @@ class MatcherGenerationProcessorITest {
                 "        beanPropertyMatcher.with(\"someNonePrimitiveBooleanProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
                 "    \n" +
                 "    @Override\n" +
                 "    public void describeTo(final Description description) {\n" +
@@ -366,6 +376,16 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoMatcher withParentPojoProperty(final String value) {\n" +
                 "        beanPropertyMatcher.with(\"parentPojoProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "    \n" +
