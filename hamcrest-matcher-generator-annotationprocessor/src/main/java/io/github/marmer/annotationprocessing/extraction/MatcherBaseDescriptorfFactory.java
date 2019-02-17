@@ -52,7 +52,7 @@ public class MatcherBaseDescriptorfFactory {
     public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration, final ProcessingEnvironment processingEnv) {
         // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
-                .map(t -> processingEnv.getElementUtils().getTypeElement(t))
+                .map(processingEnv.getElementUtils()::getTypeElement)
                 .map(typeElement -> typeDescriptorFor(processingEnv, typeElement))
                 .collect(Collectors.toSet());
     }
