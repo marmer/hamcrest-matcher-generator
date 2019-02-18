@@ -61,8 +61,20 @@ public class MatcherBaseDescriptorfFactory {
                         .packageName(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString())
                         .typeName(simpleNameOf(type))
                         .fullQualifiedName(type.getQualifiedName().toString())
-                        .primitive(false).build())
-                .properties(propertiesFor(processingEnv, type)).build();
+                        .primitive(false)
+                        .build())
+                .properties(propertiesFor(processingEnv, type))
+                .innerMatchers(innerMatchersFor(processingEnv, type))
+                .build();
+    }
+
+    private List<MatcherBaseDescriptor> innerMatchersFor(final ProcessingEnvironment processingEnv, final TypeElement type) {
+        return type.getEnclosedElements()
+                .stream()
+                // TODO: marmer 18.02.2019 Should work for interfaces as well
+                .filter(enclosedElement -> ((Element) enclosedElement).getKind().isClass())
+                .map(innerType -> typeDescriptorFor(processingEnv, (TypeElement) innerType))
+                .collect(Collectors.toList());
     }
 
     private List<PropertyDescriptor> propertiesFor(final ProcessingEnvironment processingEnv, final TypeElement type) {

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Value
@@ -12,4 +13,6 @@ import java.util.List;
 public class MatcherBaseDescriptor {
     private TypeDescriptor base;
     private List<PropertyDescriptor> properties;
+    @Builder.Default
+    private List<MatcherBaseDescriptor> innerMatchers = new ArrayList<>();
 }
