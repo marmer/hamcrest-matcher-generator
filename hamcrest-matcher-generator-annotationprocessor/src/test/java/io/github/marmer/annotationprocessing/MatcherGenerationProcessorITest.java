@@ -444,4 +444,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 Handle Matcher Property
     // TODO: marmer 14.02.2019 handle inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
+    // TODO: marmer 18.02.2019 handle (override) existing matchers
+    // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
 }
