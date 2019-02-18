@@ -52,12 +52,16 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .addMethods(typesafeMatcherMethods(descriptor))
                 .addMethod(factoryMethod(descriptor))
                 .addAnnotation(generatedAnnotationFor())
-                .addTypes(descriptor.getInnerMatchers()
-                        .stream()
-                        .map(this::matcherTypeFor)
-                        .peek(type -> type.addModifiers(Modifier.STATIC))
-                        .map(TypeSpec.Builder::build)
-                        .collect(Collectors.toList()));
+                .addTypes(innerMatchersFor(descriptor));
+    }
+
+    private List<TypeSpec> innerMatchersFor(final MatcherBaseDescriptor descriptor) {
+        return descriptor.getInnerMatchers()
+                .stream()
+                .map(this::matcherTypeFor)
+                .peek(type -> type.addModifiers(Modifier.STATIC))
+                .map(TypeSpec.Builder::build)
+                .collect(Collectors.toList());
     }
 
     private List<MethodSpec> propertyMethods(final MatcherBaseDescriptor descriptor) {
