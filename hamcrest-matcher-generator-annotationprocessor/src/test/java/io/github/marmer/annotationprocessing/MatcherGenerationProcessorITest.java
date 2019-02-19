@@ -6,8 +6,9 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaFileObject;
 import java.time.LocalDate;
+
+import javax.tools.JavaFileObject;
 
 import static java.util.Arrays.asList;
 
@@ -151,11 +152,11 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
-                "    public class InnerStaticPojoMatcher extends TypeSafeMatcher<InnerStaticPojo> {\n" +
-                "        private final BeanPropertyMatcher<InnerStaticPojo> beanPropertyMatcher;\n" +
+                "    public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {\n" +
+                "        private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerStaticPojoMatcher() {\n" +
-                "            beanPropertyMatcher = new BeanPropertyMatcher<InnerStaticPojo>(InnerStaticPojo.class);\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class);\n" +
                 "        }\n" +
                 "\n" +
                 "        public InnerStaticPojoMatcher withInnerStaticPojoProperty(final Matcher<?> matcher) {\n" +
@@ -168,18 +169,28 @@ class MatcherGenerationProcessorITest {
                 "            return this;\n" +
                 "        }\n" +
                 "\n" +
+                "        public InnerStaticPojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "            beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
+                "        public InnerStaticPojoMatcher withClass(final Class value) {\n" +
+                "            beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
                 "        @Override\n" +
                 "        public void describeTo(final Description description) {\n" +
                 "            beanPropertyMatcher.describeTo(description);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final InnerStaticPojo item) {\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerStaticPojo item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final InnerStaticPojo item, final Description description) {\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo item, final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
@@ -486,15 +497,16 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
-    // TODO: marmer 14.02.2019 Handle Matcher Property
+    // TODO: marmer 14.02.2019 Handle Property of type "org.hamcrest.Matcher"
     // TODO: marmer 18.02.2019 NonPublicModifiers
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
-    // TODO: marmer 14.02.2019 handle static inner classes
     // TODO: marmer 14.02.2019 handle non static inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
+    // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 handle (override) existing matcher files
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
     // TODO: marmer 18.02.2019 what if configuraion points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
+    // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
 }
