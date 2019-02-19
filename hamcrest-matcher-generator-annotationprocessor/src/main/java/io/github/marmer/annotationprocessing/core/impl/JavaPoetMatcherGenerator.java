@@ -67,7 +67,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private List<TypeSpec> innerMatchersFor(final MatcherBaseDescriptor descriptor, final TypeDescriptor... outerTypes) {
         return descriptor.getInnerMatchers()
                 .stream()
-                .map(innerMatcher -> matcherTypeFor(innerMatcher, asArray(outerTypes, descriptor.getBase())))
+                .map(innerMatcher -> matcherTypeFor(innerMatcher, concat(outerTypes, descriptor.getBase())))
                 .peek(type -> type.addModifiers(Modifier.STATIC))
                 .map(TypeSpec.Builder::build)
                 .collect(Collectors.toList());
@@ -76,16 +76,22 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private List<MethodSpec> propertyMethods(final MatcherBaseDescriptor descriptor, final TypeDescriptor... outerTypes) {
         final List<PropertyDescriptor> properties = descriptor.getProperties();
         return properties.stream()
-                .flatMap(property -> Stream.of(propertyMatcherMethodFor(property, descriptor, outerTypes),
-                        propertyMethodFor(property, descriptor, outerTypes))).collect(Collectors.toList());
+                .flatMap(property ->
+                        Stream.of(propertyMatcherMethodFor(property, descriptor, outerTypes),
+                                propertyMethodFor(property, descriptor, outerTypes)))
+                .collect(Collectors.toList());
     }
 
     private MethodSpec propertyMatcherMethodFor(final PropertyDescriptor property, final MatcherBaseDescriptor descriptor, final TypeDescriptor... outerTypes) {
         return MethodSpec.methodBuilder(methodNameToGenerateFor(property))
                 .returns(classNameOfGeneratedTypeFor(descriptor, outerTypes))
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(parameterizedMatchertype(), "matcher", Modifier.FINAL)
-                .addStatement("$L.with($S, matcher)", INNER_MATCHER_FIELD_NAME, property.getProperty())
+                .addParameter(parameterizedMatcherType(),
+                        "matcher",
+                        Modifier.FINAL)
+                .addStatement("$L.with($S, matcher)",
+                        INNER_MATCHER_FIELD_NAME,
+                        property.getProperty())
                 .addStatement(
                         "return this")
                 .build();
@@ -101,7 +107,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .build();
     }
 
-    private ParameterizedTypeName parameterizedMatchertype() {
+    private ParameterizedTypeName parameterizedMatcherType() {
         return ParameterizedTypeName.get(ClassName.get(Matcher.class),
                 WildcardTypeName.subtypeOf(TypeName.OBJECT));
     }
@@ -119,11 +125,14 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private MethodSpec describeToMethod() {
-        final String parameterName = PARAMETER_NAME_DESCRIPTION;
         return MethodSpec.methodBuilder("describeTo")
                 .addAnnotation(Override.class)
-                .addParameter(Description.class, parameterName, Modifier.FINAL)
-                .addStatement("$L.describeTo($L)", INNER_MATCHER_FIELD_NAME, parameterName)
+                .addParameter(Description.class,
+                        PARAMETER_NAME_DESCRIPTION,
+                        Modifier.FINAL)
+                .addStatement("$L.describeTo($L)",
+                        INNER_MATCHER_FIELD_NAME,
+                        PARAMETER_NAME_DESCRIPTION)
                 .addModifiers(Modifier.PUBLIC).build();
     }
 
@@ -132,8 +141,13 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(Boolean.TYPE)
-                .addParameter(getClassNameFor(type.getBase()), PARAMETER_NAME_ITEM, Modifier.FINAL)
-                .addStatement("return $L.matches($L)", INNER_MATCHER_FIELD_NAME, PARAMETER_NAME_ITEM).build();
+                .addParameter(getClassNameFor(type.getBase()),
+                        PARAMETER_NAME_ITEM,
+                        Modifier.FINAL)
+                .addStatement("return $L.matches($L)",
+                        INNER_MATCHER_FIELD_NAME,
+                        PARAMETER_NAME_ITEM)
+                .build();
     }
 
     private ClassName getClassNameFor(final TypeDescriptor base) {
@@ -143,23 +157,28 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
             } else {
                 return ClassName.get(base.getPackageName(),
                                     parentNames.get(0),
-                                    asArray(parentNames.subList(1, parentNames.size()).toArray(new String[parentNames.size() - 1]), base.getTypeName()));
+                        concat(parentNames.subList(1, parentNames.size()).toArray(new String[parentNames.size() - 1]), base.getTypeName()));
             }
     }
 
-    private String[] asArray(final String[] outerTypes, final String type) {
+    private String[] concat(final String[] outerTypes, final String... type) {
         return Stream.concat(Stream.of(outerTypes), Stream.of(type)).toArray(String[]::new);
     }
 
-    private TypeDescriptor[] asArray(final TypeDescriptor[] outerTypes, final TypeDescriptor type) {
+    private TypeDescriptor[] concat(final TypeDescriptor[] outerTypes, final TypeDescriptor... type) {
         return Stream.concat(Stream.of(outerTypes), Stream.of(type)).toArray(TypeDescriptor[]::new);
     }
 
     private MethodSpec describeMismatchSafelyMethod(final MatcherBaseDescriptor type) {
         return MethodSpec.methodBuilder("describeMismatchSafely")
                 .addAnnotation(Override.class)
-                .addParameter(getClassNameFor(type.getBase()), PARAMETER_NAME_ITEM, Modifier.FINAL)
-                .addStatement("$L.describeMismatch($L, $L)", INNER_MATCHER_FIELD_NAME, PARAMETER_NAME_ITEM, PARAMETER_NAME_DESCRIPTION)
+                .addParameter(getClassNameFor(type.getBase()),
+                        PARAMETER_NAME_ITEM,
+                        Modifier.FINAL)
+                .addStatement("$L.describeMismatch($L, $L)",
+                        INNER_MATCHER_FIELD_NAME,
+                        PARAMETER_NAME_ITEM,
+                        PARAMETER_NAME_DESCRIPTION)
                 .addParameter(Description.class,
                         PARAMETER_NAME_DESCRIPTION, Modifier.FINAL)
                 .addModifiers(Modifier.PROTECTED).build();
@@ -179,7 +198,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                         matcherNameFrom(descriptor)) :
                 ClassName.get(descriptor.getBase().getPackageName(),
                         matcherNameFrom(outerTypes[0]),
-                        asArray(Stream.of(Arrays.copyOfRange(outerTypes, 1, outerTypes.length))
+                        concat(Stream.of(Arrays.copyOfRange(outerTypes, 1, outerTypes.length))
                                         .map(this::matcherNameFrom)
                                         .toArray(String[]::new),
                                 matcherNameFrom(descriptor)));
@@ -193,9 +212,11 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private MethodSpec constructor(final MatcherBaseDescriptor descriptor) {
         final TypeDescriptor base = descriptor.getBase();
         return MethodSpec.constructorBuilder()
-                .addStatement("$L = new BeanPropertyMatcher<$T>($T.class)", INNER_MATCHER_FIELD_NAME, getClassNameFor(base), getClassNameFor(base))
-                .addModifiers(
-                        Modifier.PUBLIC)
+                .addStatement("$L = new BeanPropertyMatcher<$T>($T.class)",
+                        INNER_MATCHER_FIELD_NAME,
+                        getClassNameFor(base),
+                        getClassNameFor(base))
+                .addModifiers(Modifier.PUBLIC)
                 .build();
     }
 
