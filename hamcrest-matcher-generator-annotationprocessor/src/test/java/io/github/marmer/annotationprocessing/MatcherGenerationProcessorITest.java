@@ -72,7 +72,7 @@ class MatcherGenerationProcessorITest {
                 "            return \"an inner pojo property value\";\n" +
                 "        }\n" +
                 "        \n" +
-                "        public interface InnerInnerStaticType{\n" +
+                "        public static class InnerInnerStaticPojo{\n" +
                 "        }\n" +
                 "    }\n" +
                 "}");
@@ -200,45 +200,43 @@ class MatcherGenerationProcessorITest {
                 "        public static InnerStaticPojoMatcher isInnerStaticPojo() {\n" +
                 "            return new InnerStaticPojoMatcher();\n" +
                 "        }\n" +
-                "\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"missingValue\")\n" +
-                "        public static class InnerInnerStaticTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType> {\n" +
-                "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType> beanPropertyMatcher;\n" +
+                "        public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {\n" +
+                "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
-                "            public InnerInnerStaticTypeMatcher() {\n" +
-                "                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType>(SimplePojo.InnerStaticPojo.InnerInnerStaticType.class);\n" +
+                "            public InnerInnerStaticPojoMatcher() {\n" +
+                "                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class);\n" +
                 "            }\n" +
                 "\n" +
-                "            public InnerInnerStaticTypeMatcher withClass(final Matcher<?> matcher) {\n" +
+                "            public InnerInnerStaticPojoMatcher withClass(final Matcher<?> matcher) {\n" +
                 "                beanPropertyMatcher.with(\"class\", matcher);\n" +
                 "                return this;\n" +
                 "            }\n" +
                 "\n" +
-                "            public InnerInnerStaticTypeMatcher withClass(final Class value) {\n" +
+                "            public InnerInnerStaticPojoMatcher withClass(final Class value) {\n" +
                 "                beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
                 "                return this;\n" +
                 "            }\n" +
-                "            \n" +
+                "\n" +
                 "            @Override\n" +
                 "            public void describeTo(final Description description) {\n" +
                 "                beanPropertyMatcher.describeTo(description);\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected boolean matchesSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticType item) {\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo item) {\n" +
                 "                return beanPropertyMatcher.matches(item);\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticType item, final Description description) {\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo item, final Description description) {\n" +
                 "                beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "            }\n" +
                 "\n" +
-                "            public static InnerInnerStaticTypeMatcher isInnerStaticPojo() {\n" +
-                "                return new InnerInnerStaticTypeMatcher();\n" +
+                "            public static InnerInnerStaticPojoMatcher isInnerStaticPojo() {\n" +
+                "                return new InnerInnerStaticPojoMatcher();\n" +
                 "            }\n" +
                 "        }\n" +
-                "\n" +
                 "    }\n" +
                 "}"
         );
@@ -545,6 +543,7 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
     // TODO: marmer 14.02.2019 handle non static inner classes
     // TODO: marmer 14.02.2019 handle inner inner classes
+    // TODO: marmer 14.02.2019 handle inner inner interfaces and enums
     // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 handle (override) existing matcher files
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
