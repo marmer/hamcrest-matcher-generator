@@ -70,7 +70,10 @@ class MatcherGenerationProcessorITest {
                 "    public static class InnerStaticPojo{\n" +
                 "        public String getInnerStaticPojoProperty(){\n" +
                 "            return \"an inner pojo property value\";\n" +
-                "        }        \n" +
+                "        }\n" +
+                "        \n" +
+                "        public interface InnerInnerStaticType{\n" +
+                "        }\n" +
                 "    }\n" +
                 "}");
 
@@ -197,6 +200,45 @@ class MatcherGenerationProcessorITest {
                 "        public static InnerStaticPojoMatcher isInnerStaticPojo() {\n" +
                 "            return new InnerStaticPojoMatcher();\n" +
                 "        }\n" +
+                "\n" +
+                "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"missingValue\")\n" +
+                "        public static class InnerInnerStaticTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType> {\n" +
+                "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType> beanPropertyMatcher;\n" +
+                "\n" +
+                "            public InnerInnerStaticTypeMatcher() {\n" +
+                "                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticType>(SimplePojo.InnerStaticPojo.InnerInnerStaticType.class);\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerInnerStaticTypeMatcher withClass(final Matcher<?> matcher) {\n" +
+                "                beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "                return this;\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerInnerStaticTypeMatcher withClass(final Class value) {\n" +
+                "                beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "                return this;\n" +
+                "            }\n" +
+                "            \n" +
+                "            @Override\n" +
+                "            public void describeTo(final Description description) {\n" +
+                "                beanPropertyMatcher.describeTo(description);\n" +
+                "            }\n" +
+                "\n" +
+                "            @Override\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticType item) {\n" +
+                "                return beanPropertyMatcher.matches(item);\n" +
+                "            }\n" +
+                "\n" +
+                "            @Override\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticType item, final Description description) {\n" +
+                "                beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "            }\n" +
+                "\n" +
+                "            public static InnerInnerStaticTypeMatcher isInnerStaticPojo() {\n" +
+                "                return new InnerInnerStaticTypeMatcher();\n" +
+                "            }\n" +
+                "        }\n" +
+                "\n" +
                 "    }\n" +
                 "}"
         );
