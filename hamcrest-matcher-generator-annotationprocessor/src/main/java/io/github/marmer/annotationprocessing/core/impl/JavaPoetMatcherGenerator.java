@@ -138,17 +138,13 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
 
     private ClassName getClassNameFor(final TypeDescriptor base) {
         final List<String> parentNames = base.getParentNames();
-        if (base.isPrimitive()) {
-            return ClassName.get("", base.getTypeName());
-        } else {
             if (parentNames.isEmpty()) {
-                return ClassName.get(base.getPackageName(), base.getTypeName());
+                return ClassName.get(base.isPrimitive() ? "" : base.getPackageName(), base.getTypeName());
             } else {
                 return ClassName.get(base.getPackageName(),
                                     parentNames.get(0),
                                     asArray(parentNames.subList(1, parentNames.size()).toArray(new String[parentNames.size() - 1]), base.getTypeName()));
             }
-        }
     }
 
     private String[] asArray(final String[] outerTypes, final String type) {
