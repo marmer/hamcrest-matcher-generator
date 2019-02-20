@@ -542,12 +542,12 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
     // TODO: marmer 14.02.2019 handle non static inner classes
-    // TODO: marmer 14.02.2019 handle inner inner classes
-    // TODO: marmer 14.02.2019 handle inner inner interfaces and enums
+    // TODO: marmer 14.02.2019 handle inner interfaces and enums
+    // TODO: marmer 20.02.2019 int properties in interfaces
     // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 handle (override) existing matcher files
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
-    // TODO: marmer 18.02.2019 what if configuraion points to inner class only?
+    // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
 }
