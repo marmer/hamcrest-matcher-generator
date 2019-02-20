@@ -200,7 +200,7 @@ class MatcherGenerationProcessorITest {
                 "        public static InnerStaticPojoMatcher isInnerStaticPojo() {\n" +
                 "            return new InnerStaticPojoMatcher();\n" +
                 "        }\n" +
-                "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"missingValue\")\n" +
+                "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "        public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -233,7 +233,7 @@ class MatcherGenerationProcessorITest {
                 "                beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "            }\n" +
                 "\n" +
-                "            public static InnerInnerStaticPojoMatcher isInnerStaticPojo() {\n" +
+                "            public static InnerInnerStaticPojoMatcher isInnerInnerStaticPojo() {\n" +
                 "                return new InnerInnerStaticPojoMatcher();\n" +
                 "            }\n" +
                 "        }\n" +
