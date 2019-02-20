@@ -12,6 +12,10 @@ public class SomePojo extends ParentPojo {
     }
 
     public static class InnerClass {
+        private InnerClass() {
+            // to hide the default constructor
+        }
+
         public static class InnerInnerPojo {
             private final String someField;
 
@@ -22,6 +26,18 @@ public class SomePojo extends ParentPojo {
             public String getSomeField() {
                 return someField;
             }
+        }
+    }
+
+    public static class NonStaticInnerClass {
+        private final String someField;
+
+        public NonStaticInnerClass(final String someField) {
+            this.someField = someField;
+        }
+
+        public String getSomeField() {
+            return someField;
         }
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static foo.bar.sample.model.ParentPojoMatcher.isParentPojo;
 import static foo.bar.sample.model.SomePojoMatcher.InnerClassMatcher.InnerInnerPojoMatcher.isInnerInnerPojo;
+import static foo.bar.sample.model.SomePojoMatcher.NonStaticInnerClassMatcher.isNonStaticInnerClass;
 import static foo.bar.sample.model.SomePojoMatcher.isSomePojo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -60,4 +61,19 @@ class SomePojoTest {
         assertThat(innerInnerPojo, isInnerInnerPojo()
                 .withSomeField("someValue"));
     }
+
+    @Test
+    @DisplayName("Matcher for non static innerclasses should work")
+    void testMatchers_MatcherForNonStaticInnerclassesShouldWork()
+            throws Exception {
+        // Preparation
+        final SomePojo.NonStaticInnerClass nonStaticInnerClass = new SomePojo.NonStaticInnerClass("42");
+
+        // Execution
+
+        // Assertion
+        assertThat(nonStaticInnerClass, isNonStaticInnerClass()
+                .withSomeField("someValue"));
+    }
+
 }
