@@ -6,9 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-
 import javax.tools.JavaFileObject;
+import java.time.LocalDate;
 
 import static java.util.Arrays.asList;
 
@@ -319,6 +318,127 @@ class MatcherGenerationProcessorITest {
                 "    \n" +
                 "    public static SimplePojoInterfaceMatcher isSimplePojoInterface() {\n" +
                 "        return new SimplePojoInterfaceMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
+    @Test
+    @DisplayName("Matcher should be generated for inner non static classes")
+    void testGenerate_MatcherShouldBeGeneratedForInnerNonStaticClasses()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SomeClass\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomeClass", "package some.other.pck;\n" +
+                "\n" +
+                "public class SomeClass{\n" +
+                "    public class SomeNonStaticInnerClass{\n" +
+                "        \n" +
+                "    }\n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "import javax.annotation.Generated;\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {\n" +
+                "    private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SomeClassMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomeClassMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomeClassMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SomeClass item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SomeClass item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "    \n" +
+                "    public static SomeClassMatcher isSomeClass() {\n" +
+                "        return new SomeClassMatcher();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {\n" +
+                "        private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;\n" +
+                "\n" +
+                "        public SomeNonStaticInnerClassMatcher() {\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class);\n" +
+                "        }\n" +
+                "\n" +
+                "        public SomeNonStaticInnerClassMatcher withClass(final Matcher<?> matcher) {\n" +
+                "            beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
+                "        public SomeNonStaticInnerClassMatcher withClass(final Class value) {\n" +
+                "            beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        public void describeTo(final Description description) {\n" +
+                "            beanPropertyMatcher.describeTo(description);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected boolean matchesSafely(final SomeClass.SomeNonStaticInnerClass item) {\n" +
+                "            return beanPropertyMatcher.matches(item);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected void describeMismatchSafely(final SomeClass.SomeNonStaticInnerClass item, final Description description) {\n" +
+                "            beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "        }\n" +
+                "\n" +
+                "        public static SomeNonStaticInnerClassMatcher isSomeNonStaticInnerClass() {\n" +
+                "            return new SomeNonStaticInnerClassMatcher();\n" +
+                "        }\n" +
                 "    }\n" +
                 "}");
 
