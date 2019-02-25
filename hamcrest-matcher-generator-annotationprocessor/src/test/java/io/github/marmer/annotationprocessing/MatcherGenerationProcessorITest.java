@@ -456,8 +456,8 @@ class MatcherGenerationProcessorITest {
     }
 
     @Test
-    @DisplayName("Generated Matchers should work for all primitives")
-    void testGenerate_GeneratedMatchersShouldWorkForAllPrimitives()
+    @DisplayName("Generated Matchers should work for inner interfaces")
+    void testGenerate_GeneratedMatchersShouldWorkForInnerInterfaces()
             throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
@@ -474,21 +474,6 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "public class SomePojo{\n" +
                 "    public interface InnerInterface {\n" +
-                "        short getShortProperty();\n" +
-                "\n" +
-                "        int getIntProperty();\n" +
-                "\n" +
-                "        long getLongProperty();\n" +
-                "\n" +
-                "        byte getByteProperty();\n" +
-                "\n" +
-                "        char getCharProperty();\n" +
-                "\n" +
-                "        float getFloatProperty();\n" +
-                "\n" +
-                "        double getDoubleProperty();\n" +
-                "\n" +
-                "        boolean isBooleanProperty();\n" +
                 "    }\n" +
                 "}");
 
@@ -542,21 +527,11 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
-                "    public class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
+                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
                 "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerInterfaceMatcher() {\n" +
                 "            beanPropertyMatcher = new BeanPropertyMatcher<SomePojo.InnerInterface>(SomePojo.InnerInterface.class);\n" +
-                "        }\n" +
-                "\n" +
-                "        public InnerInterfaceMatcher withBooleanProperty(final Matcher<?> matcher) {\n" +
-                "            beanPropertyMatcher.with(\"booleanProperty\", matcher);\n" +
-                "            return this;\n" +
-                "        }\n" +
-                "\n" +
-                "        public InnerInterfaceMatcher withBooleanProperty(final boolean value) {\n" +
-                "            beanPropertyMatcher.with(\"booleanProperty\", Matchers.equalTo(value));\n" +
-                "            return this;\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
