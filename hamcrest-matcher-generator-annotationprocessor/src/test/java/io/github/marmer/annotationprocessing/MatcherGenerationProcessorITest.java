@@ -472,15 +472,24 @@ class MatcherGenerationProcessorITest {
 
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public interface SomePojo{\n" +
-                "    short getShortProperty();\n" +
-                "    int getIntProperty();\n" +
-                "    long getLongProperty();\n" +
-                "    byte getByteProperty();\n" +
-                "    char getCharProperty();\n" +
-                "    float getFloatProperty();\n" +
-                "    double getDoubleProperty();\n" +
-                "    boolean isBooleanProperty();\n" +
+                "public class SomePojo{\n" +
+                "    public interface InnerInterface {\n" +
+                "        short getShortProperty();\n" +
+                "\n" +
+                "        int getIntProperty();\n" +
+                "\n" +
+                "        long getLongProperty();\n" +
+                "\n" +
+                "        byte getByteProperty();\n" +
+                "\n" +
+                "        char getCharProperty();\n" +
+                "\n" +
+                "        float getFloatProperty();\n" +
+                "\n" +
+                "        double getDoubleProperty();\n" +
+                "\n" +
+                "        boolean isBooleanProperty();\n" +
+                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -503,83 +512,13 @@ class MatcherGenerationProcessorITest {
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);\n" +
                 "    }\n" +
                 "\n" +
-                "    public SomePojoMatcher withShortProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"shortProperty\", matcher);\n" +
+                "    public SomePojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SomePojoMatcher withShortProperty(final short value) {\n" +
-                "        beanPropertyMatcher.with(\"shortProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withIntProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"intProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withIntProperty(final int value) {\n" +
-                "        beanPropertyMatcher.with(\"intProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withLongProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"longProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withLongProperty(final long value) {\n" +
-                "        beanPropertyMatcher.with(\"longProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withByteProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"byteProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withByteProperty(final byte value) {\n" +
-                "        beanPropertyMatcher.with(\"byteProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withCharProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"charProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withCharProperty(final char value) {\n" +
-                "        beanPropertyMatcher.with(\"charProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withFloatProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"floatProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withFloatProperty(final float value) {\n" +
-                "        beanPropertyMatcher.with(\"floatProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withDoubleProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"doubleProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withDoubleProperty(final double value) {\n" +
-                "        beanPropertyMatcher.with(\"doubleProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withBooleanProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"booleanProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withBooleanProperty(final boolean value) {\n" +
-                "        beanPropertyMatcher.with(\"booleanProperty\", Matchers.equalTo(value));\n" +
+                "    public SomePojoMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -600,6 +539,44 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public static SomePojoMatcher isSomePojo() {\n" +
                 "        return new SomePojoMatcher();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    public class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
+                "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
+                "\n" +
+                "        public InnerInterfaceMatcher() {\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SomePojo.InnerInterface>(SomePojo.InnerInterface.class);\n" +
+                "        }\n" +
+                "\n" +
+                "        public InnerInterfaceMatcher withBooleanProperty(final Matcher<?> matcher) {\n" +
+                "            beanPropertyMatcher.with(\"booleanProperty\", matcher);\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
+                "        public InnerInterfaceMatcher withBooleanProperty(final boolean value) {\n" +
+                "            beanPropertyMatcher.with(\"booleanProperty\", Matchers.equalTo(value));\n" +
+                "            return this;\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        public void describeTo(final Description description) {\n" +
+                "            beanPropertyMatcher.describeTo(description);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected boolean matchesSafely(final SomePojo.InnerInterface item) {\n" +
+                "            return beanPropertyMatcher.matches(item);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected void describeMismatchSafely(final SomePojo.InnerInterface item, final Description description) {\n" +
+                "            beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "        }\n" +
+                "\n" +
+                "        public static InnerInterfaceMatcher isInnerInterface() {\n" +
+                "            return new InnerInterfaceMatcher();\n" +
+                "        }\n" +
                 "    }\n" +
                 "}");
 
