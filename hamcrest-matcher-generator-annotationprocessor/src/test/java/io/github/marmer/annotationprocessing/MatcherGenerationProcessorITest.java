@@ -472,32 +472,15 @@ class MatcherGenerationProcessorITest {
 
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public class SomePojo{\n" +
-                "    public short getShortProperty(){\n" +
-                "        return 4;\n" +
-                "    }\n" +
-                "    public int getIntProperty(){\n" +
-                "        return 42;\n" +
-                "    }\n" +
-                "    public long getLongProperty(){\n" +
-                "        return 4422;\n" +
-                "    }\n" +
-                "    public byte getByteProperty(){\n" +
-                "        return 0xE;\n" +
-                "    }\n" +
-                "    public char getCharProperty(){\n" +
-                "        return 'A';\n" +
-                "    }\n" +
-                "    public float getFloatProperty(){\n" +
-                "        return 4.2f;\n" +
-                "    }\n" +
-                "    public double getDoubleProperty(){\n" +
-                "        return 3.14;\n" +
-                "    }\n" +
-                "    \n" +
-                "    public boolean isBooleanProperty(){\n" +
-                "        return true;\n" +
-                "    }\n" +
+                "public interface SomePojo{\n" +
+                "    short getShortProperty();\n" +
+                "    int getIntProperty();\n" +
+                "    long getLongProperty();\n" +
+                "    byte getByteProperty();\n" +
+                "    char getCharProperty();\n" +
+                "    float getFloatProperty();\n" +
+                "    double getDoubleProperty();\n" +
+                "    boolean isBooleanProperty();\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -597,16 +580,6 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SomePojoMatcher withBooleanProperty(final boolean value) {\n" +
                 "        beanPropertyMatcher.with(\"booleanProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withClass(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SomePojoMatcher withClass(final Class value) {\n" +
-                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
