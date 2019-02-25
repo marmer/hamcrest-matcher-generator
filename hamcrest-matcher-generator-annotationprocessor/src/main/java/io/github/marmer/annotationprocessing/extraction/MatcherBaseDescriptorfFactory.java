@@ -79,10 +79,14 @@ public class MatcherBaseDescriptorfFactory {
     private List<MatcherBaseDescriptor> innerMatchersFor(final ProcessingEnvironment processingEnv, final TypeElement type, final TypeElement... outerTypes) {
         return type.getEnclosedElements()
                 .stream()
-                // TODO: marmer 18.02.2019 Should work for interfaces as well
-                .filter(enclosedElement -> enclosedElement.getKind().isClass())
+                .filter(this::isType)
                 .map(innerType -> typeDescriptorFor(processingEnv, (TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
+    }
+
+    private boolean isType(final Element element) {
+        final ElementKind kind = element.getKind();
+        return kind.isClass() || kind.isInterface();
     }
 
     private TypeElement[] asArray(final TypeElement[] outerTypes, final TypeElement type) {
