@@ -7,13 +7,21 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.*;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * Factory to create some matcher descriptions.
@@ -55,14 +63,13 @@ public class MatcherBaseDescriptorfFactory {
     private MatcherBaseDescriptor typeDescriptorFor(final ProcessingEnvironment processingEnv, final TypeElement type, final TypeElement... outerTypes) {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
-                        .packageName(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString())
-                        .typeName(simpleNameOf(type))
+                        .packageName(extractPackageName(processingEnv, type.asType()))
+                        .typeName(extractTypename(processingEnv, type.asType()))
                         .parentNames(Stream.of(outerTypes)
-                                .map(TypeElement::getSimpleName)
-                                .map(Objects::toString)
+                                .map(typeElement -> extractTypename(processingEnv, typeElement.asType()))
                                 .collect(Collectors.toList()))
                         .fullQualifiedName(type.getQualifiedName().toString())
-                        .primitive(false)
+                        .primitive(isPrimitive(type.asType()))
                         .build())
                 .properties(propertiesFor(processingEnv, type))
                 .innerMatchers(innerMatchersFor(processingEnv, type, outerTypes))
