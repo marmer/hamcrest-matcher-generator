@@ -6,8 +6,9 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.JavaFileObject;
 import java.time.LocalDate;
+
+import javax.tools.JavaFileObject;
 
 import static java.util.Arrays.asList;
 
@@ -455,6 +456,193 @@ class MatcherGenerationProcessorITest {
     }
 
     @Test
+    @DisplayName("Generated Matchers should work for all primitives")
+    void testGenerate_GeneratedMatchersShouldWorkForAllPrimitives()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SomeClass\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomePojo", "package some.other.pck;\n" +
+                "\n" +
+                "public class SomePojo{\n" +
+                "    public short getShortProperty(){\n" +
+                "        return 4;\n" +
+                "    }\n" +
+                "    public int getIntProperty(){\n" +
+                "        return 42;\n" +
+                "    }\n" +
+                "    public long getLongProperty(){\n" +
+                "        return 4422;\n" +
+                "    }\n" +
+                "    public byte getByteProperty(){\n" +
+                "        return 0xE;\n" +
+                "    }\n" +
+                "    public char getCharProperty(){\n" +
+                "        return 'A';\n" +
+                "    }\n" +
+                "    public float getFloatProperty(){\n" +
+                "        return 4.2f;\n" +
+                "    }\n" +
+                "    public double getDoubleProperty(){\n" +
+                "        return 3.14;\n" +
+                "    }\n" +
+                "    \n" +
+                "    public boolean getBooleanProperty(){\n" +
+                "        return true;\n" +
+                "    }\n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {\n" +
+                "    private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SomePojoMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withShortProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"shortProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withShortProperty(final short value) {\n" +
+                "        beanPropertyMatcher.with(\"shortProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withIntProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"intProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withIntProperty(final int value) {\n" +
+                "        beanPropertyMatcher.with(\"intProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withLongProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"longProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withLongProperty(final long value) {\n" +
+                "        beanPropertyMatcher.with(\"longProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withByteProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"byteProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withByteProperty(final byte value) {\n" +
+                "        beanPropertyMatcher.with(\"byteProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withCharProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"charProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withCharProperty(final char value) {\n" +
+                "        beanPropertyMatcher.with(\"charProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withFloatProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"floatProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withFloatProperty(final float value) {\n" +
+                "        beanPropertyMatcher.with(\"floatProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withDoubleProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"doubleProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withDoubleProperty(final double value) {\n" +
+                "        beanPropertyMatcher.with(\"doubleProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withBooleanProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"booleanProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withBooleanProperty(final boolean value) {\n" +
+                "        beanPropertyMatcher.with(\"booleanProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SomePojoMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SomePojo item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SomePojo item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static SomePojoMatcher isSomePojo() {\n" +
+                "        return new SomePojoMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
+    @Test
     @DisplayName("Matcher should be generated for Enums with property methods")
     void testGenerate_MatcherShouldBeGeneratedForEnumsWithPropertyMethods()
             throws Exception {
@@ -670,4 +858,5 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
+    // TODO: marmer 21.02.2019 test generation works for arrays
 }
