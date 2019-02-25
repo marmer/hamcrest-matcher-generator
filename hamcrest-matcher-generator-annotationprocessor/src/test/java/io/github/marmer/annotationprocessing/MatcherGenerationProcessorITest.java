@@ -6,9 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-
 import javax.tools.JavaFileObject;
+import java.time.LocalDate;
 
 import static java.util.Arrays.asList;
 
@@ -44,17 +43,21 @@ class MatcherGenerationProcessorITest {
                 "        return true;\n" +
                 "    }\n" +
                 "\n" +
+                "    public String[] getSomeStringArray(){\n" +
+                "        return new String[0];\n" +
+                "    }\n" +
+                "\n" +
                 "    public Boolean getSomeNonePrimitiveBooleanProperty(){\n" +
                 "        return false;\n" +
                 "    }\n" +
-                "    \n" +
+                "\n" +
                 "    public String someNonPropertyMethod(){\n" +
                 "        return \">o.O<\";\n" +
                 "    }\n" +
-                "    \n" +
+                "\n" +
                 "    public void getPropertyLikeVoidMethod(){\n" +
                 "    }\n" +
-                "    \n" +
+                "\n" +
                 "    public String getSomePropertyLikeMethodWithParameters(int param){\n" +
                 "        return String.valueOf(param);\n" +
                 "    }\n" +
@@ -112,6 +115,16 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoMatcher withSomePrimitiveBooleanProperty(final boolean value) {\n" +
                 "        beanPropertyMatcher.with(\"somePrimitiveBooleanProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeStringArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someStringArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeStringArray(final String[] value) {\n" +
+                "        beanPropertyMatcher.with(\"someStringArray\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -780,5 +793,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
-    // TODO: marmer 21.02.2019 test generation works for arrays
+    // TODO: marmer 25.02.2019 arrays of inner types
+    // TODO: marmer 25.02.2019 multidimensional arrays
 }

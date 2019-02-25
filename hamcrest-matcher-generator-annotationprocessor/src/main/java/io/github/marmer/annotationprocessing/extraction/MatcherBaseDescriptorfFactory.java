@@ -7,21 +7,17 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.*;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 
 /**
  * Factory to create some matcher descriptions.
@@ -177,12 +173,19 @@ public class MatcherBaseDescriptorfFactory {
                 .build();
     }
 
-    private String extractPackageName(final ProcessingEnvironment processingEnv, final TypeMirror returnType) {
-        return isPrimitive(returnType) ? null : processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(returnType)).toString();
+    private String extractPackageName(final ProcessingEnvironment processingEnv, final TypeMirror type) {
+        if (type instanceof ArrayType) {
+            return extractPackageName(processingEnv, ((ArrayType) type)
+                    .getComponentType());
+        }
+        return isPrimitive(type) ? null : processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(type)).toString();
     }
 
-    private String extractTypename(final ProcessingEnvironment processingEnv, final TypeMirror returnType) {
-        return isPrimitive(returnType) ? returnType.toString() : simpleNameOf(processingEnv.getTypeUtils().asElement(returnType));
+    private String extractTypename(final ProcessingEnvironment processingEnv, final TypeMirror type) {
+        if (type instanceof ArrayType) {
+            return type.toString().replaceFirst(extractPackageName(processingEnv, type) + ".", "");
+        }
+        return isPrimitive(type) ? type.toString() : simpleNameOf(processingEnv.getTypeUtils().asElement(type));
     }
 
     private boolean isPrimitive(final TypeMirror returnType) {
