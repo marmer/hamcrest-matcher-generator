@@ -105,7 +105,7 @@ public class MatcherBaseDescriptorfFactory {
 
     private TypeElement getSupertype(final ProcessingEnvironment processingEnv, final TypeElement type) {
         final TypeMirror superclass = type.getSuperclass();
-        return superclass == null ?
+        return superclass.getKind().equals(TypeKind.NONE) ?
                 null :
                 processingEnv.getElementUtils().getTypeElement(superclass.toString());
     }
@@ -203,7 +203,4 @@ public class MatcherBaseDescriptorfFactory {
     private boolean isPrimitiveBoolean(final TypeMirror returnType) {
         return returnType.getKind().isPrimitive() && "boolean".equals(returnType.toString());
     }
-
-    // TODO: marmer 15.02.2019 create another module which uses some of those generated matchers to know whether they really work (or even exist^^)
-
 }
