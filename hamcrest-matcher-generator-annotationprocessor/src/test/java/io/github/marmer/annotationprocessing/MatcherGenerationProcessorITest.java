@@ -465,7 +465,7 @@ class MatcherGenerationProcessorITest {
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
                 "\n" +
-                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SomeClass\"))\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SomePojo\"))\n" +
                 "public final class SomeConfiguration{\n" +
                 "    \n" +
                 "}");
