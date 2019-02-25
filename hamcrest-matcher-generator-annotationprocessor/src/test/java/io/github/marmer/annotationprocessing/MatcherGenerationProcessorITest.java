@@ -495,7 +495,7 @@ class MatcherGenerationProcessorITest {
                 "        return 3.14;\n" +
                 "    }\n" +
                 "    \n" +
-                "    public boolean getBooleanProperty(){\n" +
+                "    public boolean isBooleanProperty(){\n" +
                 "        return true;\n" +
                 "    }\n" +
                 "}");
