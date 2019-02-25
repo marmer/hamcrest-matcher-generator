@@ -774,9 +774,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 NonPublicModifiers
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
-    // TODO: marmer 14.02.2019 handle non static inner classes
-    // TODO: marmer 14.02.2019 handle inner interfaces and enums
-    // TODO: marmer 20.02.2019 int properties in inner interfaces
     // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 handle (override) existing matcher files
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
