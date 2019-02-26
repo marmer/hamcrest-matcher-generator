@@ -795,4 +795,5 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
     // TODO: marmer 25.02.2019 arrays of inner types
     // TODO: marmer 25.02.2019 multidimensional arrays
+    // TODO: marmer 26.02.2019 Split complex tests into multiple
 }
