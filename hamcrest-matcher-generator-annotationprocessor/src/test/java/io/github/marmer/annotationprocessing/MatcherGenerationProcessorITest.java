@@ -43,10 +43,6 @@ class MatcherGenerationProcessorITest {
                 "        return true;\n" +
                 "    }\n" +
                 "\n" +
-                "    public String[] getSomeStringArray(){\n" +
-                "        return new String[0];\n" +
-                "    }\n" +
-                "\n" +
                 "    public Boolean getSomeNonePrimitiveBooleanProperty(){\n" +
                 "        return false;\n" +
                 "    }\n" +
@@ -115,16 +111,6 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoMatcher withSomePrimitiveBooleanProperty(final boolean value) {\n" +
                 "        beanPropertyMatcher.with(\"somePrimitiveBooleanProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SimplePojoMatcher withSomeStringArray(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"someStringArray\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SimplePojoMatcher withSomeStringArray(final String[] value) {\n" +
-                "        beanPropertyMatcher.with(\"someStringArray\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -339,6 +325,118 @@ class MatcherGenerationProcessorITest {
         Truth.assert_()
                 .about(JavaSourcesSubjectFactory.javaSources())
                 .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
+    @Test
+    @DisplayName("Matcher should be generated for arrays")
+    void testGenerate_MatcherShouldBeGeneratedForArrays()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SimplePojoInterface\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojoInterface", "package some.other.pck;\n" +
+                "\n" +
+                "public interface SimplePojoInterface{\n" +
+                "     String[] getSomeStringArray();\n" +
+                "     String[][] getSomeMultidimensionalStringArray();\n" +
+                "    AnotherComplexType.SomeInnerType[] getSomeInnerTypeArray();\n" +
+                "}");
+        final JavaFileObject javaFileObjectWithComplexInnerTypes = JavaFileObjects.forSourceLines("some.other.pck.AnotherComplexType", "package some.other.pck;\n" +
+                "\n" +
+                "public interface AnotherComplexType{\n" +
+                "    interface SomeInnerType{\n" +
+                "        String getSomeStringProperty();\n" +
+                "    }\n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someStringArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeStringArray(final String[] value) {\n" +
+                "        beanPropertyMatcher.with(\"someStringArray\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someMultidimensionalStringArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final String[][] value) {\n" +
+                "        beanPropertyMatcher.with(\"someMultidimensionalStringArray\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someInnerTypeArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final AnotherComplexType.SomeInnerType[] value) {\n" +
+                "        beanPropertyMatcher.with(\"someInnerTypeArray\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojoInterface item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojoInterface item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static SimplePojoInterfaceMatcher isSimplePojoInterface() {\n" +
+                "        return new SimplePojoInterfaceMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject, javaFileObjectWithComplexInnerTypes))
                 .processedWith(new MatcherGenerationProcessor())
 
                 // Assertion
@@ -793,7 +891,5 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
-    // TODO: marmer 25.02.2019 arrays of inner types
-    // TODO: marmer 25.02.2019 multidimensional arrays
     // TODO: marmer 26.02.2019 Split complex tests into multiple
 }
