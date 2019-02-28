@@ -154,6 +154,13 @@ The generation happens at phase generate-test-sources by default because it need
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
+### 4.0.0
+* Projectrestart
+* Generation triggered by an annotation processor to run independent of any build tool
+* Packages of matchers for inner classes are generated as inner matchers
+* Fixed: matchers are not generated for non public types
+* Fixed: matcher methods are not generated for non public properties
+
 ### 3.2.0
 * Naming Strategy for classnames instead of package names implemented (PARENT)
 
