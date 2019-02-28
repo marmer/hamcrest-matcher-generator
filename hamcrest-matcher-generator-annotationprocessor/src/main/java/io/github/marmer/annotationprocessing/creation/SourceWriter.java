@@ -9,8 +9,6 @@ import java.io.Writer;
 
 public class SourceWriter {
     public void create(final Filer filer, final MatcherSourceDescriptor matcherSourceDescriptor) {
-        // TODO: marmer 31.01.2019 implement me.
-
         try {
             final JavaFileObject sourceFile = filer.createSourceFile(matcherSourceDescriptor.getType().getPackageName() + "." + matcherSourceDescriptor.getType().getTypeName());
             try (final Writer writer = sourceFile

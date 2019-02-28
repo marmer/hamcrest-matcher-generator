@@ -986,8 +986,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
-    // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
-    // TODO: marmer 26.02.2019 Split complex tests into multiple
-    // TODO: marmer 28.02.2019 avoid passing the environment in too many methods
     // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
+    // TODO: marmer 28.02.2019 add some "logging"
 }
