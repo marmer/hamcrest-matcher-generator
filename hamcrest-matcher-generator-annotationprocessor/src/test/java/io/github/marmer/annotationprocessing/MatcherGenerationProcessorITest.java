@@ -3,7 +3,6 @@ package io.github.marmer.annotationprocessing;
 import com.google.common.truth.Truth;
 import com.google.testing.compile.JavaFileObjects;
 import com.google.testing.compile.JavaSourcesSubjectFactory;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -879,8 +878,6 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
-    // TODO: marmer 28.02.2019 Temporary ignored for some experiments
-    @Disabled("Temporary ignored for some experiments")
     @Test
     @DisplayName("Matcher and matcher methods should not be generated for non public types and properties")
     void testGenerate_MatcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties()
@@ -983,7 +980,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
     // TODO: marmer 14.02.2019 Handle Property of type "org.hamcrest.Matcher"
-    // TODO: marmer 18.02.2019 NonPublicModifiers
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
     // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
@@ -993,4 +989,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 19.02.2019 handle anonymous types (if needed somehow)
     // TODO: marmer 26.02.2019 Split complex tests into multiple
+    // TODO: marmer 28.02.2019 avoid passing the environment in too many methods
+    // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
 }

@@ -52,8 +52,13 @@ public class MatcherBaseDescriptorfFactory {
         // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
                 .map(processingEnv.getElementUtils()::getTypeElement)
+                .filter(this::isPublic)
                 .map(typeElement -> typeDescriptorFor(processingEnv, typeElement))
                 .collect(Collectors.toSet());
+    }
+
+    private boolean isPublic(final Element typeElement) {
+        return typeElement.getModifiers().contains(Modifier.PUBLIC);
     }
 
     private MatcherBaseDescriptor typeDescriptorFor(final ProcessingEnvironment processingEnv, final TypeElement type, final TypeElement... outerTypes) {
@@ -76,6 +81,7 @@ public class MatcherBaseDescriptorfFactory {
         return type.getEnclosedElements()
                 .stream()
                 .filter(this::isType)
+                .filter(this::isPublic)
                 .map(innerType -> typeDescriptorFor(processingEnv, (TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
@@ -111,7 +117,7 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean isPropertyMethod(final Element element) {
-        if (!isMethod(element)) {
+        if (!isMethod(element) || !isPublic(element)) {
             return false;
         }
         if (hasVoidReturnType((ExecutableElement) element) ||
