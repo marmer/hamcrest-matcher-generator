@@ -73,7 +73,7 @@ class SomePojoTest {
 
         // Assertion
         assertThat(nonStaticInnerClass, isNonStaticInnerClass()
-                .withSomeField("someValue"));
+                .withSomeField("42"));
     }
 
 }
