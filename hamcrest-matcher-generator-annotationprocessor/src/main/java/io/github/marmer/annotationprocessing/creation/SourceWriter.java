@@ -8,7 +8,13 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class SourceWriter {
-    public void create(final Filer filer, final MatcherSourceDescriptor matcherSourceDescriptor) {
+    private final Filer filer;
+
+    public SourceWriter(final Filer filer) {
+        this.filer = filer;
+    }
+
+    public void create(final MatcherSourceDescriptor matcherSourceDescriptor) {
         try {
             final JavaFileObject sourceFile = filer.createSourceFile(matcherSourceDescriptor.getType().getPackageName() + "." + matcherSourceDescriptor.getType().getTypeName());
             try (final Writer writer = sourceFile
