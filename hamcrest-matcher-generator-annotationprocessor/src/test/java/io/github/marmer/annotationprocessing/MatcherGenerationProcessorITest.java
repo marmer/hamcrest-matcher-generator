@@ -896,14 +896,14 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo{\n" +
-                "    private String privatePropertyProperty(){\n" +
+                "    private String getPrivatePropertyProperty(){\n" +
                 "        return \"piv\";\n" +
                 "    }\n" +
-                "     String packagePrivatePropertyProperty(){\n" +
+                "     String getPackagePrivatePropertyProperty(){\n" +
                 "        return \"def\";\n" +
                 "    }\n" +
                 "    \n" +
-                "    protected String protectedPropertyProperty(){\n" +
+                "    protected String getProtectedPropertyProperty(){\n" +
                 "        return \"pro\";\n" +
                 "    }\n" +
                 "    private class PrivateClass{\n" +
