@@ -25,17 +25,21 @@ import java.util.stream.Stream;
 public class MatcherBaseDescriptorfFactory {
     private static final String PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX = "is";
     private static final String ANY_PROPERTY_METHOD_PREFIX = "get";
+    private final ProcessingEnvironment processingEnv;
+
+    public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv) {
+        this.processingEnv = processingEnv;
+    }
 
     /**
      * Creates Matcher descriptions.
      *
      * @param configurationsWrapper Configuration for what to create {@link MatcherBaseDescriptor}s for.
-     * @param processingEnv         environment used to find details based on the configurations.
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
-    public Set<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper, final ProcessingEnvironment processingEnv) {
+    public Set<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper) {
         return Stream.of(configurationsWrapper.value())
-                .map(matcherConfiguration -> create(matcherConfiguration, processingEnv))
+                .map(matcherConfiguration -> create(matcherConfiguration))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }
@@ -45,15 +49,14 @@ public class MatcherBaseDescriptorfFactory {
      * Creates Matcher descriptions.
      *
      * @param configuration Configuration for what to create {@link MatcherBaseDescriptor}s for.
-     * @param processingEnv environment used to find details based on the configurations.
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
-    public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration, final ProcessingEnvironment processingEnv) {
+    public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
         // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
                 .map(processingEnv.getElementUtils()::getTypeElement)
                 .filter(this::isPublic)
-                .map(typeElement -> typeDescriptorFor(processingEnv, typeElement))
+                .map(typeElement -> typeDescriptorFor(typeElement))
                 .collect(Collectors.toSet());
     }
 
@@ -61,28 +64,28 @@ public class MatcherBaseDescriptorfFactory {
         return typeElement.getModifiers().contains(Modifier.PUBLIC);
     }
 
-    private MatcherBaseDescriptor typeDescriptorFor(final ProcessingEnvironment processingEnv, final TypeElement type, final TypeElement... outerTypes) {
+    private MatcherBaseDescriptor typeDescriptorFor(final TypeElement type, final TypeElement... outerTypes) {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
-                        .packageName(extractPackageName(processingEnv, type.asType()))
-                        .typeName(extractTypename(processingEnv, type.asType()))
+                        .packageName(extractPackageName(type.asType()))
+                        .typeName(extractTypename(type.asType()))
                         .parentNames(Stream.of(outerTypes)
-                                .map(typeElement -> extractTypename(processingEnv, typeElement.asType()))
+                                .map(typeElement -> extractTypename(typeElement.asType()))
                                 .collect(Collectors.toList()))
                         .fullQualifiedName(type.getQualifiedName().toString())
                         .primitive(isPrimitive(type.asType()))
                         .build())
-                .properties(propertiesFor(processingEnv, type))
-                .innerMatchers(innerMatchersFor(processingEnv, type, outerTypes))
+                .properties(propertiesFor(type))
+                .innerMatchers(innerMatchersFor(type, outerTypes))
                 .build();
     }
 
-    private List<MatcherBaseDescriptor> innerMatchersFor(final ProcessingEnvironment processingEnv, final TypeElement type, final TypeElement... outerTypes) {
+    private List<MatcherBaseDescriptor> innerMatchersFor(final TypeElement type, final TypeElement... outerTypes) {
         return type.getEnclosedElements()
                 .stream()
                 .filter(this::isType)
                 .filter(this::isPublic)
-                .map(innerType -> typeDescriptorFor(processingEnv, (TypeElement) innerType, asArray(outerTypes, type)))
+                .map(innerType -> typeDescriptorFor((TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
 
@@ -95,7 +98,7 @@ public class MatcherBaseDescriptorfFactory {
         return Stream.concat(Stream.of(outerTypes), Stream.of(type)).toArray(TypeElement[]::new);
     }
 
-    private List<PropertyDescriptor> propertiesFor(final ProcessingEnvironment processingEnv, final TypeElement type) {
+    private List<PropertyDescriptor> propertiesFor(final TypeElement type) {
         if (type == null) {
             return Collections.emptyList();
         }
@@ -103,13 +106,13 @@ public class MatcherBaseDescriptorfFactory {
                 type.getEnclosedElements().stream()
                         .filter(this::isPropertyMethod)
                         .map(e -> (ExecutableElement) e)
-                        .map(element -> toPropertyDescriptor(processingEnv, element)),
-                propertiesFor(processingEnv, getSupertype(processingEnv, type)).stream())
+                        .map(element -> toPropertyDescriptor(element)),
+                propertiesFor(getSupertype(type)).stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    private TypeElement getSupertype(final ProcessingEnvironment processingEnv, final TypeElement type) {
+    private TypeElement getSupertype(final TypeElement type) {
         final TypeMirror superclass = type.getSuperclass();
         return superclass.getKind().equals(TypeKind.NONE) ?
                 null :
@@ -165,31 +168,31 @@ public class MatcherBaseDescriptorfFactory {
         return element.getKind().equals(ElementKind.METHOD);
     }
 
-    private PropertyDescriptor toPropertyDescriptor(final ProcessingEnvironment processingEnv, final ExecutableElement element) {
+    private PropertyDescriptor toPropertyDescriptor(final ExecutableElement element) {
         final TypeMirror returnType = element.getReturnType();
 
         return PropertyDescriptor.builder()
                 .property(toPropertyName(element))
                 .returnValue(TypeDescriptor.builder()
-                        .packageName(extractPackageName(processingEnv, returnType))
-                        .typeName(extractTypename(processingEnv, returnType))
+                        .packageName(extractPackageName(returnType))
+                        .typeName(extractTypename(returnType))
                         .fullQualifiedName(returnType.toString())
                         .primitive(isPrimitive(returnType))
                         .build())
                 .build();
     }
 
-    private String extractPackageName(final ProcessingEnvironment processingEnv, final TypeMirror type) {
+    private String extractPackageName(final TypeMirror type) {
         if (type instanceof ArrayType) {
-            return extractPackageName(processingEnv, ((ArrayType) type)
+            return extractPackageName(((ArrayType) type)
                     .getComponentType());
         }
         return isPrimitive(type) ? null : processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(type)).toString();
     }
 
-    private String extractTypename(final ProcessingEnvironment processingEnv, final TypeMirror type) {
+    private String extractTypename(final TypeMirror type) {
         if (type instanceof ArrayType) {
-            return type.toString().replaceFirst(extractPackageName(processingEnv, type) + ".", "");
+            return type.toString().replaceFirst(extractPackageName(type) + ".", "");
         }
         return isPrimitive(type) ? type.toString() : simpleNameOf(processingEnv.getTypeUtils().asElement(type));
     }
