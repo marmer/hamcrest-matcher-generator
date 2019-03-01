@@ -11,6 +11,7 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -34,13 +35,10 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        if (roundEnv.processingOver()) {
-            // TODO: marmer 31.01.2019 don't forget to test
-            return true;
-        }
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor for hamcrest matcher generation started");
 
         roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
-                .map(toAnnotationConfiguration())
+                .map(this::toAnnotationConfiguration)
                 .flatMap(toMatcherBaseDescriptorStream())
                 .map(matcherGenerator::generateMatcherFor)
                 .forEach(sourceWriter::create);
@@ -52,7 +50,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         return configurations -> matcherBaseDescriptorfFactory.create(configurations).stream();
     }
 
-    private Function<Element, MatcherConfigurations> toAnnotationConfiguration() {
-        return element -> element.getAnnotation(MatcherConfigurations.class);
+    private MatcherConfigurations toAnnotationConfiguration(final Element element) {
+        return element.getAnnotation(MatcherConfigurations.class);
     }
 }
