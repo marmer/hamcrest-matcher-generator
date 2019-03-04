@@ -1073,43 +1073,11 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject1 = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo1", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo1{\n" +
-                "    private String getPrivatePropertyProperty(){\n" +
-                "        return \"piv\";\n" +
-                "    }\n" +
-                "     String getPackagePrivatePropertyProperty(){\n" +
-                "        return \"def\";\n" +
-                "    }\n" +
-                "    \n" +
-                "    protected String getProtectedPropertyProperty(){\n" +
-                "        return \"pro\";\n" +
-                "    }\n" +
-                "    private class PrivateClass{\n" +
-                "        \n" +
-                "    }\n" +
-                "    class PackagePrivateClass{\n" +
-                "        \n" +
-                "    }\n" +
                 "}");
 
         final JavaFileObject javaFileObject2 = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo2", "package some.other.pck;\n" +
                 "\n" +
                 "public class SimplePojo2{\n" +
-                "    private String getPrivatePropertyProperty(){\n" +
-                "        return \"piv\";\n" +
-                "    }\n" +
-                "     String getPackagePrivatePropertyProperty(){\n" +
-                "        return \"def\";\n" +
-                "    }\n" +
-                "    \n" +
-                "    protected String getProtectedPropertyProperty(){\n" +
-                "        return \"pro\";\n" +
-                "    }\n" +
-                "    private class PrivateClass{\n" +
-                "        \n" +
-                "    }\n" +
-                "    class PackagePrivateClass{\n" +
-                "        \n" +
-                "    }\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
@@ -1220,6 +1188,41 @@ class MatcherGenerationProcessorITest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expectedOutput1, expectedOutput2);
+    }
+
+    @Test
+    @DisplayName("Warns on not existing packages or types")
+    void testGenerate_WarnsOnNotExistingPackagesOrTypes()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration({\"not.existing.pck\"}))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
+                "\n" +
+                "public class SimplePojo{\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .withWarningContaining("Package or type does not exist: not.existing.pck")
+        // TODO: marmer 04.03.2019 more precise location (at least a reference for the configuration annotation. If possible, maybe the exact line and column)
+        // .in(javaFileObject)
+        // .onLine(XX)
+        ;
     }
 
     // TODO: marmer 14.02.2019 Handle Lombok @Data
