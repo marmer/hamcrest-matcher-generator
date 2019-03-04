@@ -66,7 +66,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         return descriptor.getInnerMatchers()
                 .stream()
                 .map(this::matcherTypeFor)
-                .peek(type -> type.addModifiers(Modifier.STATIC))
+                .map(type -> type.addModifiers(Modifier.STATIC))
                 .map(TypeSpec.Builder::build)
                 .collect(Collectors.toList());
     }
