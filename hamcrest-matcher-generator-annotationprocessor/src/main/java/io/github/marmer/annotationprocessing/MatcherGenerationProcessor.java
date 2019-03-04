@@ -12,9 +12,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfigurations"})
+@SupportedAnnotationTypes({
+        "io.github.marmer.annotationprocessing.MatcherConfigurations",
+        "io.github.marmer.annotationprocessing.MatcherConfiguration"})
 @AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
     private MatcherBaseDescriptorfFactory matcherBaseDescriptorfFactory;
@@ -34,8 +37,12 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor for hamcrest matcher generation started");
 
-        roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
-                .map(this::toAnnotationConfiguration)
+        Stream.concat(
+                roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
+                        .map(this::toAnnotationConfigurations)
+                        .flatMap(matcherConfigurations -> Stream.of(matcherConfigurations.value())),
+                roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
+                        .map(this::toAnnotationConfiguration))
                 .flatMap(matcherBaseDescriptorfFactory::create)
                 .map(matcherGenerator::generateMatcherFor)
                 .forEach(sourceWriter::create);
@@ -43,7 +50,11 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private MatcherConfigurations toAnnotationConfiguration(final Element element) {
+    private MatcherConfiguration toAnnotationConfiguration(final Element element) {
+        return element.getAnnotation(MatcherConfiguration.class);
+    }
+
+    private MatcherConfigurations toAnnotationConfigurations(final Element element) {
         return element.getAnnotation(MatcherConfigurations.class);
     }
 }
