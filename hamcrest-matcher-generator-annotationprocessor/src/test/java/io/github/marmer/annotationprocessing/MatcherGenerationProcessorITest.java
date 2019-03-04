@@ -271,7 +271,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojoInterface", "package some.other.pck;\n" +
                 "\n" +
                 "public interface SimplePojoInterface{\n" +
-                "    public String getSomeStringProperty();\n" +
+                "    String getSomeStringProperty();\n" +
                 "}");
 
         final String today = LocalDate.now().toString();
