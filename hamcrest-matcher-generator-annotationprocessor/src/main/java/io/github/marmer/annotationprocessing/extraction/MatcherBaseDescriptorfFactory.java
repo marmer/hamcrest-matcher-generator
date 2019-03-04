@@ -208,6 +208,6 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean isPrimitiveBoolean(final TypeMirror returnType) {
-        return returnType.getKind().isPrimitive() && "boolean".equals(returnType.toString());
+        return "boolean".equals(returnType.toString());
     }
 }
