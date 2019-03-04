@@ -39,7 +39,7 @@ public class MatcherBaseDescriptorfFactory {
      */
     public Set<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper) {
         return Stream.of(configurationsWrapper.value())
-                .map(matcherConfiguration -> create(matcherConfiguration))
+                .map(this::create)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }
@@ -54,17 +54,32 @@ public class MatcherBaseDescriptorfFactory {
     public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
         // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
-                .map(processingEnv.getElementUtils()::getTypeElement)
+                .flatMap(this::toTypeElements)
                 .filter(this::isPublic)
-                .map(typeElement -> typeDescriptorFor(typeElement))
+                .map(this::toTypeDescriptor)
                 .collect(Collectors.toSet());
+    }
+
+    private Stream<TypeElement> toTypeElements(final String name) {
+        final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(name);
+        if (typeElement != null) {
+            return Stream.of(typeElement);
+        }
+        final PackageElement packageElement = processingEnv.getElementUtils().getPackageElement(name);
+        if (packageElement != null) {
+            final List<? extends Element> enclosedElements = packageElement.getEnclosedElements();
+            // TODO: marmer 04.03.2019 warn for an empry package
+            return enclosedElements.stream().map(element -> processingEnv.getElementUtils().getTypeElement(element.toString()));
+        }
+        // TODO: marmer 04.03.2019 warn that neither the package nor a type has been found
+        return Stream.empty();
     }
 
     private boolean isPublic(final Element typeElement) {
         return typeElement.getModifiers().contains(Modifier.PUBLIC);
     }
 
-    private MatcherBaseDescriptor typeDescriptorFor(final TypeElement type, final TypeElement... outerTypes) {
+    private MatcherBaseDescriptor toTypeDescriptor(final TypeElement type, final TypeElement... outerTypes) {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
                         .packageName(extractPackageName(type.asType()))
@@ -85,7 +100,7 @@ public class MatcherBaseDescriptorfFactory {
                 .stream()
                 .filter(this::isType)
                 .filter(this::isPublic)
-                .map(innerType -> typeDescriptorFor((TypeElement) innerType, asArray(outerTypes, type)))
+                .map(innerType -> toTypeDescriptor((TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
 
@@ -106,7 +121,7 @@ public class MatcherBaseDescriptorfFactory {
                 type.getEnclosedElements().stream()
                         .filter(this::isPropertyMethod)
                         .map(e -> (ExecutableElement) e)
-                        .map(element -> toPropertyDescriptor(element)),
+                        .map(this::toPropertyDescriptor),
                 propertiesFor(getSupertype(type)).stream())
                 .distinct()
                 .collect(Collectors.toList());
@@ -114,7 +129,7 @@ public class MatcherBaseDescriptorfFactory {
 
     private TypeElement getSupertype(final TypeElement type) {
         final TypeMirror superclass = type.getSuperclass();
-        return superclass.getKind().equals(TypeKind.NONE) ?
+        return TypeKind.NONE.equals(superclass.getKind()) ?
                 null :
                 processingEnv.getElementUtils().getTypeElement(superclass.toString());
     }
@@ -165,7 +180,7 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private boolean isMethod(final Element element) {
-        return element.getKind().equals(ElementKind.METHOD);
+        return ElementKind.METHOD.equals(element.getKind());
     }
 
     private PropertyDescriptor toPropertyDescriptor(final ExecutableElement element) {

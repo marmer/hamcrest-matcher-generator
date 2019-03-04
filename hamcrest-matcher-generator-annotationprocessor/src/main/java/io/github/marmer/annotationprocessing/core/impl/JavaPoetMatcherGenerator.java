@@ -1,14 +1,6 @@
 package io.github.marmer.annotationprocessing.core.impl;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
+import com.squareup.javapoet.*;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
@@ -20,14 +12,13 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
+import javax.annotation.Generated;
+import javax.lang.model.element.Modifier;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Generated;
-import javax.lang.model.element.Modifier;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
@@ -42,8 +33,15 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         return MatcherSourceDescriptor.builder()
                 .type(TypeDescriptor.builder()
                         .packageName(packageFrom(descriptor))
-                        .typeName(matcherNameFrom(descriptor.getBase())).build())
+                        .typeName(matcherNameFrom(descriptor.getBase()))
+                        .fullQualifiedName(fullQualifiedMatcherNameFrom(descriptor)).build())
                 .source(javaFile.toString()).build();
+    }
+
+    private String fullQualifiedMatcherNameFrom(final MatcherBaseDescriptor descriptor) {
+        return packageFrom(descriptor) +
+                "." +
+                matcherNameFrom(descriptor.getBase());
     }
 
     private JavaFile matcherFileFor(final MatcherBaseDescriptor descriptor) {
