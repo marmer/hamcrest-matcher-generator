@@ -3,7 +3,6 @@ package io.github.marmer.annotationprocessing;
 import com.google.auto.service.AutoService;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator;
-import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.creation.SourceWriter;
 import io.github.marmer.annotationprocessing.extraction.MatcherBaseDescriptorfFactory;
 
@@ -13,8 +12,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes({"io.github.marmer.annotationprocessing.MatcherConfigurations"})
@@ -39,15 +36,11 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
         roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
                 .map(this::toAnnotationConfiguration)
-                .flatMap(toMatcherBaseDescriptorStream())
+                .flatMap(matcherBaseDescriptorfFactory::create)
                 .map(matcherGenerator::generateMatcherFor)
                 .forEach(sourceWriter::create);
 
         return true;
-    }
-
-    private Function<MatcherConfigurations, Stream<? extends MatcherBaseDescriptor>> toMatcherBaseDescriptorStream() {
-        return configurations -> matcherBaseDescriptorfFactory.create(configurations).stream();
     }
 
     private MatcherConfigurations toAnnotationConfiguration(final Element element) {
