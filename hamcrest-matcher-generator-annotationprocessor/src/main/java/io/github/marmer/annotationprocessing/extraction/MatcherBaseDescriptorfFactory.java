@@ -12,6 +12,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,11 +64,14 @@ public class MatcherBaseDescriptorfFactory {
         final PackageElement packageElement = processingEnv.getElementUtils().getPackageElement(name);
         if (packageElement != null) {
             final List<? extends Element> enclosedElements = packageElement.getEnclosedElements();
-            // TODO: marmer 04.03.2019 warn for an empry package
             return enclosedElements.stream().map(element -> processingEnv.getElementUtils().getTypeElement(element.toString()));
         }
-        // TODO: marmer 04.03.2019 warn that neither the package nor a type has been found
+        logMandatoryWarning("Package or type does not exist: " + name);
         return Stream.empty();
+    }
+
+    private void logMandatoryWarning(final String message) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, message);
     }
 
     private boolean isPublic(final Element typeElement) {
