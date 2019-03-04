@@ -1,7 +1,6 @@
 package io.github.marmer.annotationprocessing.extraction;
 
 import io.github.marmer.annotationprocessing.MatcherConfiguration;
-import io.github.marmer.annotationprocessing.MatcherConfigurations;
 import io.github.marmer.annotationprocessing.core.impl.StringUtils;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
@@ -29,18 +28,6 @@ public class MatcherBaseDescriptorfFactory {
     public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
     }
-
-    /**
-     * Creates Matcher descriptions.
-     *
-     * @param configurationsWrapper Configuration for what to create {@link MatcherBaseDescriptor}s for.
-     * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
-     */
-    public Stream<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper) {
-        return Stream.of(configurationsWrapper.value())
-                .flatMap(this::create);
-    }
-
 
     /**
      * Creates Matcher descriptions.
