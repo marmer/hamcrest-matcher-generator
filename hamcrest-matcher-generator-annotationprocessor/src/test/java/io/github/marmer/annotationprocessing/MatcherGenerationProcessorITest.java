@@ -10,6 +10,7 @@ import javax.tools.JavaFileObject;
 import java.time.LocalDate;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 class MatcherGenerationProcessorITest {
 
@@ -976,6 +977,83 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
+    @Test
+    @DisplayName("Matcher should be generated for types of outer dependencies as well")
+    void testGenerate_MatcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"org.mockito.ArgumentMatchers\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("org.mockito.ArgumentMatchersMatcher", "package org.mockito;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {\n" +
+                "    private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public ArgumentMatchersMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public ArgumentMatchersMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ArgumentMatchersMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final ArgumentMatchers item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final ArgumentMatchers item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static ArgumentMatchersMatcher isArgumentMatchers() {\n" +
+                "        return new ArgumentMatchersMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(singletonList(configuration))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
@@ -985,7 +1063,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
-    // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
     // TODO: marmer 28.02.2019 add some "logging"
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
