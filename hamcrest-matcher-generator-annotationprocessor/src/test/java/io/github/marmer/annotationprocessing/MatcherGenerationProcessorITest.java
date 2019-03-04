@@ -988,4 +988,5 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 what if configuration points to class of a library?
     // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
     // TODO: marmer 28.02.2019 add some "logging"
+    // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
 }
