@@ -1,5 +1,6 @@
 package io.github.marmer.annotationprocessing.creation;
 
+import io.github.marmer.annotationprocessing.core.Logger;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 
 import javax.annotation.processing.Filer;
@@ -9,9 +10,11 @@ import java.io.Writer;
 
 public class SourceWriter {
     private final Filer filer;
+    private final Logger logger;
 
-    public SourceWriter(final Filer filer) {
+    public SourceWriter(final Filer filer, final Logger logger) {
         this.filer = filer;
+        this.logger = logger;
     }
 
     public void create(final MatcherSourceDescriptor matcherSourceDescriptor) {
@@ -23,8 +26,7 @@ public class SourceWriter {
                 writer.flush();
             }
         } catch (final IOException e) {
-            // TODO: marmer 07.02.2019 don't forget to log (somehow)
-            e.printStackTrace();
+            logger.fatal("Cannot write file for: " + matcherSourceDescriptor.getType().getFullQualifiedName());
         }
     }
 }

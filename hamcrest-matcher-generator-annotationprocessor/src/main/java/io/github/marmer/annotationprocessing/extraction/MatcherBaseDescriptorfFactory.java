@@ -1,6 +1,7 @@
 package io.github.marmer.annotationprocessing.extraction;
 
 import io.github.marmer.annotationprocessing.MatcherConfiguration;
+import io.github.marmer.annotationprocessing.core.Logger;
 import io.github.marmer.annotationprocessing.core.impl.StringUtils;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
@@ -11,7 +12,6 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,9 +24,11 @@ public class MatcherBaseDescriptorfFactory {
     private static final String PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX = "is";
     private static final String ANY_PROPERTY_METHOD_PREFIX = "get";
     private final ProcessingEnvironment processingEnv;
+    private Logger logger;
 
-    public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv) {
+    public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv, final Logger logger) {
         this.processingEnv = processingEnv;
+        this.logger = logger;
     }
 
     /**
@@ -36,7 +38,6 @@ public class MatcherBaseDescriptorfFactory {
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
     public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
-        // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
                 .filter(this::isPublic)
@@ -53,12 +54,8 @@ public class MatcherBaseDescriptorfFactory {
             final List<? extends Element> enclosedElements = packageElement.getEnclosedElements();
             return enclosedElements.stream().map(element -> processingEnv.getElementUtils().getTypeElement(element.toString()));
         }
-        logMandatoryWarning("Package or type does not exist: " + name);
+        logger.error("Package or type does not exist: " + name);
         return Stream.empty();
-    }
-
-    private void logMandatoryWarning(final String message) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, message);
     }
 
     private boolean isPublic(final Element typeElement) {
