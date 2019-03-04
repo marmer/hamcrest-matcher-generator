@@ -22,16 +22,4 @@ public class MessagerLogger implements Logger {
         messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, message);
 
     }
-
-    @Override
-    public void warn(final String message) {
-        messager.printMessage(Diagnostic.Kind.WARNING, message);
-
-    }
-
-    @Override
-    public void info(final String message) {
-        messager.printMessage(Diagnostic.Kind.NOTE, message);
-
-    }
 }
