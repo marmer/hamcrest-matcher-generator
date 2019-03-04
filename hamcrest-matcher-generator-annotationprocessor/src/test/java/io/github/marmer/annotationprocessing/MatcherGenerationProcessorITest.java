@@ -1054,6 +1054,7 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
+    // TODO: marmer 04.03.2019 Generate for classes in Package (not only by qualified classnames) as well
     // TODO: marmer 14.02.2019 Handle Lombok @Data
     // TODO: marmer 14.02.2019 Handle Lombok @Value
     // TODO: marmer 14.02.2019 Handle Lombok @Getter
