@@ -16,7 +16,7 @@ public class SourceWriter {
 
     public void create(final MatcherSourceDescriptor matcherSourceDescriptor) {
         try {
-            final JavaFileObject sourceFile = filer.createSourceFile(matcherSourceDescriptor.getType().getPackageName() + "." + matcherSourceDescriptor.getType().getTypeName());
+            final JavaFileObject sourceFile = filer.createSourceFile(matcherSourceDescriptor.getType().getFullQualifiedName());
             try (final Writer writer = sourceFile
                     .openWriter()) {
                 writer.write(matcherSourceDescriptor.getSource());
