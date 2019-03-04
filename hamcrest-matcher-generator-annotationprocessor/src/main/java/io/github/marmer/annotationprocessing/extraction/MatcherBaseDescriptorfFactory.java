@@ -12,10 +12,8 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,11 +35,9 @@ public class MatcherBaseDescriptorfFactory {
      * @param configurationsWrapper Configuration for what to create {@link MatcherBaseDescriptor}s for.
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
-    public Set<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper) {
+    public Stream<MatcherBaseDescriptor> create(final MatcherConfigurations configurationsWrapper) {
         return Stream.of(configurationsWrapper.value())
-                .map(this::create)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+                .flatMap(this::create);
     }
 
 
@@ -51,13 +47,12 @@ public class MatcherBaseDescriptorfFactory {
      * @param configuration Configuration for what to create {@link MatcherBaseDescriptor}s for.
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
-    public Set<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
+    public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
         // TODO: marmer 01.02.2019 Type does not exist -> warn
         return Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
                 .filter(this::isPublic)
-                .map(this::toTypeDescriptor)
-                .collect(Collectors.toSet());
+                .map(this::toTypeDescriptor);
     }
 
     private Stream<TypeElement> toTypeElements(final String name) {
