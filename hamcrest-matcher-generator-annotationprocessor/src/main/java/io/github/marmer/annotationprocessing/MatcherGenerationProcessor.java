@@ -29,8 +29,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         super.init(processingEnv);
 
         matcherGenerator = new JavaPoetMatcherGenerator();
-        matcherBaseDescriptorfFactory = new MatcherBaseDescriptorfFactory(processingEnv);
-        sourceWriter = new SourceWriter(processingEnv.getFiler());
+        matcherBaseDescriptorfFactory = new MatcherBaseDescriptorfFactory(processingEnv, new MessagerLogger(processingEnv.getMessager()));
+        sourceWriter = new SourceWriter(processingEnv.getFiler(), new MessagerLogger(processingEnv.getMessager()));
     }
 
     @Override
