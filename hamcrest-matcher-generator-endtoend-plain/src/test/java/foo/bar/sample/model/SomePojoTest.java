@@ -21,6 +21,7 @@ class SomePojoTest {
         somePojo.setPojoField("pojoFieldValue");
         somePojo.setParentField("someParentFieldValue");
 
+
         // Assertion
         assertThat(somePojo, isSomePojo()
                 .withClass(SomePojo.class)
