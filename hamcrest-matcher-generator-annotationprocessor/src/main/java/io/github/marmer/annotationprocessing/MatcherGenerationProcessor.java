@@ -35,19 +35,20 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor for hamcrest matcher generation started");
+        if (!roundEnv.processingOver()) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor for hamcrest matcher generation started");
 
-        Stream.concat(
-                roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
-                        .map(this::toAnnotationConfigurations)
-                        .flatMap(matcherConfigurations -> Stream.of(matcherConfigurations.value())),
-                roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
-                        .map(this::toAnnotationConfiguration))
-                .flatMap(matcherBaseDescriptorfFactory::create)
-                .map(matcherGenerator::generateMatcherFor)
-                .forEach(sourceWriter::create);
-
-        return true;
+            Stream.concat(
+                    roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
+                            .map(this::toAnnotationConfigurations)
+                            .flatMap(matcherConfigurations -> Stream.of(matcherConfigurations.value())),
+                    roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
+                            .map(this::toAnnotationConfiguration))
+                    .flatMap(matcherBaseDescriptorfFactory::create)
+                    .map(matcherGenerator::generateMatcherFor)
+                    .forEach(sourceWriter::create);
+        }
+        return false;
     }
 
     private MatcherConfiguration toAnnotationConfiguration(final Element element) {
