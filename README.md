@@ -16,56 +16,119 @@ This library provides the generation of hamcrest matchers without the need to po
 Bean Property Matcher
 ---------------------
 
-Using Hamcrest's Matcher HasPropertyWithValue, better known as Matchers.hasProperty, is nice if you don't have created the class you want to test yet. The Problem with that kind of Matcher is, the more test you have matching the same property the harder it is to change the property name.
+Ever wanted to...
+* ...have some Hamcrest-Matcchers for all (or some) of your Model classes oder Services magically appear?
+  * or ever wanted it without to pollute your production code with test code annotations?
+  * or types which are not part of the current source code.
+* ...test your models with hamcrest in an atomic way with atomic error messages?
+* ...have a compile safe alternative to Hamcrests "hasProperty" or HasPropertyWithValue?
 
-### Negative example
+Properties of Lombok annotated classes are supported as well (tested with version 1.18.4)
 
-Lets assume you have a bean with a property named `myFancyProperty`. The following line would match if the value is equal to `Fancy value`.
+How to use
+==========
+All you need is to add one or two dependencies and an Annotation for the configuration for what types the matchers have to be generated.
 
-`assertThat(someFancyBean, hasProperty("myFancyProperty", equalTo("Fancy value")));`
+Dependencies
+----------
 
-Now assume, you have tests all over your project with a line like this one testinh the `myFancyProperty` and you want to change its name to `myAwesomeProperty`. After renaming the property you may not find all the places in your tests to adjust. Now you only have to wait until the related tests fail to find the other places and fix the property name.
+If you want to use the matchers in your testcode only, simply add this dependency to your project.
 
-This strategy works pretty well, if you have only changed the property name and the test suite runs fast. Otherwise you'll get your feedback late or it get's really confusing and error prone.
+    <dependency>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+        <version>4.0.0</version>
+        <scope>test</scope>
+    </dependency>
+    
+If you want to use it in your production code, you should use it only "provided" to avoid unnecessary dependencies. In this case, you have to add another dependency used by the generated code.
 
-### Solution
+    <dependency>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+        <scope>provided</scope>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+        <scope>test</scope>
+    </dependency>
 
-The idea of this helper is to get your feedback allredy at compile time. So your favorite IDE or build tool can show you all the places you have to change as well in a way like the following:
+Configuration
+-------------
+Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either full qualified Class names or packages for Types you want to generate matchers for e.g.
 
-	assertThat(new SimpleModel("someValue"), isSimpleModel().withSomeProperty(equalTo("someValue")));
+    @MatcherConfiguration({
+            "foo.bar.sample.model.SomePojo",
+            "foo.bar.sample.model.ParentPojo",
+            "foo.bar.sample.model.SomePojoInterface",
+            "foo.bar.sample.model.SomeLombokPojo",
+    })
+    public class PackageConfiguration {
+    }
+    
+Depending on where you put the configuration the generated matchers will be generated within generated-test-sources you put it in your test sources or in generated-sources if you put it in your production code sources. (At least in maven projects this is the default behavior. It may be different with other build tools or non default configuration, but it should work for other build tools in a similar way)
 
-You only have to generate the matchers in advance with this tool, probably with a Plugin of your favorite IDE using this lib or with your favorite build tool.
+Generated result
+----------------
+Assuming you hava a pojo like this one with the configuration above...
 
-### Atomic Error Messages
+    package foo.bar.sample.model;
 
-In addition, when you use the "both" or "allOf" matchers with a lot of properties, it's hard to read and only the "expected" part of the error message is complete with all properties. 
+    public class SomePojo extends ParentPojo {
+        private String pojoField;
 
-The expectation part is non atomic. It contains only the first failing matcher result.
+        public String getPojoField() {
+            return pojoField;
+        }
+    }
+    
+... a Matcher Named SomePojoMatcher is generated within the same package and you could use it the following way in your test:
 
-This tool will show you all non matching properties in an atomic way (if the given matchers don't fail with an exception) so you don't have to run your tests over and over again for each non matching property.
+    final SomePojo somePojo = new SomePojo();
+    somePojo.setPojoField("pojoFieldValue");
+    somePojo.setParentField("someParentFieldValue");
 
-### How-To
 
-Currently there is only a maven plugin for the matcher generation. But a gradle extension is planed as well. If you want to see how to configure your project, read the Requirements section and have a look at the [projects used for testing the plugin](hamcrest-matcher-generator-maven-plugin/src/test/projects)
+    // Assertion
+    assertThat(somePojo, isSomePojo()
+            .withClass(SomePojo.class)
+            .withParentField("someParentFieldValue")
+            .withParentField(is(equalTo("someParentFieldValue")))
+            .withPojoField("pojoFieldValue")
+            .withPojoField(is(equalTo("pojoFieldValue")))
+    );
+
+This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and for matchers for each field.
 
 Requirements
 ============
-Here you can see what's needed for your project to work properly with the plugin and its generated sources.
+
+Build tool
+---------
+You can use this library with the buildtool of your choice or even just javac. This library is capable of annotation processing. So the matchers are generated at compile time like it's done with other Libraries (e.g. Lombok or Mapstruct).  
+
+IDE
+---
+Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by itself when the project builds. It can happen that sometimes, some IDE's (like IntelliJ) don't cleanup generated classes by itself. In this case you may have to either change the Configuration or to delete the generated matcher classes. Build tools like maven are a little more clever at this ;)
 
 JDK
 ---
 
-At least JDK6 is required to use the generated source code but the plugin requires JDK8 to create it.
+At least JDK6 is required to use the generated source code but the annotation processor requires JDK8 to create it.
 
 Generated sources may also work with JDK5. But it is and will not be tested so there is no guarantee!
 
 Hamcrest
 --------
-Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources. In General you are free to choose your version of hamcrest as long ...
+Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources of course. In General you shuld be free to choose your version of hamcrest by yourself.
 
 Your Project should be at least of Java version 1.6 and use a hamcrest version of 1.2. The resulting code will not work without hamcrest.
 
-For JDK7+ projects you should (but don't have to) use the following hamcrest version
+For JDK7+ projects you should (but don't have to) use the following hamcrest version for the generated sources
 
 	<dependency>
 		<groupId>org.hamcrest</groupId>
@@ -83,79 +146,12 @@ For JDK6 you may use:
 		<scope>test</scope>
 	</dependency>`
 
-plugin setup
-------------
-````
-            <plugin>
-                <groupId>io.github.marmer.testutils</groupId>
-                <artifactId>hamcrest-matcher-generator-maven-plugin</artifactId>
-                <version>${version.hamcrest-matcher-generator}</version>
-                <configuration>
-                    <matcherSources>
-                        <matcherSource>com.some.package</matcherSource>
-                        <matcherSource>com.some.full.qualified.ClassName</matcherSource>
-                    </matcherSources>
-                    <ignoreClassesWithoutProperties>true</ignoreClassesWithoutProperties>
-                    <outputDir>target/generated-test-sources</outputDir>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>matchers</id>
-                        <goals>
-                            <goal>matchers</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-````
-
-hamcrest-matcher-generator-dependencies
----------------------------------------
-The generated sources need the folowing dependency to work correctly
-
-	<dependency>
-		<groupId>io.github.marmer.testutils</groupId>
-		<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-		<version>#INSERT_CURRENT_PROJECT_VERSION#</version>
-		<scope>test</scope>
-	</dependency>
-	
-Test sources
-------------
-The build will work fine already if the requirements above are fulfilled. Depending on your IDE you'll get errors when you only import the project here you have two options. First, you can explicitely set the generated directory as source-folder, or you use the maven build helper plugin (if your IDE is aware of it) like as follows:
-
-
-	<plugin>
-		<groupId>org.codehaus.mojo</groupId>
-		<artifactId>build-helper-maven-plugin</artifactId>
-		<version>1.12</version>
-		<executions>
-			<execution>
-				<id>add-test-source</id>
-				<phase>generate-test-sources</phase>
-				<goals>
-					<goal>add-test-source</goal>
-				</goals>
-				<configuration>
-					<sources>
-						<source>${project.build.directory}/generated-test-sources</source>
-					</sources>
-				</configuration>
-			</execution>
-		</executions>
-	</plugin>
-	
-
-run test phase once (or a later one)
-------------------------------------
-The generation happens at phase generate-test-sources by default because it need's the compiled model classes. If you don't, your IDE won't be able to use the model classes in your ide, because they simply don't exist ;)
 
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
 ### 4.0.0
-* Projectrestart
+* Reboot of the project
 * Generation triggered by an annotation processor to run independent of any build tool
 * Packages of matchers for inner classes are generated as inner matchers
 * Fixed: matchers are not generated for non public types

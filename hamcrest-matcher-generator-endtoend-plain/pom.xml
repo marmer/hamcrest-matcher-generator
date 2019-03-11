@@ -18,6 +18,13 @@
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
             <version>4.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+            <version>4.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
