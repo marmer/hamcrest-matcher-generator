@@ -1307,11 +1307,10 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 14.02.2019 Handle Property of type "org.hamcrest.Matcher"
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
-    // TODO: marmer 14.02.2019 handle inner classes without an outer class configuration
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
     // TODO: marmer 18.02.2019 what if configuration points to inner class only?
     // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
-    // TODO: marmer 28.02.2019 add some "logging"
+    // TODO: marmer 28.02.2019 add some more "logging"
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
     // TODO: marmer 04.03.2019 how to handle resources in package
     // TODO: marmer 04.03.2019 how to handle non classes (like package-info.java) in package
