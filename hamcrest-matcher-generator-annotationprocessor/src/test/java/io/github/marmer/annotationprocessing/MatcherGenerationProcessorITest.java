@@ -1320,12 +1320,14 @@ class MatcherGenerationProcessorITest {
 
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public interface SimplePojo{\n" +
-                "    enum InnerEnum{\n" +
-                "        ONE,TWO\n" +
+                "public interface SimplePojo {\n" +
+                "    interface InnerType {\n" +
+                "        enum InnerEnum {\n" +
+                "            ONE, TWO\n" +
+                "        }\n" +
                 "    }\n" +
                 "    \n" +
-                "    InnerEnum getSomeProperty();\n" +
+                "    InnerType.InnerEnum getSomeProperty();\n" +
                 "}");
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
@@ -1352,7 +1354,7 @@ class MatcherGenerationProcessorITest {
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withSomeProperty(final SimplePojo.InnerEnum value) {\n" +
+                "    public SimplePojoMatcher withSomeProperty(final SimplePojo.InnerType.InnerEnum value) {\n" +
                 "        beanPropertyMatcher.with(\"someProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
@@ -1377,11 +1379,11 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
-                "    public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerEnum> {\n" +
-                "        private final BeanPropertyMatcher<SimplePojo.InnerEnum> beanPropertyMatcher;\n" +
+                "    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {\n" +
+                "        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;\n" +
                 "\n" +
-                "        public InnerEnumMatcher() {\n" +
-                "            beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerEnum>(SimplePojo.InnerEnum.class);\n" +
+                "        public InnerTypeMatcher() {\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType>(SimplePojo.InnerType.class);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
@@ -1390,18 +1392,47 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final SimplePojo.InnerEnum item) {\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerType item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final SimplePojo.InnerEnum item,\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerType item,\n" +
                 "                                              final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
-                "        public static InnerEnumMatcher isInnerEnum() {\n" +
-                "            return new InnerEnumMatcher();\n" +
+                "        public static InnerTypeMatcher isInnerType() {\n" +
+                "            return new InnerTypeMatcher();\n" +
+                "        }\n" +
+                "\n" +
+                "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "        public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {\n" +
+                "            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;\n" +
+                "\n" +
+                "            public InnerEnumMatcher() {\n" +
+                "                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class);\n" +
+                "            }\n" +
+                "\n" +
+                "            @Override\n" +
+                "            public void describeTo(final Description description) {\n" +
+                "                beanPropertyMatcher.describeTo(description);\n" +
+                "            }\n" +
+                "\n" +
+                "            @Override\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerType.InnerEnum item) {\n" +
+                "                return beanPropertyMatcher.matches(item);\n" +
+                "            }\n" +
+                "\n" +
+                "            @Override\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerType.InnerEnum item,\n" +
+                "                                                  final Description description) {\n" +
+                "                beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "            }\n" +
+                "\n" +
+                "            public static InnerEnumMatcher isInnerEnum() {\n" +
+                "                return new InnerEnumMatcher();\n" +
+                "            }\n" +
                 "        }\n" +
                 "    }\n" +
                 "}");

@@ -192,6 +192,7 @@ public class MatcherBaseDescriptorfFactory {
         if (element != null) {
             final Element enclosingElement = element.getEnclosingElement();
             if (isType(enclosingElement)) {
+                result.addAll(parentNamesOf(enclosingElement));
                 result.add(enclosingElement.getSimpleName().toString());
             }
         }
