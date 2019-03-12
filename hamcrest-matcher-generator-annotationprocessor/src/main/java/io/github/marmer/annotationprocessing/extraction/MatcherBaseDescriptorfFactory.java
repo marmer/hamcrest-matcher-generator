@@ -12,6 +12,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public class MatcherBaseDescriptorfFactory {
     private static final String PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX = "is";
     private static final String ANY_PROPERTY_METHOD_PREFIX = "get";
     private final ProcessingEnvironment processingEnv;
-    private Logger logger;
+    private final Logger logger;
 
     public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv, final Logger logger) {
         this.processingEnv = processingEnv;
@@ -175,9 +176,26 @@ public class MatcherBaseDescriptorfFactory {
                         .packageName(extractPackageName(returnType))
                         .typeName(extractTypename(returnType))
                         .fullQualifiedName(returnType.toString())
+                        .parentNames(parentNamesOf(returnType))
                         .primitive(isPrimitive(returnType))
                         .build())
                 .build();
+    }
+
+    private List<String> parentNamesOf(final TypeMirror type) {
+        return parentNamesOf(processingEnv.getTypeUtils().asElement(type));
+    }
+
+    private List<String> parentNamesOf(final Element element) {
+        final List<String> result = new ArrayList<>();
+
+        if (element != null) {
+            final Element enclosingElement = element.getEnclosingElement();
+            if (isType(enclosingElement)) {
+                result.add(enclosingElement.getSimpleName().toString());
+            }
+        }
+        return result;
     }
 
     private String extractPackageName(final TypeMirror type) {

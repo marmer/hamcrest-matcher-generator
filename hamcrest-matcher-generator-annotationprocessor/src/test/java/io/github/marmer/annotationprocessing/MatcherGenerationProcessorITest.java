@@ -1304,6 +1304,119 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
+    @Test
+    @DisplayName("Generation should work for properties of inner enums")
+    void testGenerate_GenerationShouldWorkForPropertiesOfInnerEnums()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "\n" +
+                "@MatcherConfiguration({\"some.other.pck.SimplePojo\"})\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
+                "\n" +
+                "public interface SimplePojo{\n" +
+                "    enum InnerEnum{\n" +
+                "        ONE,TWO\n" +
+                "    }\n" +
+                "    \n" +
+                "    InnerEnum getSomeProperty();\n" +
+                "}");
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withSomeProperty(final SimplePojo.InnerEnum value) {\n" +
+                "        beanPropertyMatcher.with(\"someProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static SimplePojoMatcher isSimplePojo() {\n" +
+                "        return new SimplePojoMatcher();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerEnum> {\n" +
+                "        private final BeanPropertyMatcher<SimplePojo.InnerEnum> beanPropertyMatcher;\n" +
+                "\n" +
+                "        public InnerEnumMatcher() {\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerEnum>(SimplePojo.InnerEnum.class);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        public void describeTo(final Description description) {\n" +
+                "            beanPropertyMatcher.describeTo(description);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerEnum item) {\n" +
+                "            return beanPropertyMatcher.matches(item);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerEnum item,\n" +
+                "                                              final Description description) {\n" +
+                "            beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "        }\n" +
+                "\n" +
+                "        public static InnerEnumMatcher isInnerEnum() {\n" +
+                "            return new InnerEnumMatcher();\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
     // TODO: marmer 14.02.2019 Handle Property of type "org.hamcrest.Matcher"
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
