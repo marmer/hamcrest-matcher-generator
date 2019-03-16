@@ -12,10 +12,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,11 +37,21 @@ public class MatcherBaseDescriptorfFactory {
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
     public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
-        return Stream.of(configuration.value())
+        final Map<Boolean, List<TypeElement>> matcherBaseDescriptorStream = Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
                 .map(this::toTopLevelContainerType)
-                .filter(this::isPublic)
+                .collect(Collectors.partitioningBy(this::isPublic));
+
+        matcherBaseDescriptorStream.get(false)
+                .forEach(this::logInfoNotPublic);
+
+        return matcherBaseDescriptorStream.get(true).stream()
                 .map(this::toTypeDescriptor);
+
+    }
+
+    private void logInfoNotPublic(final Element element) {
+        logger.info("Processing skipped for non public type: " + element, element);
     }
 
     private TypeElement toTopLevelContainerType(final TypeElement typeElement) {
@@ -83,10 +90,15 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private List<MatcherBaseDescriptor> innerMatchersFor(final TypeElement type, final TypeElement... outerTypes) {
-        return type.getEnclosedElements()
+        final Map<Boolean, ? extends List<? extends Element>> matcherBaseDescriptorStream = type.getEnclosedElements()
                 .stream()
                 .filter(this::isType)
-                .filter(this::isPublic)
+                .collect(Collectors.partitioningBy(this::isPublic));
+
+        matcherBaseDescriptorStream.get(false)
+                .forEach(this::logInfoNotPublic);
+
+        return matcherBaseDescriptorStream.get(true).stream()
                 .map(innerType -> toTypeDescriptor((TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
