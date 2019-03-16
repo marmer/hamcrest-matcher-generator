@@ -1582,10 +1582,88 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
-    // TODO: marmer 14.02.2019 Handle Property of type "org.hamcrest.Matcher"
+    @Test
+    @DisplayName("Only a single matcher method should be generated for properties of type Matcher")
+    void testGenerate_OnlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "\n" +
+                "@MatcherConfiguration({\"some.other.pck.SimplePojo\"})\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
+                "\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "\n" +
+                "public interface SimplePojo {\n" +
+                "    Matcher<String> getProperty();\n" +
+                "}");
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withProperty(final Matcher value) {\n" +
+                "        beanPropertyMatcher.with(\"property\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static SimplePojoMatcher isSimplePojo() {\n" +
+                "        return new SimplePojoMatcher();\n" +
+                "    }\n" +
+                "}");
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (info and do not create)
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
     // TODO: marmer 04.03.2019 how to handle resources in package
     // TODO: marmer 04.03.2019 how to handle non classes (like package-info.java) in package
+    // TODO: marmer 16.03.2019 handling of types with generics
+    // TODO: marmer 16.03.2019 handling of properties with generics
 }
