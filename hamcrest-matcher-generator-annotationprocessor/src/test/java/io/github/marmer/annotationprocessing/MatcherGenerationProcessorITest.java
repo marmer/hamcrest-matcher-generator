@@ -1224,9 +1224,6 @@ class MatcherGenerationProcessorITest {
                 // Assertion
                 .compilesWithoutError()
                 .withWarningContaining("Package or type does not exist: not.existing.pck")
-        // TODO: marmer 04.03.2019 more precise location (at least a reference for the configuration annotation. If possible, maybe the exact line and column)
-        // .in(javaFileObject)
-        // .onLine(XX)
         ;
     }
 
@@ -1658,10 +1655,9 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
-    // TODO: marmer 16.03.2019 better Text/name
     @Test
-    @DisplayName("Properties with generics should be handled correctly")
-    void testGenerate_PropertiesWithGenericsShouldBeHandledCorrectly()
+    @DisplayName("Generics and wildcard properties should be handled like Object")
+    void testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject()
             throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
