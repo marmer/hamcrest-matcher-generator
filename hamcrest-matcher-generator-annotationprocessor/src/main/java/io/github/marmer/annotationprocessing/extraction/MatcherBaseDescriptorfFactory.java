@@ -15,6 +15,7 @@ import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,10 +42,14 @@ public class MatcherBaseDescriptorfFactory {
     public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
         return Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
+                .map(this::toTopLevelContainerType)
                 .filter(this::isPublic)
                 .map(this::toTypeDescriptor);
     }
 
+    private TypeElement toTopLevelContainerType(final TypeElement typeElement) {
+        return parentsOf(typeElement).stream().findFirst().orElse(typeElement);
+    }
     private Stream<TypeElement> toTypeElements(final String name) {
         final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(name);
         if (typeElement != null) {
@@ -185,13 +190,20 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private List<String> parentNamesOf(final Element element) {
-        final List<String> result = new ArrayList<>();
+        return parentsOf(element).stream()
+                .map(Element::getSimpleName)
+                .map(Objects::toString)
+                .collect(Collectors.toList());
+    }
+
+    private List<TypeElement> parentsOf(final Element element) {
+        final List<TypeElement> result = new ArrayList<>();
 
         if (element != null) {
             final Element enclosingElement = element.getEnclosingElement();
             if (isType(enclosingElement)) {
-                result.addAll(parentNamesOf(enclosingElement));
-                result.add(enclosingElement.getSimpleName().toString());
+                result.addAll(parentsOf(enclosingElement));
+                result.add((TypeElement) enclosingElement);
             }
         }
         return result;
