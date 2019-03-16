@@ -10,7 +10,6 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -23,20 +22,22 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     private MatcherBaseDescriptorfFactory matcherBaseDescriptorfFactory;
     private MatcherGenerator matcherGenerator;
     private SourceWriter sourceWriter;
+    private MessagerLogger logger;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
         matcherGenerator = new JavaPoetMatcherGenerator();
-        matcherBaseDescriptorfFactory = new MatcherBaseDescriptorfFactory(processingEnv, new MessagerLogger(processingEnv.getMessager()));
-        sourceWriter = new SourceWriter(processingEnv.getFiler(), new MessagerLogger(processingEnv.getMessager()));
+        logger = new MessagerLogger(processingEnv.getMessager());
+        matcherBaseDescriptorfFactory = new MatcherBaseDescriptorfFactory(processingEnv, logger);
+        sourceWriter = new SourceWriter(processingEnv.getFiler(), logger);
     }
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         if (!roundEnv.processingOver()) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation processor for hamcrest matcher generation started");
+            logger.info("Annotation processor for hamcrest matcher generation started");
 
             Stream.concat(
                     roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()

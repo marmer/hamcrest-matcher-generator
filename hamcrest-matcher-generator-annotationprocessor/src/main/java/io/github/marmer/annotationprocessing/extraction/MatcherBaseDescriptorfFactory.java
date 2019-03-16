@@ -12,9 +12,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,12 +37,26 @@ public class MatcherBaseDescriptorfFactory {
      * @return Resulting {@link MatcherBaseDescriptor}s based on the configurations.
      */
     public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
-        return Stream.of(configuration.value())
+        final Map<Boolean, List<TypeElement>> matcherBaseDescriptorStream = Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
-                .filter(this::isPublic)
+                .map(this::toTopLevelContainerType)
+                .collect(Collectors.partitioningBy(this::isPublic));
+
+        matcherBaseDescriptorStream.get(false)
+                .forEach(this::logInfoNotPublic);
+
+        return matcherBaseDescriptorStream.get(true).stream()
                 .map(this::toTypeDescriptor);
+
     }
 
+    private void logInfoNotPublic(final Element element) {
+        logger.info("Processing skipped for non public type: " + element, element);
+    }
+
+    private TypeElement toTopLevelContainerType(final TypeElement typeElement) {
+        return parentsOf(typeElement).stream().findFirst().orElse(typeElement);
+    }
     private Stream<TypeElement> toTypeElements(final String name) {
         final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(name);
         if (typeElement != null) {
@@ -78,10 +90,15 @@ public class MatcherBaseDescriptorfFactory {
     }
 
     private List<MatcherBaseDescriptor> innerMatchersFor(final TypeElement type, final TypeElement... outerTypes) {
-        return type.getEnclosedElements()
+        final Map<Boolean, ? extends List<? extends Element>> matcherBaseDescriptorStream = type.getEnclosedElements()
                 .stream()
                 .filter(this::isType)
-                .filter(this::isPublic)
+                .collect(Collectors.partitioningBy(this::isPublic));
+
+        matcherBaseDescriptorStream.get(false)
+                .forEach(this::logInfoNotPublic);
+
+        return matcherBaseDescriptorStream.get(true).stream()
                 .map(innerType -> toTypeDescriptor((TypeElement) innerType, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
@@ -173,25 +190,40 @@ public class MatcherBaseDescriptorfFactory {
                 .returnValue(TypeDescriptor.builder()
                         .packageName(extractPackageName(returnType))
                         .typeName(extractTypename(returnType))
-                        .fullQualifiedName(returnType.toString())
+                        .fullQualifiedName(fullQualifiedNameOf(returnType))
                         .parentNames(parentNamesOf(returnType))
                         .primitive(isPrimitive(returnType))
                         .build())
                 .build();
     }
 
+    private String fullQualifiedNameOf(final TypeMirror type) {
+        return isTypeVar(type) ?
+                "java.lang.Object" :
+                type.toString();
+    }
+
     private List<String> parentNamesOf(final TypeMirror type) {
-        return parentNamesOf(processingEnv.getTypeUtils().asElement(type));
+        return isTypeVar(type) ?
+                Collections.emptyList() :
+                parentNamesOf(processingEnv.getTypeUtils().asElement(type));
     }
 
     private List<String> parentNamesOf(final Element element) {
-        final List<String> result = new ArrayList<>();
+        return parentsOf(element).stream()
+                .map(Element::getSimpleName)
+                .map(Objects::toString)
+                .collect(Collectors.toList());
+    }
+
+    private List<TypeElement> parentsOf(final Element element) {
+        final List<TypeElement> result = new ArrayList<>();
 
         if (element != null) {
             final Element enclosingElement = element.getEnclosingElement();
             if (isType(enclosingElement)) {
-                result.addAll(parentNamesOf(enclosingElement));
-                result.add(enclosingElement.getSimpleName().toString());
+                result.addAll(parentsOf(enclosingElement));
+                result.add((TypeElement) enclosingElement);
             }
         }
         return result;
@@ -201,15 +233,29 @@ public class MatcherBaseDescriptorfFactory {
         if (type instanceof ArrayType) {
             return extractPackageName(((ArrayType) type)
                     .getComponentType());
+        } else if (isPrimitive(type)) {
+            return null;
+        } else if (isTypeVar(type)) {
+            return "java.lang";
+        } else {
+            return processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(type)).toString();
         }
-        return isPrimitive(type) ? null : processingEnv.getElementUtils().getPackageOf(processingEnv.getTypeUtils().asElement(type)).toString();
+    }
+
+    private boolean isTypeVar(final TypeMirror type) {
+        return TypeKind.TYPEVAR.equals(type.getKind());
     }
 
     private String extractTypename(final TypeMirror type) {
         if (type instanceof ArrayType) {
             return type.toString().replaceFirst(extractPackageName(type) + ".", "");
+        } else if (isPrimitive(type)) {
+            return type.toString();
+        } else if (isTypeVar(type)) {
+            return "Object";
+        } else {
+            return simpleNameOf(processingEnv.getTypeUtils().asElement(type));
         }
-        return isPrimitive(type) ? type.toString() : simpleNameOf(processingEnv.getTypeUtils().asElement(type));
     }
 
     private boolean isPrimitive(final TypeMirror returnType) {

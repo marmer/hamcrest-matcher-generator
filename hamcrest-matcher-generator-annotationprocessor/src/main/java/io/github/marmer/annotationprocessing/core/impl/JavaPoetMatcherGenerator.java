@@ -75,9 +75,16 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         final List<PropertyDescriptor> properties = descriptor.getProperties();
         return properties.stream()
                 .flatMap(property ->
-                        Stream.of(propertyMatcherMethodFor(property, descriptor),
-                                propertyMethodFor(property, descriptor)))
+                        isHamcrestMatcherType(property) ?
+                                Stream.of(propertyMatcherMethodFor(property, descriptor)) :
+                                Stream.of(propertyMatcherMethodFor(property, descriptor),
+                                        propertyMethodFor(property, descriptor)))
                 .collect(Collectors.toList());
+    }
+
+    private boolean isHamcrestMatcherType(final PropertyDescriptor descriptor) {
+        final TypeDescriptor returnValue = descriptor.getReturnValue();
+        return "org.hamcrest".equals(returnValue.getPackageName()) && "Matcher".equals(returnValue.getTypeName());
     }
 
     private MethodSpec propertyMatcherMethodFor(final PropertyDescriptor property, final MatcherBaseDescriptor descriptor) {

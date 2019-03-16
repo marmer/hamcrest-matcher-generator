@@ -6,7 +6,7 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
 
 @MatcherConfigurations(
         @MatcherConfiguration({
-                "foo.bar.sample.model.SomePojo",
+                "foo.bar.sample.model.SomePojo.InnerClass",
                 "foo.bar.sample.model.ParentPojo",
                 "foo.bar.sample.model.SomePojoInterface",
                 "foo.bar.sample.model.SomeLombokPojo",
