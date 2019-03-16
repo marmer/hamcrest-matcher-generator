@@ -1581,7 +1581,6 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (warn and do not create)
     // TODO: marmer 18.02.2019 Make the generation robust (should communicate "errors" but not mandatorily crash... if possible)
-    // TODO: marmer 28.02.2019 check whether matchers would work for public inner classes of non public outer classes
     // TODO: marmer 28.02.2019 add some more "logging"
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
     // TODO: marmer 04.03.2019 how to handle resources in package
