@@ -1612,7 +1612,6 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
-                "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
@@ -1623,8 +1622,8 @@ class MatcherGenerationProcessorITest {
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withProperty(final Matcher value) {\n" +
-                "        beanPropertyMatcher.with(\"property\", Matchers.equalTo(value));\n" +
+                "    public SimplePojoMatcher withProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"property\", matcher);\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -1678,8 +1677,8 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "\n" +
-                "public interface SimplePojo {\n" +
-                "    Matcher<String> getProperty();\n" +
+                "public interface SimplePojo extends GenericType<String>{\n" +
+                "    String getProperty();\n" +
                 "}");
 
         final JavaFileObject javaFileObjectOfGenericType = JavaFileObjects.forSourceLines("some.other.pck.GenericType", "package some.other.pck;\n" +
@@ -1709,7 +1708,12 @@ class MatcherGenerationProcessorITest {
                 "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withProperty(final Matcher value) {\n" +
+                "    public SimplePojoMatcher withProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"property\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withProperty(final String value) {\n" +
                 "        beanPropertyMatcher.with(\"property\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
