@@ -151,7 +151,7 @@ For JDK6 you may use:
 This project uses semantic versioning. See https://semver.org/
 
 ### 4.0.2
-
+* Generation for matchers at configured inner classes
 
 ### 4.0.1
 * Properties can be inner types too now
