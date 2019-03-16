@@ -153,6 +153,7 @@ This project uses semantic versioning. See https://semver.org/
 ### Upcomming
 * Generation for matchers at configured inner classes
 * Handling of Properties of type org.hamcrest.Matcher
+* Handling of generic properties
 
 ### 4.0.1
 * Properties can be inner types too now

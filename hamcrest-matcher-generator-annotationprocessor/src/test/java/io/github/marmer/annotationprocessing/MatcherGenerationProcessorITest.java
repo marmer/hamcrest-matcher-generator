@@ -1677,28 +1677,26 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "\n" +
-                "public interface SimplePojo extends GenericType<String>{\n" +
-                "    String getProperty();\n" +
+                "import java.util.List;\n" +
+                "\n" +
+                "public interface SimplePojo <T>{\n" +
+                "    T getProperty();\n" +
+                "    List<? extends String> getWildcardProperty();\n" +
                 "}");
 
-        final JavaFileObject javaFileObjectOfGenericType = JavaFileObjects.forSourceLines("some.other.pck.GenericType", "package some.other.pck;\n" +
-                "\n" +
-                "import org.hamcrest.Matcher;\n" +
-                "\n" +
-                "public interface GenericType<T extends CharSequence> {\n" +
-                "    T getProperty();\n" +
-                "}");
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
+                "import java.util.List;\n" +
                 "import javax.annotation.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
@@ -1713,8 +1711,18 @@ class MatcherGenerationProcessorITest {
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withProperty(final String value) {\n" +
+                "    public SimplePojoMatcher withProperty(final Object value) {\n" +
                 "        beanPropertyMatcher.with(\"property\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withWildcardProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"wildcardProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withWildcardProperty(final List value) {\n" +
+                "        beanPropertyMatcher.with(\"wildcardProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -1740,7 +1748,7 @@ class MatcherGenerationProcessorITest {
         // Execution
         Truth.assert_()
                 .about(JavaSourcesSubjectFactory.javaSources())
-                .that(asList(configuration, javaFileObject, javaFileObjectOfGenericType))
+                .that(asList(configuration, javaFileObject))
                 .processedWith(new MatcherGenerationProcessor())
 
                 // Assertion
@@ -1754,6 +1762,4 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
     // TODO: marmer 04.03.2019 how to handle resources in package
     // TODO: marmer 04.03.2019 how to handle non classes (like package-info.java) in package
-    // TODO: marmer 16.03.2019 handling of types with generics
-    // TODO: marmer 16.03.2019 handling of properties with generics
 }
