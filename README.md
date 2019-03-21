@@ -191,10 +191,3 @@ This project uses semantic versioning. See https://semver.org/
 
 ### 1.3.0
 * Support for Matcher-Generation for Interfaces
-
-### Planed for future releases and known issues
-* Better hanling of private properties and members
-* Some Javadoc for generated methods
-* Gradle plugin
-* IntelliJ Plugin
-* Replace Classfinding by something not so much bound to the maven lifecycle. Maybe Annotation Processing... maybe with https://github.com/qinglinyi/fast-classpath-scanner
