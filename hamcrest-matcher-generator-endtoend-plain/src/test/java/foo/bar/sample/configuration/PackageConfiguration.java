@@ -10,7 +10,6 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
                 "foo.bar.sample.model.ParentPojo",
                 "foo.bar.sample.model.SomePojoInterface",
                 "foo.bar.sample.model.SomeLombokPojo",
-                "foo.bar.sample.resourcedir",
-        }))
+                "foo.bar.sample.resourcedir"}))
 public class PackageConfiguration {
 }
