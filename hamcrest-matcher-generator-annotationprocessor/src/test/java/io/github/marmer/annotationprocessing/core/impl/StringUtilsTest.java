@@ -1,5 +1,6 @@
 package io.github.marmer.annotationprocessing.core.impl;
 
+import lombok.var;
 import org.junit.Assert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
