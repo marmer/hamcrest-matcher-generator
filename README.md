@@ -37,7 +37,7 @@ If you want to use the matchers in your testcode only, simply add this dependenc
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.4</version>
         <scope>test</scope>
     </dependency>
     
@@ -46,14 +46,14 @@ If you want to use it in your production code, you should use it only "provided"
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.4</version>
         <scope>provided</scope>
         <optional>true</optional>
     </dependency>
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.4</version>
         <scope>test</scope>
     </dependency>
 
@@ -150,7 +150,8 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### upcomming
+### 4.0.4
+* back to compiler warnings for *full* backword compatibility with jdk8
 
 ### 4.0.3
 * Compiler warnings on jdk 11 use removed
