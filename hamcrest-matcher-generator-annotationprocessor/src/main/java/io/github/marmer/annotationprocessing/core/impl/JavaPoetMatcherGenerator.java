@@ -12,7 +12,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-import javax.annotation.processing.Generated;
+import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.time.LocalDate;
 import java.util.Arrays;
