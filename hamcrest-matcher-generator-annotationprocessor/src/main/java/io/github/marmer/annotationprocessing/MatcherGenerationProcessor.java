@@ -13,7 +13,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.Set;
 import java.util.stream.Stream;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes({
         "io.github.marmer.annotationprocessing.MatcherConfigurations",
         "io.github.marmer.annotationprocessing.MatcherConfiguration"})

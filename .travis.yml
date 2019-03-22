@@ -1,8 +1,10 @@
 language: java
-jdk:
-  - openjdk11
+jdk: oraclejdk8
 sudo: false
 addons:
+  apt:
+    packages:
+    - oracle-java8-installer
   sonarcloud:
     organization: "marmer-github"
     token:
