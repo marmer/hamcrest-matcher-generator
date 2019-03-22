@@ -730,7 +730,27 @@ class MatcherGenerationProcessorITest {
                 "        beanPropertyMatcher.with(\"someStringProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
-                "    \n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withDeclaringClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"declaringClass\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withDeclaringClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"declaringClass\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoEnumMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
                 "    @Override\n" +
                 "    public void describeTo(final Description description) {\n" +
                 "        beanPropertyMatcher.describeTo(description);\n" +
@@ -781,19 +801,19 @@ class MatcherGenerationProcessorITest {
 
         final JavaFileObject parentPojo = JavaFileObjects.forSourceLines("some.other.pck.ParentPojo", "package some.other.pck;\n" +
                 "\n" +
-                "public class ParentPojo{\n" +
+                "public class ParentPojo<T>{\n" +
                 "    public String getPropertyOfBothClasses(){\n" +
                 "        return \"someFancyValue\";\n" +
                 "    }\n" +
                 "    \n" +
-                "    public String getParentPojoProperty(){\n" +
-                "        return \"someValue\";\n" +
+                "    public T getParentPojoProperty(){\n" +
+                "        return null;\n" +
                 "    }\n" +
                 "}");
 
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public class SimplePojo extends ParentPojo{\n" +
+                "public class SimplePojo extends ParentPojo<String>{\n" +
                 "    public String getPropertyOfBothClasses(){\n" +
                 "        return \"someFancyValue\";\n" +
                 "    }\n" +
@@ -832,7 +852,7 @@ class MatcherGenerationProcessorITest {
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withParentPojoProperty(final String value) {\n" +
+                "    public SimplePojoMatcher withParentPojoProperty(final Object value) {\n" +
                 "        beanPropertyMatcher.with(\"parentPojoProperty\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
@@ -1414,6 +1434,26 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "            public InnerEnumMatcher() {\n" +
                 "                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class);\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerEnumMatcher withDeclaringClass(final Matcher<?> matcher) {\n" +
+                "                beanPropertyMatcher.with(\"declaringClass\", matcher);\n" +
+                "                return this;\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerEnumMatcher withDeclaringClass(final Class value) {\n" +
+                "                beanPropertyMatcher.with(\"declaringClass\", Matchers.equalTo(value));\n" +
+                "                return this;\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerEnumMatcher withClass(final Matcher<?> matcher) {\n" +
+                "                beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "                return this;\n" +
+                "            }\n" +
+                "\n" +
+                "            public InnerEnumMatcher withClass(final Class value) {\n" +
+                "                beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "                return this;\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +

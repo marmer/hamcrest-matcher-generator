@@ -13,8 +13,11 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.function.Function.identity;
 
 /**
  * Factory to create some matcher descriptions.
@@ -57,6 +60,7 @@ public class MatcherBaseDescriptorfFactory {
     private TypeElement toTopLevelContainerType(final TypeElement typeElement) {
         return parentsOf(typeElement).stream().findFirst().orElse(typeElement);
     }
+
     private Stream<TypeElement> toTypeElements(final String name) {
         final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(name);
         if (typeElement != null) {
@@ -84,7 +88,7 @@ public class MatcherBaseDescriptorfFactory {
                         .fullQualifiedName(type.getQualifiedName().toString())
                         .primitive(isPrimitive(type.asType()))
                         .build())
-                .properties(propertiesFor(type))
+                .properties(propertiesFor(type).collect(Collectors.toList()))
                 .innerMatchers(innerMatchersFor(type, outerTypes))
                 .build();
     }
@@ -112,25 +116,37 @@ public class MatcherBaseDescriptorfFactory {
         return Stream.concat(Stream.of(outerTypes), Stream.of(type)).toArray(TypeElement[]::new);
     }
 
-    private List<PropertyDescriptor> propertiesFor(final TypeElement type) {
+    private Stream<PropertyDescriptor> propertiesFor(final TypeElement type) {
         if (type == null) {
-            return Collections.emptyList();
+            return Stream.empty();
         }
-        return Stream.concat(
-                type.getEnclosedElements().stream()
-                        .filter(this::isPropertyMethod)
-                        .map(e -> (ExecutableElement) e)
-                        .map(this::toPropertyDescriptor),
-                propertiesFor(getSupertype(type)).stream())
-                .distinct()
-                .collect(Collectors.toList());
+        final Stream<PropertyDescriptor> propertyDescriptorStream = type.getEnclosedElements().stream()
+                .filter(this::isPropertyMethod)
+                .map(e -> (ExecutableElement) e)
+                .map(this::toPropertyDescriptor);
+        final Stream<PropertyDescriptor> stream = propertiesFor(getSupertype(type));
+        final Stream<PropertyDescriptor> listStream = getSuperInterfacesFor(type).flatMap(this::propertiesFor);
+        return Stream.of(
+                propertyDescriptorStream,
+                listStream,
+                stream)
+                .flatMap(identity())
+                .distinct();
+    }
+
+    private Stream<TypeElement> getSuperInterfacesFor(final TypeElement type) {
+        return type.getInterfaces().stream().map((Function<TypeMirror, TypeElement>) this::toTypeElement);
+    }
+
+    private TypeElement toTypeElement(final TypeMirror i) {
+        return processingEnv.getElementUtils().getTypeElement(i.toString().replaceAll("<.+>", ""));
     }
 
     private TypeElement getSupertype(final TypeElement type) {
         final TypeMirror superclass = type.getSuperclass();
         return TypeKind.NONE.equals(superclass.getKind()) ?
                 null :
-                processingEnv.getElementUtils().getTypeElement(superclass.toString());
+                toTypeElement(superclass);
     }
 
     private boolean isPropertyMethod(final Element element) {
