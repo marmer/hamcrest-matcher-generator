@@ -81,7 +81,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
@@ -278,7 +278,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
@@ -369,7 +369,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -473,7 +473,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
@@ -594,7 +594,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -707,7 +707,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
@@ -803,7 +803,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
@@ -920,7 +920,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1002,7 +1002,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1090,7 +1090,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1138,7 +1138,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1224,9 +1224,6 @@ class MatcherGenerationProcessorITest {
                 // Assertion
                 .compilesWithoutError()
                 .withWarningContaining("Package or type does not exist: not.existing.pck")
-        // TODO: marmer 04.03.2019 more precise location (at least a reference for the configuration annotation. If possible, maybe the exact line and column)
-        // .in(javaFileObject)
-        // .onLine(XX)
         ;
     }
 
@@ -1253,7 +1250,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1339,7 +1336,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1480,7 +1477,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
@@ -1608,7 +1605,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1658,10 +1655,9 @@ class MatcherGenerationProcessorITest {
                 .generatesSources(expectedOutput);
     }
 
-    // TODO: marmer 16.03.2019 better Text/name
     @Test
-    @DisplayName("Properties with generics should be handled correctly")
-    void testGenerate_PropertiesWithGenericsShouldBeHandledCorrectly()
+    @DisplayName("Generics and wildcard properties should be handled like Object")
+    void testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject()
             throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
@@ -1690,7 +1686,7 @@ class MatcherGenerationProcessorITest {
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import java.util.List;\n" +
-                "import javax.annotation.Generated;\n" +
+                "import javax.annotation.processing.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
@@ -1760,6 +1756,4 @@ class MatcherGenerationProcessorITest {
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
     // TODO: marmer 18.02.2019 handle Naming Conflicts (info and do not create)
     // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
-    // TODO: marmer 04.03.2019 how to handle resources in package
-    // TODO: marmer 04.03.2019 how to handle non classes (like package-info.java) in package
 }
