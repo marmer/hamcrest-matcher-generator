@@ -26,7 +26,7 @@ public class SourceWriter {
                 writer.flush();
             }
         } catch (final IOException e) {
-            logger.fatal("Cannot write file for: " + matcherSourceDescriptor.getType().getFullQualifiedName());
+            logger.error("Cannot write file for: '" + matcherSourceDescriptor.getType().getFullQualifiedName() + "' Message: " + e.getMessage());
         }
     }
 }
