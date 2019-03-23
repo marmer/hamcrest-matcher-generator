@@ -150,12 +150,11 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### upcomming
-* better handling of primitive properties
-
 ### 4.0.5
 * Handling of generic superclasses
 * Handling of generic superinterfaces
+* better handling of primitive properties
+* more stability on unknown errors
 
 ### 4.0.4
 * back to compiler warnings for *full* backword compatibility with jdk8
