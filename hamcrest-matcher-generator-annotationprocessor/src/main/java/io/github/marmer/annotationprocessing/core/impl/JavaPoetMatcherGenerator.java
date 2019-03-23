@@ -155,10 +155,12 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .build();
     }
 
-    private ClassName getClassNameFor(final TypeDescriptor base) {
+    private TypeName getClassNameFor(final TypeDescriptor base) {
         final List<String> parentNames = base.getParentNames();
         if (parentNames.isEmpty()) {
-            return ClassName.get(base.isPrimitive() ? "" : base.getPackageName(), base.getTypeName());
+            return base.isPrimitive() ?
+                    TypeVariableName.get(base.getTypeName()) :
+                    ClassName.get(base.getPackageName(), base.getTypeName());
         } else {
             return ClassName.get(base.getPackageName(),
                     parentNames.get(0),
