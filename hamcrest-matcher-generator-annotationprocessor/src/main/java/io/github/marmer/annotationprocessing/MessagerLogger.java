@@ -14,11 +14,6 @@ public class MessagerLogger implements Logger {
     }
 
     @Override
-    public void fatal(final String message) {
-        messager.printMessage(Diagnostic.Kind.ERROR, message);
-    }
-
-    @Override
     public void error(final String message) {
         messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, message);
 
