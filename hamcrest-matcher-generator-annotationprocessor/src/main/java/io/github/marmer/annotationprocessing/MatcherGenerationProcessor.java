@@ -42,7 +42,8 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
             Stream.concat(
                     roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
                             .map(this::toAnnotationConfigurations)
-                            .flatMap(matcherConfigurations -> Stream.of(matcherConfigurations.value())),
+                            .map(MatcherConfigurations::value)
+                            .flatMap(Stream::of),
                     roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
                             .map(this::toAnnotationConfiguration))
                     .flatMap(matcherBaseDescriptorfFactory::create)
