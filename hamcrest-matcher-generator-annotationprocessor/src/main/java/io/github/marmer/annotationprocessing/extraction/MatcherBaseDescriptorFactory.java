@@ -22,13 +22,13 @@ import static java.util.function.Function.identity;
 /**
  * Factory to create some matcher descriptions.
  */
-public class MatcherBaseDescriptorfFactory {
+public class MatcherBaseDescriptorFactory {
     private static final String PRIMITIVE_BOOLEAN_PROPERTY_METHOD_PREFIX = "is";
     private static final String ANY_PROPERTY_METHOD_PREFIX = "get";
     private final ProcessingEnvironment processingEnv;
     private final Logger logger;
 
-    public MatcherBaseDescriptorfFactory(final ProcessingEnvironment processingEnv, final Logger logger) {
+    public MatcherBaseDescriptorFactory(final ProcessingEnvironment processingEnv, final Logger logger) {
         this.processingEnv = processingEnv;
         this.logger = logger;
     }
