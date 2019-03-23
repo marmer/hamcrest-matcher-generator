@@ -20,6 +20,7 @@ class SomePojoTest {
         final SomePojo somePojo = new SomePojo();
         somePojo.setPojoField("pojoFieldValue");
         somePojo.setParentField("someParentFieldValue");
+        somePojo.setIntProperty(42);
 
 
         // Assertion
@@ -29,6 +30,8 @@ class SomePojoTest {
                 .withParentField(is(equalTo("someParentFieldValue")))
                 .withPojoField("pojoFieldValue")
                 .withPojoField(is(equalTo("pojoFieldValue")))
+                .withIntProperty(42)
+                .withIntProperty(is(42))
         );
     }
 
