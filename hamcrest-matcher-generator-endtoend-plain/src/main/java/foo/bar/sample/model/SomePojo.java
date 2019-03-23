@@ -3,12 +3,22 @@ package foo.bar.sample.model;
 public class SomePojo extends ParentPojo {
     private String pojoField;
 
+    private int intProperty;
+
     public String getPojoField() {
         return pojoField;
     }
 
     public void setPojoField(final String pojoField) {
         this.pojoField = pojoField;
+    }
+
+    public int getIntProperty() {
+        return intProperty;
+    }
+
+    public void setIntProperty(final int intProperty) {
+        this.intProperty = intProperty;
     }
 
     public static class InnerClass {

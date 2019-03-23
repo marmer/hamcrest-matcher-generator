@@ -11,7 +11,6 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
                 "foo.bar.sample.model.SomePojoInterface",
                 "foo.bar.sample.model.SomeLombokPojo",
                 "foo.bar.sample.resourcedir",
-                "org.springframework.http.ResponseEntity",
         }))
 public class PackageConfiguration {
 }
