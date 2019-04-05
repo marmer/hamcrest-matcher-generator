@@ -137,12 +137,14 @@ public class MatcherBaseDescriptorFactory {
                 .collect(distinctByPropertyName());
     }
 
-    private Collector<PropertyDescriptor, ArrayList<PropertyDescriptor>, Stream<PropertyDescriptor>> distinctByPropertyName() {
+    private Collector<PropertyDescriptor, Collection<PropertyDescriptor>, Stream<PropertyDescriptor>> distinctByPropertyName() {
         return collectingAndThen(Collector.of(ArrayList::new,
-                (propertyDescriptors, protpDesc) -> {
+                (propertyDescriptors, propDesc) -> {
+                    //contains by property name
                     if (propertyDescriptors.stream()
-                            .noneMatch(propertyDescriptor -> Objects.equals(propertyDescriptor.getProperty(), protpDesc.getProperty()))) {
-                        propertyDescriptors.add(protpDesc);
+                            .map(PropertyDescriptor::getProperty)
+                            .noneMatch(property -> Objects.equals(property, propDesc.getProperty()))) {
+                        propertyDescriptors.add(propDesc);
                     }
                 },
                 (list1, list2) -> {
