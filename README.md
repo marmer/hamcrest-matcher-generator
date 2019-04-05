@@ -113,7 +113,7 @@ You can use this library with the buildtool of your choice or even just javac. T
 
 IDE
 ---
-Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by itself when the project builds. It can happen that sometimes, some IDE's (like IntelliJ) don't cleanup generated classes by itself. In this case you may have to either change the Configuration or to delete the generated matcher classes. Build tools like maven are a little more clever at this ;)
+Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by itself when the project builds. Some IDEs may need a little help. Eclipse for example is in maven projects only capable of annotation processing if you have installed a maven plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt) 
 
 JDK
 ---
