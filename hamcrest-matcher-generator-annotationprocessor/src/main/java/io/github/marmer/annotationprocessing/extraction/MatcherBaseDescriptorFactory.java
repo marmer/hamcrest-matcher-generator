@@ -147,11 +147,15 @@ public class MatcherBaseDescriptorFactory {
                         propertyDescriptors.add(propDesc);
                     }
                 },
-                (list1, list2) -> {
-                    list1.addAll(list2);
-                    return list1;
-                }),
+                this::joinToList),
                 Collection::stream);
+
+    }
+
+    public Collection<PropertyDescriptor> joinToList(final Collection<PropertyDescriptor> collection1, final Collection<PropertyDescriptor> collection2) {
+        return Stream.of(collection1.stream(), collection2.stream())
+                .flatMap(identity())
+                .collect(Collectors.toList());
     }
 
     private Stream<TypeElement> getSuperInterfacesFor(final TypeElement type) {
