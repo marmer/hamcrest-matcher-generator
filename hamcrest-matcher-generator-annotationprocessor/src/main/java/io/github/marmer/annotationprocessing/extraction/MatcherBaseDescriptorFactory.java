@@ -14,10 +14,12 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.collectingAndThen;
 
 /**
  * Factory to create some matcher descriptions.
@@ -79,7 +81,8 @@ public class MatcherBaseDescriptorFactory {
         return typeElement.getModifiers().contains(Modifier.PUBLIC);
     }
 
-    private MatcherBaseDescriptor toTypeDescriptor(final TypeElement type, final TypeElement... outerTypes) {
+    private MatcherBaseDescriptor
+    toTypeDescriptor(final TypeElement type, final TypeElement... outerTypes) {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
                         .packageName(extractPackageName(type.asType()))
@@ -131,7 +134,22 @@ public class MatcherBaseDescriptorFactory {
                 listStream,
                 stream)
                 .flatMap(identity())
-                .distinct();
+                .collect(distinctByPropertyName());
+    }
+
+    private Collector<PropertyDescriptor, ArrayList<PropertyDescriptor>, Stream<PropertyDescriptor>> distinctByPropertyName() {
+        return collectingAndThen(Collector.of(ArrayList::new,
+                (propertyDescriptors, protpDesc) -> {
+                    if (propertyDescriptors.stream()
+                            .noneMatch(propertyDescriptor -> Objects.equals(propertyDescriptor.getProperty(), protpDesc.getProperty()))) {
+                        propertyDescriptors.add(protpDesc);
+                    }
+                },
+                (list1, list2) -> {
+                    list1.addAll(list2);
+                    return list1;
+                }),
+                Collection::stream);
     }
 
     private Stream<TypeElement> getSuperInterfacesFor(final TypeElement type) {
