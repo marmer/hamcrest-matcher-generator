@@ -802,7 +802,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject parentPojo = JavaFileObjects.forSourceLines("some.other.pck.ParentPojo", "package some.other.pck;\n" +
                 "\n" +
                 "public class ParentPojo<T>{\n" +
-                "    public String getPropertyOfBothClasses(){\n" +
+                "    public CharSequence getPropertyOfBothClasses(){\n" +
                 "        return \"someFancyValue\";\n" +
                 "    }\n" +
                 "    \n" +
