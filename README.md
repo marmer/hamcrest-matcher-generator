@@ -150,6 +150,10 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
+### Upcomming
+* no more MatcherMatcher...Matcher-ception
+* Excludes
+
 ### 4.0.6
 * Inherited properties can change types now
 
