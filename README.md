@@ -153,6 +153,7 @@ This project uses semantic versioning. See https://semver.org/
 ### Upcomming
 * no more MatcherMatcher...Matcher-ception
 * Excludes
+* Possibility to change the "base packeage" in which the generated Matchers are placed
 
 ### 4.0.6
 * Inherited properties can change types now
