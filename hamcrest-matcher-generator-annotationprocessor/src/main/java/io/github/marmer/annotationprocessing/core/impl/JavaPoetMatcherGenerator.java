@@ -6,6 +6,7 @@ import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -59,7 +60,14 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .addMethods(typesafeMatcherMethods(descriptor))
                 .addMethod(factoryMethod(descriptor))
                 .addAnnotation(generatedAnnotationFor())
+                .addAnnotation(basedOn(descriptor))
                 .addTypes(innerMatchersFor(descriptor));
+    }
+
+    private AnnotationSpec basedOn(final MatcherBaseDescriptor descriptor) {
+        return AnnotationSpec.builder(BasedOn.class)
+                .addMember("value", "$T.class", getClassNameFor(descriptor.getBase()))
+                .build();
     }
 
     private List<TypeSpec> innerMatchersFor(final MatcherBaseDescriptor descriptor) {

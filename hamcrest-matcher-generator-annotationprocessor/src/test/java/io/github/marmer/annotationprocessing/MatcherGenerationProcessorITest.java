@@ -80,6 +80,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
@@ -88,6 +89,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -155,6 +157,7 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SimplePojo.InnerStaticPojo.class)\n" +
                 "    public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -201,6 +204,7 @@ class MatcherGenerationProcessorITest {
                 "            return new InnerStaticPojoMatcher();\n" +
                 "        }\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "        @BasedOn(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class)\n" +
                 "        public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -277,6 +281,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
@@ -285,6 +290,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojoInterface.class)\n" +
                 "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
                 "\n" +
@@ -367,6 +373,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -377,6 +384,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojoInterface.class)\n" +
                 "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
                 "\n" +
@@ -472,6 +480,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
@@ -480,6 +489,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SomeClass.class)\n" +
                 "public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {\n" +
                 "    private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;\n" +
                 "\n" +
@@ -517,6 +527,7 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SomeClass.SomeNonStaticInnerClass.class)\n" +
                 "    public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {\n" +
                 "        private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;\n" +
                 "\n" +
@@ -592,6 +603,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -602,6 +614,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SomePojo.class)\n" +
                 "public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {\n" +
                 "    private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -639,6 +652,7 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SomePojo.InnerInterface.class)\n" +
                 "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
                 "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
                 "\n" +
@@ -706,6 +720,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
@@ -714,6 +729,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojoEnum.class)\n" +
                 "public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;\n" +
                 "\n" +
@@ -822,6 +838,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "import javax.annotation.Generated;\n" +
                 "import org.hamcrest.Description;\n" +
@@ -830,6 +847,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -938,16 +956,16 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "\n" +
                 "import javax.annotation.Generated;\n" +
-                "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1020,16 +1038,16 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("org.mockito.ArgumentMatchersMatcher", "package org.mockito;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "\n" +
                 "import javax.annotation.Generated;\n" +
-                "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(ArgumentMatchers.class)\n" +
                 "public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {\n" +
                 "    private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1108,6 +1126,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput1 = JavaFileObjects.forSourceString("sample.other.pck.SimplePojo11Matcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1118,6 +1137,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo1.class)\n" +
                 "public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1156,16 +1176,16 @@ class MatcherGenerationProcessorITest {
                 "}");
         final JavaFileObject expectedOutput2 = JavaFileObjects.forSourceString("sample.other.pck.SimplePojo22Matcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
-                "\n" +
                 "import javax.annotation.Generated;\n" +
-                "\n" +
                 "import org.hamcrest.Description;\n" +
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo2.class)\n" +
                 "public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1268,6 +1288,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1278,6 +1299,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1354,6 +1376,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1364,6 +1387,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1401,6 +1425,7 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SimplePojo.InnerType.class)\n" +
                 "    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1429,6 +1454,7 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "        @BasedOn(SimplePojo.InnerType.InnerEnum.class)\n" +
                 "        public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1515,6 +1541,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1523,6 +1550,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1550,6 +1578,7 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SimplePojo.InnerType.class)\n" +
                 "    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1578,6 +1607,7 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "        @BasedOn(SimplePojo.InnerType.InnerInnerType.class)\n" +
                 "        public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1643,6 +1673,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1652,6 +1683,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1723,6 +1755,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import java.util.List;\n" +
@@ -1735,6 +1768,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1838,6 +1872,7 @@ class MatcherGenerationProcessorITest {
         final String today = LocalDate.now().toString();
         final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SimplePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
                 "\n" +
                 "import javax.annotation.Generated;\n" +
@@ -1848,6 +1883,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.TypeSafeMatcher;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
                 "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
@@ -1974,6 +2010,47 @@ class MatcherGenerationProcessorITest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expectedOutput);
+    }
+
+
+    @Test
+    @DisplayName("No error should be thrown if the processor finds a class generated by itself")
+    void testGenerate_NoErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfigurations;\n" +
+                "\n" +
+                "@MatcherConfigurations(@MatcherConfiguration(\"some.other.pck.SomeGeneratedType\"))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomeGeneratedType", "package some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "@Generated(\n" +
+                "        value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\",\n" +
+                "        date = \"2019-04-19\"\n" +
+                ")\n" +
+                "@BasedOn(String.class)\n" +
+                "public class SomeGeneratedType{\n" +
+                "\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError();
     }
 
     // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
