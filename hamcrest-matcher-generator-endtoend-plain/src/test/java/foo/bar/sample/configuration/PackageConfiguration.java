@@ -11,6 +11,8 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
                 "foo.bar.sample.model.SomePojoInterface",
                 "foo.bar.sample.model.SomeLombokPojo",
                 "foo.bar.sample.resourcedir",
+                "foo.bar.sample.model.GeneratedByJavaPoetMatcherGeneratorType",
+                "foo.bar.sample.model.GeneratedBySomethingElse",
         }))
 public class PackageConfiguration {
 }

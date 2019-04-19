@@ -6,6 +6,7 @@ import io.github.marmer.annotationprocessing.core.impl.StringUtils;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.PropertyDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -44,7 +45,9 @@ public class MatcherBaseDescriptorFactory {
     public Stream<MatcherBaseDescriptor> create(final MatcherConfiguration configuration) {
         final Map<Boolean, List<TypeElement>> matcherBaseDescriptorStream = Stream.of(configuration.value())
                 .flatMap(this::toTypeElements)
+                .filter(this::isNotSelfGenerated)
                 .map(this::toTopLevelContainerType)
+                .filter(this::isNotSelfGenerated)
                 .collect(Collectors.partitioningBy(this::isPublic));
 
         matcherBaseDescriptorStream.get(false)
@@ -52,7 +55,10 @@ public class MatcherBaseDescriptorFactory {
 
         return matcherBaseDescriptorStream.get(true).stream()
                 .map(this::toTypeDescriptor);
+    }
 
+    private boolean isNotSelfGenerated(final Element element) {
+        return element.getAnnotation(BasedOn.class) == null;
     }
 
     private void logInfoNotPublic(final Element element) {
