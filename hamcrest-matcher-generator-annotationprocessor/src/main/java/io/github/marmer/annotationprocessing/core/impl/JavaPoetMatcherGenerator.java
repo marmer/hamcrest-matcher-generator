@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
+    public static final String TYPE_CLASS_FORMAT = "$T.class";
     private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
     private static final String PARAMETER_NAME_DESCRIPTION = "description";
     private static final String PARAMETER_NAME_ITEM = "item";
@@ -66,7 +67,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
 
     private AnnotationSpec basedOn(final MatcherBaseDescriptor descriptor) {
         return AnnotationSpec.builder(BasedOn.class)
-                .addMember("value", "$T.class", getClassNameFor(descriptor.getBase()))
+                .addMember("value", TYPE_CLASS_FORMAT, getClassNameFor(descriptor.getBase()))
                 .build();
     }
 
