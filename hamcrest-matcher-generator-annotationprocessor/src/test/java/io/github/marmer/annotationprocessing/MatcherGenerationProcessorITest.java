@@ -2064,7 +2064,7 @@ class MatcherGenerationProcessorITest {
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration;\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;\n" +
                 "\n" +
-                "@MatcherConfiguration(value = {\"some.other.pck.SimplePojo\"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration(\"my.base.pck\")))\n" +
+                "@MatcherConfiguration(value = {\"some.other.pck.SimplePojo\"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration(\"my.base.pck.\")))\n" +
                 "public final class SomeConfiguration{\n" +
                 "    \n" +
                 "}");
@@ -2088,6 +2088,7 @@ class MatcherGenerationProcessorITest {
                 "import org.hamcrest.Matcher;\n" +
                 "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
+                "import some.other.pck.SimplePojo;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
@@ -2152,6 +2153,5 @@ class MatcherGenerationProcessorITest {
 
     // TODO: marmer 27.04.2019 null generation configuration => default
     // TODO: marmer 27.04.2019 null package configuration => default
-    // TODO: marmer 27.04.2019 dot at the end of a package
     // TODO: marmer 27.04.2019 ckeck inner types for package configuration
 }

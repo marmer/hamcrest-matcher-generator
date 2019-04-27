@@ -207,14 +207,19 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private ClassName classNameOfGeneratedTypeFor(final MatcherBaseDescriptor descriptor) {
         final TypeDescriptor base = descriptor.getBase();
         final List<String> parentNames = base.getParentNames();
+        final String packageName = getPackageOfGeneratedTypeFor(descriptor);
         return parentNames.isEmpty() ?
-                ClassName.get(base.getPackageName(),
+                ClassName.get(packageName,
                         matcherNameFrom(descriptor.getBase())) :
-                ClassName.get(base.getPackageName(),
+                ClassName.get(packageName,
                         matcherNameFrom(parentNames.get(0)),
                         Stream.concat(parentNames.stream().skip(1), Stream.of(base.getTypeName()))
                                 .map(this::matcherNameFrom)
                                 .toArray(String[]::new));
+    }
+
+    private String getPackageOfGeneratedTypeFor(final MatcherBaseDescriptor descriptor) {
+        return descriptor.getMatcherConfiguration().generation().packageConfig().value() + descriptor.getBase().getPackageName();
     }
 
     private FieldSpec innerMatcherField(final MatcherBaseDescriptor descriptor) {
@@ -249,6 +254,6 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private String packageFrom(final MatcherBaseDescriptor descriptor) {
-        return descriptor.getBase().getPackageName();
+        return descriptor.getMatcherConfiguration().generation().packageConfig().value() + descriptor.getBase().getPackageName();
     }
 }

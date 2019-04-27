@@ -54,7 +54,7 @@ public class MatcherBaseDescriptorFactory {
                 .forEach(this::logInfoNotPublic);
 
         return matcherBaseDescriptorStream.get(true).stream()
-                .map(this::toTypeDescriptor);
+                .map(type -> toTypeDescriptor(type, configuration));
     }
 
     private boolean isNotSelfGenerated(final Element element) {
@@ -88,7 +88,7 @@ public class MatcherBaseDescriptorFactory {
     }
 
     private MatcherBaseDescriptor
-    toTypeDescriptor(final TypeElement type, final TypeElement... outerTypes) {
+    toTypeDescriptor(final TypeElement type, final MatcherConfiguration configuration, final TypeElement... outerTypes) {
         return MatcherBaseDescriptor.builder()
                 .base(TypeDescriptor.builder()
                         .packageName(extractPackageName(type.asType()))
@@ -98,11 +98,12 @@ public class MatcherBaseDescriptorFactory {
                         .primitive(isPrimitive(type.asType()))
                         .build())
                 .properties(propertiesFor(type).collect(Collectors.toList()))
-                .innerMatchers(innerMatchersFor(type, outerTypes))
+                .innerMatchers(innerMatchersFor(type, configuration, outerTypes))
+                .matcherConfiguration(configuration)
                 .build();
     }
 
-    private List<MatcherBaseDescriptor> innerMatchersFor(final TypeElement type, final TypeElement... outerTypes) {
+    private List<MatcherBaseDescriptor> innerMatchersFor(final TypeElement type, final MatcherConfiguration configuration, final TypeElement... outerTypes) {
         final Map<Boolean, ? extends List<? extends Element>> matcherBaseDescriptorStream = type.getEnclosedElements()
                 .stream()
                 .filter(this::isType)
@@ -112,7 +113,7 @@ public class MatcherBaseDescriptorFactory {
                 .forEach(this::logInfoNotPublic);
 
         return matcherBaseDescriptorStream.get(true).stream()
-                .map(innerType -> toTypeDescriptor((TypeElement) innerType, asArray(outerTypes, type)))
+                .map(innerType -> toTypeDescriptor((TypeElement) innerType, configuration, asArray(outerTypes, type)))
                 .collect(Collectors.toList());
     }
 

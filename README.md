@@ -176,6 +176,7 @@ This project uses semantic versioning. See https://semver.org/
 * Excludes
 * Custom Matcher Postfix (instead of Matcher)
 * Handling of naming conflicts (if a Class which ends with the configured Postfix exists allready and was not generated)
+* Logging Praefix, so that the user knows from which annotation processor output is coming 
 
 ### Upcoming
 * Possibility to change the "base package" in which the generated Matchers are placed
