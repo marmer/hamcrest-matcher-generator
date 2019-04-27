@@ -601,7 +601,7 @@ class MatcherGenerationProcessorITest {
                 "}");
 
         final String today = LocalDate.now().toString();
-        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.OutputClass", "package some.other.pck;\n" +
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("sample.other.pck.SomePojoMatcher", "package some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
@@ -2064,20 +2064,19 @@ class MatcherGenerationProcessorITest {
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration;\n" +
                 "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;\n" +
                 "\n" +
-                "@MatcherConfiguration(value = {\"some.other.pck.SimplePojo\"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration(\"my.base.pck.\")))\n" +
+                "@MatcherConfiguration(value = {\"some.other.pck.SomePojo\"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration(\"my.base.pck.\")))\n" +
                 "public final class SomeConfiguration{\n" +
                 "    \n" +
                 "}");
 
-        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomePojo", "package some.other.pck;\n" +
                 "\n" +
-                "public class SimplePojo{\n" +
-                "    public String getStringProperty(){\n" +
-                "        return \"bla\";\n" +
+                "public interface SomePojo{\n" +
+                "    public interface InnerInterface {\n" +
                 "    }\n" +
                 "}");
         final String today = LocalDate.now().toString();
-        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("my.base.pck.some.other.pck.SimplePojoMatcher", "package my.base.pck.some.other.pck;\n" +
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("my.base.pck.sample.other.pck.SomePojoMatcher", "package my.base.pck.some.other.pck;\n" +
                 "\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
                 "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
@@ -2085,39 +2084,18 @@ class MatcherGenerationProcessorITest {
                 "import javax.annotation.Generated;\n" +
                 "\n" +
                 "import org.hamcrest.Description;\n" +
-                "import org.hamcrest.Matcher;\n" +
-                "import org.hamcrest.Matchers;\n" +
                 "import org.hamcrest.TypeSafeMatcher;\n" +
-                "import some.other.pck.SimplePojo;\n" +
+                "import some.other.pck.SomePojo;\n" +
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
-                "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
-                "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
+                "@BasedOn(SomePojo.class)\n" +
+                "public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {\n" +
+                "    private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;\n" +
                 "\n" +
-                "    public SimplePojoMatcher() {\n" +
-                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
+                "    public SomePojoMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);\n" +
                 "    }\n" +
                 "\n" +
-                "    public SimplePojoMatcher withStringProperty(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"stringProperty\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SimplePojoMatcher withStringProperty(final String value) {\n" +
-                "        beanPropertyMatcher.with(\"stringProperty\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SimplePojoMatcher withClass(final Matcher<?> matcher) {\n" +
-                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
-                "        return this;\n" +
-                "    }\n" +
-                "\n" +
-                "    public SimplePojoMatcher withClass(final Class value) {\n" +
-                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
-                "        return this;\n" +
-                "    }\n" +
                 "\n" +
                 "    @Override\n" +
                 "    public void describeTo(final Description description) {\n" +
@@ -2125,17 +2103,46 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
+                "    protected boolean matchesSafely(final SomePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SomePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
-                "    public static SimplePojoMatcher isSimplePojo() {\n" +
-                "        return new SimplePojoMatcher();\n" +
+                "    public static SomePojoMatcher isSomePojo() {\n" +
+                "        return new SomePojoMatcher();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "    @BasedOn(SomePojo.InnerInterface.class)\n" +
+                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
+                "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
+                "\n" +
+                "        public InnerInterfaceMatcher() {\n" +
+                "            beanPropertyMatcher = new BeanPropertyMatcher<SomePojo.InnerInterface>(SomePojo.InnerInterface.class);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        public void describeTo(final Description description) {\n" +
+                "            beanPropertyMatcher.describeTo(description);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected boolean matchesSafely(final SomePojo.InnerInterface item) {\n" +
+                "            return beanPropertyMatcher.matches(item);\n" +
+                "        }\n" +
+                "\n" +
+                "        @Override\n" +
+                "        protected void describeMismatchSafely(final SomePojo.InnerInterface item, final Description description) {\n" +
+                "            beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "        }\n" +
+                "\n" +
+                "        public static InnerInterfaceMatcher isInnerInterface() {\n" +
+                "            return new InnerInterfaceMatcher();\n" +
+                "        }\n" +
                 "    }\n" +
                 "}");
 
@@ -2153,5 +2160,4 @@ class MatcherGenerationProcessorITest {
 
     // TODO: marmer 27.04.2019 null generation configuration => default
     // TODO: marmer 27.04.2019 null package configuration => default
-    // TODO: marmer 27.04.2019 ckeck inner types for package configuration
 }
