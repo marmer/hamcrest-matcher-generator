@@ -2053,7 +2053,105 @@ class MatcherGenerationProcessorITest {
                 .compilesWithoutError();
     }
 
-    // TODO: marmer 18.02.2019 handle Naming Conflicts (custom classpostfix)
-    // TODO: marmer 18.02.2019 handle Naming Conflicts (info and do not create)
-    // TODO: marmer 04.03.2019 Better output messages for not matching results (description and missmatchdescription)
+    @Test
+    @DisplayName("Matchers should be generated in configured base package")
+    void testGenerate_MatchersShouldBeGeneratedInConfiguredBasePackage()
+            throws Exception {
+        // Preparation
+        final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
+                "\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration;\n" +
+                "import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;\n" +
+                "\n" +
+                "@MatcherConfiguration(value = {\"some.other.pck.SimplePojo\"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration(\"my.base.pck\")))\n" +
+                "public final class SomeConfiguration{\n" +
+                "    \n" +
+                "}");
+
+        final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SimplePojo", "package some.other.pck;\n" +
+                "\n" +
+                "public class SimplePojo{\n" +
+                "    public String getStringProperty(){\n" +
+                "        return \"bla\";\n" +
+                "    }\n" +
+                "}");
+        final String today = LocalDate.now().toString();
+        final JavaFileObject expectedOutput = JavaFileObjects.forSourceString("my.base.pck.some.other.pck.SimplePojoMatcher", "package my.base.pck.some.other.pck;\n" +
+                "\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;\n" +
+                "import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;\n" +
+                "\n" +
+                "import javax.annotation.Generated;\n" +
+                "\n" +
+                "import org.hamcrest.Description;\n" +
+                "import org.hamcrest.Matcher;\n" +
+                "import org.hamcrest.Matchers;\n" +
+                "import org.hamcrest.TypeSafeMatcher;\n" +
+                "\n" +
+                "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
+                "@BasedOn(SimplePojo.class)\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
+                "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
+                "\n" +
+                "    public SimplePojoMatcher() {\n" +
+                "        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withStringProperty(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"stringProperty\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withStringProperty(final String value) {\n" +
+                "        beanPropertyMatcher.with(\"stringProperty\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"class\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoMatcher withClass(final Class value) {\n" +
+                "        beanPropertyMatcher.with(\"class\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void describeTo(final Description description) {\n" +
+                "        beanPropertyMatcher.describeTo(description);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
+                "        return beanPropertyMatcher.matches(item);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
+                "        beanPropertyMatcher.describeMismatch(item, description);\n" +
+                "    }\n" +
+                "\n" +
+                "    public static SimplePojoMatcher isSimplePojo() {\n" +
+                "        return new SimplePojoMatcher();\n" +
+                "    }\n" +
+                "}");
+
+        // Execution
+        Truth.assert_()
+                .about(JavaSourcesSubjectFactory.javaSources())
+                .that(asList(configuration, javaFileObject))
+                .processedWith(new MatcherGenerationProcessor())
+
+                // Assertion
+                .compilesWithoutError()
+                .and()
+                .generatesSources(expectedOutput);
+    }
+
+    // TODO: marmer 27.04.2019 null generation configuration => default
+    // TODO: marmer 27.04.2019 null package configuration => default
+    // TODO: marmer 27.04.2019 dot at the end of a package
+    // TODO: marmer 27.04.2019 ckeck inner types for package configuration
 }
