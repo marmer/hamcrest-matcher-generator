@@ -172,8 +172,10 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### Upcomming
+### Outstanding
 * Excludes
+
+### Upcoming
 * Possibility to change the "base packeage" in which the generated Matchers are placed
 
 ### 4.0.7
