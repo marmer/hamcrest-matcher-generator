@@ -42,9 +42,9 @@ public @interface MatcherConfiguration {
              * Which package to use for the generated types. By default this value is just a prefix or base package  of generated classes.
              * <p>
              * Example Inputs and outputs for type some.pck.SomeType
-             * "some.praefix_" => "some.praefix_some.pck"
-             * "some.praefix." => "some.praefix.some.pck"
-             * "" => "some.pck"
+             * "some.praefix_" = "some.praefix_some.pck"
+             * "some.praefix." = "some.praefix.some.pck"
+             * "" = "some.pck"
              * </p>
              *
              * @return Which package to use for the generated types
