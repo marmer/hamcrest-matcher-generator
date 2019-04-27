@@ -58,8 +58,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private Stream<MatcherSourceDescriptor> toSourcecode(final MatcherBaseDescriptor descriptor) {
         try {
-            final MatcherSourceDescriptor matcherSourceDescriptor = matcherGenerator.generateMatcherFor(descriptor);
-            return Stream.of(matcherSourceDescriptor);
+            return Stream.of(matcherGenerator.generateMatcherFor(descriptor));
         } catch (final RuntimeException e) {
             logger.error("Hamcrest matcher generation stopped for '" + descriptor.getBase().getFullQualifiedName() + "' because of an unexpected error: " + e.getMessage());
         }
