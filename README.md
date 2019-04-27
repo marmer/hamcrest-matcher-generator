@@ -174,9 +174,11 @@ This project uses semantic versioning. See https://semver.org/
 
 ### Outstanding
 * Excludes
+* Custom Matcher Postfix (instead of Matcher)
+* Handling of naming conflicts (if a Class which ends with the configured Postfix exists allready and was not generated)
 
 ### Upcoming
-* Possibility to change the "base packeage" in which the generated Matchers are placed
+* Possibility to change the "base package" in which the generated Matchers are placed
 
 ### 4.0.7
 * no more MatcherMatcher...Matcher-ception
