@@ -1,6 +1,7 @@
 package io.github.marmer.annotationprocessing.core.impl;
 
 import com.squareup.javapoet.*;
+import io.github.marmer.annotationprocessing.MatcherConfiguration;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JavaPoetMatcherGenerator implements MatcherGenerator {
+    private static final String TYPE_CLASS_FORMAT = "$T.class";
+    private static final String ANNOTATION_VALUE_FIELD_NAME = "value";
     private static final String INNER_MATCHER_FIELD_NAME = "beanPropertyMatcher";
     private static final String PARAMETER_NAME_DESCRIPTION = "description";
     private static final String PARAMETER_NAME_ITEM = "item";
@@ -66,7 +69,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
 
     private AnnotationSpec basedOn(final MatcherBaseDescriptor descriptor) {
         return AnnotationSpec.builder(BasedOn.class)
-                .addMember("value", "$T.class", getClassNameFor(descriptor.getBase()))
+                .addMember(ANNOTATION_VALUE_FIELD_NAME, TYPE_CLASS_FORMAT, getClassNameFor(descriptor.getBase()))
                 .build();
     }
 
@@ -114,7 +117,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         return MethodSpec.methodBuilder(methodNameToGenerateFor(property))
                 .returns(classNameOfGeneratedTypeFor(descriptor))
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(getClassNameFor(property.getReturnValue()), "value", Modifier.FINAL)
+                .addParameter(getClassNameFor(property.getReturnValue()), ANNOTATION_VALUE_FIELD_NAME, Modifier.FINAL)
                 .addStatement("$L.with($S, $T.equalTo(value))", INNER_MATCHER_FIELD_NAME, property.getProperty(), Matchers.class)
                 .addStatement("return this")
                 .build();
@@ -206,14 +209,19 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private ClassName classNameOfGeneratedTypeFor(final MatcherBaseDescriptor descriptor) {
         final TypeDescriptor base = descriptor.getBase();
         final List<String> parentNames = base.getParentNames();
+        final String packageName = getPackageOfGeneratedTypeFor(descriptor);
         return parentNames.isEmpty() ?
-                ClassName.get(base.getPackageName(),
+                ClassName.get(packageName,
                         matcherNameFrom(descriptor.getBase())) :
-                ClassName.get(base.getPackageName(),
+                ClassName.get(packageName,
                         matcherNameFrom(parentNames.get(0)),
                         Stream.concat(parentNames.stream().skip(1), Stream.of(base.getTypeName()))
                                 .map(this::matcherNameFrom)
                                 .toArray(String[]::new));
+    }
+
+    private String getPackageOfGeneratedTypeFor(final MatcherBaseDescriptor descriptor) {
+        return getGenerationPackageConfigurationValueFrom(descriptor) + descriptor.getBase().getPackageName();
     }
 
     private FieldSpec innerMatcherField(final MatcherBaseDescriptor descriptor) {
@@ -234,7 +242,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
 
     private AnnotationSpec generatedAnnotationFor() {
         return AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", getClass().getName())
+                .addMember(ANNOTATION_VALUE_FIELD_NAME, "$S", getClass().getName())
                 .addMember("date", "$S", LocalDate.now())
                 .build();
     }
@@ -248,6 +256,22 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     }
 
     private String packageFrom(final MatcherBaseDescriptor descriptor) {
-        return descriptor.getBase().getPackageName();
+        return getGenerationPackageConfigurationValueFrom(descriptor) + descriptor.getBase().getPackageName();
+    }
+
+    private String getGenerationPackageConfigurationValueFrom(final MatcherBaseDescriptor descriptor) {
+        return getGenerationPackageConfigurationFrom(descriptor).value();
+    }
+
+    private MatcherConfiguration.GenerationConfiguration.PackageConfiguration getGenerationPackageConfigurationFrom(final MatcherBaseDescriptor descriptor) {
+        return getGenerationConfigurationFrom(descriptor).packageConfig();
+    }
+
+    private MatcherConfiguration.GenerationConfiguration getGenerationConfigurationFrom(final MatcherBaseDescriptor descriptor) {
+        return getMatcherConfigurationFrom(descriptor).generation();
+    }
+
+    private MatcherConfiguration getMatcherConfigurationFrom(final MatcherBaseDescriptor descriptor) {
+        return descriptor.getMatcherConfiguration();
     }
 }
