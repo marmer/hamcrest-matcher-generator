@@ -39,11 +39,8 @@ public class MessagerLogger implements Logger {
         }
     }
 
-    public void setCurrentElement(final Element currentElement) {
+    void setCurrentElement(final Element currentElement) {
         this.currentElement = currentElement;
     }
 
-    public void reset() {
-        currentElement = null;
-    }
 }
