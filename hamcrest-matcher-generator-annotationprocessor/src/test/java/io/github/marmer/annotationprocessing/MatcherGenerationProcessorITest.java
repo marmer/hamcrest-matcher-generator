@@ -1013,11 +1013,15 @@ class MatcherGenerationProcessorITest {
                 .compilesWithoutError()
                 .and()
                 .generatesSources(expectedOutput)
-                .withNoteContaining("Processing skipped for non public type: some.other.pck.SimplePojo.PrivateClass")
+                .withNoteContaining("Hamcrest-Matcher-Generator: Processing skipped for non public type: some.other.pck.SimplePojo.PrivateClass")
                 .in(javaFileObject)
+                .onLine(14)
+                .atColumn(13)
                 .and()
-                .withNoteContaining("Processing skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass")
-                .in(javaFileObject);
+                .withNoteContaining("Hamcrest-Matcher-Generator: Processing skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass")
+                .in(javaFileObject)
+                .onLine(17)
+                .atColumn(5);
     }
 
     @Test
@@ -1263,8 +1267,10 @@ class MatcherGenerationProcessorITest {
 
                 // Assertion
                 .compilesWithoutError()
-                .withWarningContaining("Package or type does not exist: not.existing.pck")
-        ;
+                .withWarningContaining("Hamcrest-Matcher-Generator: Package or type does not exist: not.existing.pck")
+                .in(configuration)
+                .onLine(7)
+                .atColumn(14);
     }
 
     @Test

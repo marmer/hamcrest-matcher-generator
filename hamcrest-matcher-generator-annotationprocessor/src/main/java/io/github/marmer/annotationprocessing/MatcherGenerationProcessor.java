@@ -1,7 +1,6 @@
 package io.github.marmer.annotationprocessing;
 
 import com.google.auto.service.AutoService;
-import io.github.marmer.annotationprocessing.core.Logger;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
@@ -25,14 +24,14 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     private MatcherBaseDescriptorFactory matcherBaseDescriptorFactory;
     private MatcherGenerator matcherGenerator;
     private SourceWriter sourceWriter;
-    private Logger logger;
+    private MessagerLogger logger;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
         matcherGenerator = new JavaPoetMatcherGenerator();
-        logger = new MessagerLogger(processingEnv.getMessager());
+        logger = new MessagerLogger("Hamcrest-Matcher-Generator", processingEnv.getMessager());
         matcherBaseDescriptorFactory = new MatcherBaseDescriptorFactory(processingEnv, logger);
         sourceWriter = new SourceWriter(processingEnv.getFiler(), logger);
     }
@@ -42,18 +41,34 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         if (!roundEnv.processingOver()) {
             logger.info("Annotation processor for hamcrest matcher generation started");
 
-            Stream.concat(
-                    roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
-                            .map(this::toAnnotationConfigurations)
-                            .map(MatcherConfigurations::value)
-                            .flatMap(Stream::of),
-                    roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
-                            .map(this::toAnnotationConfiguration))
-                    .flatMap(matcherBaseDescriptorFactory::create)
-                    .flatMap(this::toSourcecode)
-                    .forEach(sourceWriter::create);
+            processPluralConfigurationElements(roundEnv);
+            processSingularConfigurationElement(roundEnv);
         }
         return false;
+    }
+
+
+    private void processSingularConfigurationElement(final RoundEnvironment roundEnv) {
+        roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class).stream()
+                .forEachOrdered(this::processSingularConfigurationElement);
+    }
+
+    private void processSingularConfigurationElement(final Element element) {
+        logger.setCurrentElement(element);
+        performMatcherGeneration(element.getAnnotation(MatcherConfiguration.class));
+    }
+
+    private void processPluralConfigurationElements(final RoundEnvironment roundEnv) {
+        roundEnv.getElementsAnnotatedWith(MatcherConfigurations.class).stream()
+                .forEachOrdered(this::processPluralConfigurationElements);
+    }
+
+    private void processPluralConfigurationElements(final Element element) {
+        logger.setCurrentElement(element);
+        final MatcherConfigurations matcherConfigurations = toAnnotationConfigurations(element);
+        Stream.of(matcherConfigurations.value())
+                .flatMap(Stream::of)
+                .forEach(this::performMatcherGeneration);
     }
 
     private Stream<MatcherSourceDescriptor> toSourcecode(final MatcherBaseDescriptor descriptor) {
@@ -65,11 +80,13 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
         return Stream.empty();
     }
 
-    private MatcherConfiguration toAnnotationConfiguration(final Element element) {
-        return element.getAnnotation(MatcherConfiguration.class);
-    }
-
     private MatcherConfigurations toAnnotationConfigurations(final Element element) {
         return element.getAnnotation(MatcherConfigurations.class);
+    }
+
+    private void performMatcherGeneration(final MatcherConfiguration matcherConfiguration) {
+        matcherBaseDescriptorFactory.create(matcherConfiguration)
+                .flatMap(this::toSourcecode)
+                .forEach(sourceWriter::create);
     }
 }

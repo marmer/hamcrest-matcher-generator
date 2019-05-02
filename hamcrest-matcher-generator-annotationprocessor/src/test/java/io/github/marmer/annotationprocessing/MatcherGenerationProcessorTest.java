@@ -1,6 +1,5 @@
 package io.github.marmer.annotationprocessing;
 
-import io.github.marmer.annotationprocessing.core.Logger;
 import io.github.marmer.annotationprocessing.core.MatcherGenerator;
 import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
 import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
@@ -41,7 +40,7 @@ class MatcherGenerationProcessorTest {
     @Mock
     private SourceWriter sourceWriter;
     @Mock
-    private Logger logger;
+    private MessagerLogger logger;
 
     @Test
     @DisplayName("All types for configured packages of single configuration should be processed and saved")
