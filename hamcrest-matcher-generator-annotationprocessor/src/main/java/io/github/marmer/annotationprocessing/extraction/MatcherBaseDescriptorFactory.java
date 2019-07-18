@@ -95,7 +95,7 @@ public class MatcherBaseDescriptorFactory {
                         .typeName(extractTypename(type.asType()))
                         .parentNames(parentNamesOf(type))
                         .fullQualifiedName(type.getQualifiedName().toString())
-                        .primitive(isPrimitive(type.asType()))
+                        .primitiveBased(isPrimitiveBased(type.asType()))
                         .build())
                 .properties(propertiesFor(type).collect(Collectors.toList()))
                 .innerMatchers(innerMatchersFor(type, configuration, outerTypes))
@@ -216,7 +216,7 @@ public class MatcherBaseDescriptorFactory {
     }
 
     private boolean hasPrimitiveBooleanReturnType(final ExecutableElement element) {
-        return element.getReturnType().getKind().isPrimitive() && "boolean".equals(element.getReturnType().toString());
+        return isPrimitive(element.getReturnType()) && "boolean".equals(element.getReturnType().toString());
     }
 
     private boolean isMethod(final Element element) {
@@ -233,7 +233,7 @@ public class MatcherBaseDescriptorFactory {
                         .typeName(extractTypename(returnType))
                         .fullQualifiedName(fullQualifiedNameOf(returnType))
                         .parentNames(parentNamesOf(returnType))
-                        .primitive(isPrimitive(returnType))
+                        .primitiveBased(isPrimitiveBased(returnType))
                         .build())
                 .build();
     }
@@ -274,7 +274,7 @@ public class MatcherBaseDescriptorFactory {
         if (type instanceof ArrayType) {
             return extractPackageName(((ArrayType) type)
                     .getComponentType());
-        } else if (isPrimitive(type)) {
+        } else if (isPrimitiveBased(type)) {
             return null;
         } else if (isTypeVar(type)) {
             return "java.lang";
@@ -290,13 +290,21 @@ public class MatcherBaseDescriptorFactory {
     private String extractTypename(final TypeMirror type) {
         if (type instanceof ArrayType) {
             return type.toString().replaceFirst(extractPackageName(type) + ".", "");
-        } else if (isPrimitive(type)) {
+        } else if (isPrimitiveBased(type)) {
             return type.toString();
         } else if (isTypeVar(type)) {
             return "Object";
         } else {
             return simpleNameOf(processingEnv.getTypeUtils().asElement(type));
         }
+    }
+
+    private boolean isPrimitiveBased(final TypeMirror type) {
+        return isPrimitive(type) || isArrayOfPrimitives(type);
+    }
+
+    private boolean isArrayOfPrimitives(final TypeMirror type) {
+        return type instanceof ArrayType && isPrimitiveBased(((ArrayType) type).getComponentType());
     }
 
     private boolean isPrimitive(final TypeMirror returnType) {

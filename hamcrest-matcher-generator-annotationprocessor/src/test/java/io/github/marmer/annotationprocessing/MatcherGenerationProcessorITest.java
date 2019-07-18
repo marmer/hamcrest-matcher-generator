@@ -361,6 +361,8 @@ class MatcherGenerationProcessorITest {
                 "     String[] getSomeStringArray();\n" +
                 "     String[][] getSomeMultidimensionalStringArray();\n" +
                 "    AnotherComplexType.SomeInnerType[] getSomeInnerTypeArray();\n" +
+                "    byte[] getSomePrimitiveArray();\n" +
+                "    byte[][] getSomeMultidimensionalPrimitiveArray();\n" +
                 "}");
         final JavaFileObject javaFileObjectWithComplexInnerTypes = JavaFileObjects.forSourceLines("some.other.pck.AnotherComplexType", "package some.other.pck;\n" +
                 "\n" +
@@ -419,6 +421,26 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final AnotherComplexType.SomeInnerType[] value) {\n" +
                 "        beanPropertyMatcher.with(\"someInnerTypeArray\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomePrimitiveArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"somePrimitiveArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomePrimitiveArray(final byte[] value) {\n" +
+                "        beanPropertyMatcher.with(\"somePrimitiveArray\", Matchers.equalTo(value));\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final Matcher<?> matcher) {\n" +
+                "        beanPropertyMatcher.with(\"someMultidimensionalPrimitiveArray\", matcher);\n" +
+                "        return this;\n" +
+                "    }\n" +
+                "\n" +
+                "    public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final byte[][] value) {\n" +
+                "        beanPropertyMatcher.with(\"someMultidimensionalPrimitiveArray\", Matchers.equalTo(value));\n" +
                 "        return this;\n" +
                 "    }\n" +
                 "\n" +
@@ -2078,7 +2100,7 @@ class MatcherGenerationProcessorITest {
         final JavaFileObject javaFileObject = JavaFileObjects.forSourceLines("some.other.pck.SomePojo", "package some.other.pck;\n" +
                 "\n" +
                 "public interface SomePojo{\n" +
-                "    public interface InnerInterface {\n" +
+                "    interface InnerInterface {\n" +
                 "    }\n" +
                 "}");
         final String today = LocalDate.now().toString();

@@ -16,5 +16,5 @@ public class TypeDescriptor {
     private List<String> parentNames = Collections.emptyList();
     private String packageName;
     private String fullQualifiedName;
-    private boolean primitive;
+    private boolean primitiveBased;
 }

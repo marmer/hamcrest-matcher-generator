@@ -169,7 +169,7 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
     private TypeName getClassNameFor(final TypeDescriptor base) {
         final List<String> parentNames = base.getParentNames();
         if (parentNames.isEmpty()) {
-            return base.isPrimitive() ?
+            return base.isPrimitiveBased() ?
                     TypeVariableName.get(base.getTypeName()) :
                     ClassName.get(base.getPackageName(), base.getTypeName());
         } else {

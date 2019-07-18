@@ -177,6 +177,9 @@ This project uses semantic versioning. See https://semver.org/
 * Custom Matcher Postfix (instead of Matcher)
 * Handling of naming conflicts (if a Class which ends with the configured Postfix exists already and was not generated)
 
+### 4.2.1
+* Handling of arrays of primitives fixed
+
 ### 4.2.0
 * Logging happens with a prefix so that the user is able to distinguish between errors of this annotation processor and others
 * Annotation based logs without more concrete elements contain line and column information of the annotated element  
