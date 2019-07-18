@@ -1,5 +1,5 @@
 language: java
-jdk: oraclejdk8
+jdk: openjdk8
 sudo: false
 addons:
   sonarcloud:
@@ -8,19 +8,19 @@ addons:
       secure: "Evcu9i2FMFx3RfCvDSFa7WTJBGhWeht4iNO2ksdLJoos5/ahSTDdU4dmM8ShooZT57AFKPJCZsmPqY8Wnq/gKQgCdBtPeHIi3rPJj4H15vTHzOMkfkYitvm3wXKx9/p8yFEVjndG2YMUY3ZTIuZ9o1zEusLqyoS99RIqjtAOLeqGtzv0JSWkHbuR0pvoQbQJIjuE6Iw4+7soGZah3GC3dApskycOJOwxDE6Y9regjbWAErsLoJSKNVR9naeHBZuwWD+l9G4tei6CwXF70vBLm9s929cTPdBBea4rOde3Msuy2CBKNSEz2M4981i/6R8fdwmxtQEMyw6QnyJxTUiwhRVLnRvRatwJcsDAv6d0xZEVRlfPOwyvSRdeKie1TT1LbeWKQ1RW4BEExETUuaOKfz7JiFt+6+jqm9jEGR3N91C2DiEPYJtfq+JmjrpGWKVxBEt0EzLockE0vng6RJde2a5libldRs1FATmI+yNenIwap/Se4xYYXHmFcvoUDQ9aRWP4kaWjIF3VrNdzay8CimJxCJ0AG+gTqjh8c96RaQF5fNdKzTLLePByt+pQ6JO+VH+aw3kZyf3lLPNNp8293r5NaA60HGiBxvGKzQgROjp+hruDjghYYl8mnXI7jmi4fs1wPxvtb4UfDa8N4LsqcuW4ekbPBfmmXidV0i7JDIM="
 cache:
   directories:
-  - "$HOME/.m2/repository"
-  - "$HOME/apache-maven-${MAVEN_VERSION}"
-  - "$HOME/.sonar/cache"
+    - "$HOME/.m2/repository"
+    - "$HOME/apache-maven-${MAVEN_VERSION}"
+    - "$HOME/.sonar/cache"
 before_cache:
-- rm -rfv $HOME/.m2/repository/io/github/marmer
+  - rm -rfv $HOME/.m2/repository/io/github/marmer
 before_install:
-- export M2_HOME=$HOME/apache-maven-${MAVEN_VERSION}
-- if [ ! -d $M2_HOME/bin ]; then curl https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz
-  | tar zxf - -C $HOME; fi
-- export PATH=$M2_HOME/bin:$PATH
+  - export M2_HOME=$HOME/apache-maven-${MAVEN_VERSION}
+  - if [ ! -d $M2_HOME/bin ]; then curl https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz
+    | tar zxf - -C $HOME; fi
+  - export PATH=$M2_HOME/bin:$PATH
 install:
-- mvn clean install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
+  - mvn clean install -DskipTests=true -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -B -V -U
 script:
   - mvn org.jacoco:jacoco-maven-plugin:0.8.3:prepare-agent package sonar:sonar -Dmaven.javadoc.skip -Dmaven.source.skip -Dassembly.skipAssembly -V
 after_success:
-- mvn clean deploy -Dmaven.test.skip --settings server-settings.xml
+  - mvn clean deploy -Dmaven.test.skip --settings server-settings.xml
