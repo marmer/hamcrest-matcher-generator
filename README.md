@@ -176,7 +176,6 @@ This project uses semantic versioning. See https://semver.org/
 * Excludes
 * Custom Matcher Postfix (instead of Matcher)
 * Handling of naming conflicts (if a Class which ends with the configured Postfix exists already and was not generated)
-* possiblility to set a package prefix because jigsaw does not allow the generation of types within packages of other modules
 
 ### 4.2.2
 * ability to create/use/handle javax.annotations.Generated annotations with newer JDKs added
