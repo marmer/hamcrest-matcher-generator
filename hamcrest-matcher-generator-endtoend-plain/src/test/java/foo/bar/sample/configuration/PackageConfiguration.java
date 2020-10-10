@@ -13,6 +13,7 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
                 "foo.bar.sample.resourcedir",
                 "foo.bar.sample.model.GeneratedByJavaPoetMatcherGeneratorType",
                 "foo.bar.sample.model.GeneratedBySomethingElse",
+                "foo.bar.sample.model.inheritance",
         }))
 public class PackageConfiguration {
 }

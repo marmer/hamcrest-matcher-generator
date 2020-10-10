@@ -56,11 +56,11 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         final ClassName className = classNameOfGeneratedTypeFor(descriptor);
         return TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC)
-                .superclass(parameterizedTypesafeMatchertype(descriptor))
+                .superclass(parameterizedTypesafeMatchertype())
                 .addField(innerMatcherField(descriptor))
                 .addMethod(constructor(descriptor))
                 .addMethods(propertyMethods(descriptor))
-                .addMethods(typesafeMatcherMethods(descriptor))
+                .addMethods(typesafeMatcherMethods())
                 .addMethod(factoryMethod(descriptor))
                 .addAnnotation(generatedAnnotationFor())
                 .addAnnotation(basedOn(descriptor))
@@ -132,12 +132,16 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         return "with" + StringUtils.capitalize(propertyName.getProperty());
     }
 
-    private ParameterizedTypeName parameterizedTypesafeMatchertype(final MatcherBaseDescriptor descriptor) {
-        return ParameterizedTypeName.get(ClassName.get(TypeSafeMatcher.class), getClassNameFor(descriptor.getBase()));
+    private ParameterizedTypeName parameterizedTypesafeMatchertype() {
+        return ParameterizedTypeName.get(ClassName.get(TypeSafeMatcher.class), getObjectClassName());
     }
 
-    private Iterable<MethodSpec> typesafeMatcherMethods(final MatcherBaseDescriptor descriptor) {
-        return Arrays.asList(describeToMethod(), matchesSafelyMathod(descriptor), describeMismatchSafelyMethod(descriptor));
+    private ClassName getObjectClassName() {
+        return ClassName.get("java.lang", "Object");
+    }
+
+    private Iterable<MethodSpec> typesafeMatcherMethods() {
+        return Arrays.asList(describeToMethod(), matchesSafelyMathod(), describeMismatchSafelyMethod());
     }
 
     private MethodSpec describeToMethod() {
@@ -152,12 +156,12 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
                 .addModifiers(Modifier.PUBLIC).build();
     }
 
-    private MethodSpec matchesSafelyMathod(final MatcherBaseDescriptor type) {
+    private MethodSpec matchesSafelyMathod() {
         return MethodSpec.methodBuilder("matchesSafely")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(Boolean.TYPE)
-                .addParameter(getClassNameFor(type.getBase()),
+                .addParameter(getObjectClassName(),
                         PARAMETER_NAME_ITEM,
                         Modifier.FINAL)
                 .addStatement("return $L.matches($L)",
@@ -183,10 +187,10 @@ public class JavaPoetMatcherGenerator implements MatcherGenerator {
         return Stream.concat(Stream.of(outerTypes), Stream.of(type)).toArray(String[]::new);
     }
 
-    private MethodSpec describeMismatchSafelyMethod(final MatcherBaseDescriptor type) {
+    private MethodSpec describeMismatchSafelyMethod() {
         return MethodSpec.methodBuilder("describeMismatchSafely")
                 .addAnnotation(Override.class)
-                .addParameter(getClassNameFor(type.getBase()),
+                .addParameter(getObjectClassName(),
                         PARAMETER_NAME_ITEM,
                         Modifier.FINAL)
                 .addStatement("$L.describeMismatch($L, $L)",

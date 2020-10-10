@@ -37,7 +37,7 @@ If you want to use the matchers in your testcode only, simply add this dependenc
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.2</version>
+        <version>4.2.3</version>
         <scope>test</scope>
     </dependency>
     
@@ -46,14 +46,14 @@ If you want to use it in your production code, you should use it only "provided"
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.2</version>
+        <version>4.2.3</version>
         <scope>provided</scope>
         <optional>true</optional>
     </dependency>
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-        <version>4.2.2</version>
+        <version>4.2.3</version>
         <scope>test</scope>
     </dependency>
 
@@ -172,10 +172,8 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### Outstanding
-* Excludes
-* Custom Matcher Postfix (instead of Matcher)
-* Handling of naming conflicts (if a Class which ends with the configured Postfix exists already and was not generated)
+### 4.2.3
+* Problems with inheritance fixed (Matchers.contains did not work for parent collections with different child types)
 
 ### 4.2.2
 * ability to create/use/handle javax.annotations.Generated annotations with newer JDKs added
