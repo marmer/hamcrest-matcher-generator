@@ -37,7 +37,7 @@ If you want to use the matchers in your testcode only, simply add this dependenc
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.0</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>test</scope>
     </dependency>
     
@@ -46,14 +46,14 @@ If you want to use it in your production code, you should use it only "provided"
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.0</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>provided</scope>
         <optional>true</optional>
     </dependency>
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-        <version>4.2.0</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>test</scope>
     </dependency>
 
@@ -154,8 +154,8 @@ For JDK7+ projects you should (but don't have to) use the following hamcrest ver
 
 	<dependency>
 		<groupId>org.hamcrest</groupId>
-		<artifactId>java-hamcrest</artifactId>
-		<version>2.0.0.0</version>
+		<artifactId>hamcrest</artifactId>
+		<version>2.2</version>
 		<scope>test</scope>
 	</dependency>	
 
@@ -172,11 +172,12 @@ For JDK6 you may use:
 ### Changelog
 This project uses semantic versioning. See https://semver.org/
 
-### Outstanding
-* Excludes
-* Custom Matcher Postfix (instead of Matcher)
-* Handling of naming conflicts (if a Class which ends with the configured Postfix exists already and was not generated)
-* possiblility to set a package prefix because jigsaw does not allow the generation of types within packages of other modules
+### 4.2.4
+* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element within a list in "contains" to "Matcher" without any generic information
+
+### 4.2.3
+* Problems with inheritance fixed (Matchers.contains did not work for parent collections with different child types)
+* ability to set a package prefix because jigsaw does not allow the generation of types within packages of other modules
 
 ### 4.2.2
 * ability to create/use/handle javax.annotations.Generated annotations with newer JDKs added
