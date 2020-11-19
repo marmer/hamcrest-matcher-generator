@@ -7,24 +7,24 @@
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator</artifactId>
-        <version>4.2.3</version>
+        <version>4.2.4</version>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-endtoend-plain</artifactId>
-    <version>4.2.3</version>
+    <version>4.2.4</version>
 
     <dependencies>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-            <version>4.2.3</version>
+            <version>4.2.4</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-            <version>4.2.3</version>
+            <version>4.2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -34,8 +34,8 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>java-hamcrest</artifactId>
-            <version>2.0.0.0</version>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

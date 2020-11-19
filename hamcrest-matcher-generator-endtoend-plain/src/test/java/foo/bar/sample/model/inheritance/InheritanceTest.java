@@ -1,5 +1,6 @@
 package foo.bar.sample.model.inheritance;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +29,7 @@ class InheritanceTest {
 
         MatcherAssert.assertThat(main, isMain()
                 .withParents(Matchers.contains(
-                        FirstChildMatcher.isFirstChild()
+                        (Matcher) FirstChildMatcher.isFirstChild()
                                 .withId(firstId)
                                 .withName(firstName),
                         SecondChildMatcher.isSecondChild()
