@@ -11,28 +11,28 @@
 
 hamcrest-matcher-generator
 ==========================
-This library provides the generation of hamcrest matchers without the need to pollute the production code. 
+This library allows you to generate Hamcrest matchers without forcing you to pollute your production code. 
 
 Bean Property Matcher
 ---------------------
 
-Ever wanted to...
-* ...have some Hamcrest-Matcchers for all (or some) of your Model classes oder Services magically appear?
-  * or ever wanted it without to pollute your production code with test code annotations?
-  * or types which are not part of the current source code.
-* ...test your models with hamcrest in an atomic way with atomic error messages?
-* ...have a compile safe alternative to Hamcrests "hasProperty" or HasPropertyWithValue?
+Have you ever wished you could ...
+* magically produce Hamcrest Matchers for all (or just some) of your model or service classes?
+* produce such matchers without polluting your production code with test code annotations?
+* generate types which are not part of the current source code?
+* test your models with hamcrest in an atomic way with informative error messages?
+* have a compile-safe alternative to Hamcrest's "hasProperty" or HasPropertyWithValue?
 
 Properties of Lombok annotated classes are supported as well (tested with version 1.18.4)
 
 How to use
 ==========
-All you need is to add one or two dependencies and an Annotation for the configuration for what types the matchers have to be generated.
+All you need to do is to add one or two dependencies and an Annotation for the configuration for those types the matchers have to be generated for.
 
 Dependencies
 ----------
 
-If you want to use the matchers in your testcode only, simply add this dependency to your project.
+If you wish to use the matchers in your test code only, simply add this dependency to your project:
 
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
@@ -41,7 +41,7 @@ If you want to use the matchers in your testcode only, simply add this dependenc
         <scope>test</scope>
     </dependency>
     
-If you want to use it in your production code, you should use it only "provided" to avoid unnecessary dependencies. In this case, you have to add another dependency used by the generated code.
+If you wish to use it in your production code as well, you should declare the scope as "provided" to avoid unnecessary dependencies. In this case you will have to add another dependency that will be used by the generated code.
 
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
@@ -59,7 +59,7 @@ If you want to use it in your production code, you should use it only "provided"
 
 Configuration
 -------------
-Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either full qualified Class names or packages for Types you want to generate matchers for e.g.
+Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either fully-qualified class names or packages for the types you wish to generate matchers for e.g.
 
     @MatcherConfiguration({
             "foo.bar.sample.model.SomePojo",
@@ -70,7 +70,7 @@ Simply create a Class or Interface with one or more `@MatcherConfiguration` and 
     public class PackageConfiguration {
     }
     
-Depending on where you put the configuration the generated matchers will be generated within generated-test-sources you put it in your test sources or in generated-sources if you put it in your production code sources. (At least in maven projects this is the default behavior. It may be different with other build tools or non default configuration, but it should work for other build tools in a similar way)
+Depending on where you place the configuration file, the generated matchers will be created either within generated-test-sources you(if you place it inside your test sources directory) or in generated-sources (if you place it inside your production code source directory). Imaven projects this is the default behavior. It may be different with other build tools or with a non-default configuration, but it should work for other build tools in a similar way)
 
 Generated result
 ----------------
@@ -86,7 +86,7 @@ Assuming you hava a pojo like this one with the configuration above...
         }
     }
     
-... a Matcher Named SomePojoMatcher is generated within the same package and you could use it the following way in your test:
+... a Matcher named SomePojoMatcher is generated within the same package which you can use in your test in the following way:
 
     final SomePojo somePojo = new SomePojo();
     somePojo.setPojoField("pojoFieldValue");
@@ -102,18 +102,18 @@ Assuming you hava a pojo like this one with the configuration above...
             .withPojoField(is(equalTo("pojoFieldValue")))
     );
 
-This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and for matchers for each field.
+This example shows a way to match the class, equality for its field values as well as for parent fields and for matchers for each of those field.
 
 Requirements
 ============
 
 Build tool
 ---------
-You can use this library with the buildtool of your choice or even just javac. This library is capable of annotation processing. So the matchers are generated at compile time like it's done with other Libraries (e.g. Lombok or Mapstruct).  
+You can use this library with the build tool of your choice or with even with javac. This library is capable of annotation processing and the matchers are generated at compile time, similar to libraries such as Lombok and Mapstruct.  
 
 IDE
 ---
-Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by itself when the project builds. Some IDEs may need a little help. Eclipse for example may be only capable of annotation processing in maven projects if you have installed a maven plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt) but you don't have the IDO to perform the processing. With a little help of the `build-helper-maven-plugin` you can tell the IDE where to look for sources generated by Maven. 
+Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the generation automatically when the project builds. Some IDEs may need a little help, however. Eclipse, for example, may only be capable of annotation processing for Maven projects as long as you have already installed a maven plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt). With the support of the `build-helper-maven-plugin`, however, you can configure the IDE to tell it where to look for the sources generated by Maven. 
 
 ```
 <plugin>
@@ -140,15 +140,15 @@ Use the IDE of your choice. Each IDE with annotation processing capabilities sho
 JDK
 ---
 
-At least JDK6 is required to use the generated source code but the annotation processor requires JDK8 to create it.
+JDK6 or higher is required to use the generated source code, however the annotation processor requires JDK8 to create it.
 
-Generated sources may also work with JDK5. But it is and will not be tested so there is no guarantee!
+Generated sources may also work with JDK5. This configuration will not be tested, however, so there is no guarantee!
 
 Hamcrest
 --------
-Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources of course. In General you shuld be free to choose your version of hamcrest by yourself.
+Because Hamcrest matchers are generated you will also need a dependency on the library in order to be able to use the generated sources. You are free to choose your own version of Hamcrest.
 
-Your Project should be at least of Java version 1.6 and use a hamcrest version of 1.2. The resulting code will not work without hamcrest.
+Your project should be compiled with Java version 1.6 or higher and use a Hamcrest version starting with 1.2. The resulting code will not work without Hamcrest.
 
 For JDK7+ projects you should (but don't have to) use the following hamcrest version for the generated sources
 
