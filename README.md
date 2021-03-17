@@ -168,18 +168,25 @@ For JDK6 you may use:
 		<scope>test</scope>
 	</dependency>`
 
-
 ### Changelog
+
 This project uses semantic versioning. See https://semver.org/
 
+### 4.2.5
+
+* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element within a list in "contains" to "Matcher" without any generic information
+
 ### 4.2.4
+
 * Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element within a list in "contains" to "Matcher" without any generic information
 
 ### 4.2.3
+
 * Problems with inheritance fixed (Matchers.contains did not work for parent collections with different child types)
 * ability to set a package prefix because jigsaw does not allow the generation of types within packages of other modules
 
 ### 4.2.2
+
 * ability to create/use/handle javax.annotations.Generated annotations with newer JDKs added
 
 ### 4.2.1

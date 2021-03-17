@@ -14,6 +14,7 @@ import io.github.marmer.annotationprocessing.MatcherConfigurations;
                 "foo.bar.sample.model.GeneratedByJavaPoetMatcherGeneratorType",
                 "foo.bar.sample.model.GeneratedBySomethingElse",
                 "foo.bar.sample.model.inheritance",
+                "foo.bar.sample.model"
         }))
 public class PackageConfiguration {
 }

@@ -17,7 +17,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
-    void testGenerate_MatcherShouldHaveBeenGeneratedForPojoFromSourceFile() {
+    void testGenerate_MatcherShouldHaveBeenGeneratedForPojoFromSourceFile()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -89,7 +90,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -142,12 +143,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -157,7 +158,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SimplePojo.InnerStaticPojo.class)\n" +
-                "    public static class InnerStaticPojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerStaticPojoMatcher() {\n" +
@@ -190,12 +191,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerStaticPojo item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo item, final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
@@ -204,7 +205,7 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "        @BasedOn(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class)\n" +
-                "        public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "        public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "            public InnerInnerStaticPojoMatcher() {\n" +
@@ -227,12 +228,12 @@ class MatcherGenerationProcessorITest {
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected boolean matchesSafely(final Object item) {\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo item) {\n" +
                 "                return beanPropertyMatcher.matches(item);\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo item, final Description description) {\n" +
                 "                beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "            }\n" +
                 "\n" +
@@ -258,7 +259,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should be generated for Interfaces with property methods")
-    void testGenerate_MatcherShouldBeGeneratedForInterfacesWithPropertyMethods() {
+    void testGenerate_MatcherShouldBeGeneratedForInterfacesWithPropertyMethods()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -289,7 +291,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojoInterface.class)\n" +
-                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoInterfaceMatcher() {\n" +
@@ -312,12 +314,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojoInterface item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojoInterface item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "    \n" +
@@ -340,7 +342,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should be generated for arrays")
-    void testGenerate_MatcherShouldBeGeneratedForArrays() {
+    void testGenerate_MatcherShouldBeGeneratedForArrays()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -384,7 +387,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojoInterface.class)\n" +
-                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoInterfaceMatcher() {\n" +
@@ -447,12 +450,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojoInterface item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojoInterface item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -475,7 +478,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should be generated for inner non static classes")
-    void testGenerate_MatcherShouldBeGeneratedForInnerNonStaticClasses() {
+    void testGenerate_MatcherShouldBeGeneratedForInnerNonStaticClasses()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -508,7 +512,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SomeClass.class)\n" +
-                "public class SomeClassMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {\n" +
                 "    private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SomeClassMatcher() {\n" +
@@ -531,12 +535,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SomeClass item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SomeClass item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "    \n" +
@@ -546,7 +550,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SomeClass.SomeNonStaticInnerClass.class)\n" +
-                "    public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {\n" +
                 "        private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public SomeNonStaticInnerClassMatcher() {\n" +
@@ -569,12 +573,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SomeClass.SomeNonStaticInnerClass item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "        protected void describeMismatchSafely(final SomeClass.SomeNonStaticInnerClass item, final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
@@ -598,7 +602,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Generated Matchers should work for inner interfaces")
-    void testGenerate_GeneratedMatchersShouldWorkForInnerInterfaces() {
+    void testGenerate_GeneratedMatchersShouldWorkForInnerInterfaces()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -632,7 +637,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SomePojo.class)\n" +
-                "public class SomePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {\n" +
                 "    private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SomePojoMatcher() {\n" +
@@ -655,12 +660,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SomePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SomePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -670,7 +675,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SomePojo.InnerInterface.class)\n" +
-                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
                 "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerInterfaceMatcher() {\n" +
@@ -683,12 +688,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SomePojo.InnerInterface item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "        protected void describeMismatchSafely(final SomePojo.InnerInterface item, final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
@@ -712,7 +717,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should be generated for Enums with property methods")
-    void testGenerate_MatcherShouldBeGeneratedForEnumsWithPropertyMethods() {
+    void testGenerate_MatcherShouldBeGeneratedForEnumsWithPropertyMethods()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -746,7 +752,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojoEnum.class)\n" +
-                "public class SimplePojoEnumMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoEnumMatcher() {\n" +
@@ -789,12 +795,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojoEnum item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojoEnum item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "    \n" +
@@ -818,7 +824,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should contain inherited properties")
-    void testGenerate_MatcherShouldContainInheritedProperties() {
+    void testGenerate_MatcherShouldContainInheritedProperties()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -863,7 +870,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -906,12 +913,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "    \n" +
@@ -934,7 +941,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher and matcher methods should not be generated for non public types and properties")
-    void testGenerate_MatcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties() {
+    void testGenerate_MatcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -980,7 +988,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1003,12 +1011,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1040,7 +1048,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matcher should be generated for types of outer dependencies as well")
-    void testGenerate_MatcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell() {
+    void testGenerate_MatcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1065,7 +1074,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(ArgumentMatchers.class)\n" +
-                "public class ArgumentMatchersMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {\n" +
                 "    private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public ArgumentMatchersMatcher() {\n" +
@@ -1088,12 +1097,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final ArgumentMatchers item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final ArgumentMatchers item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1117,7 +1126,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matchers should be generated for all classes directly located in a configured package")
-    void testGenerate_MatchersShouldBeGeneratedForAllClassesDirectlyLocatedInAConfiguredPackage() {
+    void testGenerate_MatchersShouldBeGeneratedForAllClassesDirectlyLocatedInAConfiguredPackage()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1154,7 +1164,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo1.class)\n" +
-                "public class SimplePojo1Matcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojo1Matcher() {\n" +
@@ -1177,12 +1187,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo1 item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo1 item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1202,7 +1212,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo2.class)\n" +
-                "public class SimplePojo2Matcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojo2Matcher() {\n" +
@@ -1225,12 +1235,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo2 item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo2 item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1253,7 +1263,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Warns on not existing packages or types")
-    void testGenerate_WarnsOnNotExistingPackagesOrTypes() {
+    void testGenerate_WarnsOnNotExistingPackagesOrTypes()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1286,7 +1297,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Generation should work for MatcherConfiguration (singular) as well")
-    void testGenerate_GenerationSholdWorkForMatcherConfigurationAsWell() {
+    void testGenerate_GenerationSholdWorkForMatcherConfigurationAsWell()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1316,7 +1328,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1339,12 +1351,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1366,7 +1378,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Generation should work for properties of inner enums")
-    void testGenerate_GenerationShouldWorkForPropertiesOfInnerEnums() {
+    void testGenerate_GenerationShouldWorkForPropertiesOfInnerEnums()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1403,7 +1416,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1426,12 +1439,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1441,7 +1454,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SimplePojo.InnerType.class)\n" +
-                "    public static class InnerTypeMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerTypeMatcher() {\n" +
@@ -1454,12 +1467,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerType item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item,\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerType item,\n" +
                 "                                              final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
@@ -1470,7 +1483,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "        @BasedOn(SimplePojo.InnerType.InnerEnum.class)\n" +
-                "        public static class InnerEnumMatcher extends TypeSafeMatcher<Object> {\n" +
+                "        public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;\n" +
                 "\n" +
                 "            public InnerEnumMatcher() {\n" +
@@ -1503,12 +1516,12 @@ class MatcherGenerationProcessorITest {
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected boolean matchesSafely(final Object item) {\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerType.InnerEnum item) {\n" +
                 "                return beanPropertyMatcher.matches(item);\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected void describeMismatchSafely(final Object item,\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerType.InnerEnum item,\n" +
                 "                                                  final Description description) {\n" +
                 "                beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "            }\n" +
@@ -1533,7 +1546,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Configured inner types should also generate all outer matchers")
-    void testGenerate_ConfiguredInnerTypesShouldAlsoGenerateAllOuterMatchers() {
+    void testGenerate_ConfiguredInnerTypesShouldAlsoGenerateAllOuterMatchers()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1565,7 +1579,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1578,12 +1592,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1593,7 +1607,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SimplePojo.InnerType.class)\n" +
-                "    public static class InnerTypeMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {\n" +
                 "        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerTypeMatcher() {\n" +
@@ -1606,12 +1620,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SimplePojo.InnerType item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item,\n" +
+                "        protected void describeMismatchSafely(final SimplePojo.InnerType item,\n" +
                 "                                              final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
@@ -1622,7 +1636,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "        @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "        @BasedOn(SimplePojo.InnerType.InnerInnerType.class)\n" +
-                "        public static class InnerInnerTypeMatcher extends TypeSafeMatcher<Object> {\n" +
+                "        public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {\n" +
                 "            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType> beanPropertyMatcher;\n" +
                 "\n" +
                 "            public InnerInnerTypeMatcher() {\n" +
@@ -1635,12 +1649,12 @@ class MatcherGenerationProcessorITest {
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected boolean matchesSafely(final Object item) {\n" +
+                "            protected boolean matchesSafely(final SimplePojo.InnerType.InnerInnerType item) {\n" +
                 "                return beanPropertyMatcher.matches(item);\n" +
                 "            }\n" +
                 "\n" +
                 "            @Override\n" +
-                "            protected void describeMismatchSafely(final Object item,\n" +
+                "            protected void describeMismatchSafely(final SimplePojo.InnerType.InnerInnerType item,\n" +
                 "                                                  final Description description) {\n" +
                 "                beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "            }\n" +
@@ -1665,7 +1679,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Only a single matcher method should be generated for properties of type Matcher")
-    void testGenerate_OnlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher() {
+    void testGenerate_OnlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1697,7 +1712,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1715,12 +1730,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1742,7 +1757,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Generics and wildcard properties should be handled like Object")
-    void testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject() {
+    void testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1781,7 +1797,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1814,12 +1830,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -1841,7 +1857,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Generation should work properly for primitives")
-    void testGenerate_GenerationShouldWorkProperlyForPrimitives() {
+    void testGenerate_GenerationShouldWorkProperlyForPrimitives()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -1895,7 +1912,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SimplePojo.class)\n" +
-                "public class SimplePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {\n" +
                 "    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SimplePojoMatcher() {\n" +
@@ -1998,12 +2015,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SimplePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SimplePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -2026,7 +2043,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("No error should be thrown if the processor finds a class generated by itself")
-    void testGenerate_NoErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself() {
+    void testGenerate_NoErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -2065,7 +2083,8 @@ class MatcherGenerationProcessorITest {
 
     @Test
     @DisplayName("Matchers should be generated in configured base package")
-    void testGenerate_MatchersShouldBeGeneratedInConfiguredBasePackage() {
+    void testGenerate_MatchersShouldBeGeneratedInConfiguredBasePackage()
+            throws Exception {
         // Preparation
         final JavaFileObject configuration = JavaFileObjects.forSourceLines("some.pck.SomeConfiguration", "package some.pck;\n" +
                 "\n" +
@@ -2098,7 +2117,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "@Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "@BasedOn(SomePojo.class)\n" +
-                "public class SomePojoMatcher extends TypeSafeMatcher<Object> {\n" +
+                "public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {\n" +
                 "    private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;\n" +
                 "\n" +
                 "    public SomePojoMatcher() {\n" +
@@ -2112,12 +2131,12 @@ class MatcherGenerationProcessorITest {
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected boolean matchesSafely(final Object item) {\n" +
+                "    protected boolean matchesSafely(final SomePojo item) {\n" +
                 "        return beanPropertyMatcher.matches(item);\n" +
                 "    }\n" +
                 "\n" +
                 "    @Override\n" +
-                "    protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "    protected void describeMismatchSafely(final SomePojo item, final Description description) {\n" +
                 "        beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "    }\n" +
                 "\n" +
@@ -2127,7 +2146,7 @@ class MatcherGenerationProcessorITest {
                 "\n" +
                 "    @Generated(value = \"io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator\", date = \"" + today + "\")\n" +
                 "    @BasedOn(SomePojo.InnerInterface.class)\n" +
-                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<Object> {\n" +
+                "    public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {\n" +
                 "        private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;\n" +
                 "\n" +
                 "        public InnerInterfaceMatcher() {\n" +
@@ -2140,12 +2159,12 @@ class MatcherGenerationProcessorITest {
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected boolean matchesSafely(final Object item) {\n" +
+                "        protected boolean matchesSafely(final SomePojo.InnerInterface item) {\n" +
                 "            return beanPropertyMatcher.matches(item);\n" +
                 "        }\n" +
                 "\n" +
                 "        @Override\n" +
-                "        protected void describeMismatchSafely(final Object item, final Description description) {\n" +
+                "        protected void describeMismatchSafely(final SomePojo.InnerInterface item, final Description description) {\n" +
                 "            beanPropertyMatcher.describeMismatch(item, description);\n" +
                 "        }\n" +
                 "\n" +
