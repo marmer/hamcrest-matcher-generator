@@ -37,7 +37,7 @@ If you wish to use the matchers in your test code only, simply add this dependen
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.3</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>test</scope>
     </dependency>
     
@@ -46,14 +46,14 @@ If you wish to use it in your production code as well, you should declare the sc
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>4.2.3</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>provided</scope>
         <optional>true</optional>
     </dependency>
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-        <version>4.2.3</version>
+        <version>${hamcrest-matcher-generator.version}</version>
         <scope>test</scope>
     </dependency>
 
