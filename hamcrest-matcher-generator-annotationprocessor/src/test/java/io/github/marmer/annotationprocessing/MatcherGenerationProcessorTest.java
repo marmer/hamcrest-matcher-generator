@@ -6,7 +6,6 @@ import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
 import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
 import io.github.marmer.annotationprocessing.creation.SourceWriter;
 import io.github.marmer.annotationprocessing.extraction.MatcherBaseDescriptorFactory;
-import lombok.var;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
