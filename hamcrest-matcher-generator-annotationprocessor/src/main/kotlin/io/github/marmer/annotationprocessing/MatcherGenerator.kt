@@ -36,12 +36,50 @@ class MatcherGenerator(
         .superclass(getSuperClass())
 //        .addSuperinterface(getPojoAsserterInterface())
         .addFields(getFields())
-//        .addMethods(getInitializers())
+        .addMethods(getInitializers())
 //        .addMethods(getBaseAssertionMethods())
 //        .addMethods(getPropertyAssertionMethods())
 //        .addMethods(getFinisherMethods())
         .addMethods(getMatcherMethods())
         .addTypes(getInnerMatchers())
+
+    private fun getInitializers() = listOf(
+        getBaseTypeConstructor(),
+        getApiInitializer()
+    )
+
+    private fun getApiInitializer() =
+        methodBuilder("is${baseType.simpleName}") // TODO: marmer 17.06.2021 check if genericy have to be erased
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
+            .addParameter(baseType.typeName, "base", Modifier.FINAL)
+            .addStatement("return new \$T(base)", getGeneratedTypeName())
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getSimpleMatcherClassName() =
+        ClassName.get("", simpleMatcherName)
+
+    private fun getGeneratedTypeName() =
+        if (baseType.typeParameters.isEmpty()) ClassName.get("", simpleMatcherName)
+        else getSimpleMatcherClassNameWithParameters()
+
+    private fun getSimpleMatcherClassNameWithParameters() = ParameterizedTypeName.get(
+        getSimpleMatcherClassName(),
+        *(baseType.typeParameters.map { TypeVariableName.get(it) }.toTypedArray())
+    )
+
+
+    private fun getBaseTypeConstructor() = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PRIVATE)
+        .addStatement(
+            "\$L = new \$L(\$L.class)",
+            builderFieldName,
+            getBuilderFieldType(),
+            baseType.simpleName,
+        )
+        .build()
+
 
     private fun getMatcherMethods() = listOf(
         getDescribeToMethod(),
