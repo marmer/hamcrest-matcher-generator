@@ -5,13 +5,18 @@ import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeName.BOOLEAN
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
 import org.hamcrest.Description
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers
 import org.hamcrest.TypeSafeMatcher
 import java.time.LocalDateTime
+import java.util.*
 import javax.annotation.processing.Generated
 import javax.annotation.processing.ProcessingEnvironment
-import javax.lang.model.element.Modifier
-import javax.lang.model.element.PackageElement
-import javax.lang.model.element.TypeElement
+import javax.lang.model.element.*
+import javax.lang.model.type.PrimitiveType
+import javax.lang.model.type.TypeKind
+import javax.lang.model.type.TypeMirror
+
 
 class MatcherGenerator(
     private val processingEnv: ProcessingEnvironment,
@@ -34,26 +39,61 @@ class MatcherGenerator(
         .addAnnotation(getGeneratedAnnotation())
         .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
         .superclass(getSuperClass())
-//        .addSuperinterface(getPojoAsserterInterface())
         .addFields(getFields())
-        .addMethods(getInitializers())
-//        .addMethods(getBaseAssertionMethods())
-//        .addMethods(getPropertyAssertionMethods())
-//        .addMethods(getFinisherMethods())
+        .addMethod(getConstructor())
+        .addMethods(getPropertyMatcherMethods())
         .addMethods(getMatcherMethods())
+        .addMethod(getApiInitializer())
         .addTypes(getInnerMatchers())
 
-    private fun getInitializers() = listOf(
-        getBaseTypeConstructor(),
-        getApiInitializer()
-    )
+    private fun getPropertyMatcherMethods() =
+        baseType.properties
+            .flatMap { property ->
+                listOfNotNull(
+                    getTypeMatcherFor(property),
+                    getMancrestMatcherFor(property),
+                )
+            }
+
+    private fun getTypeMatcherFor(property: Property) =
+        methodBuilder("with${property.name.capitalized}")
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(
+                ParameterizedTypeName.get(
+                    ClassName.get(Matcher::class.java),
+                    WildcardTypeName.supertypeOf(TypeName.get(property.boxedType))
+                ),
+                "matcher",
+                Modifier.FINAL
+            )
+            .addStatement(
+                "\$L.with(\$S, matcher)",
+                builderFieldName,
+                property.name
+            )
+            .addStatement(
+                "return this"
+            )
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getMancrestMatcherFor(property: Property) =
+        methodBuilder("with${property.name.capitalized}")
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(TypeName.get(property.boxedType), "value", Modifier.FINAL)
+            .addStatement(
+                "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, property.name,
+                Matchers::class.java
+            )
+            .addStatement("return this")
+            .returns(getGeneratedTypeName())
+            .build()
 
     private fun getApiInitializer() =
-        methodBuilder("is${baseType.simpleName}") // TODO: marmer 17.06.2021 check if genericy have to be erased
+        methodBuilder("is${baseType.simpleName}")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
-            .addParameter(baseType.typeName, "base", Modifier.FINAL)
-            .addStatement("return new \$T(base)", getGeneratedTypeName())
+            .addStatement("return new \$T()", getGeneratedTypeName())
             .returns(getGeneratedTypeName())
             .build()
 
@@ -70,13 +110,13 @@ class MatcherGenerator(
     )
 
 
-    private fun getBaseTypeConstructor() = MethodSpec.constructorBuilder()
-        .addModifiers(Modifier.PRIVATE)
+    private fun getConstructor() = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PUBLIC)
         .addStatement(
             "\$L = new \$L(\$L.class)",
             builderFieldName,
             getBuilderFieldType(),
-            baseType.simpleName,
+            baseType.typeName,
         )
         .build()
 
@@ -88,7 +128,7 @@ class MatcherGenerator(
     )
 
     private fun getDescribeToMethod() = methodBuilder("describeTo")
-        .addModifiers(Modifier.PROTECTED)
+        .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override::class.java)
         .addParameter(
             Description::class.java,
@@ -108,24 +148,20 @@ class MatcherGenerator(
         .addParameter(baseType.typeName, "item", Modifier.FINAL)
         .addStatement("return \$L.matches(\$L)", builderFieldName, "item")
         .returns(BOOLEAN)
-        .build();
+        .build()
 
     private fun getDescribeMissmatchSafelyMethod() =
         methodBuilder("describeMismatchSafely")
             .addAnnotation(Override::class.java)
             .addParameter(baseType.typeName, "item", Modifier.FINAL)
-            .addParameter(
-                Description::class.java,
-                "description",
-                Modifier.FINAL
-            )
+            .addParameter(Description::class.java, "description", Modifier.FINAL)
             .addStatement(
                 "\$L.describeMismatch(\$L, \$L)",
                 builderFieldName,
                 "item",
                 "description"
             )
-            .addModifiers(Modifier.PROTECTED).build();
+            .addModifiers(Modifier.PROTECTED).build()
 
 
     private fun getFields() = listOf(
@@ -165,17 +201,75 @@ class MatcherGenerator(
                     .build()
             }
 
+    private val TypeElement.properties: List<Property>
+        get() = transitiveInheritedElements
+            .filter { it.isProperty }
+            .distinctBy { it.simpleName }
+            .map { it as ExecutableElement }
+            .map {
+                Property(
+                    name = it.simpleName.withoutPropertyPrefix(),
+                    type = it.returnType,
+                    accessor = it.toString()
+                )
+            }
+
+    private val TypeElement.transitiveInheritedElements: List<Element>
+        get() = if (superclass.kind != TypeKind.NONE && kind != ElementKind.ENUM)
+            enclosedElements +
+                    superclass.asTypeElement().transitiveInheritedElements +
+                    interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
+        else
+            enclosedElements +
+                    interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
+    private val Property.boxedType: TypeMirror
+        get() =
+            if (type is PrimitiveType) processingEnv.typeUtils.boxedClass(type).asType()
+            else type
+
     private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
         .addMember("value", "\$S", generationMarker)
         .addMember("date", "\$S", generationTimeStamp())
         .build()
 
+    private val simpleMatcherName = "${baseType.simpleName}Matcher"
+
+    private fun TypeMirror.asTypeElement() =
+        (processingEnv.typeUtils.asElement(this) as TypeElement)
+
     private val TypeElement.packageElement: PackageElement
         get() = processingEnv.elementUtils.getPackageOf(this)
 
-    private val simpleMatcherName = "${baseType.simpleName}Matcher"
 
     private val TypeElement.typeName: TypeName
         get() = TypeName.get(asType())
+
+    private val Element.isProperty
+        get() =
+            this is ExecutableElement &&
+                    !isPrivate &&
+                    hasPropertyPrefix() &&
+                    hasReturnType() &&
+                    hasNoParameters()
+
+    private fun Element.hasPropertyPrefix() =
+        simpleName.startsWith("get") || simpleName.startsWith("is")
+
+    private fun ExecutableElement.hasReturnType() =
+        returnType.kind != TypeKind.VOID
+
+    private fun ExecutableElement.hasNoParameters() =
+        this.parameters.isEmpty()
+
+    private fun Name.withoutPropertyPrefix() = toString()
+        .replaceFirst(Regex("^((get)|(is))"), "")
+        .decapitalized
+
+    private val String.capitalized: String
+        get() = replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+    private val String.decapitalized: String
+        get() = replaceFirstChar { it.lowercase(Locale.getDefault()) }
 }
 
+private data class Property(val name: String, val type: TypeMirror, val accessor: String)

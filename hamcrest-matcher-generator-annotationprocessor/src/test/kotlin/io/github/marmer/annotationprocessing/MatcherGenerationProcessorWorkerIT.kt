@@ -78,7 +78,6 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -86,8 +85,7 @@ internal class MatcherGenerationProcessorIT {
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -154,7 +152,7 @@ internal class MatcherGenerationProcessorIT {
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SimplePojo.InnerStaticPojo.class)
                 public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {
                     private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;
@@ -201,7 +199,7 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerStaticPojoMatcher isInnerStaticPojo() {
                         return new InnerStaticPojoMatcher();
                     }
-                    @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                     @BasedOn(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class)
                     public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {
                         private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
@@ -280,7 +278,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -288,7 +285,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SimplePojoInterface.class)
             public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {
                 private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
@@ -380,7 +377,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -390,7 +386,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SimplePojoInterface.class)
             public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {
                 private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
@@ -510,7 +506,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -518,7 +513,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SomeClass.class)
             public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
                 private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;
@@ -556,7 +551,7 @@ public interface SimplePojoInterface{
                     return new SomeClassMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SomeClass.SomeNonStaticInnerClass.class)
                 public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {
                     private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;
@@ -636,7 +631,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SomePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -646,7 +640,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SomePojo.class)
             public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
                 private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
@@ -684,7 +678,7 @@ public interface SimplePojoInterface{
                     return new SomePojoMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SomePojo.InnerInterface.class)
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
                     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
@@ -756,7 +750,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -764,7 +757,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SimplePojoEnum.class)
             public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> {
                 private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;
@@ -878,7 +871,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -886,8 +878,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -999,7 +990,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -1007,8 +997,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1086,7 +1075,6 @@ public interface SimplePojoInterface{
             "org.mockito.ArgumentMatchersMatcher", """
             package org.mockito;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -1094,7 +1082,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(ArgumentMatchers.class)
             public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {
                 private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;
@@ -1180,7 +1168,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojo11Matcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1190,7 +1177,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SimplePojo1.class)
             public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> {
                 private final BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher;
@@ -1233,7 +1220,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojo22Matcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import javax.annotation.Generated;
             import org.hamcrest.Description;
@@ -1241,7 +1227,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SimplePojo2.class)
             public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {
                 private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;
@@ -1315,7 +1301,7 @@ public interface SimplePojoInterface{
              """.trimIndent()
         )
         val now = LocalDateTime.now()
-        
+
         // Execution
         Truth.assert_()
             .about(JavaSourcesSubjectFactory.javaSources())
@@ -1356,7 +1342,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1366,8 +1351,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1449,7 +1433,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1459,8 +1442,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1497,7 +1479,7 @@ public interface SimplePojoInterface{
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SimplePojo.InnerType.class)
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
                     private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
@@ -1526,7 +1508,7 @@ public interface SimplePojoInterface{
                         return new InnerTypeMatcher();
                     }
             
-                    @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                     @BasedOn(SimplePojo.InnerType.InnerEnum.class)
                     public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {
                         private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;
@@ -1619,7 +1601,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1627,8 +1608,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Description;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1655,7 +1635,7 @@ public interface SimplePojoInterface{
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SimplePojo.InnerType.class)
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
                     private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
@@ -1684,7 +1664,7 @@ public interface SimplePojoInterface{
                         return new InnerTypeMatcher();
                     }
             
-                    @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                     @BasedOn(SimplePojo.InnerType.InnerInnerType.class)
                     public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {
                         private final BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType> beanPropertyMatcher;
@@ -1756,7 +1736,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1765,8 +1744,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matcher;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1842,7 +1820,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import java.util.List;
@@ -1854,8 +1831,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.TypeSafeMatcher;
             
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1964,7 +1940,6 @@ public interface SimplePojoInterface{
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -1974,8 +1949,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
-            @BasedOn(SimplePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -2122,12 +2096,11 @@ public interface SimplePojoInterface{
             "some.other.pck.SomeGeneratedType", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             
             import javax.annotation.Generated;
             
             @Generated(
-                    value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator",
+                    value = "${MatcherGenerationProcessor::class.simpleName}",
                     date = "2019-04-19"
             )
             @BasedOn(String.class)
@@ -2177,7 +2150,6 @@ public interface SimplePojoInterface{
             "my.base.pck.sample.other.pck.SomePojoMatcher", """
             package my.base.pck.some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             
             import javax.annotation.Generated;
@@ -2186,7 +2158,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.TypeSafeMatcher;
             import some.other.pck.SomePojo;
             
-            @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
             @BasedOn(SomePojo.class)
             public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
                 private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
@@ -2215,7 +2187,7 @@ public interface SimplePojoInterface{
                     return new SomePojoMatcher();
                 }
             
-                @Generated(value = "io.github.marmer.annotationprocessing.core.impl.JavaPoetMatcherGenerator", date = "$now")
+                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
                 @BasedOn(SomePojo.InnerInterface.class)
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
                     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
