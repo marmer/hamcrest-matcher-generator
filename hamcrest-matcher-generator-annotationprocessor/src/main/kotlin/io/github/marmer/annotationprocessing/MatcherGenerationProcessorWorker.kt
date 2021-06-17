@@ -158,3 +158,6 @@ internal val Element.isPrivate: Boolean
 
 internal val Element.isPublic: Boolean
     get() = modifiers.contains(Modifier.PUBLIC)
+
+internal val Element.isStatic: Boolean
+    get() = modifiers.contains(Modifier.STATIC)

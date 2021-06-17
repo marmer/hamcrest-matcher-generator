@@ -256,12 +256,14 @@ class MatcherGenerator(
         get() =
             this is ExecutableElement &&
                     isPublic &&
-                    hasPropertyPrefix() &&
-                    hasReturnType() &&
+                    !isStatic &&
+                    hasReturnTypeWithMatchingPropertyPrefix() &&
                     hasNoParameters()
 
-    private fun Element.hasPropertyPrefix() =
-        simpleName.startsWith("get") || simpleName.startsWith("is")
+    private fun ExecutableElement.hasReturnTypeWithMatchingPropertyPrefix() =
+        hasReturnType() &&
+                simpleName.startsWith("get") && returnType.kind != TypeKind.BOOLEAN ||
+                (simpleName.startsWith("is") && returnType.kind == TypeKind.BOOLEAN)
 
     private fun ExecutableElement.hasReturnType() =
         returnType.kind != TypeKind.VOID
