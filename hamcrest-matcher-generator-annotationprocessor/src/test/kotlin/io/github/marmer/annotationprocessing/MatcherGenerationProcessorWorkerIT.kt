@@ -79,13 +79,17 @@ internal class MatcherGenerationProcessorIT {
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Boolean;
+            import java.lang.Class;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -93,7 +97,7 @@ internal class MatcherGenerationProcessorIT {
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withSomeStringProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -103,7 +107,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withSomePrimitiveBooleanProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withSomePrimitiveBooleanProperty(final Matcher<? super Boolean> matcher) {
                     beanPropertyMatcher.with("somePrimitiveBooleanProperty", matcher);
                     return this;
                 }
@@ -113,7 +117,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Matcher<? super Boolean> matcher) {
                     beanPropertyMatcher.with("someNonePrimitiveBooleanProperty", matcher);
                     return this;
                 }
@@ -123,12 +127,12 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Class value) {
+                public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -152,8 +156,7 @@ internal class MatcherGenerationProcessorIT {
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SimplePojo.InnerStaticPojo.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {
                     private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;
             
@@ -161,7 +164,7 @@ internal class MatcherGenerationProcessorIT {
                         beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class);
                     }
             
-                    public InnerStaticPojoMatcher withInnerStaticPojoProperty(final Matcher<?> matcher) {
+                    public InnerStaticPojoMatcher withInnerStaticPojoProperty(final Matcher<? super String> matcher) {
                         beanPropertyMatcher.with("innerStaticPojoProperty", matcher);
                         return this;
                     }
@@ -171,12 +174,12 @@ internal class MatcherGenerationProcessorIT {
                         return this;
                     }
             
-                    public InnerStaticPojoMatcher withClass(final Matcher<?> matcher) {
+                    public InnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                         beanPropertyMatcher.with("class", matcher);
                         return this;
                     }
             
-                    public InnerStaticPojoMatcher withClass(final Class value) {
+                    public InnerStaticPojoMatcher withClass(final Class<?> value) {
                         beanPropertyMatcher.with("class", Matchers.equalTo(value));
                         return this;
                     }
@@ -199,8 +202,7 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerStaticPojoMatcher isInnerStaticPojo() {
                         return new InnerStaticPojoMatcher();
                     }
-                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                    @BasedOn(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class)
+                    @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {
                         private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
             
@@ -208,12 +210,12 @@ internal class MatcherGenerationProcessorIT {
                             beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class);
                         }
             
-                        public InnerInnerStaticPojoMatcher withClass(final Matcher<?> matcher) {
+                        public InnerInnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
                             return this;
                         }
             
-                        public InnerInnerStaticPojoMatcher withClass(final Class value) {
+                        public InnerInnerStaticPojoMatcher withClass(final Class<?> value) {
                             beanPropertyMatcher.with("class", Matchers.equalTo(value));
                             return this;
                         }
@@ -285,8 +287,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SimplePojoInterface.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {
                 private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
             
@@ -386,8 +387,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SimplePojoInterface.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {
                 private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
             
@@ -513,8 +513,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SomeClass.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
                 private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;
             
@@ -551,8 +550,7 @@ public interface SimplePojoInterface{
                     return new SomeClassMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SomeClass.SomeNonStaticInnerClass.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {
                     private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;
             
@@ -640,8 +638,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SomePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
                 private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
             
@@ -678,8 +675,7 @@ public interface SimplePojoInterface{
                     return new SomePojoMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SomePojo.InnerInterface.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
                     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
             
@@ -757,8 +753,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SimplePojoEnum.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> {
                 private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;
             
@@ -878,7 +873,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -997,7 +992,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1082,8 +1077,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(ArgumentMatchers.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {
                 private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;
             
@@ -1177,8 +1171,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SimplePojo1.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> {
                 private final BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher;
             
@@ -1227,8 +1220,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SimplePojo2.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {
                 private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;
             
@@ -1351,7 +1343,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1442,7 +1434,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1479,8 +1471,7 @@ public interface SimplePojoInterface{
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SimplePojo.InnerType.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
                     private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
             
@@ -1508,8 +1499,7 @@ public interface SimplePojoInterface{
                         return new InnerTypeMatcher();
                     }
             
-                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                    @BasedOn(SimplePojo.InnerType.InnerEnum.class)
+                    @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {
                         private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;
             
@@ -1608,7 +1598,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Description;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1635,8 +1625,7 @@ public interface SimplePojoInterface{
                     return new SimplePojoMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SimplePojo.InnerType.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
                     private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
             
@@ -1664,8 +1653,7 @@ public interface SimplePojoInterface{
                         return new InnerTypeMatcher();
                     }
             
-                    @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                    @BasedOn(SimplePojo.InnerType.InnerInnerType.class)
+                    @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {
                         private final BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType> beanPropertyMatcher;
             
@@ -1744,7 +1732,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matcher;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1831,7 +1819,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.TypeSafeMatcher;
             
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -1949,7 +1937,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
                 private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
             
@@ -2100,10 +2088,9 @@ public interface SimplePojoInterface{
             import javax.annotation.Generated;
             
             @Generated(
-                    value = "${MatcherGenerationProcessor::class.simpleName}",
+                    value = "${MatcherGenerationProcessor::class.qualifiedName}",
                     date = "2019-04-19"
             )
-            @BasedOn(String.class)
             public class SomeGeneratedType{
             
             }""".trimIndent()
@@ -2158,8 +2145,7 @@ public interface SimplePojoInterface{
             import org.hamcrest.TypeSafeMatcher;
             import some.other.pck.SomePojo;
             
-            @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-            @BasedOn(SomePojo.class)
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
             public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
                 private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
             
@@ -2187,8 +2173,7 @@ public interface SimplePojoInterface{
                     return new SomePojoMatcher();
                 }
             
-                @Generated(value = "${MatcherGenerationProcessor::class.simpleName}", date = "$now")
-                @BasedOn(SomePojo.InnerInterface.class)
+                @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
                     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
             

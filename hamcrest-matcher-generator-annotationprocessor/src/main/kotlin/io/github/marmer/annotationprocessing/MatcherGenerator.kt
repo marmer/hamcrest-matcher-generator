@@ -57,12 +57,12 @@ class MatcherGenerator(
         baseType.properties
             .flatMap { property ->
                 listOfNotNull(
-                    getTypeMatcherFor(property),
-                    getMancrestMatcherFor(property),
+                    getHamcrestMatcher(property),
+                    getEqualsMatcher(property),
                 )
             }
 
-    private fun getTypeMatcherFor(property: Property) =
+    private fun getHamcrestMatcher(property: Property) =
         methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
@@ -84,10 +84,10 @@ class MatcherGenerator(
             .returns(getGeneratedTypeName())
             .build()
 
-    private fun getMancrestMatcherFor(property: Property) =
+    private fun getEqualsMatcher(property: Property) =
         methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
-            .addParameter(TypeName.get(property.boxedType), "value", Modifier.FINAL)
+            .addParameter(TypeName.get(property.type), "value", Modifier.FINAL)
             .addStatement(
                 "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, property.name,
                 Matchers::class.java
@@ -120,7 +120,7 @@ class MatcherGenerator(
     private fun getConstructor() = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PUBLIC)
         .addStatement(
-            "\$L = new \$L(\$L.class)",
+            "\$L = new \$T(\$T.class)",
             builderFieldName,
             getBuilderFieldType(),
             baseType.typeName,
@@ -255,7 +255,7 @@ class MatcherGenerator(
     private val Element.isProperty
         get() =
             this is ExecutableElement &&
-                    !isPrivate &&
+                    isPublic &&
                     hasPropertyPrefix() &&
                     hasReturnType() &&
                     hasNoParameters()

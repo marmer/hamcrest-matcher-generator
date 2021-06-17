@@ -60,7 +60,7 @@ class MatcherGenerationProcessorWorker(
         listOf(typeElement) +
                 typeElement.enclosedElements
                     .filterIsInstance(TypeElement::class.java)
-                    .filterNot(TypeElement::isPrivate)
+                    .filter(TypeElement::isPublic)
                     .flatMap { expandToNestedTypes(it) }
 
     private fun getAllTypeElementsFor(configurationType: Element): List<TypeElement> {
@@ -155,3 +155,6 @@ internal fun ProcessingEnvironment.logNote(message: String, element: Element? = 
 
 internal val Element.isPrivate: Boolean
     get() = modifiers.contains(Modifier.PRIVATE)
+
+internal val Element.isPublic: Boolean
+    get() = modifiers.contains(Modifier.PUBLIC)
