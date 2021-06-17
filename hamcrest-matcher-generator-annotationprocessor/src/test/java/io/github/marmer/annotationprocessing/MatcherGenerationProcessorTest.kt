@@ -1,122 +1,132 @@
-package io.github.marmer.annotationprocessing;
+package io.github.marmer.annotationprocessing
 
-import io.github.marmer.annotationprocessing.core.MatcherGenerator;
-import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor;
-import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor;
-import io.github.marmer.annotationprocessing.core.model.TypeDescriptor;
-import io.github.marmer.annotationprocessing.creation.SourceWriter;
-import io.github.marmer.annotationprocessing.extraction.MatcherBaseDescriptorFactory;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import io.github.marmer.annotationprocessing.core.MatcherGenerator
+import io.github.marmer.annotationprocessing.core.model.MatcherBaseDescriptor
+import io.github.marmer.annotationprocessing.core.model.MatcherSourceDescriptor
+import io.github.marmer.annotationprocessing.core.model.TypeDescriptor
+import io.github.marmer.annotationprocessing.creation.SourceWriter
+import io.github.marmer.annotationprocessing.extraction.MatcherBaseDescriptorFactory
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.Mockito.*
+import org.mockito.junit.jupiter.MockitoExtension
+import java.util.stream.Stream
+import javax.annotation.processing.RoundEnvironment
+import javax.lang.model.element.Element
 
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
-class MatcherGenerationProcessorTest {
+@ExtendWith(MockitoExtension::class)
+internal class MatcherGenerationProcessorTest {
     @InjectMocks
-    private MatcherGenerationProcessor underTest;
+    private lateinit var underTest: MatcherGenerationProcessor
 
     @Mock
-    private MatcherBaseDescriptorFactory matcherBaseDescriptorFactory;
+    private lateinit var matcherBaseDescriptorFactory: MatcherBaseDescriptorFactory
+
     @Mock
-    private MatcherGenerator matcherGenerator;
+    private lateinit var matcherGenerator: MatcherGenerator
+
     @Mock
-    private SourceWriter sourceWriter;
+    private lateinit var sourceWriter: SourceWriter
+
     @Mock
-    private MessagerLogger logger;
+    private lateinit var logger: MessagerLogger
 
     @Test
     @DisplayName("All types for configured packages of single configuration should be processed and saved")
-    void testProcess_AllTypesForConfiguredPackagesOfSingleConfigurationShouldBeProcessedAndSaved()
-            throws Exception {
+    fun testProcess_AllTypesForConfiguredPackagesOfSingleConfigurationShouldBeProcessedAndSaved() {
         // Preparation
-        final RoundEnvironment roundEnv = Mockito.mock(RoundEnvironment.class);
-        final MatcherConfiguration matcherConfiguration = mock(MatcherConfiguration.class);
-        final Element matcherConfigurationElement = mock(Element.class);
-        final Set matcherConfigurationElements = singleton(matcherConfigurationElement);
-        final MatcherBaseDescriptor matcherBaseDescriptor = MatcherBaseDescriptor.builder().build();
-        final MatcherSourceDescriptor matcherSourceDescriptor = MatcherSourceDescriptor.builder().build();
-
-        when(roundEnv.processingOver()).thenReturn(false);
-        when(matcherConfigurationElement.getAnnotation(MatcherConfiguration.class)).thenReturn(matcherConfiguration);
-        doReturn(emptySet()).when(roundEnv).getElementsAnnotatedWith(MatcherConfigurations.class);
-        doReturn(matcherConfigurationElements).when(roundEnv).getElementsAnnotatedWith(MatcherConfiguration.class);
-
-        when(matcherBaseDescriptorFactory.create(matcherConfiguration)).thenReturn(Stream.of(matcherBaseDescriptor));
-        when(matcherGenerator.generateMatcherFor(matcherBaseDescriptor)).thenReturn(matcherSourceDescriptor);
+        val roundEnv = mock(RoundEnvironment::class.java)
+        val matcherConfiguration = mock(MatcherConfiguration::class.java)
+        val matcherConfigurationElement = mock(
+            Element::class.java
+        )
+        val matcherConfigurationElements = setOf(matcherConfigurationElement)
+        val matcherBaseDescriptor = MatcherBaseDescriptor.builder().build()
+        val matcherSourceDescriptor = MatcherSourceDescriptor.builder().build()
+        `when`(roundEnv.processingOver()).thenReturn(false)
+        `when`(matcherConfigurationElement.getAnnotation(MatcherConfiguration::class.java))
+            .thenReturn(matcherConfiguration)
+        doReturn(emptySet<Any>()).`when`(roundEnv).getElementsAnnotatedWith(
+            MatcherConfigurations::class.java
+        )
+        doReturn(matcherConfigurationElements).`when`(roundEnv).getElementsAnnotatedWith(
+            MatcherConfiguration::class.java
+        )
+        `when`(matcherBaseDescriptorFactory.create(matcherConfiguration))
+            .thenReturn(Stream.of(matcherBaseDescriptor))
+        `when`(matcherGenerator.generateMatcherFor(matcherBaseDescriptor)).thenReturn(matcherSourceDescriptor)
 
         // Execution
-        final var result = underTest.process(Collections.emptySet(), roundEnv);
+        val result = underTest.process(emptySet(), roundEnv)
 
         // Assertion
-        verify(sourceWriter).create(matcherSourceDescriptor);
-        assertThat(result, is(false));
+        verify(sourceWriter).create(matcherSourceDescriptor)
+        assertThat(result, `is`(false))
     }
 
     @Test
     @DisplayName("Generation should be successfull for not exceptional parts if some error occurs on sourcecode generation")
-    void testProcess_GenerationShouldBeSuccessfullForNotExceptionalPartsIfSomeErrorOccursOnSourcecodeGeneration()
-            throws Exception {
+    fun testProcess_GenerationShouldBeSuccessfullForNotExceptionalPartsIfSomeErrorOccursOnSourcecodeGeneration() {
         // Preparation
-        final RoundEnvironment roundEnv = Mockito.mock(RoundEnvironment.class);
-        final MatcherConfiguration matcherConfiguration = mock(MatcherConfiguration.class);
-        final Element matcherConfigurationElement = mock(Element.class);
-        final Set matcherConfigurationElements = singleton(matcherConfigurationElement);
-        final MatcherBaseDescriptor matcherBaseDescriptor = MatcherBaseDescriptor.builder().build();
-        final MatcherBaseDescriptor erroneousMatcherBaseDescriptor = newMatcherBaseDescriptorForType("some.Type").build();
-        final MatcherSourceDescriptor matcherSourceDescriptor = MatcherSourceDescriptor.builder().build();
-
-        when(roundEnv.processingOver()).thenReturn(false);
-        when(matcherConfigurationElement.getAnnotation(MatcherConfiguration.class)).thenReturn(matcherConfiguration);
-        doReturn(emptySet()).when(roundEnv).getElementsAnnotatedWith(MatcherConfigurations.class);
-        doReturn(matcherConfigurationElements).when(roundEnv).getElementsAnnotatedWith(MatcherConfiguration.class);
-
-        final RuntimeException cause = new RuntimeException("some error message");
-
-        when(matcherBaseDescriptorFactory.create(matcherConfiguration)).thenReturn(Stream.of(matcherBaseDescriptor, erroneousMatcherBaseDescriptor));
-        doReturn(matcherSourceDescriptor).when(matcherGenerator).generateMatcherFor(same(matcherBaseDescriptor));
-        doThrow(cause).when(matcherGenerator).generateMatcherFor(same(erroneousMatcherBaseDescriptor));
+        val roundEnv = mock(RoundEnvironment::class.java)
+        val matcherConfiguration = mock(MatcherConfiguration::class.java)
+        val matcherConfigurationElement = mock(
+            Element::class.java
+        )
+        val matcherConfigurationElements: Set<*> = setOf(matcherConfigurationElement)
+        val matcherBaseDescriptor = MatcherBaseDescriptor.builder().build()
+        val erroneousMatcherBaseDescriptor = "some.Type".newMatcherBaseDescriptorForType()
+            .build()
+        val matcherSourceDescriptor = MatcherSourceDescriptor.builder().build()
+        `when`(roundEnv.processingOver()).thenReturn(false)
+        `when`(matcherConfigurationElement.getAnnotation(MatcherConfiguration::class.java))
+            .thenReturn(matcherConfiguration)
+        doReturn(emptySet<Any>()).`when`(roundEnv).getElementsAnnotatedWith(
+            MatcherConfigurations::class.java
+        )
+        doReturn(matcherConfigurationElements).`when`(roundEnv).getElementsAnnotatedWith(
+            MatcherConfiguration::class.java
+        )
+        val cause = RuntimeException("some error message")
+        `when`(matcherBaseDescriptorFactory.create(matcherConfiguration))
+            .thenReturn(Stream.of(matcherBaseDescriptor, erroneousMatcherBaseDescriptor))
+        doReturn(matcherSourceDescriptor).`when`(matcherGenerator)
+            .generateMatcherFor(ArgumentMatchers.same(matcherBaseDescriptor))
+        doThrow(cause).`when`(matcherGenerator)
+            .generateMatcherFor(ArgumentMatchers.same(erroneousMatcherBaseDescriptor))
 
         // Execution
-        final var result = underTest.process(Collections.emptySet(), roundEnv);
+        val result = underTest.process(emptySet(), roundEnv)
 
         // Assertion
-        verify(sourceWriter).create(matcherSourceDescriptor);
-        verify(logger).error("Hamcrest matcher generation stopped for 'some.Type' because of an unexpected error: some error message");
-        assertThat(result, is(false));
+        verify(sourceWriter).create(matcherSourceDescriptor)
+        verify(logger).error(
+            "Hamcrest matcher generation stopped for 'some.Type' because of an unexpected error: some error message"
+        )
+        assertThat(result, `is`(false))
     }
 
-    private MatcherBaseDescriptor.MatcherBaseDescriptorBuilder newMatcherBaseDescriptorForType(final String fullQualifiedName) {
-        return MatcherBaseDescriptor.builder().base(TypeDescriptor.builder().fullQualifiedName(fullQualifiedName).build());
+    private fun String.newMatcherBaseDescriptorForType(): MatcherBaseDescriptor.MatcherBaseDescriptorBuilder {
+        return MatcherBaseDescriptor.builder()
+            .base(TypeDescriptor.builder().fullQualifiedName(this).build())
     }
 
     @Test
     @DisplayName("Processing is allready over should return immediately")
-    void testProcess_ProcessingIsAllreadyOverShouldReturnImmediately()
-            throws Exception {
+    fun testProcess_ProcessingIsAllreadyOverShouldReturnImmediately() {
         // Preparation
-        final RoundEnvironment roundEnv = mock(RoundEnvironment.class);
+        val roundEnv = mock(RoundEnvironment::class.java)
 
         // Execution
-        final var result = underTest.process(emptySet(), roundEnv);
+        val result = underTest.process(emptySet(), roundEnv)
 
         // Assertion
-        assertThat(result, is(false));
+        assertThat(result, `is`(false))
     }
 }
