@@ -1,9 +1,11 @@
 package io.github.marmer.annotationprocessing
 
-import com.squareup.javapoet.AnnotationSpec
-import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.TypeSpec
-import com.squareup.javapoet.TypeVariableName
+import com.squareup.javapoet.*
+import com.squareup.javapoet.MethodSpec.methodBuilder
+import com.squareup.javapoet.TypeName.BOOLEAN
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
+import org.hamcrest.Description
+import org.hamcrest.TypeSafeMatcher
 import java.time.LocalDateTime
 import javax.annotation.processing.Generated
 import javax.annotation.processing.ProcessingEnvironment
@@ -31,13 +33,83 @@ class MatcherGenerator(
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(getGeneratedAnnotation())
         .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
+        .superclass(getSuperClass())
 //        .addSuperinterface(getPojoAsserterInterface())
-//        .addField(getPojoAssertionBuilderField())
+        .addFields(getFields())
 //        .addMethods(getInitializers())
 //        .addMethods(getBaseAssertionMethods())
 //        .addMethods(getPropertyAssertionMethods())
 //        .addMethods(getFinisherMethods())
+        .addMethods(getMatcherMethods())
         .addTypes(getInnerMatchers())
+
+    private fun getMatcherMethods() = listOf(
+        getDescribeToMethod(),
+        getMatchesSafelyMethod(),
+        getDescribeMissmatchSafelyMethod()
+    )
+
+    private fun getDescribeToMethod() = methodBuilder("describeTo")
+        .addModifiers(Modifier.PROTECTED)
+        .addAnnotation(Override::class.java)
+        .addParameter(
+            Description::class.java,
+            "description",
+            Modifier.FINAL
+        )
+        .addStatement(
+            "\$L.describeTo(\$L)",
+            builderFieldName,
+            "description"
+        )
+        .build()
+
+    private fun getMatchesSafelyMethod() = methodBuilder("matchesSafely")
+        .addAnnotation(Override::class.java)
+        .addModifiers(Modifier.PROTECTED)
+        .addParameter(baseType.typeName, "item", Modifier.FINAL)
+        .addStatement("return \$L.matches(\$L)", builderFieldName, "item")
+        .returns(BOOLEAN)
+        .build();
+
+    private fun getDescribeMissmatchSafelyMethod() =
+        methodBuilder("describeMismatchSafely")
+            .addAnnotation(Override::class.java)
+            .addParameter(baseType.typeName, "item", Modifier.FINAL)
+            .addParameter(
+                Description::class.java,
+                "description",
+                Modifier.FINAL
+            )
+            .addStatement(
+                "\$L.describeMismatch(\$L, \$L)",
+                builderFieldName,
+                "item",
+                "description"
+            )
+            .addModifiers(Modifier.PROTECTED).build();
+
+
+    private fun getFields() = listOf(
+        FieldSpec.builder(
+            getBuilderFieldType(),
+            builderFieldName,
+            Modifier.PRIVATE,
+            Modifier.FINAL
+        ).build()
+    )
+
+    private fun getBuilderFieldType() = ParameterizedTypeName.get(
+        ClassName.get(BeanPropertyMatcher::class.java),
+        baseType.typeName
+    )
+
+    private val builderFieldName = "beanPropertyMatcher"
+
+    private fun getSuperClass() = ParameterizedTypeName.get(
+        ClassName.get(TypeSafeMatcher::class.java),
+        TypeName.get(baseType.asType())
+    )
 
     private fun getInnerMatchers(): List<TypeSpec> =
         baseType.enclosedElements
@@ -64,5 +136,8 @@ class MatcherGenerator(
         get() = processingEnv.elementUtils.getPackageOf(this)
 
     private val simpleMatcherName = "${baseType.simpleName}Matcher"
+
+    private val TypeElement.typeName: TypeName
+        get() = TypeName.get(asType())
 }
 
