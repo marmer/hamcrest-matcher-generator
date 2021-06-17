@@ -43,7 +43,8 @@ class MatcherGenerationProcessorWorker(
                         it,
                         timeProvider,
                         generatorName,
-                        roundEnv.getTypesWithAsserters()
+                        roundEnv.getTypesWithAsserters(),
+                        listOf(generationConfiguration)
                     ).generate()
                 }
             }

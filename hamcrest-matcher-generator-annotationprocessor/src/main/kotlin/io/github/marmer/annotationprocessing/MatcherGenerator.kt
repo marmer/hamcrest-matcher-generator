@@ -23,7 +23,8 @@ class MatcherGenerator(
     private val baseType: TypeElement,
     private val generationTimeStamp: () -> LocalDateTime,
     private val generationMarker: String,
-    private val typesWithAsserters: Collection<TypeElement>
+    private val typesWithAsserters: Collection<TypeElement>,
+    private val additionalOriginationElements: Collection<Element>
 ) {
 
     fun generate() = JavaFile.builder(
@@ -33,18 +34,24 @@ class MatcherGenerator(
     ).build()
         .writeTo(processingEnv.filer)
 
-    private fun getPreparedTypeSpecBuilder() = TypeSpec.classBuilder(simpleMatcherName)
-        .addOriginatingElement(baseType)
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(getGeneratedAnnotation())
-        .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
-        .superclass(getSuperClass())
-        .addFields(getFields())
-        .addMethod(getConstructor())
-        .addMethods(getPropertyMatcherMethods())
-        .addMethods(getMatcherMethods())
-        .addMethod(getApiInitializer())
-        .addTypes(getInnerMatchers())
+    private fun getPreparedTypeSpecBuilder(): TypeSpec.Builder {
+        val classBuilder = TypeSpec.classBuilder(simpleMatcherName)
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(getGeneratedAnnotation())
+            .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
+            .superclass(getSuperClass())
+            .addFields(getFields())
+            .addMethod(getConstructor())
+            .addMethods(getPropertyMatcherMethods())
+            .addMethods(getMatcherMethods())
+            .addMethod(getApiInitializer())
+            .addTypes(getInnerMatchers())
+            .addOriginatingElement(baseType)
+
+        additionalOriginationElements.forEach { classBuilder.addOriginatingElement(it) }
+
+        return classBuilder
+    }
 
     private fun getPropertyMatcherMethods() =
         baseType.properties
@@ -195,7 +202,8 @@ class MatcherGenerator(
                     it,
                     generationTimeStamp,
                     generationMarker,
-                    typesWithAsserters
+                    typesWithAsserters,
+                    listOf<Element>(baseType) + additionalOriginationElements
                 ).getPreparedTypeSpecBuilder()
                     .addModifiers(Modifier.STATIC)
                     .build()
