@@ -23,8 +23,8 @@ class MatcherGenerator(
     private val baseType: TypeElement,
     private val generationTimeStamp: () -> LocalDateTime,
     private val generationMarker: String,
-    private val typesWithAsserters: Collection<TypeElement>,
-    private val additionalOriginationElements: Collection<Element>
+    private val additionalOriginationElements: Collection<Element>,
+    private val matcherConfiguration: AnnotationMirror
 ) {
 
     fun generate() = JavaFile.builder(
@@ -206,8 +206,8 @@ class MatcherGenerator(
                     it,
                     generationTimeStamp,
                     generationMarker,
-                    typesWithAsserters,
-                    listOf<Element>(baseType) + additionalOriginationElements
+                    listOf<Element>(baseType) + additionalOriginationElements,
+                    matcherConfiguration
                 ).getPreparedTypeSpecBuilder()
                     .addModifiers(Modifier.STATIC)
                     .build()
@@ -217,7 +217,9 @@ class MatcherGenerator(
     private fun logTypeSkipped(element: TypeElement) {
         processingEnv.logNote(
             "Matcher generation skipped for non public type: ${element.qualifiedName}",
-            element
+            element,
+            matcherConfiguration,
+            matcherConfiguration.getAnnotationValueForValue()
         )
     }
 
