@@ -3,6 +3,7 @@ package io.github.marmer.annotationprocessing
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubjectFactory
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -13,7 +14,7 @@ internal class MatcherGenerationProcessorIT {
     @DisplayName("Matcher should have been generated for Pojo from Source file")
     fun testGenerate_MatcherShouldHaveBeenGeneratedForPojoFromSourceFile() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
                 package some.pck;
                 
@@ -24,7 +25,7 @@ internal class MatcherGenerationProcessorIT {
                 
                 }"""
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -74,7 +75,7 @@ internal class MatcherGenerationProcessorIT {
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
@@ -257,7 +258,7 @@ internal class MatcherGenerationProcessorIT {
     @DisplayName("Matcher should be generated for Interfaces with property methods")
     fun testGenerate_MatcherShouldBeGeneratedForInterfacesWithPropertyMethods() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -268,7 +269,7 @@ internal class MatcherGenerationProcessorIT {
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojoInterface", """package some.other.pck;
 
 public interface SimplePojoInterface{
@@ -276,12 +277,14 @@ public interface SimplePojoInterface{
 }"""
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -295,7 +298,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -340,7 +343,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher should be generated for arrays")
     fun testGenerate_MatcherShouldBeGeneratedForArrays() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -351,7 +354,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojoInterface", """
             package some.other.pck;
             
@@ -363,7 +366,7 @@ public interface SimplePojoInterface{
                 byte[][] getSomeMultidimensionalPrimitiveArray();
             }""".trimIndent()
         )
-        val javaFileObjectWithComplexInnerTypes = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObjectWithComplexInnerTypes = JavaFileObjects.forSourceLines(
             "some.other.pck.AnotherComplexType", """
             package some.other.pck;
             
@@ -374,7 +377,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
@@ -395,7 +398,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<? super String[]> matcher) {
                     beanPropertyMatcher.with("someStringArray", matcher);
                     return this;
                 }
@@ -405,7 +408,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final Matcher<? super String[][]> matcher) {
                     beanPropertyMatcher.with("someMultidimensionalStringArray", matcher);
                     return this;
                 }
@@ -415,7 +418,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final Matcher<? super AnotherComplexType.SomeInnerType[]> matcher) {
                     beanPropertyMatcher.with("someInnerTypeArray", matcher);
                     return this;
                 }
@@ -425,7 +428,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomePrimitiveArray(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomePrimitiveArray(final Matcher<? super byte[]> matcher) {
                     beanPropertyMatcher.with("somePrimitiveArray", matcher);
                     return this;
                 }
@@ -435,7 +438,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final Matcher<?> matcher) {
+                public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final Matcher<? super byte[][]> matcher) {
                     beanPropertyMatcher.with("someMultidimensionalPrimitiveArray", matcher);
                     return this;
                 }
@@ -480,7 +483,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher should be generated for inner non static classes")
     fun testGenerate_MatcherShouldBeGeneratedForInnerNonStaticClasses() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -491,7 +494,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomeClass", """
             package some.other.pck;
             
@@ -502,7 +505,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
@@ -521,12 +524,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class);
                 }
             
-                public SomeClassMatcher withClass(final Matcher<?> matcher) {
+                public SomeClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SomeClassMatcher withClass(final Class value) {
+                public SomeClassMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -558,12 +561,12 @@ public interface SimplePojoInterface{
                         beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class);
                     }
             
-                    public SomeNonStaticInnerClassMatcher withClass(final Matcher<?> matcher) {
+                    public SomeNonStaticInnerClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
                         beanPropertyMatcher.with("class", matcher);
                         return this;
                     }
             
-                    public SomeNonStaticInnerClassMatcher withClass(final Class value) {
+                    public SomeNonStaticInnerClassMatcher withClass(final Class<?> value) {
                         beanPropertyMatcher.with("class", Matchers.equalTo(value));
                         return this;
                     }
@@ -604,7 +607,7 @@ public interface SimplePojoInterface{
     @DisplayName("Generated Matchers should work for inner interfaces")
     fun testGenerate_GeneratedMatchersShouldWorkForInnerInterfaces() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -615,7 +618,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomePojo", """
             package some.other.pck;
             
@@ -625,7 +628,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SomePojoMatcher", """
             package some.other.pck;
             
@@ -646,12 +649,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);
                 }
             
-                public SomePojoMatcher withClass(final Matcher<?> matcher) {
+                public SomePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SomePojoMatcher withClass(final Class value) {
+                public SomePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -719,7 +722,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher should be generated for Enums with property methods")
     fun testGenerate_MatcherShouldBeGeneratedForEnumsWithPropertyMethods() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -730,7 +733,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojoEnum", """
             package some.other.pck;
             
@@ -742,7 +745,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
@@ -761,7 +764,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoEnum>(SimplePojoEnum.class);
                 }
             
-                public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<?> matcher) {
+                public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -771,22 +774,22 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withDeclaringClass(final Matcher<?> matcher) {
+                public SimplePojoEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("declaringClass", matcher);
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withDeclaringClass(final Class value) {
+                public SimplePojoEnumMatcher withDeclaringClass(final Class<?> value) {
                     beanPropertyMatcher.with("declaringClass", Matchers.equalTo(value));
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoEnumMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withClass(final Class value) {
+                public SimplePojoEnumMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -826,7 +829,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher should contain inherited properties")
     fun testGenerate_MatcherShouldContainInheritedProperties() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -837,7 +840,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val parentPojo = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val parentPojo = JavaFileObjects.forSourceLines(
             "some.other.pck.ParentPojo", """
             package some.other.pck;
             
@@ -851,7 +854,7 @@ public interface SimplePojoInterface{
                 }
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -862,7 +865,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
@@ -881,7 +884,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withPropertyOfBothClasses(final Matcher<?> matcher) {
+                public SimplePojoMatcher withPropertyOfBothClasses(final Matcher<? super String> matcher) {
                     beanPropertyMatcher.with("propertyOfBothClasses", matcher);
                     return this;
                 }
@@ -891,7 +894,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withParentPojoProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withParentPojoProperty(final Matcher<? super Object> matcher) {
                     beanPropertyMatcher.with("parentPojoProperty", matcher);
                     return this;
                 }
@@ -901,12 +904,12 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Class value) {
+                public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -946,7 +949,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher and matcher methods should not be generated for non public types and properties")
     fun testGenerate_MatcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -957,7 +960,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -981,12 +984,14 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1000,12 +1005,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Class value) {
+                public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -1039,12 +1044,12 @@ public interface SimplePojoInterface{
             .compilesWithoutError()
             .and()
             .generatesSources(expectedOutput)
-            .withNoteContaining("Hamcrest-Matcher-Generator: Processing skipped for non public type: some.other.pck.SimplePojo.PrivateClass")
+            .withNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PrivateClass")
             .`in`(javaFileObject)
             .onLine(14)
             .atColumn(13)
             .and()
-            .withNoteContaining("Hamcrest-Matcher-Generator: Processing skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass")
+            .withNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass")
             .`in`(javaFileObject)
             .onLine(17)
             .atColumn(5)
@@ -1054,7 +1059,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matcher should be generated for types of outer dependencies as well")
     fun testGenerate_MatcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1066,7 +1071,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "org.mockito.ArgumentMatchersMatcher", """
             package org.mockito;
             
@@ -1085,12 +1090,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class);
                 }
             
-                public ArgumentMatchersMatcher withClass(final Matcher<?> matcher) {
+                public ArgumentMatchersMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public ArgumentMatchersMatcher withClass(final Class value) {
+                public ArgumentMatchersMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -1130,7 +1135,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matchers should be generated for all classes directly located in a configured package")
     fun testGenerate_MatchersShouldBeGeneratedForAllClassesDirectlyLocatedInAConfiguredPackage() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1141,7 +1146,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject1 = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject1 = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo1", """
      package some.other.pck;
      
@@ -1149,7 +1154,7 @@ public interface SimplePojoInterface{
      }
      """.trimIndent()
         )
-        val javaFileObject2 = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject2 = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo2", """
      package some.other.pck;
      
@@ -1158,7 +1163,7 @@ public interface SimplePojoInterface{
      """.trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput1 = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput1 = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojo11Matcher", """
             package some.other.pck;
             
@@ -1179,12 +1184,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo1>(SimplePojo1.class);
                 }
             
-                public SimplePojo1Matcher withClass(final Matcher<?> matcher) {
+                public SimplePojo1Matcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojo1Matcher withClass(final Class value) {
+                public SimplePojo1Matcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -1209,7 +1214,7 @@ public interface SimplePojoInterface{
                 }
             }""".trimIndent()
         )
-        val expectedOutput2 = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput2 = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojo22Matcher", """
             package some.other.pck;
             
@@ -1228,12 +1233,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo2>(SimplePojo2.class);
                 }
             
-                public SimplePojo2Matcher withClass(final Matcher<?> matcher) {
+                public SimplePojo2Matcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojo2Matcher withClass(final Class value) {
+                public SimplePojo2Matcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -1273,7 +1278,7 @@ public interface SimplePojoInterface{
     @DisplayName("Warns on not existing packages or types")
     fun testGenerate_WarnsOnNotExistingPackagesOrTypes() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1284,7 +1289,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
              package some.other.pck;
              
@@ -1310,7 +1315,7 @@ public interface SimplePojoInterface{
     @DisplayName("Generation should work for MatcherConfiguration (singular) as well")
     fun testGenerate_GenerationSholdWorkForMatcherConfigurationAsWell() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1321,7 +1326,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
              package some.other.pck;
              
@@ -1330,7 +1335,7 @@ public interface SimplePojoInterface{
              """.trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1351,12 +1356,12 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Class value) {
+                public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -1395,7 +1400,7 @@ public interface SimplePojoInterface{
     @DisplayName("Generation should work for properties of inner enums")
     fun testGenerate_GenerationShouldWorkForPropertiesOfInnerEnums() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1406,7 +1411,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -1421,7 +1426,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1442,7 +1447,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withSomeProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withSomeProperty(final Matcher<? super SimplePojo.InnerType.InnerEnum> matcher) {
                     beanPropertyMatcher.with("someProperty", matcher);
                     return this;
                 }
@@ -1507,22 +1512,22 @@ public interface SimplePojoInterface{
                             beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class);
                         }
             
-                        public InnerEnumMatcher withDeclaringClass(final Matcher<?> matcher) {
+                        public InnerEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
                             beanPropertyMatcher.with("declaringClass", matcher);
                             return this;
                         }
             
-                        public InnerEnumMatcher withDeclaringClass(final Class value) {
+                        public InnerEnumMatcher withDeclaringClass(final Class<?> value) {
                             beanPropertyMatcher.with("declaringClass", Matchers.equalTo(value));
                             return this;
                         }
             
-                        public InnerEnumMatcher withClass(final Matcher<?> matcher) {
+                        public InnerEnumMatcher withClass(final Matcher<? super Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
                             return this;
                         }
             
-                        public InnerEnumMatcher withClass(final Class value) {
+                        public InnerEnumMatcher withClass(final Class<?> value) {
                             beanPropertyMatcher.with("class", Matchers.equalTo(value));
                             return this;
                         }
@@ -1564,7 +1569,7 @@ public interface SimplePojoInterface{
     @DisplayName("Configured inner types should also generate all outer matchers")
     fun testGenerate_ConfiguredInnerTypesShouldAlsoGenerateAllOuterMatchers() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1575,7 +1580,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -1587,7 +1592,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1698,7 +1703,7 @@ public interface SimplePojoInterface{
     @DisplayName("Only a single matcher method should be generated for properties of type Matcher")
     fun testGenerate_OnlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1709,7 +1714,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -1720,7 +1725,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1740,7 +1745,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withProperty(final Matcher<String> matcher) {
                     beanPropertyMatcher.with("property", matcher);
                     return this;
                 }
@@ -1779,7 +1784,7 @@ public interface SimplePojoInterface{
     @DisplayName("Generics and wildcard properties should be handled like Object")
     fun testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1790,7 +1795,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -1804,7 +1809,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1827,7 +1832,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
                     beanPropertyMatcher.with("property", matcher);
                     return this;
                 }
@@ -1837,12 +1842,12 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withWildcardProperty(final Matcher<? super List<? extends String>> matcher) {
                     beanPropertyMatcher.with("wildcardProperty", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final List value) {
+                public SimplePojoMatcher withWildcardProperty(final List<? extends String> value) {
                     beanPropertyMatcher.with("wildcardProperty", Matchers.equalTo(value));
                     return this;
                 }
@@ -1881,7 +1886,7 @@ public interface SimplePojoInterface{
     @DisplayName("Generation should work properly for primitives")
     fun testGenerate_GenerationShouldWorkProperlyForPrimitives() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -1892,7 +1897,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
@@ -1924,7 +1929,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
@@ -1945,7 +1950,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withIntProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withIntProperty(final Matcher<? super Integer> matcher) {
                     beanPropertyMatcher.with("intProperty", matcher);
                     return this;
                 }
@@ -1955,7 +1960,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withShortProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withShortProperty(final Matcher<? super Short> matcher) {
                     beanPropertyMatcher.with("shortProperty", matcher);
                     return this;
                 }
@@ -1965,7 +1970,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withLongProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withLongProperty(final Matcher<? super Long> matcher) {
                     beanPropertyMatcher.with("longProperty", matcher);
                     return this;
                 }
@@ -1975,7 +1980,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withDoubleProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withDoubleProperty(final Matcher<? super Double> matcher) {
                     beanPropertyMatcher.with("doubleProperty", matcher);
                     return this;
                 }
@@ -1985,7 +1990,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withFloatProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withFloatProperty(final Matcher<? super Float> matcher) {
                     beanPropertyMatcher.with("floatProperty", matcher);
                     return this;
                 }
@@ -1995,7 +2000,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withCharProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withCharProperty(final Matcher<? super Character> matcher) {
                     beanPropertyMatcher.with("charProperty", matcher);
                     return this;
                 }
@@ -2005,7 +2010,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withByteProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withByteProperty(final Matcher<? super Byte> matcher) {
                     beanPropertyMatcher.with("byteProperty", matcher);
                     return this;
                 }
@@ -2015,7 +2020,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withBooleanProperty(final Matcher<?> matcher) {
+                public SimplePojoMatcher withBooleanProperty(final Matcher<? super Boolean> matcher) {
                     beanPropertyMatcher.with("booleanProperty", matcher);
                     return this;
                 }
@@ -2025,12 +2030,12 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<?> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Class value) {
+                public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
                 }
@@ -2069,7 +2074,7 @@ public interface SimplePojoInterface{
     @DisplayName("No error should be thrown if the processor finds a class generated by itself")
     fun testGenerate_NoErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -2080,7 +2085,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomeGeneratedType", """
             package some.other.pck;
             
@@ -2112,7 +2117,7 @@ public interface SimplePojoInterface{
     @DisplayName("Matchers should be generated in configured base package")
     fun testGenerate_MatchersShouldBeGeneratedInConfiguredBasePackage() {
         // Preparation
-        val configuration = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
             package some.pck;
             
@@ -2125,7 +2130,7 @@ public interface SimplePojoInterface{
                 
             }""".trimIndent()
         )
-        val javaFileObject = JavaFileObjects.forSourceLines(
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomePojo", """
             package some.other.pck;
             
@@ -2135,7 +2140,7 @@ public interface SimplePojoInterface{
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
-        val expectedOutput = JavaFileObjects.forSourceString(
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "my.base.pck.sample.other.pck.SomePojoMatcher", """
             package my.base.pck.some.other.pck;
             

@@ -192,10 +192,14 @@ class MatcherGenerator(
         TypeName.get(baseType.asType())
     )
 
-    private fun getInnerMatchers(): List<TypeSpec> =
-        baseType.enclosedElements
+    private fun getInnerMatchers(): List<TypeSpec> {
+        val innerMatcherBases = baseType.enclosedElements
             .filterIsInstance(TypeElement::class.java)
-            .filterNot { it.modifiers.contains(Modifier.PRIVATE) }
+            .partition { it.modifiers.contains(Modifier.PUBLIC) }
+
+        innerMatcherBases.second.forEach(this::logTypeSkipped)
+        return innerMatcherBases
+            .first
             .map {
                 MatcherGenerator(
                     processingEnv,
@@ -208,6 +212,14 @@ class MatcherGenerator(
                     .addModifiers(Modifier.STATIC)
                     .build()
             }
+    }
+
+    private fun logTypeSkipped(element: TypeElement) {
+        processingEnv.logNote(
+            "Matcher generation skipped for non public type: ${element.qualifiedName}",
+            element
+        )
+    }
 
     private val TypeElement.properties: List<Property>
         get() = transitiveInheritedElements
