@@ -1305,10 +1305,10 @@ public interface SimplePojoInterface{
             .that(Arrays.asList(configuration, javaFileObject))
             .processedWith(MatcherGenerationProcessor { now }) // Assertion
             .compilesWithoutError()
-            .withWarningContaining("Hamcrest-Matcher-Generator: Package or type does not exist: not.existing.pck")
+            .withWarningContaining("Neither a type nor a type exists for 'not.existing.pck'")
             .`in`(configuration)
-            .onLine(7)
-            .atColumn(14)
+            .onLine(5)
+            .atColumn(23)
     }
 
     @Test
