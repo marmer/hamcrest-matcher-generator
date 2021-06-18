@@ -123,7 +123,7 @@ class MatcherGenerator(
             "\$L = new \$T(\$T.class)",
             builderFieldName,
             getBuilderFieldType(),
-            baseType.typeName,
+            processingEnv.typeUtils.getDeclaredType(baseType),
         )
         .build()
 
@@ -189,7 +189,7 @@ class MatcherGenerator(
 
     private fun getSuperClass() = ParameterizedTypeName.get(
         ClassName.get(TypeSafeMatcher::class.java),
-        TypeName.get(baseType.asType())
+        baseType.typeName
     )
 
     private fun getInnerMatchers(): List<TypeSpec> {
@@ -254,7 +254,7 @@ class MatcherGenerator(
         .addMember("date", "\$S", generationTimeStamp())
         .build()
 
-    private val simpleMatcherName = "${baseType.simpleName}Matcher"
+    private val simpleMatcherName = "${processingEnv.typeUtils.getDeclaredType(baseType).asElement().simpleName}Matcher"
 
     private fun TypeMirror.asTypeElement() =
         (processingEnv.typeUtils.asElement(this) as TypeElement)
