@@ -38,7 +38,6 @@ class MatcherGenerator(
         val classBuilder = TypeSpec.classBuilder(simpleMatcherName)
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(getGeneratedAnnotation())
-            .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
             .superclass(getSuperClass())
             .addFields(getFields())
             .addMethod(getConstructor())
@@ -99,7 +98,6 @@ class MatcherGenerator(
     private fun getApiInitializer() =
         methodBuilder("is${baseType.simpleName}")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-            .addTypeVariables(baseType.typeParameters.map { TypeVariableName.get(it) })
             .addStatement("return new \$T()", getGeneratedTypeName())
             .returns(getGeneratedTypeName())
             .build()
@@ -108,14 +106,7 @@ class MatcherGenerator(
         ClassName.get("", simpleMatcherName)
 
     private fun getGeneratedTypeName() =
-        if (baseType.typeParameters.isEmpty()) ClassName.get("", simpleMatcherName)
-        else getSimpleMatcherClassNameWithParameters()
-
-    private fun getSimpleMatcherClassNameWithParameters() = ParameterizedTypeName.get(
-        getSimpleMatcherClassName(),
-        *(baseType.typeParameters.map { TypeVariableName.get(it) }.toTypedArray())
-    )
-
+        getSimpleMatcherClassName()
 
     private fun getConstructor() = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PUBLIC)
