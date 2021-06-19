@@ -239,7 +239,7 @@ class MatcherGenerator(
             }
 
     private val TypeElement.transitiveInheritedElements: List<Element>
-        get() = if (superclass.kind != TypeKind.NONE && kind != ElementKind.ENUM)
+        get() = if (superclass.kind != TypeKind.NONE)
             enclosedElements +
                     superclass.asTypeElement().transitiveInheritedElements +
                     interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
