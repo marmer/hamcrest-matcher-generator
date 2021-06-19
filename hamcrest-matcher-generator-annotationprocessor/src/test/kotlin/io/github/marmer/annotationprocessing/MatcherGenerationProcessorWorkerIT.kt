@@ -382,9 +382,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -510,7 +510,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -750,7 +752,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -870,7 +874,11 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Class;
+            import java.lang.Object;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1170,9 +1178,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1221,7 +1229,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            import javax.annotation.Generated;
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1342,9 +1352,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
