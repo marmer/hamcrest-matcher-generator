@@ -54,10 +54,10 @@ class MatcherGenerator(
 
     private fun getPropertyMatcherMethods() =
         baseType.properties
-            .flatMap { property ->
+            .flatMap {
                 listOfNotNull(
-                    getHamcrestMatcher(property),
-                    getEqualsMatcher(property),
+                    getHamcrestMatcher(it),
+                    getEqualsMatcher(it),
                 )
             }
 
@@ -143,7 +143,7 @@ class MatcherGenerator(
     private fun getMatchesSafelyMethod() = methodBuilder("matchesSafely")
         .addAnnotation(Override::class.java)
         .addModifiers(Modifier.PROTECTED)
-        .addParameter(baseType.typeName, "item", Modifier.FINAL)
+        .addParameter(baseType.typeNameWithWildCards, "item", Modifier.FINAL)
         .addStatement("return \$L.matches(\$L)", builderFieldName, "item")
         .returns(BOOLEAN)
         .build()
@@ -151,7 +151,7 @@ class MatcherGenerator(
     private fun getDescribeMissmatchSafelyMethod() =
         methodBuilder("describeMismatchSafely")
             .addAnnotation(Override::class.java)
-            .addParameter(baseType.typeName, "item", Modifier.FINAL)
+            .addParameter(baseType.typeNameWithWildCards, "item", Modifier.FINAL)
             .addParameter(Description::class.java, "description", Modifier.FINAL)
             .addStatement(
                 "\$L.describeMismatch(\$L, \$L)",
@@ -173,14 +173,14 @@ class MatcherGenerator(
 
     private fun getBuilderFieldType() = ParameterizedTypeName.get(
         ClassName.get(BeanPropertyMatcher::class.java),
-        baseType.typeName
+        baseType.typeNameWithWildCards
     )
 
     private val builderFieldName = "beanPropertyMatcher"
 
     private fun getSuperClass() = ParameterizedTypeName.get(
         ClassName.get(TypeSafeMatcher::class.java),
-        baseType.typeName
+        baseType.typeNameWithWildCards
     )
 
     private fun getInnerMatchers(): List<TypeSpec> {
@@ -237,8 +237,11 @@ class MatcherGenerator(
                     interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
     private val Property.boxedType: TypeMirror
         get() =
-            if (type is PrimitiveType) processingEnv.typeUtils.boxedClass(type).asType()
-            else type
+            when (type) {
+                is PrimitiveType -> processingEnv.typeUtils.boxedClass(type).asType()
+                type.kind == TypeKind.TYPEVAR -> processingEnv.typeUtils.Object::class.java
+                else -> type
+            }
 
     private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
         .addMember("value", "\$S", generationMarker)
@@ -256,6 +259,15 @@ class MatcherGenerator(
 
     private val TypeElement.typeName: TypeName
         get() = TypeName.get(asType())
+
+    private val TypeElement.typeNameWithWildCards: TypeName
+        get() = if (typeParameters.isEmpty())
+            typeName
+        else
+            ParameterizedTypeName.get(
+                ClassName.get(this),
+                *(this.typeParameters.map { WildcardTypeName.subtypeOf(Object::class.java) }).toTypedArray()
+            )
 
     private val Element.isProperty
         get() =
