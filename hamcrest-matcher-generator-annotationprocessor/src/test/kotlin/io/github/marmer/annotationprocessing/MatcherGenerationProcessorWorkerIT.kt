@@ -633,9 +633,9 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Class;
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1433,9 +1433,8 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
@@ -1599,9 +1598,8 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.TypeSafeMatcher;
             
@@ -1816,6 +1814,7 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Object;
             import java.lang.Override;
             import java.lang.String;
             import java.util.List;
@@ -1827,11 +1826,11 @@ public interface SimplePojoInterface{
             
             
             @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
-            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
-                private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
+            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
+                private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
             
                 public SimplePojoMatcher() {
-                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
+                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class);
                 }
             
                 public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
@@ -1860,12 +1859,12 @@ public interface SimplePojoInterface{
                 }
             
                 @Override
-                protected boolean matchesSafely(final SimplePojo item) {
+                protected boolean matchesSafely(final SimplePojo<?> item) {
                     return beanPropertyMatcher.matches(item);
                 }
             
                 @Override
-                protected void describeMismatchSafely(final SimplePojo item, final Description description) {
+                protected void describeMismatchSafely(final SimplePojo<?> item, final Description description) {
                     beanPropertyMatcher.describeMismatch(item, description);
                 }
             
@@ -1936,9 +1935,17 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Boolean;
+            import java.lang.Byte;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.Double;
+            import java.lang.Float;
+            import java.lang.Integer;
+            import java.lang.Long;
+            import java.lang.Override;
+            import java.lang.Short;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;

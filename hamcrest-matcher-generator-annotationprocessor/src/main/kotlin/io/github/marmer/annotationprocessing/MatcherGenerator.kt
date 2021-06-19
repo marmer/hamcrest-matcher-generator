@@ -3,6 +3,7 @@ package io.github.marmer.annotationprocessing
 import com.squareup.javapoet.*
 import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeName.BOOLEAN
+import com.squareup.javapoet.TypeName.get
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -65,10 +66,7 @@ class MatcherGenerator(
         methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
-                ParameterizedTypeName.get(
-                    ClassName.get(Matcher::class.java),
-                    WildcardTypeName.supertypeOf(TypeName.get(property.boxedType))
-                ),
+                property.toMatcherType(),
                 "matcher",
                 Modifier.FINAL
             )
@@ -83,10 +81,23 @@ class MatcherGenerator(
             .returns(getGeneratedTypeName())
             .build()
 
+    private fun Property.toMatcherType() =
+        ParameterizedTypeName.get(
+            ClassName.get(Matcher::class.java),
+            WildcardTypeName.supertypeOf(
+                if (type.kind == TypeKind.TYPEVAR) get(Object::class.java)
+                else get(boxedType)
+            )
+        )
+
     private fun getEqualsMatcher(property: Property) =
         methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
-            .addParameter(TypeName.get(property.type), "value", Modifier.FINAL)
+            .addParameter(
+                if (property.type.kind == TypeKind.TYPEVAR) get(Object::class.java)
+                else get(property.type),
+                "value", Modifier.FINAL
+            )
             .addStatement(
                 "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, property.name,
                 Matchers::class.java
@@ -237,11 +248,8 @@ class MatcherGenerator(
                     interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
     private val Property.boxedType: TypeMirror
         get() =
-            when (type) {
-                is PrimitiveType -> processingEnv.typeUtils.boxedClass(type).asType()
-                type.kind == TypeKind.TYPEVAR -> processingEnv.typeUtils.Object::class.java
-                else -> type
-            }
+            if (type is PrimitiveType) processingEnv.typeUtils.boxedClass(type).asType()
+            else type
 
     private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
         .addMember("value", "\$S", generationMarker)
@@ -258,7 +266,7 @@ class MatcherGenerator(
 
 
     private val TypeElement.typeName: TypeName
-        get() = TypeName.get(asType())
+        get() = get(asType())
 
     private val TypeElement.typeNameWithWildCards: TypeName
         get() = if (typeParameters.isEmpty())
