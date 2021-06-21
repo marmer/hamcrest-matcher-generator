@@ -2165,9 +2165,8 @@ public interface SimplePojoInterface{
             package my.base.pck.some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Override;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.TypeSafeMatcher;
             import some.other.pck.SomePojo;

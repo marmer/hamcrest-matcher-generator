@@ -25,15 +25,26 @@ class MatcherGenerator(
     private val generationTimeStamp: () -> LocalDateTime,
     private val generationMarker: String,
     private val additionalOriginationElements: Collection<Element>,
-    private val matcherConfiguration: AnnotationMirror
+    private val matcherConfigurationMirror: AnnotationMirror,
+    private val matcherConfiguration: MatcherConfiguration
 ) {
 
     fun generate() = JavaFile.builder(
-        baseType.packageElement.toString(),
+        getBasePackage(),
         getPreparedTypeSpecBuilder()
             .build()
     ).build()
         .writeTo(processingEnv.filer)
+
+    private fun getBasePackage() =
+        if (matcherConfiguration.generation.packageConfig.value.isBlank()
+        ) baseType.packageElement.toString()
+        else "${
+            matcherConfiguration.generation.packageConfig.value.replace(
+                Regex("\\.+$"),
+                ""
+            )
+        }.${baseType.packageElement}"
 
     private fun getPreparedTypeSpecBuilder(): TypeSpec.Builder {
         val classBuilder = TypeSpec.classBuilder(simpleMatcherName)
@@ -210,6 +221,7 @@ class MatcherGenerator(
                     generationTimeStamp,
                     generationMarker,
                     listOf<Element>(baseType) + additionalOriginationElements,
+                    matcherConfigurationMirror,
                     matcherConfiguration
                 ).getPreparedTypeSpecBuilder()
                     .addModifiers(Modifier.STATIC)
@@ -221,8 +233,8 @@ class MatcherGenerator(
         processingEnv.logNote(
             "Matcher generation skipped for non public type: ${element.qualifiedName}",
             element,
-            matcherConfiguration,
-            matcherConfiguration.getAnnotationValueForValue()
+            matcherConfigurationMirror,
+            matcherConfigurationMirror.getAnnotationValueForValue()
         )
     }
 
