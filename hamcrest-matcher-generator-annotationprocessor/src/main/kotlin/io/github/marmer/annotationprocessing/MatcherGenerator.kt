@@ -14,9 +14,7 @@ import java.util.*
 import javax.annotation.processing.Generated
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.*
-import javax.lang.model.type.PrimitiveType
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
+import javax.lang.model.type.*
 
 
 class MatcherGenerator(
@@ -106,8 +104,7 @@ class MatcherGenerator(
         methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
-                if (property.type.kind == TypeKind.TYPEVAR) get(Object::class.java)
-                else get(property.type),
+                property.toEqualsMatcherParameterType(),
                 "value", Modifier.FINAL
             )
             .addStatement(
@@ -117,6 +114,36 @@ class MatcherGenerator(
             .addStatement("return this")
             .returns(getGeneratedTypeName())
             .build()
+
+    private fun Property.toEqualsMatcherParameterType(): TypeName =
+        if (type.kind == TypeKind.TYPEVAR) get(Object::class.java)
+        else {
+            type.typeVarsToWildcards()
+        }
+
+    private fun TypeMirror.typeVarsToWildcards(): TypeName {
+        return if (this is DeclaredType && typeArguments.isNotEmpty()) {
+            ParameterizedTypeName.get(
+                ClassName.get(asTypeElement()),
+                *(typeArguments.map {
+                    when (it.kind) {
+                        TypeKind.TYPEVAR -> WildcardTypeName.subtypeOf(Object::class.java)
+                        TypeKind.WILDCARD ->
+                            (it as javax.lang.model.type.WildcardType).extendsBound
+                        (it as javax.lang.model.type.WildcardType).superBound
+
+                                Hier geht's weiter ... und die zwei Zeilen oben dürften den entscheidenden Hinweis geben'
+
+//                            WildcardTypeName.subtypeOf(
+//                            get((it as com.sun.tools.javac.code.Type.WildcardType).type)
+                            )
+                        else -> WildcardTypeName.subtypeOf(it.typeVarsToWildcards())
+                    }
+                }.toTypedArray())
+            )
+        } else
+            get(this)
+    }
 
     private fun getApiInitializer() =
         methodBuilder("is${baseType.simpleName}")

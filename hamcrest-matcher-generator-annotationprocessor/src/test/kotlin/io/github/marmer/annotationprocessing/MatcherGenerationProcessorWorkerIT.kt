@@ -1816,10 +1816,10 @@ public interface SimplePojoInterface{
             
             import java.util.List;
             
-            public interface SimplePojo <T,X extends String & Function<? extends String, T> & Consumer<String>>{
+            public interface SimplePojo <T,X extends String & Function<? super String, T> & Consumer<String>>{
                 T getProperty();
-                Map<T, List<X>> getNestedGenericProperty();
-                List<? extends String> getWildcardProperty();
+                Map<T, List<Supplier<X>>> getNestedGenericProperty();
+                List<? extends Supplier<? extends T> > getWildcardProperty();
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
@@ -1859,22 +1859,22 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, List<? extends String & Function<? extends String, ?> & Consumer<String>>> matcher) {
+                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, List<Supplier<?>>> matcher) {
                     beanPropertyMatcher.with("nestedGenericProperty", matcher);
                     return this;
                 }
            
-                public SimplePojoMatcher withNestedGenericProperty(final Map<?, List<? extends String & Function<? extends String, ?> & Consumer<String>>> value) {
+                public SimplePojoMatcher withNestedGenericProperty(final Map<?, List<Supplier<?>>> value) {
                     beanPropertyMatcher.with("nestedGenericProperty", Matchers.equalTo(value));
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final Matcher<? super List<? extends String>> matcher) {
+                public SimplePojoMatcher withWildcardProperty(final List<? extends Supplier<?>> matcher) {
                     beanPropertyMatcher.with("wildcardProperty", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final List<? extends String> value) {
+                public SimplePojoMatcher withWildcardProperty(final List<? extends Supplier<?>> value) {
                     beanPropertyMatcher.with("wildcardProperty", Matchers.equalTo(value));
                     return this;
                 }
