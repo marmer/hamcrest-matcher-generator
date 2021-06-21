@@ -1792,8 +1792,8 @@ public interface SimplePojoInterface{
     }
 
     @Test
-    @DisplayName("Generics and wildcard properties should be handled like Object")
-    fun testGenerate_GenericsAndWildcardPropertiesShouldBeHandledLikeObject() {
+    @DisplayName("Generics and wildcard properties should be handled properly")
+    fun testGenerate_GenericsAndWildcardPropertiesShouldBeHandledProperly() {
         // Preparation
         @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration", """
