@@ -63,7 +63,8 @@ class MatcherGenerator(
             }
 
     private fun getHamcrestMatcher(property: Property) =
-        methodBuilder("with${property.name.capitalized}")
+        if (property.type.isMatcher) null
+        else methodBuilder("with${property.name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
                 property.toMatcherType(),
@@ -260,6 +261,10 @@ class MatcherGenerator(
 
     private fun TypeMirror.asTypeElement() =
         (processingEnv.typeUtils.asElement(this) as TypeElement)
+
+    private val TypeMirror.isMatcher: Boolean
+        get() =
+            kind == TypeKind.DECLARED && Matcher::class.java.canonicalName == this.asTypeElement().qualifiedName.toString()
 
     private val TypeElement.packageElement: PackageElement
         get() = processingEnv.elementUtils.getPackageOf(this)

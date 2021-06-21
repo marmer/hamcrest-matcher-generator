@@ -1740,11 +1740,12 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
-            
-            import javax.annotation.Generated;
-            
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
             @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
@@ -1755,8 +1756,8 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withProperty(final Matcher<String> matcher) {
-                    beanPropertyMatcher.with("property", matcher);
+                public SimplePojoMatcher withProperty(final Matcher<String> value) {
+                    beanPropertyMatcher.with("property", Matchers.equalTo(value));
                     return this;
                 }
             
