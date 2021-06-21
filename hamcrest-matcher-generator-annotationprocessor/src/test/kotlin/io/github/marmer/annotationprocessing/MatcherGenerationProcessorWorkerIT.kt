@@ -1810,12 +1810,15 @@ public interface SimplePojoInterface{
             "some.other.pck.SimplePojo", """
             package some.other.pck;
             
+            import java.util.Map;
+            import java.util.function.Consumer;import java.util.function.Function;import java.util.function.Supplier;
             import org.hamcrest.Matcher;
             
             import java.util.List;
             
-            public interface SimplePojo <T>{
+            public interface SimplePojo <T,X extends String & Function<? extends String, T> & Consumer<String>>{
                 T getProperty();
+                Map<T, List<X>> getNestedGenericProperty();
                 List<? extends String> getWildcardProperty();
             }""".trimIndent()
         )
@@ -1829,6 +1832,8 @@ public interface SimplePojoInterface{
             import java.lang.Override;
             import java.lang.String;
             import java.util.List;
+            import java.util.function.Consumer;
+            import java.util.function.Supplier;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
             import org.hamcrest.Matcher;
@@ -1837,11 +1842,11 @@ public interface SimplePojoInterface{
             
             
             @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
-            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
-                private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
+            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?,?>> {
+                private final BeanPropertyMatcher<SimplePojo<?,?>> beanPropertyMatcher;
             
                 public SimplePojoMatcher() {
-                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class);
+                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?,?>>(SimplePojo.class);
                 }
             
                 public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
@@ -1851,6 +1856,16 @@ public interface SimplePojoInterface{
             
                 public SimplePojoMatcher withProperty(final Object value) {
                     beanPropertyMatcher.with("property", Matchers.equalTo(value));
+                    return this;
+                }
+            
+                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, List<? extends String & Function<? extends String, ?> & Consumer<String>>> matcher) {
+                    beanPropertyMatcher.with("nestedGenericProperty", matcher);
+                    return this;
+                }
+           
+                public SimplePojoMatcher withNestedGenericProperty(final Map<?, List<? extends String & Function<? extends String, ?> & Consumer<String>>> value) {
+                    beanPropertyMatcher.with("nestedGenericProperty", Matchers.equalTo(value));
                     return this;
                 }
             
