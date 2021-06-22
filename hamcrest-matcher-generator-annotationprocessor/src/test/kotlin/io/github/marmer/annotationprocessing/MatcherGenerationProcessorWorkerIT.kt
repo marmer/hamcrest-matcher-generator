@@ -1756,7 +1756,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withProperty(final Matcher<String> value) {
+                public SimplePojoMatcher withProperty(final Matcher<? extends String> value) {
                     beanPropertyMatcher.with("property", Matchers.equalTo(value));
                     return this;
                 }

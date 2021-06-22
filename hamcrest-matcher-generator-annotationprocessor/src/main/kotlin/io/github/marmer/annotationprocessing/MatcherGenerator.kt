@@ -95,8 +95,7 @@ class MatcherGenerator(
         ParameterizedTypeName.get(
             ClassName.get(Matcher::class.java),
             WildcardTypeName.supertypeOf(
-                if (type.kind == TypeKind.TYPEVAR) get(Object::class.java)
-                else get(boxedType)
+                type.typeVarsToWildcards(true)
             )
         )
 
@@ -121,7 +120,7 @@ class MatcherGenerator(
             type.typeVarsToWildcards()
         }
 
-    private fun TypeMirror.typeVarsToWildcards(): TypeName =
+    private fun TypeMirror.typeVarsToWildcards(boxPrimitives: Boolean = false): TypeName =
         when {
             this is DeclaredType && typeArguments.isNotEmpty() -> {
                 ParameterizedTypeName.get(
@@ -131,16 +130,27 @@ class MatcherGenerator(
                             it is TypeVariable -> WildcardTypeName.subtypeOf(Object::class.java)
                             it is WildcardType ->
                                 when {
-                                    it.extendsBound != null -> WildcardTypeName.subtypeOf(it.extendsBound.typeVarsToWildcards())
-                                    it.superBound != null -> WildcardTypeName.supertypeOf(it.superBound.typeVarsToWildcards())
+                                    it.extendsBound != null -> WildcardTypeName.subtypeOf(
+                                        it.extendsBound.typeVarsToWildcards(
+                                            boxPrimitives
+                                        )
+                                    )
+                                    it.superBound != null -> WildcardTypeName.supertypeOf(
+                                        it.superBound.typeVarsToWildcards(
+                                            boxPrimitives
+                                        )
+                                    )
                                     else -> WildcardTypeName.subtypeOf(Object::class.java)
                                 }
-                            else -> WildcardTypeName.subtypeOf(it.typeVarsToWildcards())
+                            else -> WildcardTypeName.subtypeOf(it.typeVarsToWildcards(boxPrimitives))
                         }
                     }.toTypedArray())
                 )
             }
             this is TypeVariable -> get(Object::class.java)
+            this is PrimitiveType ->
+                if (boxPrimitives) get(processingEnv.typeUtils.boxedClass(this).asType())
+                else get(this)
             else -> get(this)
         }
 
@@ -285,10 +295,6 @@ class MatcherGenerator(
         else
             enclosedElements +
                     interfaces.flatMap { it.asTypeElement().transitiveInheritedElements }
-    private val Property.boxedType: TypeMirror
-        get() =
-            if (type is PrimitiveType) processingEnv.typeUtils.boxedClass(type).asType()
-            else type
 
     private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
         .addMember("value", "\$S", generationMarker)
