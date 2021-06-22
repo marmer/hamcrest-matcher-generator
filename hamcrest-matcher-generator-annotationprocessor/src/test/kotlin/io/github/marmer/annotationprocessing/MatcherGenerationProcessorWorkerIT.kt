@@ -1818,8 +1818,8 @@ public interface SimplePojoInterface{
             
             public interface SimplePojo <T,X extends String & Function<? super String, T> & Consumer<String>>{
                 T getProperty();
-                Map<T, List<Supplier<X>>> getNestedGenericProperty();
-                List<? extends Supplier<? extends T> > getWildcardProperty();
+                Map<T, List<Supplier<?>>> getNestedGenericProperty();
+                List<? extends Function<? extends T, ? super Consumer<?>> > getWildcardProperty();
             }""".trimIndent()
         )
         val now = LocalDateTime.now()
@@ -1869,12 +1869,12 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final List<? extends Supplier<?>> matcher) {
+                public SimplePojoMatcher withWildcardProperty(final Matcher<? super List<? extends Function<?, ? super Consumer<?>>>> matcher) {
                     beanPropertyMatcher.with("wildcardProperty", matcher);
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final List<? extends Supplier<?>> value) {
+                public SimplePojoMatcher withWildcardProperty(final List<? extends Function<?, ? super Consumer<?>>> value) {
                     beanPropertyMatcher.with("wildcardProperty", Matchers.equalTo(value));
                     return this;
                 }
