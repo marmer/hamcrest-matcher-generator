@@ -1830,9 +1830,10 @@ public interface SimplePojoInterface{
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
             import java.lang.Object;
             import java.lang.Override;
-            import java.lang.String;
             import java.util.List;
+            import java.util.Map;
             import java.util.function.Consumer;
+            import java.util.function.Function;
             import java.util.function.Supplier;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
@@ -1840,13 +1841,12 @@ public interface SimplePojoInterface{
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
-            
             @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
-            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?,?>> {
-                private final BeanPropertyMatcher<SimplePojo<?,?>> beanPropertyMatcher;
+            public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?, ?>> {
+                private final BeanPropertyMatcher<SimplePojo<?, ?>> beanPropertyMatcher;
             
                 public SimplePojoMatcher() {
-                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?,?>>(SimplePojo.class);
+                    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?, ?>>(SimplePojo.class);
                 }
             
                 public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
@@ -1859,12 +1859,12 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, List<Supplier<?>>> matcher) {
+                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, ? extends List<? extends Supplier<?>>>> matcher) {
                     beanPropertyMatcher.with("nestedGenericProperty", matcher);
                     return this;
                 }
            
-                public SimplePojoMatcher withNestedGenericProperty(final Map<?, List<Supplier<?>>> value) {
+                public SimplePojoMatcher withNestedGenericProperty(final Map<?, ? extends List<? extends Supplier<?>>> value) {
                     beanPropertyMatcher.with("nestedGenericProperty", Matchers.equalTo(value));
                     return this;
                 }
@@ -1885,12 +1885,12 @@ public interface SimplePojoInterface{
                 }
             
                 @Override
-                protected boolean matchesSafely(final SimplePojo<?> item) {
+                protected boolean matchesSafely(final SimplePojo<?, ?> item) {
                     return beanPropertyMatcher.matches(item);
                 }
             
                 @Override
-                protected void describeMismatchSafely(final SimplePojo<?> item, final Description description) {
+                protected void describeMismatchSafely(final SimplePojo<?, ?> item, final Description description) {
                     beanPropertyMatcher.describeMismatch(item, description);
                 }
             
