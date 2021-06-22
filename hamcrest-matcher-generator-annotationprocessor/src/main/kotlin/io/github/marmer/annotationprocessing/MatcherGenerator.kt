@@ -66,24 +66,24 @@ class MatcherGenerator(
         baseType.properties
             .flatMap {
                 listOfNotNull(
-                    getHamcrestMatcher(it),
-                    getEqualsMatcher(it),
+                    it.getHamcrestMatcher(),
+                    it.toEqualsMatcher(),
                 )
             }
 
-    private fun getHamcrestMatcher(property: Property) =
-        if (property.type.isMatcher) null
-        else methodBuilder("with${property.name.capitalized}")
+    private fun Property.getHamcrestMatcher() =
+        if (type.isMatcher) null
+        else methodBuilder("with${name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
-                property.toMatcherType(),
+                toMatcherType(),
                 "matcher",
                 Modifier.FINAL
             )
             .addStatement(
                 "\$L.with(\$S, matcher)",
                 builderFieldName,
-                property.name
+                name
             )
             .addStatement(
                 "return this"
@@ -100,15 +100,15 @@ class MatcherGenerator(
             )
         )
 
-    private fun getEqualsMatcher(property: Property) =
-        methodBuilder("with${property.name.capitalized}")
+    private fun Property.toEqualsMatcher() =
+        methodBuilder("with${name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
-                property.toEqualsMatcherParameterType(),
+                toEqualsMatcherParameterType(),
                 "value", Modifier.FINAL
             )
             .addStatement(
-                "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, property.name,
+                "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, name,
                 Matchers::class.java
             )
             .addStatement("return this")
