@@ -56,7 +56,11 @@ internal class MatcherGenerationProcessorIT {
                     return String.valueOf(param);
                 }
                 
-                public boolean getSomePropertyLike(){
+                public boolean getSomePrimitiveBooleanPropertyLike(){
+                    return true;
+                }
+                
+                public Boolean isSomeWrapperBooleanPropertyLike(){
                     return true;
                 }
                 
