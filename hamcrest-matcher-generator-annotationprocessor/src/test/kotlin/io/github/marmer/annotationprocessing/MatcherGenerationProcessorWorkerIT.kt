@@ -752,6 +752,7 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Class;
             import java.lang.Override;
             import java.lang.String;
             import javax.annotation.processing.Generated;
@@ -1443,6 +1444,7 @@ public interface SimplePojoInterface{
             package some.other.pck;
             
             import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Class;
             import java.lang.Override;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
