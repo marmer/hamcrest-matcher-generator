@@ -1,7 +1,8 @@
 package foo.bar.sample.model;
 
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.BasedOn;
+import javax.annotation.processing.Generated;
 
-@BasedOn(SomePojo.class)
+@Generated(value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor", date = "12345")
 public class GeneratedByJavaPoetMatcherGeneratorType {
+
 }

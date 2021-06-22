@@ -7,15 +7,16 @@ import java.lang.annotation.Target;
 
 
 /**
- * This interface keeps information about the classes generated classes are
- * based of.
+ * This interface keeps information about the classes generated classes are based of.
  *
  * @author marmer
- * @since   21.06.2017
+ * @since 21.06.2017
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BasedOn {
+    // TODO: marmer 22.06.2021 Check alternative!
+
     /**
      * Tha generation base.
      *
