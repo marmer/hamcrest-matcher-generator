@@ -22,14 +22,14 @@ class MatcherGenerationProcessorWorker(
         processingEnv.logNote("Annotation processor for hamcrest matcher generation started")
         return if (annotations.contains<MatcherConfiguration>()) {
             roundEnv.getElementsAnnotatedWith<MatcherConfiguration>()
-                .forEach { it.gemerateMatchers() }
+                .forEach { it.generateMatchers() }
             true
         } else {
             false
         }
     }
 
-    private fun Element.gemerateMatchers() {
+    private fun Element.generateMatchers() {
         getAllTypeElementsFor()
             .forEach {
                 if (it.isSelfGenerated()) {
