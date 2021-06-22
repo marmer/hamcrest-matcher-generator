@@ -1,58 +1,50 @@
-package io.github.marmer.annotationprocessing;
+package io.github.marmer.annotationprocessing
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
-public @interface MatcherConfiguration {
-
+@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class MatcherConfiguration(
     /**
      * Package names and/or full qualified class names to scan for classes to generate matchers for.
      *
      * @return Package names and full qualified class names
      */
-    String[] value();
-
+    vararg val value: String,
     /**
      * Configuration of how to generate something.
      *
      * @return Configuration of how to generate something.
      */
-    GenerationConfiguration generation() default @GenerationConfiguration();
-
+    val generation: GenerationConfiguration = GenerationConfiguration()
+) {
     /**
      * Configuration of how to generate something.
      */
-    @Retention(RetentionPolicy.SOURCE)
-    @interface GenerationConfiguration {
-
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class GenerationConfiguration(
         /**
          * Configuration of how packages are created for Matchers.
          *
          * @return Configuration of how packages are created for Matchers.
          */
-        PackageConfiguration packageConfig() default @PackageConfiguration("");
-
+        val packageConfig: PackageConfiguration = PackageConfiguration("")
+    ) {
         /**
          * Configuration of how packages are created for Matchers.
          */
-        @Retention(RetentionPolicy.SOURCE)
-        @interface PackageConfiguration {
-
+        @Retention(AnnotationRetention.SOURCE)
+        annotation class PackageConfiguration(
             /**
              * Which package to use for the generated types. By default this value is just a prefix or base package  of
              * generated classes.
-             * <p>
+             *
+             *
              * Example Inputs and outputs for type some.pck.SomeType "some.praefix_" = "some.praefix_some.pck"
              * "some.praefix." = "some.praefix.some.pck" "" = "some.pck"
-             * </p>
+             *
              *
              * @return Which package to use for the generated types
              */
-            String value();
-        }
+            val value: String
+        )
     }
 }

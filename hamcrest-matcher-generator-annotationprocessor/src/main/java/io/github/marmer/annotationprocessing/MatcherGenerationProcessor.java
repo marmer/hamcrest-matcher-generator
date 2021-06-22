@@ -9,11 +9,9 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
 @SupportedAnnotationTypes("io.github.marmer.annotationprocessing.MatcherConfiguration")
 @AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
