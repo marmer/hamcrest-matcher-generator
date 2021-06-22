@@ -9,7 +9,8 @@
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=io.github.marmer.testutils:hamcrest-matcher-generator&metric=Maintainability)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=io.github.marmer.testutils:hamcrest-matcher-generator&metric=Reliability)
 
-hamcrest-matcher-generator ========================== This library provides the generation of hamcrest matchers without the need to pollute the production code.
+hamcrest-matcher-generator ========================== This library provides the generation of hamcrest matchers without
+the need to pollute the production code.
 
 Bean Property Matcher
 ---------------------
@@ -17,8 +18,8 @@ Bean Property Matcher
 Ever wanted to...
 
 * ...have some Hamcrest-Matcchers for all (or some) of your Model classes oder Services magically appear?
-  * or ever wanted it without to pollute your production code with test code annotations?
-  * or types which are not part of the current source code.
+    * or ever wanted it without to pollute your production code with test code annotations?
+    * or types which are not part of the current source code.
 * ...test your models with hamcrest in an atomic way with atomic error messages?
 * ...have a compile safe alternative to Hamcrests "hasProperty" or HasPropertyWithValue?
 
@@ -26,7 +27,8 @@ Properties of Lombok annotated classes are supported as well (tested with versio
 
 How to use
 ==========
-All you need is to add one or two dependencies and an Annotation for the configuration for what types the matchers have to be generated.
+All you need is to add one or two dependencies and an Annotation for the configuration for what types the matchers have
+to be generated.
 
 Dependencies
 ----------
@@ -40,7 +42,8 @@ If you want to use the matchers in your testcode only, simply add this dependenc
         <scope>test</scope>
     </dependency>
 
-If you want to use it in your production code, you should use it only "provided" to avoid unnecessary dependencies. In this case, you have to add another dependency used by the generated code.
+If you want to use it in your production code, you should use it only "provided" to avoid unnecessary dependencies. In
+this case, you have to add another dependency used by the generated code.
 
     <dependency>
         <groupId>io.github.marmer.testutils</groupId>
@@ -58,7 +61,8 @@ If you want to use it in your production code, you should use it only "provided"
 
 Configuration
 -------------
-Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either full qualified Class names or packages for Types you want to generate matchers for e.g.
+Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either full qualified Class names or
+packages for Types you want to generate matchers for e.g.
 
     @MatcherConfiguration({
             "foo.bar.sample.model.SomePojo",
@@ -69,7 +73,10 @@ Simply create a Class or Interface with one or more `@MatcherConfiguration` and 
     public class PackageConfiguration {
     }
 
-Depending on where you put the configuration the generated matchers will be generated within generated-test-sources you put it in your test sources or in generated-sources if you put it in your production code sources. (At least in maven projects this is the default behavior. It may be different with other build tools or non default configuration, but it should work for other build tools in a similar way)
+Depending on where you put the configuration the generated matchers will be generated within generated-test-sources you
+put it in your test sources or in generated-sources if you put it in your production code sources. (At least in maven
+projects this is the default behavior. It may be different with other build tools or non default configuration, but it
+should work for other build tools in a similar way)
 
 Generated result
 ----------------
@@ -85,7 +92,8 @@ Assuming you hava a pojo like this one with the configuration above...
         }
     }
 
-... a Matcher Named SomePojoMatcher is generated within the same package and you could use it the following way in your test:
+... a Matcher Named SomePojoMatcher is generated within the same package and you could use it the following way in your
+test:
 
     final SomePojo somePojo = new SomePojo();
     somePojo.setPojoField("pojoFieldValue");
@@ -101,18 +109,25 @@ Assuming you hava a pojo like this one with the configuration above...
             .withPojoField(is(equalTo("pojoFieldValue")))
     );
 
-This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and for matchers for each field.
+This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and
+for matchers for each field.
 
 Requirements
 ============
 
 Build tool
 ---------
-You can use this library with the buildtool of your choice or even just javac. This library is capable of annotation processing. So the matchers are generated at compile time like it's done with other Libraries (e.g. Lombok or Mapstruct).
+You can use this library with the buildtool of your choice or even just javac. This library is capable of annotation
+processing. So the matchers are generated at compile time like it's done with other Libraries (e.g. Lombok or Mapstruct)
+.
 
 IDE
 ---
-Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by itself when the project builds. Some IDEs may need a little help. Eclipse for example may be only capable of annotation processing in maven projects if you have installed a maven plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt) but you don't have the IDO to perform the processing. With a little help of the `build-helper-maven-plugin` you can tell the IDE where to look for sources generated by Maven.
+Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by
+itself when the project builds. Some IDEs may need a little help. Eclipse for example may be only capable of annotation
+processing in maven projects if you have installed a maven
+plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt) but you don't have the IDO to perform the processing.
+With a little help of the `build-helper-maven-plugin` you can tell the IDE where to look for sources generated by Maven.
 
 ```
 <plugin>
@@ -145,9 +160,11 @@ Generated sources may also work with JDK5. But it is and will not be tested so t
 
 Hamcrest
 --------
-Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources of course. In General you shuld be free to choose your version of hamcrest by yourself.
+Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources
+of course. In General you shuld be free to choose your version of hamcrest by yourself.
 
-Your Project should be at least of Java version 1.6 and use a hamcrest version of 1.2. The resulting code will not work without hamcrest.
+Your Project should be at least of Java version 1.6 and use a hamcrest version of 1.2. The resulting code will not work
+without hamcrest.
 
 For JDK7+ projects you should (but don't have to) use the following hamcrest version for the generated sources
 
@@ -171,13 +188,21 @@ For JDK6 you may use:
 
 This project uses semantic versioning. See https://semver.org/
 
+### 5.0.0
+
+* Codebase migrated to Java 11 and Kotlin 1.5
+* Unnecessary MatcherConfigurations removed
+* Useless BasedOn Annotation removed
+
 ### 4.2.5
 
-* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element within a list in "contains" to "Matcher" without any generic information
+* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element
+  within a list in "contains" to "Matcher" without any generic information
 
 ### 4.2.4
 
-* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element within a list in "contains" to "Matcher" without any generic information
+* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element
+  within a list in "contains" to "Matcher" without any generic information
 
 ### 4.2.3
 
@@ -194,12 +219,14 @@ This project uses semantic versioning. See https://semver.org/
 
 ### 4.2.0
 
-* Logging happens with a prefix so that the user is able to distinguish between errors of this annotation processor and others
+* Logging happens with a prefix so that the user is able to distinguish between errors of this annotation processor and
+  others
 * Annotation based logs without more concrete elements contain line and column information of the annotated element
 
 ### 4.1.0
 
-* Possibility added to change the "base package" in which the generated Matchers are placed with some package postfix (which can be a complete package)
+* Possibility added to change the "base package" in which the generated Matchers are placed with some package postfix (
+  which can be a complete package)
 
 ### 4.0.7
 
@@ -268,7 +295,8 @@ This project uses semantic versioning. See https://semver.org/
 
 ### 2.0.0
 
-* Support for multiple inner classes with the same name added by using different naming strategies. For backwart compatibility use <namingStrategy>PLAIN</namingStrategy> which is the old strategy
+* Support for multiple inner classes with the same name added by using different naming strategies. For backwart
+  compatibility use <namingStrategy>PLAIN</namingStrategy> which is the old strategy
 
 ### 1.3.0
 

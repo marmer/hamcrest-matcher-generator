@@ -9,7 +9,6 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-
 /**
  * Matcher for beans.
  *
@@ -43,7 +42,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         fullMatcher.add(instanceOfMatcher);
         fullMatcher.addAll(hasPropertyMatcher);
 
-        return allOf(fullMatcher.toArray(new Matcher[fullMatcher.size()]));
+        return allOf(fullMatcher.toArray(new Matcher[0]));
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
