@@ -340,6 +340,36 @@ public interface SimplePojoInterface{
     }
 
     @Test
+    @DisplayName("Print a warning for not existing configured types")
+    fun testGenerate_PrintAWarningForNotExistingConfiguredTypes() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+            package some.pck;
+            
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            
+            @MatcherConfiguration("some.other.pck.NotExistingType")
+            @FunctionalInterface
+            public interface SomeConfiguration{
+                String someMethod(String blub);
+            }""".trimIndent()
+        )
+
+        // Execution
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(configuration))
+            .processedWith(MatcherGenerationProcessor()) // Assertion
+            .compilesWithoutError()
+            .withWarningContaining("Neither a type nor a type exists for 'some.other.pck.NotExistingType'")
+            .`in`(configuration)
+            .onLine(5)
+            .atColumn(23)
+    }
+
+
+    @Test
     @DisplayName("Additional Annotations are allowed for configuration classes")
     fun testGenerate_AdditinoalAnnotationsAreAllowedForConfigurationClasses() {
         // Preparation
