@@ -80,11 +80,7 @@ internal class MatcherGenerationProcessorIT {
             }""".trimIndent()
         )
 
-        todo { // TODO: marmer 22.06.2021 Minimal Fingerprint test Modules
-        }
         todo { // TODO: marmer 22.06.2021 Kotlin only Testmodule
-        }
-        todo { // TODO: marmer 22.06.2021 Java only Testmodule
         }
         todo { // TODO: marmer 22.06.2021 Kotlin Java Mixed Testmodule
         }
