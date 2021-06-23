@@ -12,7 +12,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
-@SupportedAnnotationTypes("io.github.marmer.annotationprocessing.MatcherConfiguration")
+@SupportedAnnotationTypes("io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration")
 @AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
 

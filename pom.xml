@@ -369,7 +369,7 @@
         <profile>
             <id>dev</id>
             <modules>
-                <module>hamcrest-matcher-generator-endtoend-plain</module>
+                <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>

@@ -1,50 +1,58 @@
-package io.github.marmer.annotationprocessing
+package io.github.marmer.testutils.generators.beanmatcher.dependencies;
 
-@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class MatcherConfiguration(
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.SOURCE)
+public @interface MatcherConfiguration {
+
     /**
      * Package names and/or full qualified class names to scan for classes to generate matchers for.
      *
      * @return Package names and full qualified class names
      */
-    vararg val value: String,
+    String[] value();
+
     /**
      * Configuration of how to generate something.
      *
      * @return Configuration of how to generate something.
      */
-    val generation: GenerationConfiguration = GenerationConfiguration()
-) {
+    GenerationConfiguration generation() default @GenerationConfiguration();
+
     /**
      * Configuration of how to generate something.
      */
-    @Retention(AnnotationRetention.SOURCE)
-    annotation class GenerationConfiguration(
+    @Retention(RetentionPolicy.SOURCE)
+    @interface GenerationConfiguration {
+
         /**
          * Configuration of how packages are created for Matchers.
          *
          * @return Configuration of how packages are created for Matchers.
          */
-        val packageConfig: PackageConfiguration = PackageConfiguration("")
-    ) {
+        PackageConfiguration packageConfig() default @PackageConfiguration("");
+
         /**
          * Configuration of how packages are created for Matchers.
          */
-        @Retention(AnnotationRetention.SOURCE)
-        annotation class PackageConfiguration(
+        @Retention(RetentionPolicy.SOURCE)
+        @interface PackageConfiguration {
+
             /**
              * Which package to use for the generated types. By default this value is just a prefix or base package  of
              * generated classes.
-             *
-             *
+             * <p>
              * Example Inputs and outputs for type some.pck.SomeType "some.praefix_" = "some.praefix_some.pck"
              * "some.praefix." = "some.praefix.some.pck" "" = "some.pck"
-             *
+             * </p>
              *
              * @return Which package to use for the generated types
              */
-            val value: String
-        )
+            String value();
+        }
     }
 }

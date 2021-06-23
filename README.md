@@ -9,8 +9,9 @@
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=io.github.marmer.testutils:hamcrest-matcher-generator&metric=Maintainability)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=io.github.marmer.testutils:hamcrest-matcher-generator&metric=Reliability)
 
-hamcrest-matcher-generator ========================== This library provides the generation of hamcrest matchers without
-the need to pollute the production code.
+hamcrest-matcher-generator
+========================== 
+This library provides the generation of hamcrest matchers without the need to pollute the production code.
 
 Bean Property Matcher
 ---------------------
@@ -154,19 +155,18 @@ With a little help of the `build-helper-maven-plugin` you can tell the IDE where
 JDK
 ---
 
-At least JDK6 is required to use the generated source code but the annotation processor requires JDK8 to create it.
+At least JDK11 is required to use the generated source code but the annotation processor requires JDK11 to create it.
 
-Generated sources may also work with JDK5. But it is and will not be tested so there is no guarantee!
+Generated sources may also work with earlier JDK Versinos. But it is and will not be tested so there is no guarantee!
 
 Hamcrest
 --------
 Because hamcrest matchers are generated, you will need a dependency to hamcrest to be able to use the generated sources
 of course. In General you shuld be free to choose your version of hamcrest by yourself.
 
-Your Project should be at least of Java version 1.6 and use a hamcrest version of 1.2. The resulting code will not work
-without hamcrest.
+Your Project should use a minimum version of hamcrest of 1.2. The generated code will not work otherwise.
 
-For JDK7+ projects you should (but don't have to) use the following hamcrest version for the generated sources
+You may copy this dependency if you want.
 
 	<dependency>
 		<groupId>org.hamcrest</groupId>
@@ -174,15 +174,6 @@ For JDK7+ projects you should (but don't have to) use the following hamcrest ver
 		<version>2.2</version>
 		<scope>test</scope>
 	</dependency>	
-
-For JDK6 you may use:
-
-	<dependency>
-		<groupId>org.hamcrest</groupId>
-		<artifactId>hamcrest-all</artifactId>
-		<version>1.3</version>
-		<scope>test</scope>
-	</dependency>`
 
 ### Changelog
 

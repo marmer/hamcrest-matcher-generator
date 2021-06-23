@@ -1,7 +1,7 @@
 package foo.bar.sample.configuration;
 
 
-import io.github.marmer.annotationprocessing.MatcherConfiguration;
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
 
 @MatcherConfiguration({
     "foo.bar.sample.model.SomePojoInterface",

@@ -10,7 +10,7 @@
         <version>5.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>hamcrest-matcher-generator-endtoend-plain</artifactId>
+    <artifactId>hamcrest-matcher-generator-endtoend-plain-java-minimal</artifactId>
     <version>5.0.0-SNAPSHOT</version>
 
     <dependencies>
@@ -18,13 +18,12 @@
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
             <version>5.0.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+            <version>5.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -36,18 +35,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <build>

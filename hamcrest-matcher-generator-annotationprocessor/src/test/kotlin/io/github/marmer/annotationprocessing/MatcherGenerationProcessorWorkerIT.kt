@@ -19,7 +19,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
                 package some.pck;
                 
-                import io.github.marmer.annotationprocessing.MatcherConfiguration;
+                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
                 
                 @MatcherConfiguration("some.other.pck.SimplePojo")
                 public final class SomeConfiguration{
@@ -283,7 +283,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             public final class SomeConfiguration{
@@ -368,7 +368,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.NotExistingType")
             @FunctionalInterface
@@ -398,7 +398,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             @FunctionalInterface
@@ -485,7 +485,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             import javax.annotation.processing.Generated;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
@@ -576,7 +576,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             public final class SomeConfiguration{
@@ -716,7 +716,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomeClass")
             public final class SomeConfiguration{
@@ -842,7 +842,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomePojo")
             public final class SomeConfiguration{
@@ -957,7 +957,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoEnum")
             public final class SomeConfiguration{
@@ -1067,7 +1067,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojo")
             public final class SomeConfiguration{
@@ -1191,7 +1191,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojo")
             public final class SomeConfiguration{
@@ -1301,7 +1301,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("org.mockito.ArgumentMatchers")
             public final class SomeConfiguration{
@@ -1379,7 +1379,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck")
             public final class SomeConfiguration{
@@ -1524,7 +1524,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"not.existing.pck"})
             public final class SomeConfiguration{
@@ -1561,7 +1561,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -1646,7 +1646,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -1815,7 +1815,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo.InnerType.InnerInnerType"})
             public final class SomeConfiguration{
@@ -1948,7 +1948,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2030,7 +2030,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2148,7 +2148,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2344,7 +2344,7 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomeGeneratedType")
             public final class SomeConfiguration{
@@ -2389,9 +2389,9 @@ public interface SimplePojoInterface{
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.annotationprocessing.MatcherConfiguration;
-            import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration;
-            import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration.GenerationConfiguration;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;
             
             @MatcherConfiguration(value = {"some.other.pck.SomePojo"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration("my.base.pck.")))
             public final class SomeConfiguration{

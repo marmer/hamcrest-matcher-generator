@@ -1,5 +1,6 @@
 package io.github.marmer.annotationprocessing
 
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
 import java.time.LocalDateTime
 import javax.annotation.processing.Generated
 import javax.annotation.processing.ProcessingEnvironment

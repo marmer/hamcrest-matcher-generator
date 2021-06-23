@@ -5,6 +5,7 @@ import com.squareup.javapoet.MethodSpec.methodBuilder
 import com.squareup.javapoet.TypeName.BOOLEAN
 import com.squareup.javapoet.TypeName.get
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
