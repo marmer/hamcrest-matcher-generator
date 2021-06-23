@@ -115,7 +115,7 @@ internal class MatcherGenerationProcessorIT {
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
+                public SimplePojoMatcher withSomeStringProperty(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -125,7 +125,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withSomePrimitiveBooleanProperty(final Matcher<? super Boolean> matcher) {
+                public SimplePojoMatcher withSomePrimitiveBooleanProperty(final Matcher<? extends Boolean> matcher) {
                     beanPropertyMatcher.with("somePrimitiveBooleanProperty", matcher);
                     return this;
                 }
@@ -135,7 +135,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Matcher<? super Boolean> matcher) {
+                public SimplePojoMatcher withSomeNonePrimitiveBooleanProperty(final Matcher<? extends Boolean> matcher) {
                     beanPropertyMatcher.with("someNonePrimitiveBooleanProperty", matcher);
                     return this;
                 }
@@ -145,7 +145,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -182,7 +182,7 @@ internal class MatcherGenerationProcessorIT {
                         beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class);
                     }
             
-                    public InnerStaticPojoMatcher withInnerStaticPojoProperty(final Matcher<? super String> matcher) {
+                    public InnerStaticPojoMatcher withInnerStaticPojoProperty(final Matcher<? extends String> matcher) {
                         beanPropertyMatcher.with("innerStaticPojoProperty", matcher);
                         return this;
                     }
@@ -192,7 +192,7 @@ internal class MatcherGenerationProcessorIT {
                         return this;
                     }
             
-                    public InnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    public InnerStaticPojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                         beanPropertyMatcher.with("class", matcher);
                         return this;
                     }
@@ -228,7 +228,7 @@ internal class MatcherGenerationProcessorIT {
                             beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class);
                         }
             
-                        public InnerInnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                        public InnerInnerStaticPojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
                             return this;
                         }
@@ -315,7 +315,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -432,7 +432,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -522,7 +522,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -623,7 +623,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
                 }
             
-                public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<? super String[]> matcher) {
+                public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<? extends String[]> matcher) {
                     beanPropertyMatcher.with("someStringArray", matcher);
                     return this;
                 }
@@ -633,7 +633,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final Matcher<? super String[][]> matcher) {
+                public SimplePojoInterfaceMatcher withSomeMultidimensionalStringArray(final Matcher<? extends String[][]> matcher) {
                     beanPropertyMatcher.with("someMultidimensionalStringArray", matcher);
                     return this;
                 }
@@ -643,7 +643,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final Matcher<? super AnotherComplexType.SomeInnerType[]> matcher) {
+                public SimplePojoInterfaceMatcher withSomeInnerTypeArray(final Matcher<? extends AnotherComplexType.SomeInnerType[]> matcher) {
                     beanPropertyMatcher.with("someInnerTypeArray", matcher);
                     return this;
                 }
@@ -653,7 +653,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomePrimitiveArray(final Matcher<? super byte[]> matcher) {
+                public SimplePojoInterfaceMatcher withSomePrimitiveArray(final Matcher<? extends byte[]> matcher) {
                     beanPropertyMatcher.with("somePrimitiveArray", matcher);
                     return this;
                 }
@@ -663,7 +663,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final Matcher<? super byte[][]> matcher) {
+                public SimplePojoInterfaceMatcher withSomeMultidimensionalPrimitiveArray(final Matcher<? extends byte[][]> matcher) {
                     beanPropertyMatcher.with("someMultidimensionalPrimitiveArray", matcher);
                     return this;
                 }
@@ -751,7 +751,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class);
                 }
             
-                public SomeClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SomeClassMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -788,7 +788,7 @@ public interface SimplePojoInterface{
                         beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class);
                     }
             
-                    public SomeNonStaticInnerClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    public SomeNonStaticInnerClassMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                         beanPropertyMatcher.with("class", matcher);
                         return this;
                     }
@@ -876,7 +876,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);
                 }
             
-                public SomePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SomePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -994,7 +994,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoEnum>(SimplePojoEnum.class);
                 }
             
-                public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
+                public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
                     return this;
                 }
@@ -1004,7 +1004,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoEnumMatcher withDeclaringClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("declaringClass", matcher);
                     return this;
                 }
@@ -1014,7 +1014,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoEnumMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoEnumMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1118,7 +1118,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withPropertyOfBothClasses(final Matcher<? super String> matcher) {
+                public SimplePojoMatcher withPropertyOfBothClasses(final Matcher<? extends String> matcher) {
                     beanPropertyMatcher.with("propertyOfBothClasses", matcher);
                     return this;
                 }
@@ -1128,7 +1128,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withParentPojoProperty(final Matcher<? super Object> matcher) {
+                public SimplePojoMatcher withParentPojoProperty(final Matcher<?> matcher) {
                     beanPropertyMatcher.with("parentPojoProperty", matcher);
                     return this;
                 }
@@ -1138,7 +1138,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1239,7 +1239,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1326,7 +1326,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class);
                 }
             
-                public ArgumentMatchersMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public ArgumentMatchersMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1420,7 +1420,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo1>(SimplePojo1.class);
                 }
             
-                public SimplePojo1Matcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojo1Matcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1471,7 +1471,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo2>(SimplePojo2.class);
                 }
             
-                public SimplePojo2Matcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojo2Matcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1594,7 +1594,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
@@ -1685,7 +1685,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withSomeProperty(final Matcher<? super SimplePojo.InnerType.InnerEnum> matcher) {
+                public SimplePojoMatcher withSomeProperty(final Matcher<? extends SimplePojo.InnerType.InnerEnum> matcher) {
                     beanPropertyMatcher.with("someProperty", matcher);
                     return this;
                 }
@@ -1750,7 +1750,7 @@ public interface SimplePojoInterface{
                             beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class);
                         }
             
-                        public InnerEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
+                        public InnerEnumMatcher withDeclaringClass(final Matcher<? extends Class<?>> matcher) {
                             beanPropertyMatcher.with("declaringClass", matcher);
                             return this;
                         }
@@ -1760,7 +1760,7 @@ public interface SimplePojoInterface{
                             return this;
                         }
             
-                        public InnerEnumMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                        public InnerEnumMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
                             return this;
                         }
@@ -2076,7 +2076,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?, ?>>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
+                public SimplePojoMatcher withProperty(final Matcher<?> matcher) {
                     beanPropertyMatcher.with("property", matcher);
                     return this;
                 }
@@ -2086,7 +2086,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? super Map<?, ? extends List<? extends Supplier<?>>>> matcher) {
+                public SimplePojoMatcher withNestedGenericProperty(final Matcher<? extends Map<?, ? extends List<? extends Supplier<?>>>> matcher) {
                     beanPropertyMatcher.with("nestedGenericProperty", matcher);
                     return this;
                 }
@@ -2096,7 +2096,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withWildcardProperty(final Matcher<? super List<? extends Function<?, ? super Consumer<?>>>> matcher) {
+                public SimplePojoMatcher withWildcardProperty(final Matcher<? extends List<? extends Function<?, ? super Consumer<?>>>> matcher) {
                     beanPropertyMatcher.with("wildcardProperty", matcher);
                     return this;
                 }
@@ -2212,7 +2212,7 @@ public interface SimplePojoInterface{
                     beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
                 }
             
-                public SimplePojoMatcher withIntProperty(final Matcher<? super Integer> matcher) {
+                public SimplePojoMatcher withIntProperty(final Matcher<? extends Integer> matcher) {
                     beanPropertyMatcher.with("intProperty", matcher);
                     return this;
                 }
@@ -2222,7 +2222,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withShortProperty(final Matcher<? super Short> matcher) {
+                public SimplePojoMatcher withShortProperty(final Matcher<? extends Short> matcher) {
                     beanPropertyMatcher.with("shortProperty", matcher);
                     return this;
                 }
@@ -2232,7 +2232,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withLongProperty(final Matcher<? super Long> matcher) {
+                public SimplePojoMatcher withLongProperty(final Matcher<? extends Long> matcher) {
                     beanPropertyMatcher.with("longProperty", matcher);
                     return this;
                 }
@@ -2242,7 +2242,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withDoubleProperty(final Matcher<? super Double> matcher) {
+                public SimplePojoMatcher withDoubleProperty(final Matcher<? extends Double> matcher) {
                     beanPropertyMatcher.with("doubleProperty", matcher);
                     return this;
                 }
@@ -2252,7 +2252,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withFloatProperty(final Matcher<? super Float> matcher) {
+                public SimplePojoMatcher withFloatProperty(final Matcher<? extends Float> matcher) {
                     beanPropertyMatcher.with("floatProperty", matcher);
                     return this;
                 }
@@ -2262,7 +2262,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withCharProperty(final Matcher<? super Character> matcher) {
+                public SimplePojoMatcher withCharProperty(final Matcher<? extends Character> matcher) {
                     beanPropertyMatcher.with("charProperty", matcher);
                     return this;
                 }
@@ -2272,7 +2272,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withByteProperty(final Matcher<? super Byte> matcher) {
+                public SimplePojoMatcher withByteProperty(final Matcher<? extends Byte> matcher) {
                     beanPropertyMatcher.with("byteProperty", matcher);
                     return this;
                 }
@@ -2282,7 +2282,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withBooleanProperty(final Matcher<? super Boolean> matcher) {
+                public SimplePojoMatcher withBooleanProperty(final Matcher<? extends Boolean> matcher) {
                     beanPropertyMatcher.with("booleanProperty", matcher);
                     return this;
                 }
@@ -2292,7 +2292,7 @@ public interface SimplePojoInterface{
                     return this;
                 }
             
-                public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                public SimplePojoMatcher withClass(final Matcher<? extends Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }

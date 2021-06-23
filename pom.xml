@@ -370,6 +370,7 @@
             <id>dev</id>
             <modules>
                 <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
+                <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>

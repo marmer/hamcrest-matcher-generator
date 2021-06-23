@@ -95,7 +95,7 @@ class MatcherGenerator(
     private fun Property.toMatcherType() =
         ParameterizedTypeName.get(
             ClassName.get(Matcher::class.java),
-            WildcardTypeName.supertypeOf(
+            WildcardTypeName.subtypeOf(
                 type.typeVarsToWildcards(true)
             )
         )
