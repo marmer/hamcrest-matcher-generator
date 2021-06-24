@@ -79,9 +79,6 @@ internal class MatcherGenerationProcessorIT {
             }""".trimIndent()
         )
 
-        // TODO: marmer 23.06.2021 Ability for object like objects?
-        // TODO: marmer 23.06.2021 Optional instanceOf check
-
         val now = LocalDateTime.now()
         @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
             "sample.other.pck.OutputClass", """
