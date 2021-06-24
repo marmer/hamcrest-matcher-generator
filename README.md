@@ -36,43 +36,53 @@ Dependencies
 
 If you want to use the matchers in your testcode only, simply add this dependency to your project.
 
-    <dependency>
-        <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>${hamcrest-matcher-generator.version}</version>
-        <scope>test</scope>
-    </dependency>
+```xml
+
+<dependency>
+    <groupId>io.github.marmer.testutils</groupId>
+    <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+    <version>${hamcrest-matcher-generator.version}</version>
+    <scope>test</scope>
+</dependency>
+```
 
 If you want to use it in your production code, you should use it only "provided" to avoid unnecessary dependencies. In
 this case, you have to add another dependency used by the generated code.
 
-    <dependency>
-        <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-        <version>${hamcrest-matcher-generator.version}</version>
-        <scope>provided</scope>
-        <optional>true</optional>
-    </dependency>
-    <dependency>
-        <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-        <version>${hamcrest-matcher-generator.version}</version>
-        <scope>test</scope>
-    </dependency>
+```xml
+
+<dependency>
+    <groupId>io.github.marmer.testutils</groupId>
+    <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+    <version>${hamcrest-matcher-generator.version}</version>
+    <scope>provided</scope>
+    <optional>true</optional>
+</dependency>
+<dependency>
+<groupId>io.github.marmer.testutils</groupId>
+<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+<version>${hamcrest-matcher-generator.version}</version>
+<scope>test</scope>
+</dependency>
+```
 
 Configuration
 -------------
 Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either full qualified Class names or
 packages for Types you want to generate matchers for e.g.
 
-    @MatcherConfiguration({
-            "foo.bar.sample.model.SomePojo",
-            "foo.bar.sample.model.ParentPojo",
-            "foo.bar.sample.model.SomePojoInterface",
-            "foo.bar.sample.model.SomeLombokPojo",
-    })
-    public class PackageConfiguration {
-    }
+```java
+
+@MatcherConfiguration({
+    "foo.bar.sample.model.SomePojo",
+    "foo.bar.sample.model.ParentPojo",
+    "foo.bar.sample.model.SomePojoInterface",
+    "foo.bar.sample.model.SomeLombokPojo",
+})
+public class PackageConfiguration {
+
+}
+```
 
 Depending on where you put the configuration the generated matchers will be generated within generated-test-sources you
 put it in your test sources or in generated-sources if you put it in your production code sources. (At least in maven
@@ -83,35 +93,73 @@ Generated result
 ----------------
 Assuming you hava a pojo like this one with the configuration above...
 
+```java
     package foo.bar.sample.model;
 
-    public class SomePojo extends ParentPojo {
-        private String pojoField;
+public class SomePojo extends ParentPojo {
 
-        public String getPojoField() {
-            return pojoField;
-        }
+    private String pojoField;
+
+    public String getPojoField() {
+        return pojoField;
     }
+}
+```
 
 ... a Matcher Named SomePojoMatcher is generated within the same package and you could use it the following way in your
 test:
 
-    final SomePojo somePojo = new SomePojo();
+```java
+    final SomePojo somePojo=new SomePojo();
     somePojo.setPojoField("pojoFieldValue");
     somePojo.setParentField("someParentFieldValue");
 
-
     // Assertion
-    assertThat(somePojo, isSomePojo()
-            .withClass(SomePojo.class)
-            .withParentField("someParentFieldValue")
-            .withParentField(is(equalTo("someParentFieldValue")))
-            .withPojoField("pojoFieldValue")
-            .withPojoField(is(equalTo("pojoFieldValue")))
+    assertThat(somePojo,isSomePojo()
+    .withClass(SomePojo.class)
+    .withParentField("someParentFieldValue")
+    .withParentField(is(equalTo("someParentFieldValue")))
+    .withPojoField("pojoFieldValue")
+    .withPojoField(is(equalTo("pojoFieldValue")))
     );
+```
 
 This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and
 for matchers for each field.
+
+Kotlin-JVM
+----------
+
+The generation works with Kotlin Projekts as well. If you write your testcode in Java, you don't have to change anything
+else. If you write them in Kotlin, you have to configure kotlin test-kapt. It works
+like [kapt](https://kotlinlang.org/docs/kapt.html).
+
+You can find an example [here](hamcrest-matcher-generator-endtoend-mixed-kotlin-java/pom.xml)
+
+Additionally, you have to add the output directories the test-compile execution of the kotlin-maven-plugin:
+
+```xml
+
+<execution>
+    <id>test-compile</id>
+    <goals>
+        <goal>test-compile</goal>
+    </goals>
+    <configuration>
+        <sourceDirs>
+            <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+            <sourceDir>${project.basedir}/src/test/java</sourceDir>
+            <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
+            <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
+            <sourceDir>${project.build.directory}/generated-test-sources/test-annotations
+        </sourceDirs>
+    </configuration>
+</execution>
+
+```
+
+[Here](pom.xml) you can find this configuration and an equal one for kapt if you want to generate the matchers in your
+production sources.
 
 Requirements
 ============
@@ -125,12 +173,16 @@ processing. So the matchers are generated at compile time like it's done with ot
 IDE
 ---
 Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the Generation by
-itself when the project builds. Some IDEs may need a little help. Eclipse for example may be only capable of annotation
-processing in maven projects if you have installed a maven
+itself when the project builds. Some IDEs may need a little help.
+
+### Eclipse
+
+Eclipse may be only capable of annotation processing in maven projects if you have installed a maven
 plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt) but you don't have the IDO to perform the processing.
 With a little help of the `build-helper-maven-plugin` you can tell the IDE where to look for sources generated by Maven.
 
-```
+```xml
+
 <plugin>
     <groupId>org.codehaus.mojo</groupId>
     <artifactId>build-helper-maven-plugin</artifactId>
@@ -152,6 +204,43 @@ With a little help of the `build-helper-maven-plugin` you can tell the IDE where
 </plugin> 
 ``` 
 
+### Intellij
+
+In Plain Java projects you don't have to do anything at all. In Mixed Java/Kotlin projects you don't have to do anything
+if all of your tests are written in Java. If the tests are written in Kotlin a little hack is needed, because the IDE
+does not know about the default generation paths for testsources generated by kapt.
+
+You could simply move the generated test sources into a well known location right after the moment of generation.
+
+#### Example for Maven:
+
+```xml
+
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-antrun-plugin</artifactId>
+    <version>3.0.0</version>
+    <executions>
+        <execution>
+            <phase>process-test-sources</phase>
+            <goals>
+                <goal>run</goal>
+            </goals>
+            <configuration>
+                <target>
+                    <move todir="${project.basedir}/target/generated-test-sources/test-annotations"
+                        force="true">
+                        <fileset dir="${project.basedir}/target/generated-sources/kapt/test/"/>
+                    </move>
+                </target>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+The drawback is, now you *have to* compile your project with your build tool for a fresh generation.
+
 JDK
 ---
 
@@ -168,12 +257,15 @@ Your Project should use a minimum version of hamcrest of 1.2. The generated code
 
 You may copy this dependency if you want.
 
-	<dependency>
-		<groupId>org.hamcrest</groupId>
-		<artifactId>hamcrest</artifactId>
-		<version>2.2</version>
-		<scope>test</scope>
-	</dependency>	
+```xml
+
+<dependency>
+    <groupId>org.hamcrest</groupId>
+    <artifactId>hamcrest</artifactId>
+    <version>2.2</version>
+    <scope>test</scope>
+</dependency>    
+```
 
 ### Changelog
 
