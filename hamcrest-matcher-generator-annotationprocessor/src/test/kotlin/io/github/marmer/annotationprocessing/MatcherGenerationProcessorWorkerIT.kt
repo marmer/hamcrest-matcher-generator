@@ -86,7 +86,7 @@ internal class MatcherGenerationProcessorIT {
         }
         todo { // TODO: marmer 23.06.2021 Ability for object like objects?
         }
-        todo { // TODO: marmer 23.06.2021 Optional instance of check
+        todo { // TODO: marmer 23.06.2021 Optional instanceOf check
         }
 
         val now = LocalDateTime.now()
