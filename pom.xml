@@ -371,6 +371,7 @@
             <modules>
                 <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
                 <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
+                <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>

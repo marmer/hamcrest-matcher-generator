@@ -80,8 +80,6 @@ internal class MatcherGenerationProcessorIT {
             }""".trimIndent()
         )
 
-        todo { // TODO: marmer 22.06.2021 Kotlin only Testmodule
-        }
         todo { // TODO: marmer 23.06.2021 Documentation and release notes
         }
         todo { // TODO: marmer 23.06.2021 Ability for object like objects?
