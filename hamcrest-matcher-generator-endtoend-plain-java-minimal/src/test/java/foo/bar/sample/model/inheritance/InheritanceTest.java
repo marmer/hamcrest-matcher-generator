@@ -31,7 +31,8 @@ class InheritanceTest {
 
         MatcherAssert.assertThat(main, isMain()
             .withParents(contains(
-                (Matcher) isFirstChild() // TODO: marmer 23.06.2021 Reference for known "issue" (needed to enforce the usage of the Matcher method instead of the item method)
+                // Known "Issue" - needed to enforce the usage of the Matcher method instead of the item method
+                (Matcher) isFirstChild()
                     .withId(firstId)
                     .withName(firstName),
                 isSecondChild()

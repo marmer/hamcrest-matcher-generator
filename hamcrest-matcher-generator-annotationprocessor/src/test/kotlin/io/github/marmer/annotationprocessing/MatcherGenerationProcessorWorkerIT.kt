@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.test.todo
 
 internal class MatcherGenerationProcessorIT {
     @Test
@@ -80,12 +79,8 @@ internal class MatcherGenerationProcessorIT {
             }""".trimIndent()
         )
 
-        todo { // TODO: marmer 23.06.2021 Documentation and release notes
-        }
-        todo { // TODO: marmer 23.06.2021 Ability for object like objects?
-        }
-        todo { // TODO: marmer 23.06.2021 Optional instanceOf check
-        }
+        // TODO: marmer 23.06.2021 Ability for object like objects?
+        // TODO: marmer 23.06.2021 Optional instanceOf check
 
         val now = LocalDateTime.now()
         @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
