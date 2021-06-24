@@ -158,9 +158,6 @@ Additionally, you have to add the output directories the test-compile execution 
 
 ```
 
-[Here](pom.xml) you can find this configuration and an equal one for kapt if you want to generate the matchers in your
-production sources.
-
 Requirements
 ============
 
