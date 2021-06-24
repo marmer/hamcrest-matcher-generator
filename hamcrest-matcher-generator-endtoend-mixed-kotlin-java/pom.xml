@@ -64,7 +64,7 @@
                                 <annotationProcessorPath>
                                     <groupId>io.github.marmer.testutils</groupId>
                                     <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-                                    <version>5.0.0-SNAPSHOT</version>
+                                    <version>${project.version}</version>
                                 </annotationProcessorPath>
                             </annotationProcessorPaths>
                         </configuration>
