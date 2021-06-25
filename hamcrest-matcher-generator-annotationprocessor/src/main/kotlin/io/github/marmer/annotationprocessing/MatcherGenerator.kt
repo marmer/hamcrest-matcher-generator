@@ -2,8 +2,7 @@ package io.github.marmer.annotationprocessing
 
 import com.squareup.javapoet.*
 import com.squareup.javapoet.MethodSpec.methodBuilder
-import com.squareup.javapoet.TypeName.BOOLEAN
-import com.squareup.javapoet.TypeName.get
+import com.squareup.javapoet.TypeName.*
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
 import org.hamcrest.Description
@@ -63,21 +62,31 @@ class MatcherGenerator(
         return classBuilder
     }
 
-    private fun getPropertyHamcrestMatcherMethods() =
-        baseType.properties
-            .map { it.getHamcrestMatcher() }
+    private fun getPropertyHamcrestMatcherMethods(): List<MethodSpec> {
+        return baseType.properties
+            .distinctBy { it.name }
+            .map { it.toHamcrestMatcher() }
             .filterNotNull()
+    }
+
+    private fun isConflictingProperty(propertyName: String) = baseType.properties
+        .groupBy { it.name }
+        .filter { it.value.size > 1 }
+        .map { it.key }
+        .distinct()
+        .contains(propertyName)
+
 
     private fun getPropertyEqualsMatcherMethods() =
         baseType.properties
             .map { it.toEqualsMatcher() }
 
-    private fun Property.getHamcrestMatcher() =
+    private fun Property.toHamcrestMatcher() =
         if (type.isMatcher) null
         else methodBuilder("with${name.capitalized}")
             .addModifiers(Modifier.PUBLIC)
             .addParameter(
-                toMatcherType(),
+                toParameterizedMatcherType(),
                 "matcher",
                 Modifier.FINAL
             )
@@ -92,10 +101,12 @@ class MatcherGenerator(
             .returns(getGeneratedTypeName())
             .build()
 
-    private fun Property.toMatcherType() =
+    private fun Property.toParameterizedMatcherType() =
         ParameterizedTypeName.get(
             ClassName.get(Matcher::class.java),
-            WildcardTypeName.supertypeOf(
+            if (isConflictingProperty(name))
+                WildcardTypeName.subtypeOf(OBJECT)
+            else WildcardTypeName.supertypeOf(
                 type.typeVarsToWildcards(true)
             )
         )

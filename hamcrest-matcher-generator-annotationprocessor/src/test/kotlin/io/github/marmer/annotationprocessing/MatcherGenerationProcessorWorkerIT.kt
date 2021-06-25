@@ -398,7 +398,7 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
-                public SimplePojoInterfaceMatcher withConflictProperty(final Boolean value) {
+                public SimplePojoInterfaceMatcher withConflictProperty(final boolean value) {
                     beanPropertyMatcher.with("conflictProperty", Matchers.equalTo(value));
                     return this;
                 }
