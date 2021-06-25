@@ -11,7 +11,6 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.TypeSafeMatcher
 import java.time.LocalDateTime
-import java.util.*
 import javax.annotation.processing.Generated
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.*
@@ -52,7 +51,8 @@ class MatcherGenerator(
             .superclass(getSuperClass())
             .addFields(getFields())
             .addMethod(getConstructor())
-            .addMethods(getPropertyMatcherMethods())
+            .addMethods(getPropertyHamcrestMatcherMethods())
+            .addMethods(getPropertyEqualsMatcherMethods())
             .addMethods(getMatcherMethods())
             .addMethod(getApiInitializer())
             .addTypes(getInnerMatchers())
@@ -63,14 +63,14 @@ class MatcherGenerator(
         return classBuilder
     }
 
-    private fun getPropertyMatcherMethods() =
+    private fun getPropertyHamcrestMatcherMethods() =
         baseType.properties
-            .flatMap {
-                listOfNotNull(
-                    it.getHamcrestMatcher(),
-                    it.toEqualsMatcher(),
-                )
-            }
+            .map { it.getHamcrestMatcher() }
+            .filterNotNull()
+
+    private fun getPropertyEqualsMatcherMethods() =
+        baseType.properties
+            .map { it.toEqualsMatcher() }
 
     private fun Property.getHamcrestMatcher() =
         if (type.isMatcher) null
@@ -351,10 +351,10 @@ class MatcherGenerator(
         .decapitalized
 
     private val String.capitalized: String
-        get() = replaceFirstChar { it.titlecase(Locale.getDefault()) }
+        get() = replaceFirstChar { it.uppercase() }
 
     private val String.decapitalized: String
-        get() = replaceFirstChar { it.lowercase(Locale.getDefault()) }
+        get() = replaceFirstChar { it.lowercase() }
 }
 
 private data class Property(val name: String, val type: TypeMirror, val accessor: String)
