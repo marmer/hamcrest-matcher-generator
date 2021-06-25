@@ -274,6 +274,7 @@ This project uses semantic versioning. See https://semver.org/
 * Useless BasedOn Annotation removed
 * Sample modules for plain java, plain kotlin and mixed java-kotlin
 * Generics for better IDE and Compiler support when matchers are used
+* Fixed: Handling of a douplicate property (e.g. boolean isPropName() and String getPropName())
 
 ### 4.2.5
 
