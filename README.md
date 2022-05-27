@@ -84,14 +84,14 @@ public class PackageConfiguration {
 }
 ```
 
-Depending on where you place the configuration file, the generated matchers will be created either within generated-test-sources you
-(if you place it inside your test sources directory) or in generated-sources (if you place it inside your production code source directory). Imaven
+Depending on where you place the configuration file, the generated matchers will be created either within generated-test-sources
+(if you place it inside your test sources directory) or in generated-sources (if you place it inside your production code source directory). In maven
 projects this is the default behavior. It may be different with other build tools or with a non-default configuration, but it
 should work for other build tools in a similar way)
 
 Generated result
 ----------------
-Assuming you hava a pojo like this one with the configuration above...
+Assuming you have a pojo like this one with the configuration above...
 
 ```java
     package foo.bar.sample.model;
