@@ -51,6 +51,7 @@ class MatcherGenerator(
             .addFields(getFields())
             .addMethod(getConstructor())
             .addMethods(getPropertyHamcrestMatcherMethods())
+            .addMethods(getPropertyHamcrestMatcherResetMethods())
             .addMethods(getPropertyEqualsMatcherMethods())
             .addMethods(getMatcherMethods())
             .addMethod(getApiInitializer())
@@ -76,6 +77,12 @@ class MatcherGenerator(
         .distinct()
         .contains(propertyName)
 
+    private fun getPropertyHamcrestMatcherResetMethods(): List<MethodSpec> {
+        return baseType.properties
+            .distinctBy { it.name }
+            .map { it.toHamcrestMatcherReset() }
+            .filterNotNull()
+    }
 
     private fun getPropertyEqualsMatcherMethods() =
         baseType.properties
@@ -92,6 +99,21 @@ class MatcherGenerator(
             )
             .addStatement(
                 "\$L.with(\$S, matcher)",
+                builderFieldName,
+                name
+            )
+            .addStatement(
+                "return this"
+            )
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun Property.toHamcrestMatcherReset() =
+        if (type.isMatcher) null
+        else methodBuilder("reset${name.capitalized}")
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement(
+                "\$L.reset(\$S)",
                 builderFieldName,
                 name
             )

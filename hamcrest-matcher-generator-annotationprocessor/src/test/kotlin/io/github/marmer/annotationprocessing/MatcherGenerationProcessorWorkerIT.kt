@@ -121,6 +121,26 @@ internal class MatcherGenerationProcessorIT {
                     beanPropertyMatcher.with("class", matcher);
                     return this;
                 }
+                
+                public SimplePojoMatcher resetSomeStringProperty() {
+                    beanPropertyMatcher.reset("someStringProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetSomePrimitiveBooleanProperty() {
+                    beanPropertyMatcher.reset("somePrimitiveBooleanProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetSomeNonePrimitiveBooleanProperty() {
+                    beanPropertyMatcher.reset("someNonePrimitiveBooleanProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
             
                 public SimplePojoMatcher withSomeStringProperty(final String value) {
                     beanPropertyMatcher.with("someStringProperty", Matchers.equalTo(value));
@@ -179,6 +199,16 @@ internal class MatcherGenerationProcessorIT {
                         return this;
                     }
             
+                    public InnerStaticPojoMatcher resetInnerStaticPojoProperty() {
+                        beanPropertyMatcher.reset("innerStaticPojoProperty");
+                        return this;
+                    }
+            
+                    public InnerStaticPojoMatcher resetClass() {
+                        beanPropertyMatcher.reset("class");
+                        return this;
+                    }
+            
                     public InnerStaticPojoMatcher withInnerStaticPojoProperty(final String value) {
                         beanPropertyMatcher.with("innerStaticPojoProperty", Matchers.equalTo(value));
                         return this;
@@ -188,7 +218,7 @@ internal class MatcherGenerationProcessorIT {
                         beanPropertyMatcher.with("class", Matchers.equalTo(value));
                         return this;
                     }
-            
+                    
                     @Override
                     public void describeTo(final Description description) {
                         beanPropertyMatcher.describeTo(description);
@@ -217,6 +247,11 @@ internal class MatcherGenerationProcessorIT {
             
                         public InnerInnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
+                            return this;
+                        }
+            
+                        public InnerInnerStaticPojoMatcher resetClass() {
+                            beanPropertyMatcher.reset("class");
                             return this;
                         }
             
@@ -307,6 +342,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoInterfaceMatcher resetSomeStringProperty() {
+                    beanPropertyMatcher.reset("someStringProperty");
+                    return this;
+                }
+            
                 public SimplePojoInterfaceMatcher withSomeStringProperty(final String value) {
                     beanPropertyMatcher.with("someStringProperty", Matchers.equalTo(value));
                     return this;
@@ -390,6 +430,11 @@ internal class MatcherGenerationProcessorIT {
             
                 public SimplePojoInterfaceMatcher withConflictProperty(final Matcher<?> matcher) {
                     beanPropertyMatcher.with("conflictProperty", matcher);
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetConflictProperty() {
+                    beanPropertyMatcher.reset("conflictProperty");
                     return this;
                 }
             
@@ -514,6 +559,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoInterfaceMatcher resetSomeStringProperty() {
+                    beanPropertyMatcher.reset("someStringProperty");
+                    return this;
+                }
+            
                 public SimplePojoInterfaceMatcher withSomeStringProperty(final String value) {
                     beanPropertyMatcher.with("someStringProperty", Matchers.equalTo(value));
                     return this;
@@ -600,6 +650,11 @@ internal class MatcherGenerationProcessorIT {
             
                 public SimplePojoInterfaceMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
                     beanPropertyMatcher.with("someStringProperty", matcher);
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetSomeStringProperty() {
+                    beanPropertyMatcher.reset("someStringProperty");
                     return this;
                 }
             
@@ -723,6 +778,31 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoInterfaceMatcher resetSomeStringArray() {
+                    beanPropertyMatcher.reset("someStringArray");
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetSomeMultidimensionalStringArray() {
+                    beanPropertyMatcher.reset("someMultidimensionalStringArray");
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetSomeInnerTypeArray() {
+                    beanPropertyMatcher.reset("someInnerTypeArray");
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetSomePrimitiveArray() {
+                    beanPropertyMatcher.reset("somePrimitiveArray");
+                    return this;
+                }
+            
+                public SimplePojoInterfaceMatcher resetSomeMultidimensionalPrimitiveArray() {
+                    beanPropertyMatcher.reset("someMultidimensionalPrimitiveArray");
+                    return this;
+                }
+            
                 public SimplePojoInterfaceMatcher withSomeStringArray(final String[] value) {
                     beanPropertyMatcher.with("someStringArray", Matchers.equalTo(value));
                     return this;
@@ -830,6 +910,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SomeClassMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SomeClassMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
@@ -864,6 +949,11 @@ internal class MatcherGenerationProcessorIT {
             
                     public SomeNonStaticInnerClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
                         beanPropertyMatcher.with("class", matcher);
+                        return this;
+                    }
+            
+                    public SomeNonStaticInnerClassMatcher resetClass() {
+                        beanPropertyMatcher.reset("class");
                         return this;
                     }
             
@@ -951,6 +1041,11 @@ internal class MatcherGenerationProcessorIT {
             
                 public SomePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+            
+                public SomePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
                     return this;
                 }
             
@@ -1081,6 +1176,21 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoEnumMatcher resetSomeStringProperty() {
+                    beanPropertyMatcher.reset("someStringProperty");
+                    return this;
+                }
+            
+                public SimplePojoEnumMatcher resetDeclaringClass() {
+                    beanPropertyMatcher.reset("declaringClass");
+                    return this;
+                }
+            
+                public SimplePojoEnumMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SimplePojoEnumMatcher withSomeStringProperty(final String value) {
                     beanPropertyMatcher.with("someStringProperty", Matchers.equalTo(value));
                     return this;
@@ -1204,6 +1314,21 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoMatcher resetPropertyOfBothClasses() {
+                    beanPropertyMatcher.reset("propertyOfBothClasses");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetParentPojoProperty() {
+                    beanPropertyMatcher.reset("parentPojoProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SimplePojoMatcher withPropertyOfBothClasses(final String value) {
                     beanPropertyMatcher.with("propertyOfBothClasses", Matchers.equalTo(value));
                     return this;
@@ -1315,6 +1440,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
@@ -1398,6 +1528,11 @@ internal class MatcherGenerationProcessorIT {
             
                 public ArgumentMatchersMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+            
+                public ArgumentMatchersMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
                     return this;
                 }
             
@@ -1494,6 +1629,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojo1Matcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SimplePojo1Matcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
@@ -1542,6 +1682,11 @@ internal class MatcherGenerationProcessorIT {
             
                 public SimplePojo2Matcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+            
+                public SimplePojo2Matcher resetClass() {
+                    beanPropertyMatcher.reset("class");
                     return this;
                 }
             
@@ -1666,6 +1811,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
                 public SimplePojoMatcher withClass(final Class<?> value) {
                     beanPropertyMatcher.with("class", Matchers.equalTo(value));
                     return this;
@@ -1756,6 +1906,11 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoMatcher resetSomeProperty() {
+                    beanPropertyMatcher.reset("someProperty");
+                    return this;
+                }
+            
                 public SimplePojoMatcher withSomeProperty(final SimplePojo.InnerType.InnerEnum value) {
                     beanPropertyMatcher.with("someProperty", Matchers.equalTo(value));
                     return this;
@@ -1823,6 +1978,16 @@ internal class MatcherGenerationProcessorIT {
             
                         public InnerEnumMatcher withClass(final Matcher<? super Class<?>> matcher) {
                             beanPropertyMatcher.with("class", matcher);
+                            return this;
+                        }
+            
+                        public InnerEnumMatcher resetDeclaringClass() {
+                            beanPropertyMatcher.reset("declaringClass");
+                            return this;
+                        }
+            
+                        public InnerEnumMatcher resetClass() {
+                            beanPropertyMatcher.reset("class");
                             return this;
                         }
             
@@ -2154,6 +2319,21 @@ internal class MatcherGenerationProcessorIT {
                     return this;
                 }
             
+                public SimplePojoMatcher resetProperty() {
+                    beanPropertyMatcher.reset("property");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetNestedGenericProperty() {
+                    beanPropertyMatcher.reset("nestedGenericProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetWildcardProperty() {
+                    beanPropertyMatcher.reset("wildcardProperty");
+                    return this;
+                }
+            
                 public SimplePojoMatcher withProperty(final Object value) {
                     beanPropertyMatcher.with("property", Matchers.equalTo(value));
                     return this;
@@ -2316,6 +2496,51 @@ internal class MatcherGenerationProcessorIT {
             
                 public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
                     beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetIntProperty() {
+                    beanPropertyMatcher.reset("intProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetShortProperty() {
+                    beanPropertyMatcher.reset("shortProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetLongProperty() {
+                    beanPropertyMatcher.reset("longProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetDoubleProperty() {
+                    beanPropertyMatcher.reset("doubleProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetFloatProperty() {
+                    beanPropertyMatcher.reset("floatProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetCharProperty() {
+                    beanPropertyMatcher.reset("charProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetByteProperty() {
+                    beanPropertyMatcher.reset("byteProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetBooleanProperty() {
+                    beanPropertyMatcher.reset("booleanProperty");
+                    return this;
+                }
+            
+                public SimplePojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
                     return this;
                 }
             
