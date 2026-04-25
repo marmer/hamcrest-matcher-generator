@@ -5,7 +5,7 @@ on:
     branches-ignore: [ master ]
 jobs:
   build:
-    name: Build
+    name: Build (JDK 21)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,13 +56,36 @@ jobs:
         run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator-annotationprocessor,hamcrest-matcher-generator-dependencies"
         if: success()
 
-  build-java25:
-    name: Build (Java 25)
+  build-java17:
+    name: Verify (JDK 17)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          fetch-depth: 0
+          java-version: 17
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-java17-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-java17
+
+      - name: Build and Test (JDK 17)
+        run: ./mvnw -B clean verify -Dkotlin.compiler.jvmTarget=17
+
+  build-java25:
+    name: Verify (JDK 25)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4
@@ -80,10 +103,5 @@ jobs:
           key: ${{ runner.os }}-m2-java25-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2-java25
 
-      - name: Build
-        run: ./mvnw -B clean install -DskipTests
-        if: success()
-
-      - name: Test (endtoend-java25)
-        run: ./mvnw -B verify -P endtoend-java25 --projects "hamcrest-matcher-generator-endtoend-plain-java-java25,hamcrest-matcher-generator-endtoend-mixed-kotlin-java-java25,hamcrest-matcher-generator-endtoend-plain-kotlin-java25" -am
-        if: success()
+      - name: Build and Test (JDK 25)
+        run: ./mvnw -B clean verify -P endtoend-java25
