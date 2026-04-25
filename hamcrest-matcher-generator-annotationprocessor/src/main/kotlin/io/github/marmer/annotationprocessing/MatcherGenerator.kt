@@ -309,17 +309,26 @@ class MatcherGenerator(
     }
 
     private val TypeElement.properties: List<Property>
-        get() = transitiveInheritedElements
-            .filter { it.isProperty }
-            .distinctBy { it.simpleName }
-            .map { it as ExecutableElement }
-            .map {
+        get() = if (kind == ElementKind.RECORD)
+            recordComponents.map {
                 Property(
-                    name = it.simpleName.withoutPropertyPrefix(),
-                    type = it.returnType,
-                    accessor = it.toString()
+                    name = it.simpleName.toString(),
+                    type = it.asType(),
+                    accessor = "${it.simpleName}()"
                 )
             }
+        else
+            transitiveInheritedElements
+                .filter { it.isProperty }
+                .distinctBy { it.simpleName }
+                .map { it as ExecutableElement }
+                .map {
+                    Property(
+                        name = it.simpleName.withoutPropertyPrefix(),
+                        type = it.returnType,
+                        accessor = it.toString()
+                    )
+                }
 
     private val TypeElement.transitiveInheritedElements: List<Element>
         get() = if (superclass.kind != TypeKind.NONE)

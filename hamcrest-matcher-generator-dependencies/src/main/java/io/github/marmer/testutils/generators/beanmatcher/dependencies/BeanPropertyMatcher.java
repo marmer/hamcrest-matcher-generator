@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.allOf;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -46,13 +47,46 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
-        addToHasPropertyMatcher(propertyName, Matchers.hasProperty(propertyName,matcher));
+        addToHasPropertyMatcher(propertyName, propertyOrAccessorMatcher(propertyName, matcher));
         return this;
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName) {
-        addToHasPropertyMatcher(propertyName, Matchers.hasProperty(propertyName));
+        addToHasPropertyMatcher(propertyName, propertyOrAccessorMatcher(propertyName, null));
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Matcher<Object> propertyOrAccessorMatcher(final String propertyName, final Matcher<?> valueMatcher) {
+        final Matcher<Object> beanMatcher = valueMatcher != null
+                ? (Matcher<Object>) Matchers.hasProperty(propertyName, valueMatcher)
+                : (Matcher<Object>) Matchers.hasProperty(propertyName);
+
+        return new BaseMatcher<Object>() {
+            @Override
+            public boolean matches(final Object actual) {
+                if (beanMatcher.matches(actual)) {
+                    return true;
+                }
+                // Fallback for records: accessor method has the same name as the component (e.g. name())
+                try {
+                    final Object value = actual.getClass().getMethod(propertyName).invoke(actual);
+                    return valueMatcher == null || ((Matcher<Object>) valueMatcher).matches(value);
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }
+
+            @Override
+            public void describeTo(final Description description) {
+                beanMatcher.describeTo(description);
+            }
+
+            @Override
+            public void describeMismatch(final Object item, final Description description) {
+                beanMatcher.describeMismatch(item, description);
+            }
+        };
     }
 
     public void reset(final String propertyName) {

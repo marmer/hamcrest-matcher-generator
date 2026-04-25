@@ -2767,4 +2767,109 @@ internal class MatcherGenerationProcessorIT {
             .and()
             .generatesSources(expectedOutput)
     }
+
+    @Test
+    fun `Matcher should be generated for Java Records with record component accessors`() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+            package some.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+            @MatcherConfiguration("some.other.pck.SimpleRecord")
+            public final class SomeConfiguration{
+
+            }""".trimIndent()
+        )
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
+            "some.other.pck.SimpleRecord", """
+            package some.other.pck;
+
+            public record SimpleRecord(String name, int count) {
+            }""".trimIndent()
+        )
+        val now = LocalDateTime.now()
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
+            "some.other.pck.SimpleRecordMatcher", """
+            package some.other.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Integer;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
+            import org.hamcrest.Description;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
+            import org.hamcrest.TypeSafeMatcher;
+
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
+            public class SimpleRecordMatcher extends TypeSafeMatcher<SimpleRecord> {
+                private final BeanPropertyMatcher<SimpleRecord> beanPropertyMatcher;
+
+                public SimpleRecordMatcher() {
+                    beanPropertyMatcher = new BeanPropertyMatcher<SimpleRecord>(SimpleRecord.class);
+                }
+
+                public SimpleRecordMatcher withName(final Matcher<? super String> matcher) {
+                    beanPropertyMatcher.with("name", matcher);
+                    return this;
+                }
+
+                public SimpleRecordMatcher withCount(final Matcher<? super Integer> matcher) {
+                    beanPropertyMatcher.with("count", matcher);
+                    return this;
+                }
+
+                public SimpleRecordMatcher resetName() {
+                    beanPropertyMatcher.reset("name");
+                    return this;
+                }
+
+                public SimpleRecordMatcher resetCount() {
+                    beanPropertyMatcher.reset("count");
+                    return this;
+                }
+
+                public SimpleRecordMatcher withName(final String value) {
+                    beanPropertyMatcher.with("name", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public SimpleRecordMatcher withCount(final int value) {
+                    beanPropertyMatcher.with("count", Matchers.equalTo(value));
+                    return this;
+                }
+
+                @Override
+                public void describeTo(final Description description) {
+                    beanPropertyMatcher.describeTo(description);
+                }
+
+                @Override
+                protected boolean matchesSafely(final SimpleRecord item) {
+                    return beanPropertyMatcher.matches(item);
+                }
+
+                @Override
+                protected void describeMismatchSafely(final SimpleRecord item, final Description description) {
+                    beanPropertyMatcher.describeMismatch(item, description);
+                }
+
+                public static SimpleRecordMatcher isSimpleRecord() {
+                    return new SimpleRecordMatcher();
+                }
+            }""".trimIndent()
+        )
+
+        // Execution
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(configuration, javaFileObject))
+            .processedWith(MatcherGenerationProcessor { now }) // Assertion
+            .compilesWithoutError()
+            .and()
+            .generatesSources(expectedOutput)
+    }
 }
