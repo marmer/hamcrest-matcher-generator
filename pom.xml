@@ -371,9 +371,23 @@
                 <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
                 <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
                 <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
+                <module>hamcrest-matcher-generator-endtoend-plain-java-java17</module>
+                <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java-java17</module>
+                <module>hamcrest-matcher-generator-endtoend-plain-kotlin-java17</module>
             </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>endtoend-java25</id>
+            <modules>
+                <module>hamcrest-matcher-generator-endtoend-plain-java-java25</module>
+                <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java-java25</module>
+                <module>hamcrest-matcher-generator-endtoend-plain-kotlin-java25</module>
+            </modules>
+            <activation>
+                <jdk>[25,)</jdk>
             </activation>
         </profile>
         <profile>
