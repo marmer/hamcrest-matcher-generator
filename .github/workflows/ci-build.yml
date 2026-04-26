@@ -117,5 +117,59 @@ jobs:
       - name: Test plain-java e2e module (JDK 25)
         # Verifies that the annotation processor generates valid Java 25 code
         # and that the generated matchers compile and pass tests on JDK 25.
-        # Kotlin-based Java 25 modules require Kotlin 2.2+ for JDK 25 runtime support.
         run: ./mvnw -B verify -pl hamcrest-matcher-generator-endtoend-plain-java-java25
+
+      - name: Test Kotlin e2e modules (JDK 25 + Kotlin 2.2.0)
+        # Kotlin 2.2.0 supports JDK 25 as compiler JVM; tests Kotlin-based Java 25 modules
+        run: ./mvnw -B verify -Dkotlin.version=2.2.0
+          -pl hamcrest-matcher-generator-endtoend-mixed-kotlin-java-java25,hamcrest-matcher-generator-endtoend-plain-kotlin-java25
+
+  build-kotlin22:
+    name: Verify (Kotlin 2.2.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-kotlin22-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-kotlin22
+
+      - name: Build and Test (Kotlin 2.2.0)
+        run: ./mvnw -B clean verify -Dkotlin.version=2.2.0
+
+  build-kotlin23:
+    name: Verify (Kotlin 2.3.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-kotlin23-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-kotlin23
+
+      - name: Build and Test (Kotlin 2.3.0)
+        run: ./mvnw -B clean verify -Dkotlin.version=2.3.0
