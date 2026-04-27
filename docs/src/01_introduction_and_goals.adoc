@@ -3,31 +3,117 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-introduction-and-goals]]
 == Introduction and Goals
 
+[role="arc42help"]
+****
+Describes the relevant requirements and the driving forces that software architects and development team must consider.
+These include
 
-
-
+* underlying business goals, essential features and functional requirements for the system
+* quality goals for the architecture
+* relevant stakeholders and their expectations
+****
 
 === Requirements Overview
 
+[role="arc42help"]
+****
+.Contents
+Short description of the functional requirements, driving forces, extract (or abstract) of requirements.
+Link to (hopefully existing) requirements documents (with version number and information where to find it).
 
+.Motivation
+From the point of view of the end users a system is created or modified to improve support of a business activity and/or improve the quality.
 
+.Form
+Short textual description, probably in tabular use-case format.
+If requirements documents exist this overview should refer to these documents.
 
+Keep these excerpts as short as possible.
+Balance readability of this document with potential redundancy w.r.t to requirements documents.
+****
+
+* Generate Hamcrest matchers for model/domain classes at compile time
+* No production-code pollution - configuration uses a SOURCE-retention annotation only, leaving model classes untouched
+* Compile-safe alternative to Hamcrest's `hasProperty()` / `HasPropertyWithValue`
+* Informative mismatch messages via the generated fluent API
+* Lombok-annotated classes are supported
+* Works with plain Java and Kotlin (via KAPT)
 
 === Quality Goals
 
+[role="arc42help"]
+****
+.Contents
+The top three (max five) quality goals for the architecture whose fulfillment is of highest importance to the major stakeholders.
+We really mean quality goals for the architecture.
+Don't confuse them with project goals.
+They are not necessarily identical.
 
+.Motivation
+You should know the quality goals of your most important stakeholders, since they will influence fundamental architectural decisions.
+Make sure to be very concrete about these qualities, avoid buzzwords.
+If you as an architect do not know how the quality of your work will be judged …
 
+.Form
+A table with quality goals and concrete scenarios, ordered by priorities
+****
 
+[options="header",cols="1,2,4"]
+|===
+| Priority | Quality | Motivation
+
+| 1
+| Correctness
+| Generated matchers must be type-safe and compile without errors - broken generation is worse than no generation
+
+| 2
+| Non-intrusiveness
+| The core design promise: zero footprint on production code; SOURCE retention means no runtime dependency bleeds into model classes
+
+| 3
+| Usability
+| The generated fluent API must be discoverable and ergonomic for test writers
+
+| 4
+| Build-tool agnosticism
+| Works via standard APT (javac) and KAPT (kotlinc); no coupling to a specific build plugin
+
+| 5
+| Maintainability
+| The generator codebase must remain understandable and extensible for contributors
+|===
 
 === Stakeholders
 
+[role="arc42help"]
+****
+.Contents
+Explicit overview of stakeholders of the system, i.e. all person, roles or organizations that
 
+* should know the architecture
+* have to be convinced of the architecture
+* have to work with the architecture or with code
+* need the documentation of the architecture for their work
+* have to come up with decisions about the system or its development
 
+.Motivation
+You should know all parties involved in development of the system or affected by the system.
+Otherwise, you may get nasty surprises later in the development process.
+These stakeholders determine the extent and the level of detail of your work and its results.
 
+.Form
+Table with role names, person names, and their expectations with respect to the architecture and its documentation.
+****
 
-[options="header",cols="1,2,2"]
+[options="header",cols="2,2,4"]
 |===
-|Role/Name|Contact|Expectations
-| _<Role-1>_ | _<Contact-1>_ | _<Expectation-1>_
-| _<Role-2>_ | _<Contact-2>_ | _<Expectation-2>_
+| Role/Name | Contact | Expectations
+
+| Test engineers / Java-Kotlin developers
+| GitHub Issues
+| Stable, backwards-compatible releases; correct and ergonomic generated matchers; reliable Maven Central artifacts
+
+| Contributors (incl. maintainer marmer)
+| https://github.com/marmer/hamcrest-matcher-generator
+| Understandable architecture; clear contribution path; well-tested generator code
 |===
