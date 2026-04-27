@@ -88,10 +88,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
-          java-version: 21
+          java-version: 25
           distribution: temurin
 
       - name: Grant execute permission for mvnw
@@ -104,25 +104,11 @@ jobs:
           key: ${{ runner.os }}-m2-java25-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2-java25
 
-      - name: Build and install all artifacts (JDK 21)
-        # Kotlin 2.1.20 does not support running on JDK 25; build Kotlin modules with JDK 21
-        run: ./mvnw -B clean install -DskipTests
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          java-version: 25
-          distribution: temurin
-
-      - name: Test plain-java e2e module (JDK 25)
-        # Verifies that the annotation processor generates valid Java 25 code
-        # and that the generated matchers compile and pass tests on JDK 25.
-        run: ./mvnw -B verify -pl hamcrest-matcher-generator-endtoend-plain-java-java25
-
-      - name: Test Kotlin e2e modules (JDK 25 + Kotlin 2.2.0)
-        # Kotlin 2.2.0 supports JDK 25 as compiler JVM; tests Kotlin-based Java 25 modules
-        run: ./mvnw -B verify -Dkotlin.version=2.2.0
-          -pl hamcrest-matcher-generator-endtoend-mixed-kotlin-java-java25,hamcrest-matcher-generator-endtoend-plain-kotlin-java25
+      - name: Build and Test (JDK 25 + Kotlin 2.2.0)
+        # -P dev is explicit: the endtoend-java25 profile auto-activates on JDK 25 via
+        # <jdk>[25,)</jdk>, which deactivates the activeByDefault dev profile per Maven rules.
+        # Kotlin 2.2.0 (first release after Java 25 GA) supports JDK 25 as compiler JVM.
+        run: ./mvnw -B clean verify -P dev -Dkotlin.version=2.2.0
 
   build-kotlin22:
     name: Verify (Kotlin 2.2.0)
