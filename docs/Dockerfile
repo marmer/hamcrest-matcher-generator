@@ -7,4 +7,5 @@ CMD ["asciidoctor", \
      "-a", "data-uri", \
      "-a", "allow-uri-read", \
      "-D", "/documents/build", \
+     "-o", "index.html", \
      "/documents/arc42.adoc"]
