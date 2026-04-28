@@ -95,30 +95,25 @@
                                 <sourceDir>${project.basedir}/src/test/java</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
-                                <sourceDir>${project.build.directory}/generated-test-sources/test-annotations
-                                </sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>add-kapt-test-sources</id>
                         <phase>process-test-sources</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>add-test-source</goal>
                         </goals>
                         <configuration>
-                            <target>
-                                <move todir="${project.basedir}/target/generated-test-sources/test-annotations"
-                                    force="true">
-                                    <fileset dir="${project.basedir}/target/generated-sources/kapt/test/"/>
-                                </move>
-                            </target>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/kapt/test</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
