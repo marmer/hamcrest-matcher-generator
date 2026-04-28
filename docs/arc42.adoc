@@ -6,14 +6,14 @@
 // configure EN settings for asciidoc
 include::src/config.adoc[]
 
-= image:arc42-logo.png[arc42] Template
+= hamcrest-matcher-generator
 :revnumber: {revnumber}
 :revdate: {revdate}
 :revremark: {revremark}
 :toc-title: Table of Contents
 
 //additional style for arc42 help callouts
-include::src/../../../common/styles/arc42-help-style.adoc[]
+include::src/arc42-help-style.adoc[]
 
 
 

@@ -1,0 +1,28 @@
+name: Docs
+
+on:
+  push:
+    branches: [ development ]
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build docs
+        run: |
+          docker build -t hamcrest-matcher-generator-docs ./docs
+          mkdir -p docs/build
+          docker run --rm -v ${{ github.workspace }}/docs:/documents hamcrest-matcher-generator-docs
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build
+          enable_jekyll: false
