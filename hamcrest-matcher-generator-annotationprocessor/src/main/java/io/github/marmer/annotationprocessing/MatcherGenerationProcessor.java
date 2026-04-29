@@ -1,19 +1,16 @@
 package io.github.marmer.annotationprocessing;
 
-import com.google.auto.service.AutoService;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
 @SupportedAnnotationTypes("io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration")
-@AutoService(Processor.class)
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private final Supplier<LocalDateTime> timeProvider;

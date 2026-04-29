@@ -3,7 +3,9 @@
     "allow": [
       "*",
       "Bash(gh api *)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./mvnw clean *)",
+      "Bash(java *)"
     ]
   }
 }
