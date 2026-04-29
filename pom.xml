@@ -385,7 +385,21 @@
                 <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
             </modules>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>!skipEndtoend</name>
+                </property>
+            </activation>
+        </profile>
+        <profile>
+            <id>java16plus</id>
+            <modules>
+                <module>hamcrest-matcher-generator-endtoend-java-records</module>
+            </modules>
+            <activation>
+                <jdk>[16,)</jdk>
+                <property>
+                    <name>!skipEndtoend</name>
+                </property>
             </activation>
         </profile>
         <profile>
@@ -438,6 +452,9 @@
         </profile>
         <profile>
             <id>release</id>
+            <properties>
+                <skipEndtoend>true</skipEndtoend>
+            </properties>
             <build>
                 <plugins>
                     <plugin>

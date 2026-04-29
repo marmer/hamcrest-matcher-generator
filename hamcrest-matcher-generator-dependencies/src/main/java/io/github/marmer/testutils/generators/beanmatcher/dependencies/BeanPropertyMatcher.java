@@ -2,10 +2,12 @@ package io.github.marmer.testutils.generators.beanmatcher.dependencies;
 
 import static org.hamcrest.Matchers.allOf;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import org.hamcrest.Description;
+import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
@@ -22,8 +24,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> hasPropertyMatcher = new LinkedHashMap<>();
     private final Matcher<?> instanceOfMatcher;
+    private final Class<? super T> expectedClass;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
+        this.expectedClass = expectedClass;
         instanceOfMatcher = Matchers.instanceOf(expectedClass);
     }
 
@@ -46,8 +50,36 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
-        addToHasPropertyMatcher(propertyName, Matchers.hasProperty(propertyName,matcher));
+        addToHasPropertyMatcher(propertyName, buildPropertyMatcher(propertyName, matcher));
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Matcher<?> buildPropertyMatcher(String propertyName, Matcher<?> valueMatcher) {
+        String capitalized = Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+        boolean hasGetter = hasAccessibleMethod("get" + capitalized) || hasAccessibleMethod("is" + capitalized);
+        if (!hasGetter && hasAccessibleMethod(propertyName)) {
+            return new FeatureMatcher<T, Object>((Matcher<? super Object>) valueMatcher, propertyName, propertyName) {
+                @Override
+                protected Object featureValueOf(T actual) {
+                    try {
+                        return actual.getClass().getMethod(propertyName).invoke(actual);
+                    } catch (ReflectiveOperationException e) {
+                        throw new AssertionError("Could not read component '" + propertyName + "'", e);
+                    }
+                }
+            };
+        }
+        return Matchers.hasProperty(propertyName, valueMatcher);
+    }
+
+    private boolean hasAccessibleMethod(String methodName) {
+        try {
+            Method m = expectedClass.getMethod(methodName);
+            return m.getParameterCount() == 0;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName) {
