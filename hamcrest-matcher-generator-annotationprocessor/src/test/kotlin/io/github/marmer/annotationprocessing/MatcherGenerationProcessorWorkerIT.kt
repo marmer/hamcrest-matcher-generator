@@ -6,6 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledForJreRange
+import org.junit.jupiter.api.condition.JRE
 import java.time.LocalDateTime
 import java.util.*
 
@@ -2770,6 +2772,7 @@ internal class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher should be generated for record with single String component")
+    @EnabledForJreRange(min = JRE.JAVA_16)
     fun `Matcher should be generated for record with single String component`() {
         // Preparation
         @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
@@ -2876,6 +2879,7 @@ internal class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher should be generated for record with multiple components")
+    @EnabledForJreRange(min = JRE.JAVA_16)
     fun `Matcher should be generated for record with multiple components`() {
         // Preparation
         @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
@@ -2998,6 +3002,7 @@ internal class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors")
+    @EnabledForJreRange(min = JRE.JAVA_16)
     fun `Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors`() {
         // Preparation
         @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
