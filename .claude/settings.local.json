@@ -1,9 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "*",
       "Bash(gh api *)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(java *)",
+      "Bash(javac *)",
+      "Bash(xargs grep *)",
+      "Bash(./mvnw *)",
+      "Bash(mvn *)",
+      "Bash(jar *)",
+      "Bash(javap *)"
     ]
   }
 }

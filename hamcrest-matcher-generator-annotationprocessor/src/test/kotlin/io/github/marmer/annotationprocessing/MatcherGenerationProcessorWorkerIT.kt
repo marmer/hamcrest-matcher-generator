@@ -6,6 +6,8 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledForJreRange
+import org.junit.jupiter.api.condition.JRE
 import java.time.LocalDateTime
 import java.util.*
 
@@ -2763,6 +2765,358 @@ internal class MatcherGenerationProcessorIT {
             .about(JavaSourcesSubjectFactory.javaSources())
             .that(Arrays.asList(configuration, javaFileObject))
             .processedWith(MatcherGenerationProcessor { now }) // Assertion
+            .compilesWithoutError()
+            .and()
+            .generatesSources(expectedOutput)
+    }
+
+    @Test
+    @DisplayName("Matcher should be generated for record with single String component")
+    @EnabledForJreRange(min = JRE.JAVA_16)
+    fun `Matcher should be generated for record with single String component`() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+                package some.pck;
+
+                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+                @MatcherConfiguration("some.other.pck.SomeRecord")
+                public final class SomeConfiguration{
+
+                }"""
+        )
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomeRecord", """
+            package some.other.pck;
+
+            public record SomeRecord(String name) {}""".trimIndent()
+        )
+
+        val now = LocalDateTime.now()
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
+            "some.other.pck.SomeRecordMatcher", """
+            package some.other.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Class;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
+            import org.hamcrest.Description;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
+            import org.hamcrest.TypeSafeMatcher;
+
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
+            public class SomeRecordMatcher extends TypeSafeMatcher<SomeRecord> {
+                private final BeanPropertyMatcher<SomeRecord> beanPropertyMatcher;
+
+                public SomeRecordMatcher() {
+                    beanPropertyMatcher = new BeanPropertyMatcher<SomeRecord>(SomeRecord.class);
+                }
+
+                public SomeRecordMatcher withName(final Matcher<? super String> matcher) {
+                    beanPropertyMatcher.with("name", matcher);
+                    return this;
+                }
+
+                public SomeRecordMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+
+                public SomeRecordMatcher resetName() {
+                    beanPropertyMatcher.reset("name");
+                    return this;
+                }
+
+                public SomeRecordMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+
+                public SomeRecordMatcher withName(final String value) {
+                    beanPropertyMatcher.with("name", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public SomeRecordMatcher withClass(final Class<?> value) {
+                    beanPropertyMatcher.with("class", Matchers.equalTo(value));
+                    return this;
+                }
+
+                @Override
+                public void describeTo(final Description description) {
+                    beanPropertyMatcher.describeTo(description);
+                }
+
+                @Override
+                protected boolean matchesSafely(final SomeRecord item) {
+                    return beanPropertyMatcher.matches(item);
+                }
+
+                @Override
+                protected void describeMismatchSafely(final SomeRecord item, final Description description) {
+                    beanPropertyMatcher.describeMismatch(item, description);
+                }
+
+                public static SomeRecordMatcher isSomeRecord() {
+                    return new SomeRecordMatcher();
+                }
+            }""".trimIndent()
+        )
+
+        // Execution + Assertion
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(configuration, javaFileObject))
+            .processedWith(MatcherGenerationProcessor { now })
+            .compilesWithoutError()
+            .and()
+            .generatesSources(expectedOutput)
+    }
+
+    @Test
+    @DisplayName("Matcher should be generated for record with multiple components")
+    @EnabledForJreRange(min = JRE.JAVA_16)
+    fun `Matcher should be generated for record with multiple components`() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+                package some.pck;
+
+                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+                @MatcherConfiguration("some.other.pck.SomeRecord")
+                public final class SomeConfiguration{
+
+                }"""
+        )
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomeRecord", """
+            package some.other.pck;
+
+            public record SomeRecord(String name, int age) {}""".trimIndent()
+        )
+
+        val now = LocalDateTime.now()
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
+            "some.other.pck.SomeRecordMatcher", """
+            package some.other.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Class;
+            import java.lang.Integer;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
+            import org.hamcrest.Description;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
+            import org.hamcrest.TypeSafeMatcher;
+
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
+            public class SomeRecordMatcher extends TypeSafeMatcher<SomeRecord> {
+                private final BeanPropertyMatcher<SomeRecord> beanPropertyMatcher;
+
+                public SomeRecordMatcher() {
+                    beanPropertyMatcher = new BeanPropertyMatcher<SomeRecord>(SomeRecord.class);
+                }
+
+                public SomeRecordMatcher withName(final Matcher<? super String> matcher) {
+                    beanPropertyMatcher.with("name", matcher);
+                    return this;
+                }
+
+                public SomeRecordMatcher withAge(final Matcher<? super Integer> matcher) {
+                    beanPropertyMatcher.with("age", matcher);
+                    return this;
+                }
+
+                public SomeRecordMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+
+                public SomeRecordMatcher resetName() {
+                    beanPropertyMatcher.reset("name");
+                    return this;
+                }
+
+                public SomeRecordMatcher resetAge() {
+                    beanPropertyMatcher.reset("age");
+                    return this;
+                }
+
+                public SomeRecordMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+
+                public SomeRecordMatcher withName(final String value) {
+                    beanPropertyMatcher.with("name", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public SomeRecordMatcher withAge(final int value) {
+                    beanPropertyMatcher.with("age", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public SomeRecordMatcher withClass(final Class<?> value) {
+                    beanPropertyMatcher.with("class", Matchers.equalTo(value));
+                    return this;
+                }
+
+                @Override
+                public void describeTo(final Description description) {
+                    beanPropertyMatcher.describeTo(description);
+                }
+
+                @Override
+                protected boolean matchesSafely(final SomeRecord item) {
+                    return beanPropertyMatcher.matches(item);
+                }
+
+                @Override
+                protected void describeMismatchSafely(final SomeRecord item, final Description description) {
+                    beanPropertyMatcher.describeMismatch(item, description);
+                }
+
+                public static SomeRecordMatcher isSomeRecord() {
+                    return new SomeRecordMatcher();
+                }
+            }""".trimIndent()
+        )
+
+        // Execution + Assertion
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(configuration, javaFileObject))
+            .processedWith(MatcherGenerationProcessor { now })
+            .compilesWithoutError()
+            .and()
+            .generatesSources(expectedOutput)
+    }
+
+    @Test
+    @DisplayName("Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors")
+    @EnabledForJreRange(min = JRE.JAVA_16)
+    fun `Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors`() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+                package some.pck;
+
+                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+                @MatcherConfiguration("some.other.pck.PersonRecord")
+                public final class SomeConfiguration{
+
+                }"""
+        )
+        @Language("JAVA") val javaFileObject = JavaFileObjects.forSourceLines(
+            "some.other.pck.PersonRecord", """
+            package some.other.pck;
+
+            public record PersonRecord(String firstName, String lastName) {}""".trimIndent()
+        )
+
+        val now = LocalDateTime.now()
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
+            "some.other.pck.PersonRecordMatcher", """
+            package some.other.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.Class;
+            import java.lang.Override;
+            import java.lang.String;
+            import javax.annotation.processing.Generated;
+            import org.hamcrest.Description;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
+            import org.hamcrest.TypeSafeMatcher;
+
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
+            public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> {
+                private final BeanPropertyMatcher<PersonRecord> beanPropertyMatcher;
+
+                public PersonRecordMatcher() {
+                    beanPropertyMatcher = new BeanPropertyMatcher<PersonRecord>(PersonRecord.class);
+                }
+
+                public PersonRecordMatcher withFirstName(final Matcher<? super String> matcher) {
+                    beanPropertyMatcher.with("firstName", matcher);
+                    return this;
+                }
+
+                public PersonRecordMatcher withLastName(final Matcher<? super String> matcher) {
+                    beanPropertyMatcher.with("lastName", matcher);
+                    return this;
+                }
+
+                public PersonRecordMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+
+                public PersonRecordMatcher resetFirstName() {
+                    beanPropertyMatcher.reset("firstName");
+                    return this;
+                }
+
+                public PersonRecordMatcher resetLastName() {
+                    beanPropertyMatcher.reset("lastName");
+                    return this;
+                }
+
+                public PersonRecordMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+
+                public PersonRecordMatcher withFirstName(final String value) {
+                    beanPropertyMatcher.with("firstName", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public PersonRecordMatcher withLastName(final String value) {
+                    beanPropertyMatcher.with("lastName", Matchers.equalTo(value));
+                    return this;
+                }
+
+                public PersonRecordMatcher withClass(final Class<?> value) {
+                    beanPropertyMatcher.with("class", Matchers.equalTo(value));
+                    return this;
+                }
+
+                @Override
+                public void describeTo(final Description description) {
+                    beanPropertyMatcher.describeTo(description);
+                }
+
+                @Override
+                protected boolean matchesSafely(final PersonRecord item) {
+                    return beanPropertyMatcher.matches(item);
+                }
+
+                @Override
+                protected void describeMismatchSafely(final PersonRecord item, final Description description) {
+                    beanPropertyMatcher.describeMismatch(item, description);
+                }
+
+                public static PersonRecordMatcher isPersonRecord() {
+                    return new PersonRecordMatcher();
+                }
+            }""".trimIndent()
+        )
+
+        // Execution + Assertion
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(configuration, javaFileObject))
+            .processedWith(MatcherGenerationProcessor { now })
             .compilesWithoutError()
             .and()
             .generatesSources(expectedOutput)
