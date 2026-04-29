@@ -54,8 +54,9 @@
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.kotlin.coveragePlugin>jacoco</sonar.kotlin.coveragePlugin>
         <sonar.coverage.jacoco.xmlReportPaths>
-            */target/site/jacoco/jacoco.xml,*/target/site/jacoco-it/jacoco.xml
+            ${project.basedir}/target/site/jacoco/jacoco.xml,${project.basedir}/target/site/jacoco-it/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
+        <argLine/>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 
         <!-- Plugin and dependency Versions-->

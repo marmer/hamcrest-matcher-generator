@@ -116,6 +116,7 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <argLine>
+                        ${argLine}
                         --add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
                         --add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
                         --add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
