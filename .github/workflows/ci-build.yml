@@ -55,7 +55,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator-annotationprocessor,hamcrest-matcher-generator-dependencies"
         if: success()
-        continue-on-error: true
 
   verify-matrix:
     name: Verify JDK ${{ matrix.java-version }}
