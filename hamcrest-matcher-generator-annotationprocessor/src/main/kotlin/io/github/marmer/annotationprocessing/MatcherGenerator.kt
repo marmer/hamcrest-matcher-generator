@@ -16,6 +16,8 @@ import javax.lang.model.element.*
 import javax.lang.model.type.*
 
 
+private const val RETURN_THIS = "return this"
+
 class MatcherGenerator(
     private val processingEnv: ProcessingEnvironment,
     private val baseType: TypeElement,
@@ -103,7 +105,7 @@ class MatcherGenerator(
                 name
             )
             .addStatement(
-                "return this"
+                RETURN_THIS
             )
             .returns(getGeneratedTypeName())
             .build()
@@ -118,7 +120,7 @@ class MatcherGenerator(
                 name
             )
             .addStatement(
-                "return this"
+                RETURN_THIS
             )
             .returns(getGeneratedTypeName())
             .build()
@@ -144,7 +146,7 @@ class MatcherGenerator(
                 "\$L.with(\$S, \$T.equalTo(value))", builderFieldName, name,
                 Matchers::class.java
             )
-            .addStatement("return this")
+            .addStatement(RETURN_THIS)
             .returns(getGeneratedTypeName())
             .build()
 
@@ -308,18 +310,44 @@ class MatcherGenerator(
         )
     }
 
-    private val TypeElement.properties: List<Property>
-        get() = transitiveInheritedElements
-            .filter { it.isProperty }
-            .distinctBy { it.simpleName }
-            .map { it as ExecutableElement }
+    private val TypeElement.isRecord: Boolean
+        get() = kind.name == "RECORD"
+
+    private val TypeElement.recordComponentProperties: List<Property>
+        get() = enclosedElements
+            .filterIsInstance<ExecutableElement>()
+            .filter { it.isPublic && !it.isStatic && it.hasNoParameters() && it.hasReturnType() && it.isRecordComponentAccessor() }
             .map {
                 Property(
-                    name = it.simpleName.withoutPropertyPrefix(),
+                    name = it.simpleName.toString(),
                     type = it.returnType,
                     accessor = it.toString()
                 )
             }
+
+    private fun ExecutableElement.isRecordComponentAccessor(): Boolean {
+        val name = simpleName.toString()
+        return name != "hashCode" && name != "toString" && !name.startsWith("get") && !name.startsWith("is")
+    }
+
+    private val TypeElement.properties: List<Property>
+        get() {
+            val getterProperties = transitiveInheritedElements
+                .filter { it.isProperty }
+                .distinctBy { it.simpleName }
+                .map { it as ExecutableElement }
+                .map {
+                    Property(
+                        name = it.simpleName.withoutPropertyPrefix(),
+                        type = it.returnType,
+                        accessor = it.toString()
+                    )
+                }
+            return if (isRecord)
+                (recordComponentProperties + getterProperties).distinctBy { it.name }
+            else
+                getterProperties
+        }
 
     private val TypeElement.transitiveInheritedElements: List<Element>
         get() = if (superclass.kind != TypeKind.NONE)

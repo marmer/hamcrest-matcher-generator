@@ -1,0 +1,20 @@
+ifdef::backend-html5[]
+++++
+<style>
+.arc42help {
+  background-color: #e8faff;
+  padding: 1em;
+  border: 1px solid #b4d7e8;
+  border-radius: 4px;
+  margin-bottom: 1em;
+}
+.arc42help::before {
+  content: "arc42 hint";
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5em;
+  color: #2c7eb4;
+}
+</style>
+++++
+endif::backend-html5[]
