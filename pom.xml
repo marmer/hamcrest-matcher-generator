@@ -57,7 +57,6 @@
             */target/site/jacoco/jacoco.xml,*/target/site/jacoco-it/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.projectKey>marmer_hamcrest-matcher-generator</sonar.projectKey>
 
         <!-- Plugin and dependency Versions-->
         <kotlin.version>2.1.20</kotlin.version>
