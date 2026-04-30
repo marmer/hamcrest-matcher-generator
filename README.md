@@ -2,13 +2,13 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.marmer.testutils/hamcrest-matcher-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/hamcrest-matcher-generator)
 [![Documentation](https://img.shields.io/badge/docs-arc42-blue)](https://marmer.github.io/hamcrest-matcher-generator/)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
 
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=marmer_hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=marmer_hamcrest-matcher-generator)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
 
 hamcrest-matcher-generator
 ==========================
