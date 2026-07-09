@@ -7,23 +7,23 @@
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>hamcrest-matcher-generator</artifactId>
-        <version>5.1.0</version>
+        <version>6.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-endtoend-java-records</artifactId>
-    <version>5.1.0</version>
+    <version>6.0.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-            <version>5.1.0</version>
+            <version>6.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-            <version>5.1.0</version>
+            <version>6.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -42,12 +42,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <release>16</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>io.github.marmer.testutils</groupId>
                             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-                            <version>5.1.0</version>
+                            <version>6.0.0-SNAPSHOT</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
