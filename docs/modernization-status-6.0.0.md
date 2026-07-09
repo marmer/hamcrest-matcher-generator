@@ -11,7 +11,7 @@ um bei "continue" / "führe fort" an der richtigen Stelle weiterzumachen.
 | Phase | Beschreibung | Status |
 |-------|--------------|--------|
 | 1 | Build- & Release-Infrastruktur | ✅ abgeschlossen |
-| 2 | Dependency-Modernisierung | ⬜ offen |
+| 2 | Dependency-Modernisierung | ✅ abgeschlossen |
 | 3 | Artefakt-Restrukturierung | ⬜ offen |
 | 4 | Mismatch-Messages (Property-Diff) | ⬜ offen |
 | 5 | Features (Referenzobjekt, Exclude, Strict) | ⬜ offen |
@@ -56,14 +56,19 @@ Legende: ⬜ offen · 🔄 in Arbeit · ✅ abgeschlossen · ⚠️ blockiert/An
 
 ## Phase 2 — Dependency-Modernisierung
 
-Geplante Teilschritte (Build muss nach jedem Schritt grün bleiben):
+Teilschritte (Build nach jedem Schritt grün):
 
-- [ ] JavaPoet 1.13.0 → `com.palantir.javapoet` (Palantir-Fork)
-- [ ] `javax.annotation-api` entfernen (ungenutzt)
-- [ ] Hamcrest 2.2 → 3.0
-- [ ] Mockito 3.11.1 → 5.x, mockito-kotlin 3.2.0 → aktuell
-- [ ] compile-testing → aktuell, classgraph 4.8.108 → aktuell
-- [ ] Restliche Test-Dependencies prüfen (junit-extensions, truth, guava, javaparser)
+- [x] Hamcrest 2.2 → 3.0
+- [x] `javax.annotation-api` entfernt (ungenutzt; Code nutzt JDK-eigenes `javax.annotation.processing.Generated`)
+- [x] classgraph 4.8.108 → 4.8.184, compile-testing 0.21.0 → 0.23.0, truth → 1.4.5, guava → 33.6.0-jre, lombok → 1.18.46, JUnit 5.12.1 → 5.14.4 (Platform-Launcher 1.14.4)
+- [x] Ungenutzte Dependencies entfernt: junit-extensions, auto-service- und javaparser-Einträge im dependencyManagement
+- [x] Mockito 3.11.1 → 5.23.0, mockito-kotlin 3.2.0 → 6.3.0 (org.mockito.kotlin; kaum direkte Nutzung im Code)
+- [x] JavaPoet 1.13.0 → `com.palantir.javapoet:javapoet:0.17.0` — reine Paketumbenennung in `MatcherGenerator.kt` (einzige Nutzungsstelle)
+
+Anmerkungen:
+- Bewusst NICHT auf JUnit 6.x gegangen (Kompatibilität mockito-junit-jupiter/kotlin-test-junit5); latest 5.x reicht.
+- Kotlin bleibt auf 2.1.20 (Plan: KAPT beibehalten, kein Kotlin-Bump gefordert).
+- Palantir-Fork: `TypeName.OBJECT` existiert nicht mehr → `WildcardTypeName.subtypeOf(Object::class.java)`; sonst 1:1-Paketumbenennung.
 
 ## Phase 3 — Artefakt-Restrukturierung
 
@@ -95,4 +100,5 @@ Geplante Teilschritte (Build muss nach jedem Schritt grün bleiben):
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-09** — Phase 2 abgeschlossen: alle Dependencies modernisiert (Hamcrest 3.0, Mockito 5.23, Palantir JavaPoet 0.17, JUnit 5.14.4, …), Ungenutztes entfernt. Build nach jedem Teilschritt grün. Draft-PR #50 erstellt.
 - **2026-07-09** — Phase 1 abgeschlossen: JCenter raus, Central-Portal-Publishing, alle Maven-Plugins + Wrapper aktuell, Java-17-Baseline, Records-Modul im Default-Set, Version 6.0.0-SNAPSHOT, CI-Matrix 17/21/25, KAPT-antrun-Hack durch build-helper ersetzt. Voller Build grün.

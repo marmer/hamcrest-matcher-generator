@@ -1,8 +1,8 @@
 package io.github.marmer.annotationprocessing
 
-import com.squareup.javapoet.*
-import com.squareup.javapoet.MethodSpec.methodBuilder
-import com.squareup.javapoet.TypeName.*
+import com.palantir.javapoet.*
+import com.palantir.javapoet.MethodSpec.methodBuilder
+import com.palantir.javapoet.TypeName.*
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
 import org.hamcrest.Description
@@ -129,7 +129,7 @@ class MatcherGenerator(
         ParameterizedTypeName.get(
             ClassName.get(Matcher::class.java),
             if (isConflictingProperty(name))
-                WildcardTypeName.subtypeOf(OBJECT)
+                WildcardTypeName.subtypeOf(Object::class.java)
             else WildcardTypeName.supertypeOf(
                 type.typeVarsToWildcards(true)
             )
