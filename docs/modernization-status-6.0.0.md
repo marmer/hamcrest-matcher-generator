@@ -13,7 +13,7 @@ um bei "continue" / "führe fort" an der richtigen Stelle weiterzumachen.
 | 1 | Build- & Release-Infrastruktur | ✅ abgeschlossen |
 | 2 | Dependency-Modernisierung | ✅ abgeschlossen |
 | 3 | Artefakt-Restrukturierung | ✅ abgeschlossen |
-| 4 | Mismatch-Messages (Property-Diff) | ⬜ offen |
+| 4 | Mismatch-Messages (Property-Diff) | ✅ abgeschlossen |
 | 5 | Features (Referenzobjekt, Exclude, Strict) | ⬜ offen |
 | 6 | Release 6.0.0 | ⬜ offen |
 
@@ -83,9 +83,10 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 
 ## Phase 4 — Mismatch-Messages
 
-- [ ] Multi-line Property-Diff in der generierten Matcher-Logik
-- [ ] Unit-Tests für das Ausgabeformat
-- [ ] End-to-End-Tests für das Ausgabeformat
+- [x] Multi-line Property-Diff in der emittierten `BeanPropertyMatcher`-Logik: Expectations werden jetzt als (property, valueMatcher, propertyMatcher)-Tripel (`Expectation`-Klasse) gespeichert; `describeMismatchSafely` listet nur fehlschlagende Properties, eine pro Zeile, Format `foo: expected "bar" but was "baz"`. Ist-Wert wird reflektiv über get/is/Record-Accessor gelesen; Fallback auf hasProperty-Mismatch, wenn nicht lesbar. `describeTo` bleibt kompakt (instanceOf + konfigurierte Expectations).
+- [x] End-to-End-Tests fürs Ausgabeformat: `MismatchDescriptionTest` (plain-java-minimal) prüft Property-Diff (Werte- und Matcher-Expectations) sowie kompaktes `describeTo`
+- [x] compile-testing-ITs decken die generierte Struktur ab (Konstante `embeddedBeanPropertyMatcher` aktualisiert; Import-Set unverändert)
+- [x] README-Changelog um das neue Format ergänzt
 
 ## Phase 5 — Features
 
@@ -103,6 +104,7 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-09** — Phase 4 abgeschlossen: Multi-line Property-Diff im Mismatch (nur fehlschlagende Properties, `foo: expected "bar" but was "baz"`), E2E-Formattests, README-Changelog. Voller Build grün.
 - **2026-07-09** — Phase 3 abgeschlossen: Single-Artifact-Struktur (`dependencies`-Modul entfernt), `@MatcherConfiguration` in `io.github.marmer.annotationprocessing`, generierte Matcher self-contained (nested `BeanPropertyMatcher`), README + Migrationsguide aktualisiert. Voller Build grün.
 - **2026-07-09** — Phase 2 abgeschlossen: alle Dependencies modernisiert (Hamcrest 3.0, Mockito 5.23, Palantir JavaPoet 0.17, JUnit 5.14.4, …), Ungenutztes entfernt. Build nach jedem Teilschritt grün. Draft-PR #50 erstellt.
 - **2026-07-09** — Phase 1 abgeschlossen: JCenter raus, Central-Portal-Publishing, alle Maven-Plugins + Wrapper aktuell, Java-17-Baseline, Records-Modul im Default-Set, Version 6.0.0-SNAPSHOT, CI-Matrix 17/21/25, KAPT-antrun-Hack durch build-helper ersetzt. Voller Build grün.

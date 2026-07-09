@@ -1,5 +1,6 @@
 package io.github.marmer.annotationprocessing
 
+import com.palantir.javapoet.AnnotationSpec
 import com.palantir.javapoet.ClassName
 import com.palantir.javapoet.FieldSpec
 import com.palantir.javapoet.MethodSpec
@@ -25,6 +26,8 @@ internal object BeanPropertyMatcherTypeFactory {
 
     val unqualifiedClassName: ClassName = ClassName.get("", TYPE_NAME)
 
+    private val expectationClassName: ClassName = ClassName.get("", "Expectation")
+
     fun create(): TypeSpec {
         val t = TypeVariableName.get("T")
         val matcherOfAnything: TypeName = ParameterizedTypeName.get(
@@ -35,10 +38,14 @@ internal object BeanPropertyMatcherTypeFactory {
             ClassName.get(java.util.List::class.java),
             matcherOfAnything
         )
-        val matcherMapType = ParameterizedTypeName.get(
+        val expectationListType = ParameterizedTypeName.get(
+            ClassName.get(java.util.List::class.java),
+            expectationClassName
+        )
+        val expectationMapType = ParameterizedTypeName.get(
             ClassName.get(java.util.Map::class.java),
             ClassName.get(String::class.java),
-            matcherListType
+            expectationListType
         )
         val classOfSuperT = ParameterizedTypeName.get(
             ClassName.get(Class::class.java),
@@ -51,7 +58,7 @@ internal object BeanPropertyMatcherTypeFactory {
             .addTypeVariable(t)
             .superclass(ParameterizedTypeName.get(ClassName.get(TypeSafeMatcher::class.java), t))
             .addField(
-                FieldSpec.builder(matcherMapType, "hasPropertyMatcher", Modifier.PRIVATE, Modifier.FINAL)
+                FieldSpec.builder(expectationMapType, "expectations", Modifier.PRIVATE, Modifier.FINAL)
                     .initializer("new \$T<>()", java.util.LinkedHashMap::class.java)
                     .build()
             )
@@ -98,7 +105,9 @@ internal object BeanPropertyMatcherTypeFactory {
                         java.util.ArrayList::class.java
                     )
                     .addStatement("fullMatcher.add(instanceOfMatcher)")
-                    .addStatement("fullMatcher.addAll(hasPropertyMatcherToList())")
+                    .beginControlFlow("for (final \$T expectation : expectationsToList())", expectationClassName)
+                    .addStatement("fullMatcher.add(expectation.propertyMatcher)")
+                    .endControlFlow()
                     .addStatement(
                         "return \$T.allOf(fullMatcher.toArray(new \$T[0]))",
                         Matchers::class.java,
@@ -112,7 +121,10 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addParameter(String::class.java, "propertyName", Modifier.FINAL)
                     .addParameter(matcherOfAnything, "matcher", Modifier.FINAL)
                     .returns(selfWithT)
-                    .addStatement("addToHasPropertyMatcher(propertyName, buildPropertyMatcher(propertyName, matcher))")
+                    .addStatement(
+                        "addExpectation(new \$T(propertyName, matcher, buildPropertyMatcher(propertyName, matcher)))",
+                        expectationClassName
+                    )
                     .addStatement("return this")
                     .build()
             )
@@ -122,7 +134,8 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addParameter(String::class.java, "propertyName", Modifier.FINAL)
                     .returns(selfWithT)
                     .addStatement(
-                        "addToHasPropertyMatcher(propertyName, \$T.hasProperty(propertyName))",
+                        "addExpectation(new \$T(propertyName, null, \$T.hasProperty(propertyName)))",
+                        expectationClassName,
                         Matchers::class.java
                     )
                     .addStatement("return this")
@@ -132,13 +145,13 @@ internal object BeanPropertyMatcherTypeFactory {
                 MethodSpec.methodBuilder("reset")
                     .addModifiers(Modifier.PUBLIC)
                     .addParameter(String::class.java, "propertyName", Modifier.FINAL)
-                    .addStatement("hasPropertyMatcher.remove(propertyName)")
+                    .addStatement("expectations.remove(propertyName)")
                     .build()
             )
             .addMethod(
                 MethodSpec.methodBuilder("buildPropertyMatcher")
                     .addAnnotation(
-                        com.palantir.javapoet.AnnotationSpec.builder(SuppressWarnings::class.java)
+                        AnnotationSpec.builder(SuppressWarnings::class.java)
                             .addMember("value", "\$S", "unchecked")
                             .build()
                     )
@@ -213,38 +226,117 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addStatement("mismatchDescriptionAlreadyAdded = true")
                     .endControlFlow()
                     .beginControlFlow(
-                        "for (final \$T matcher : hasPropertyMatcherToList())",
-                        matcherOfAnything
+                        "for (final \$T expectation : expectationsToList())",
+                        expectationClassName
                     )
-                    .beginControlFlow("if (!matcher.matches(item))")
+                    .beginControlFlow("if (!expectation.propertyMatcher.matches(item))")
                     .beginControlFlow("if (mismatchDescriptionAlreadyAdded)")
-                    .addStatement("mismatchDescription.appendText(\$S)", " and ")
+                    .addStatement("mismatchDescription.appendText(\$S)", "\n")
                     .endControlFlow()
-                    .addStatement("matcher.describeMismatch(item, mismatchDescription)")
+                    .addStatement("mismatchDescription.appendText(expectation.property + \$S)", ": ")
+                    .addStatement("describePropertyMismatch(item, expectation, mismatchDescription)")
                     .addStatement("mismatchDescriptionAlreadyAdded = true")
                     .endControlFlow()
                     .endControlFlow()
                     .build()
             )
             .addMethod(
-                MethodSpec.methodBuilder("hasPropertyMatcherToList")
+                MethodSpec.methodBuilder("describePropertyMismatch")
                     .addModifiers(Modifier.PRIVATE)
-                    .returns(matcherListType)
+                    .addParameter(t, "item", Modifier.FINAL)
+                    .addParameter(expectationClassName, "expectation", Modifier.FINAL)
+                    .addParameter(Description::class.java, "mismatchDescription", Modifier.FINAL)
+                    .beginControlFlow("if (expectation.valueMatcher == null)")
+                    .addStatement("mismatchDescription.appendText(\$S)", "expected a readable property but ")
+                    .addStatement("expectation.propertyMatcher.describeMismatch(item, mismatchDescription)")
+                    .addStatement("return")
+                    .endControlFlow()
+                    .addStatement("mismatchDescription.appendText(\$S)", "expected ")
+                    .addStatement("expectation.valueMatcher.describeTo(mismatchDescription)")
+                    .addStatement("mismatchDescription.appendText(\$S)", " but ")
+                    .beginControlFlow("try")
                     .addStatement(
-                        "return hasPropertyMatcher.values().stream().flatMap(\$T::stream).collect(\$T.toList())",
+                        "expectation.valueMatcher.describeMismatch(readProperty(item, expectation.property), mismatchDescription)"
+                    )
+                    .nextControlFlow("catch (final \$T e)", ReflectiveOperationException::class.java)
+                    .addStatement("expectation.propertyMatcher.describeMismatch(item, mismatchDescription)")
+                    .endControlFlow()
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("readProperty")
+                    .addModifiers(Modifier.PRIVATE)
+                    .addParameter(t, "item", Modifier.FINAL)
+                    .addParameter(String::class.java, "propertyName", Modifier.FINAL)
+                    .returns(ClassName.get(Object::class.java))
+                    .addException(ClassName.get(ReflectiveOperationException::class.java))
+                    .addStatement(
+                        "final \$T capitalized = \$T.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1)",
+                        String::class.java,
+                        Character::class.java
+                    )
+                    .beginControlFlow(
+                        "for (final \$T candidate : new \$T[]{\$S + capitalized, \$S + capitalized, propertyName})",
+                        String::class.java,
+                        String::class.java,
+                        "get",
+                        "is"
+                    )
+                    .beginControlFlow("try")
+                    .addStatement("return item.getClass().getMethod(candidate).invoke(item)")
+                    .nextControlFlow("catch (final \$T e)", NoSuchMethodException::class.java)
+                    .addComment("try next accessor candidate")
+                    .endControlFlow()
+                    .endControlFlow()
+                    .addStatement("throw new \$T(propertyName)", NoSuchMethodException::class.java)
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("expectationsToList")
+                    .addModifiers(Modifier.PRIVATE)
+                    .returns(expectationListType)
+                    .addStatement(
+                        "return expectations.values().stream().flatMap(\$T::stream).collect(\$T.toList())",
                         java.util.Collection::class.java,
                         java.util.stream.Collectors::class.java
                     )
                     .build()
             )
             .addMethod(
-                MethodSpec.methodBuilder("addToHasPropertyMatcher")
+                MethodSpec.methodBuilder("addExpectation")
                     .addModifiers(Modifier.PRIVATE)
-                    .addParameter(String::class.java, "propertyName", Modifier.FINAL)
-                    .addParameter(matcherOfAnything, "matcher", Modifier.FINAL)
+                    .addParameter(expectationClassName, "expectation", Modifier.FINAL)
                     .addStatement(
-                        "hasPropertyMatcher.computeIfAbsent(propertyName, key -> new \$T<>()).add(matcher)",
+                        "expectations.computeIfAbsent(expectation.property, key -> new \$T<>()).add(expectation)",
                         java.util.ArrayList::class.java
+                    )
+                    .build()
+            )
+            .addType(
+                TypeSpec.classBuilder("Expectation")
+                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                    .addField(
+                        FieldSpec.builder(String::class.java, "property", Modifier.PRIVATE, Modifier.FINAL)
+                            .build()
+                    )
+                    .addField(
+                        FieldSpec.builder(matcherOfAnything, "valueMatcher", Modifier.PRIVATE, Modifier.FINAL)
+                            .build()
+                    )
+                    .addField(
+                        FieldSpec.builder(matcherOfAnything, "propertyMatcher", Modifier.PRIVATE, Modifier.FINAL)
+                            .build()
+                    )
+                    .addMethod(
+                        MethodSpec.constructorBuilder()
+                            .addModifiers(Modifier.PRIVATE)
+                            .addParameter(String::class.java, "property", Modifier.FINAL)
+                            .addParameter(matcherOfAnything, "valueMatcher", Modifier.FINAL)
+                            .addParameter(matcherOfAnything, "propertyMatcher", Modifier.FINAL)
+                            .addStatement("this.property = property")
+                            .addStatement("this.valueMatcher = valueMatcher")
+                            .addStatement("this.propertyMatcher = propertyMatcher")
+                            .build()
                     )
                     .build()
             )

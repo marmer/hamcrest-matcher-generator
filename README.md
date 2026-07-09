@@ -267,6 +267,9 @@ Migration guide 5.x → 6.0.0:
   (inside the annotation-processor artifact).
 * Generated matchers are now **self-contained** — they no longer reference a runtime library; only Hamcrest is needed
   at test runtime. Built and tested against Hamcrest 3.0.
+* **Mismatch message format changed** to a multi-line property diff: only the *failing* properties are listed, one per
+  line, each with expected vs. actual (e.g. `pojoField: expected "bar" but was "baz"`). Assertions on the old message
+  text need updating.
 
 ### 5.1.0
 * Ability to reset properties with *reset** methods to be able to set/reconfigure individual properties at complex matcher configurations

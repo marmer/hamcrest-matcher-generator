@@ -3457,7 +3457,7 @@ internal class MatcherGenerationProcessorIT {
 
 private val embeddedBeanPropertyMatcher = """
   private static class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
-    private final Map<String, List<Matcher<?>>> hasPropertyMatcher = new LinkedHashMap<>();
+    private final Map<String, List<Expectation>> expectations = new LinkedHashMap<>();
 
     private final Matcher<?> instanceOfMatcher;
 
@@ -3481,22 +3481,24 @@ private val embeddedBeanPropertyMatcher = """
     private Matcher<?> getFullInnerMatcher() {
       final List<Matcher<?>> fullMatcher = new ArrayList<>();
       fullMatcher.add(instanceOfMatcher);
-      fullMatcher.addAll(hasPropertyMatcherToList());
+      for (final Expectation expectation : expectationsToList()) {
+        fullMatcher.add(expectation.propertyMatcher);
+      }
       return Matchers.allOf(fullMatcher.toArray(new Matcher[0]));
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
-      addToHasPropertyMatcher(propertyName, buildPropertyMatcher(propertyName, matcher));
+      addExpectation(new Expectation(propertyName, matcher, buildPropertyMatcher(propertyName, matcher)));
       return this;
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName) {
-      addToHasPropertyMatcher(propertyName, Matchers.hasProperty(propertyName));
+      addExpectation(new Expectation(propertyName, null, Matchers.hasProperty(propertyName)));
       return this;
     }
 
     public void reset(final String propertyName) {
-      hasPropertyMatcher.remove(propertyName);
+      expectations.remove(propertyName);
     }
 
     @SuppressWarnings("unchecked")
@@ -3534,23 +3536,69 @@ private val embeddedBeanPropertyMatcher = """
         mismatchDescription.appendText("Is an instance of " + item.getClass());
         mismatchDescriptionAlreadyAdded = true;
       }
-      for (final Matcher<?> matcher : hasPropertyMatcherToList()) {
-        if (!matcher.matches(item)) {
+      for (final Expectation expectation : expectationsToList()) {
+        if (!expectation.propertyMatcher.matches(item)) {
           if (mismatchDescriptionAlreadyAdded) {
-            mismatchDescription.appendText(" and ");
+            mismatchDescription.appendText("\n");
           }
-          matcher.describeMismatch(item, mismatchDescription);
+          mismatchDescription.appendText(expectation.property + ": ");
+          describePropertyMismatch(item, expectation, mismatchDescription);
           mismatchDescriptionAlreadyAdded = true;
         }
       }
     }
 
-    private List<Matcher<?>> hasPropertyMatcherToList() {
-      return hasPropertyMatcher.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+    private void describePropertyMismatch(final T item, final Expectation expectation,
+        final Description mismatchDescription) {
+      if (expectation.valueMatcher == null) {
+        mismatchDescription.appendText("expected a readable property but ");
+        expectation.propertyMatcher.describeMismatch(item, mismatchDescription);
+        return;
+      }
+      mismatchDescription.appendText("expected ");
+      expectation.valueMatcher.describeTo(mismatchDescription);
+      mismatchDescription.appendText(" but ");
+      try {
+        expectation.valueMatcher.describeMismatch(readProperty(item, expectation.property), mismatchDescription);
+      } catch (final ReflectiveOperationException e) {
+        expectation.propertyMatcher.describeMismatch(item, mismatchDescription);
+      }
     }
 
-    private void addToHasPropertyMatcher(final String propertyName, final Matcher<?> matcher) {
-      hasPropertyMatcher.computeIfAbsent(propertyName, key -> new ArrayList<>()).add(matcher);
+    private Object readProperty(final T item, final String propertyName) throws
+        ReflectiveOperationException {
+      final String capitalized = Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+      for (final String candidate : new String[]{"get" + capitalized, "is" + capitalized, propertyName}) {
+        try {
+          return item.getClass().getMethod(candidate).invoke(item);
+        } catch (final NoSuchMethodException e) {
+          // try next accessor candidate
+        }
+      }
+      throw new NoSuchMethodException(propertyName);
+    }
+
+    private List<Expectation> expectationsToList() {
+      return expectations.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    private void addExpectation(final Expectation expectation) {
+      expectations.computeIfAbsent(expectation.property, key -> new ArrayList<>()).add(expectation);
+    }
+
+    private static final class Expectation {
+      private final String property;
+
+      private final Matcher<?> valueMatcher;
+
+      private final Matcher<?> propertyMatcher;
+
+      private Expectation(final String property, final Matcher<?> valueMatcher,
+          final Matcher<?> propertyMatcher) {
+        this.property = property;
+        this.valueMatcher = valueMatcher;
+        this.propertyMatcher = propertyMatcher;
+      }
     }
   }
 """
