@@ -19,7 +19,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
                 package some.pck;
                 
-                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+                import io.github.marmer.annotationprocessing.MatcherConfiguration;
                 
                 @MatcherConfiguration("some.other.pck.SimplePojo")
                 public final class SomeConfiguration{
@@ -85,13 +85,25 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
             import java.lang.Boolean;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -282,7 +294,8 @@ internal class MatcherGenerationProcessorIT {
                         }
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -302,7 +315,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             public final class SomeConfiguration{
@@ -322,11 +335,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -372,7 +398,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -392,7 +419,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             public final class SomeConfiguration{
@@ -413,11 +440,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -468,7 +508,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -489,7 +530,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.NotExistingType")
             @FunctionalInterface
@@ -518,7 +559,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             @FunctionalInterface
@@ -539,11 +580,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -589,7 +643,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -609,7 +664,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             import javax.annotation.processing.Generated;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
@@ -633,11 +688,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -683,7 +751,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -704,7 +773,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoInterface")
             public final class SomeConfiguration{
@@ -738,11 +807,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -848,7 +930,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -868,7 +951,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomeClass")
             public final class SomeConfiguration{
@@ -890,11 +973,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -983,7 +1079,8 @@ internal class MatcherGenerationProcessorIT {
                         return new SomeNonStaticInnerClassMatcher();
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1003,7 +1100,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomePojo")
             public final class SomeConfiguration{
@@ -1024,11 +1121,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SomePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1102,7 +1212,8 @@ internal class MatcherGenerationProcessorIT {
                         return new InnerInterfaceMatcher();
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1122,7 +1233,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojoEnum")
             public final class SomeConfiguration{
@@ -1145,12 +1256,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1226,7 +1349,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoEnumMatcher isSimplePojoEnum() {
                     return new SimplePojoEnumMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1246,7 +1370,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojo")
             public final class SomeConfiguration{
@@ -1282,13 +1406,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
             import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1364,7 +1499,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1385,7 +1521,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SimplePojo")
             public final class SomeConfiguration{
@@ -1420,11 +1556,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.OutputClass", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1470,7 +1619,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1499,7 +1649,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("org.mockito.ArgumentMatchers")
             public final class SomeConfiguration{
@@ -1511,11 +1661,24 @@ internal class MatcherGenerationProcessorIT {
             "org.mockito.ArgumentMatchersMatcher", """
             package org.mockito;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1561,7 +1724,8 @@ internal class MatcherGenerationProcessorIT {
                 public static ArgumentMatchersMatcher isArgumentMatchers() {
                     return new ArgumentMatchersMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1581,7 +1745,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck")
             public final class SomeConfiguration{
@@ -1609,11 +1773,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojo11Matcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1659,17 +1836,31 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojo1Matcher isSimplePojo1() {
                     return new SimplePojo1Matcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         @Language("JAVA") val expectedOutput2 = JavaFileObjects.forSourceString(
             "sample.other.pck.SimplePojo22Matcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1715,7 +1906,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojo2Matcher isSimplePojo2() {
                     return new SimplePojo2Matcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -1735,7 +1927,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"not.existing.pck"})
             public final class SomeConfiguration{
@@ -1771,7 +1963,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -1791,11 +1983,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -1841,7 +2046,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -1860,7 +2066,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -1886,11 +2092,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2024,7 +2243,8 @@ internal class MatcherGenerationProcessorIT {
                         }
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -2043,7 +2263,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo.InnerType.InnerInnerType"})
             public final class SomeConfiguration{
@@ -2066,10 +2286,26 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             
             @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
@@ -2156,7 +2392,8 @@ internal class MatcherGenerationProcessorIT {
                         }
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -2175,7 +2412,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2197,11 +2434,24 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2237,7 +2487,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -2256,7 +2507,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2284,16 +2535,27 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
             import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
             import java.util.List;
             import java.util.Map;
             import java.util.function.Consumer;
             import java.util.function.Function;
             import java.util.function.Supplier;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2369,7 +2631,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -2388,7 +2651,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration({"some.other.pck.SimplePojo"})
             public final class SomeConfiguration{
@@ -2431,7 +2694,7 @@ internal class MatcherGenerationProcessorIT {
             "sample.other.pck.SimplePojoMatcher", """
             package some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
             import java.lang.Boolean;
             import java.lang.Byte;
             import java.lang.Character;
@@ -2440,10 +2703,22 @@ internal class MatcherGenerationProcessorIT {
             import java.lang.Float;
             import java.lang.Integer;
             import java.lang.Long;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.Short;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2609,7 +2884,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
         // Execution
         Truth.assert_()
@@ -2628,7 +2904,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
             
             @MatcherConfiguration("some.other.pck.SomeGeneratedType")
             public final class SomeConfiguration{
@@ -2672,9 +2948,9 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
             package some.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration.GenerationConfiguration;
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration;
+            import io.github.marmer.annotationprocessing.MatcherConfiguration.GenerationConfiguration.PackageConfiguration;
             
             @MatcherConfiguration(value = {"some.other.pck.SomePojo"}, generation = @GenerationConfiguration(packageConfig= @PackageConfiguration("my.base.pck.")))
             public final class SomeConfiguration{
@@ -2695,10 +2971,26 @@ internal class MatcherGenerationProcessorIT {
             "my.base.pck.sample.other.pck.SomePojoMatcher", """
             package my.base.pck.some.other.pck;
             
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
             import some.other.pck.SomePojo;
             
@@ -2757,7 +3049,8 @@ internal class MatcherGenerationProcessorIT {
                         return new InnerInterfaceMatcher();
                     }
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution
@@ -2779,7 +3072,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
                 package some.pck;
 
-                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+                import io.github.marmer.annotationprocessing.MatcherConfiguration;
 
                 @MatcherConfiguration("some.other.pck.SomeRecord")
                 public final class SomeConfiguration{
@@ -2798,12 +3091,24 @@ internal class MatcherGenerationProcessorIT {
             "some.other.pck.SomeRecordMatcher", """
             package some.other.pck;
 
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2864,7 +3169,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SomeRecordMatcher isSomeRecord() {
                     return new SomeRecordMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution + Assertion
@@ -2886,7 +3192,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
                 package some.pck;
 
-                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+                import io.github.marmer.annotationprocessing.MatcherConfiguration;
 
                 @MatcherConfiguration("some.other.pck.SomeRecord")
                 public final class SomeConfiguration{
@@ -2905,13 +3211,25 @@ internal class MatcherGenerationProcessorIT {
             "some.other.pck.SomeRecordMatcher", """
             package some.other.pck;
 
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
             import java.lang.Integer;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -2987,7 +3305,8 @@ internal class MatcherGenerationProcessorIT {
                 public static SomeRecordMatcher isSomeRecord() {
                     return new SomeRecordMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution + Assertion
@@ -3009,7 +3328,7 @@ internal class MatcherGenerationProcessorIT {
             "some.pck.SomeConfiguration", """
                 package some.pck;
 
-                import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+                import io.github.marmer.annotationprocessing.MatcherConfiguration;
 
                 @MatcherConfiguration("some.other.pck.PersonRecord")
                 public final class SomeConfiguration{
@@ -3028,12 +3347,24 @@ internal class MatcherGenerationProcessorIT {
             "some.other.pck.PersonRecordMatcher", """
             package some.other.pck;
 
-            import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+            import java.lang.AssertionError;
+            import java.lang.Character;
             import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
             import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
             import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
             import javax.annotation.processing.Generated;
             import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
             import org.hamcrest.Matcher;
             import org.hamcrest.Matchers;
             import org.hamcrest.TypeSafeMatcher;
@@ -3109,7 +3440,8 @@ internal class MatcherGenerationProcessorIT {
                 public static PersonRecordMatcher isPersonRecord() {
                     return new PersonRecordMatcher();
                 }
-            }""".trimIndent()
+            $embeddedBeanPropertyMatcher
+}""".trimIndent()
         )
 
         // Execution + Assertion
@@ -3122,3 +3454,103 @@ internal class MatcherGenerationProcessorIT {
             .generatesSources(expectedOutput)
     }
 }
+
+private val embeddedBeanPropertyMatcher = """
+  private static class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
+    private final Map<String, List<Matcher<?>>> hasPropertyMatcher = new LinkedHashMap<>();
+
+    private final Matcher<?> instanceOfMatcher;
+
+    private final Class<? super T> expectedClass;
+
+    public BeanPropertyMatcher(final Class<? super T> expectedClass) {
+      this.expectedClass = expectedClass;
+      instanceOfMatcher = Matchers.instanceOf(expectedClass);
+    }
+
+    @Override
+    public void describeTo(final Description description) {
+      getFullInnerMatcher().describeTo(description);
+    }
+
+    @Override
+    protected boolean matchesSafely(final T item) {
+      return getFullInnerMatcher().matches(item);
+    }
+
+    private Matcher<?> getFullInnerMatcher() {
+      final List<Matcher<?>> fullMatcher = new ArrayList<>();
+      fullMatcher.add(instanceOfMatcher);
+      fullMatcher.addAll(hasPropertyMatcherToList());
+      return Matchers.allOf(fullMatcher.toArray(new Matcher[0]));
+    }
+
+    public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
+      addToHasPropertyMatcher(propertyName, buildPropertyMatcher(propertyName, matcher));
+      return this;
+    }
+
+    public BeanPropertyMatcher<T> with(final String propertyName) {
+      addToHasPropertyMatcher(propertyName, Matchers.hasProperty(propertyName));
+      return this;
+    }
+
+    public void reset(final String propertyName) {
+      hasPropertyMatcher.remove(propertyName);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Matcher<?> buildPropertyMatcher(final String propertyName,
+        final Matcher<?> valueMatcher) {
+      final String capitalized = Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+      final boolean hasGetter = hasAccessibleMethod("get" + capitalized) || hasAccessibleMethod("is" + capitalized);
+      if (!hasGetter && hasAccessibleMethod(propertyName)) {
+        return new FeatureMatcher<T, Object>((Matcher<? super Object>) valueMatcher, propertyName, propertyName) {
+            @Override
+            protected Object featureValueOf(final T actual) {
+                try {
+                    return actual.getClass().getMethod(propertyName).invoke(actual);
+                } catch (final ReflectiveOperationException e) {
+                    throw new AssertionError("Could not read component '" + propertyName + "'", e);
+                }
+            }
+        };
+      }
+      return Matchers.hasProperty(propertyName, valueMatcher);
+    }
+
+    private boolean hasAccessibleMethod(final String methodName) {
+      try {
+        return expectedClass.getMethod(methodName).getParameterCount() == 0;
+      } catch (final NoSuchMethodException e) {
+        return false;
+      }
+    }
+
+    @Override
+    protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
+      boolean mismatchDescriptionAlreadyAdded = false;
+      if (!instanceOfMatcher.matches(item)) {
+        mismatchDescription.appendText("Is an instance of " + item.getClass());
+        mismatchDescriptionAlreadyAdded = true;
+      }
+      for (final Matcher<?> matcher : hasPropertyMatcherToList()) {
+        if (!matcher.matches(item)) {
+          if (mismatchDescriptionAlreadyAdded) {
+            mismatchDescription.appendText(" and ");
+          }
+          matcher.describeMismatch(item, mismatchDescription);
+          mismatchDescriptionAlreadyAdded = true;
+        }
+      }
+    }
+
+    private List<Matcher<?>> hasPropertyMatcherToList() {
+      return hasPropertyMatcher.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    private void addToHasPropertyMatcher(final String propertyName, final Matcher<?> matcher) {
+      hasPropertyMatcher.computeIfAbsent(propertyName, key -> new ArrayList<>()).add(matcher);
+    }
+  }
+"""

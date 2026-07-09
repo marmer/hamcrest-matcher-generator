@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
-            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+            <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
             <version>6.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
@@ -122,6 +122,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- Matcher generation already happened via KAPT; keep javac from
+                         re-running the processor discovered on the test classpath -->
+                    <proc>none</proc>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

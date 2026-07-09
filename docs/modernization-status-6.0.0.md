@@ -12,7 +12,7 @@ um bei "continue" / "führe fort" an der richtigen Stelle weiterzumachen.
 |-------|--------------|--------|
 | 1 | Build- & Release-Infrastruktur | ✅ abgeschlossen |
 | 2 | Dependency-Modernisierung | ✅ abgeschlossen |
-| 3 | Artefakt-Restrukturierung | ⬜ offen |
+| 3 | Artefakt-Restrukturierung | ✅ abgeschlossen |
 | 4 | Mismatch-Messages (Property-Diff) | ⬜ offen |
 | 5 | Features (Referenzobjekt, Exclude, Strict) | ⬜ offen |
 | 6 | Release 6.0.0 | ⬜ offen |
@@ -72,11 +72,14 @@ Anmerkungen:
 
 ## Phase 3 — Artefakt-Restrukturierung
 
-- [ ] `@MatcherConfiguration` in den Annotation-Processor umziehen
-- [ ] Generierte Matcher self-contained machen (BeanPropertyMatcher als nested static class emittieren)
-- [ ] `hamcrest-matcher-generator-dependencies`-Modul entfernen
-- [ ] End-to-End-Module anpassen
-- [ ] README-Setup-Anleitung anpassen
+- [x] `@MatcherConfiguration` in den Annotation-Processor umgezogen — **neues Package:** `io.github.marmer.annotationprocessing.MatcherConfiguration` (vorher `io.github.marmer.testutils.generators.beanmatcher.dependencies`)
+- [x] Generierte Matcher self-contained: neue `BeanPropertyMatcherTypeFactory.kt` emittiert die Runtime-Logik als `private static class BeanPropertyMatcher<T>` in jede generierte Top-Level-Matcher-Klasse; Referenz unqualifiziert (`ClassName.get("", …)`), kein Import mehr nötig
+- [x] `hamcrest-matcher-generator-dependencies`-Modul entfernt (Verzeichnis, Root-Module-Liste, alle Dependency-Referenzen, CI-Sonar-Projektliste)
+- [x] End-to-End-Module angepasst: Kotlin-Module haben AP jetzt als test-Dependency (für die Annotation) und `<proc>none</proc>` für javac (sonst FilerException, weil javac den via Service-Discovery gefundenen Processor nach KAPT nochmal ausführt)
+- [x] IT-Erwartungen (24 Blöcke in `MatcherGenerationProcessorWorkerIT.kt`) per Skript umgebaut: Import-Sets vereinigt/sortiert, Kotlin-Konstante `embeddedBeanPropertyMatcher` wird vor der schließenden Klammer jedes erwarteten Outputs interpoliert → Phase 4/5 müssen nur die Konstante + Factory ändern
+- [x] README: Single-Dependency-Setup, neues Annotation-Package, build-helper statt antrun-Hack, JDK-17-/Hamcrest-3.0-Anforderungen, 6.0.0-Changelog mit Migrationsguide
+
+Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdeckung liegt jetzt bei den E2E-Tests + compile-testing-ITs. Phase 4 ergänzt gezielte Tests fürs Mismatch-Format.
 
 ## Phase 4 — Mismatch-Messages
 
@@ -100,5 +103,6 @@ Anmerkungen:
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-09** — Phase 3 abgeschlossen: Single-Artifact-Struktur (`dependencies`-Modul entfernt), `@MatcherConfiguration` in `io.github.marmer.annotationprocessing`, generierte Matcher self-contained (nested `BeanPropertyMatcher`), README + Migrationsguide aktualisiert. Voller Build grün.
 - **2026-07-09** — Phase 2 abgeschlossen: alle Dependencies modernisiert (Hamcrest 3.0, Mockito 5.23, Palantir JavaPoet 0.17, JUnit 5.14.4, …), Ungenutztes entfernt. Build nach jedem Teilschritt grün. Draft-PR #50 erstellt.
 - **2026-07-09** — Phase 1 abgeschlossen: JCenter raus, Central-Portal-Publishing, alle Maven-Plugins + Wrapper aktuell, Java-17-Baseline, Records-Modul im Default-Set, Version 6.0.0-SNAPSHOT, CI-Matrix 17/21/25, KAPT-antrun-Hack durch build-helper ersetzt. Voller Build grün.

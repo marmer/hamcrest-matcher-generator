@@ -3,8 +3,6 @@ package io.github.marmer.annotationprocessing
 import com.palantir.javapoet.*
 import com.palantir.javapoet.MethodSpec.methodBuilder
 import com.palantir.javapoet.TypeName.*
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
@@ -31,6 +29,7 @@ class MatcherGenerator(
     fun generate() = JavaFile.builder(
         getBasePackage(),
         getPreparedTypeSpecBuilder()
+            .addType(BeanPropertyMatcherTypeFactory.create())
             .build()
     ).build()
         .writeTo(processingEnv.filer)
@@ -267,7 +266,7 @@ class MatcherGenerator(
     )
 
     private fun getBuilderFieldType() = ParameterizedTypeName.get(
-        ClassName.get(BeanPropertyMatcher::class.java),
+        BeanPropertyMatcherTypeFactory.unqualifiedClassName,
         baseType.typeNameWithWildCards
     )
 

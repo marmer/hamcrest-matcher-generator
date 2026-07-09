@@ -10,7 +10,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
-@SupportedAnnotationTypes("io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration")
+@SupportedAnnotationTypes("io.github.marmer.annotationprocessing.MatcherConfiguration")
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private final Supplier<LocalDateTime> timeProvider;

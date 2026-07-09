@@ -34,7 +34,6 @@
     </licenses>
 
     <modules>
-        <module>hamcrest-matcher-generator-dependencies</module>
         <module>hamcrest-matcher-generator-annotationprocessor</module>
     </modules>
 
