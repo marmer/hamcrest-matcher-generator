@@ -38,7 +38,6 @@ jobs:
       - name: Prepare source directories for sonar
         run: |
           mkdir -p hamcrest-matcher-generator-annotationprocessor/src/{main,test}/{java,kotlin}
-          mkdir -p hamcrest-matcher-generator-dependencies/src/{main,test}/{java,kotlin}
         if: success()
 
       - name: Build
@@ -53,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator-annotationprocessor,hamcrest-matcher-generator-dependencies"
+        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator-annotationprocessor"
         if: success()
 
   verify-matrix:
@@ -61,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [11, 17, 25]
+        java-version: [17, 21, 25]
     steps:
       - uses: actions/checkout@v4
 

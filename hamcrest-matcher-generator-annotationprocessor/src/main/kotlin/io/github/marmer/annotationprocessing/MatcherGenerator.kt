@@ -1,10 +1,8 @@
 package io.github.marmer.annotationprocessing
 
-import com.squareup.javapoet.*
-import com.squareup.javapoet.MethodSpec.methodBuilder
-import com.squareup.javapoet.TypeName.*
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
+import com.palantir.javapoet.*
+import com.palantir.javapoet.MethodSpec.methodBuilder
+import com.palantir.javapoet.TypeName.*
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
@@ -31,6 +29,7 @@ class MatcherGenerator(
     fun generate() = JavaFile.builder(
         getBasePackage(),
         getPreparedTypeSpecBuilder()
+            .addType(BeanPropertyMatcherTypeFactory.create())
             .build()
     ).build()
         .writeTo(processingEnv.filer)
@@ -57,6 +56,9 @@ class MatcherGenerator(
             .addMethods(getPropertyEqualsMatcherMethods())
             .addMethods(getMatcherMethods())
             .addMethod(getApiInitializer())
+            .addMethod(getWithAllPropertiesOf())
+            .addMethod(getStrictModeConfigurator())
+            .addMethod(getReferenceApiInitializer())
             .addTypes(getInnerMatchers())
             .addOriginatingElement(baseType)
 
@@ -129,7 +131,7 @@ class MatcherGenerator(
         ParameterizedTypeName.get(
             ClassName.get(Matcher::class.java),
             if (isConflictingProperty(name))
-                WildcardTypeName.subtypeOf(OBJECT)
+                WildcardTypeName.subtypeOf(Object::class.java)
             else WildcardTypeName.supertypeOf(
                 type.typeVarsToWildcards(true)
             )
@@ -194,6 +196,45 @@ class MatcherGenerator(
         methodBuilder("is${baseType.simpleName}")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addStatement("return new \$T()", getGeneratedTypeName())
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private val referencePropertyNames: List<String>
+        get() = baseType.properties
+            .distinctBy { it.name }
+            .map { it.name }
+            .filter { it != "class" }
+
+    private fun getWithAllPropertiesOf() =
+        methodBuilder("withAllPropertiesOf")
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(baseType.typeNameWithWildCards, "other", Modifier.FINAL)
+            .addStatement(
+                "\$L.withAllEqualTo(other\$L)",
+                builderFieldName,
+                referencePropertyNames.joinToString("") { ", \"$it\"" }
+            )
+            .addStatement(RETURN_THIS)
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getStrictModeConfigurator() =
+        methodBuilder("strict")
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement(
+                "\$L.strict(\$L)",
+                builderFieldName,
+                referencePropertyNames.joinToString(", ") { "\"$it\"" }
+            )
+            .addStatement(RETURN_THIS)
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getReferenceApiInitializer() =
+        methodBuilder("is${baseType.simpleName}EqualTo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addParameter(baseType.typeNameWithWildCards, "other", Modifier.FINAL)
+            .addStatement("return new \$T().withAllPropertiesOf(other)", getGeneratedTypeName())
             .returns(getGeneratedTypeName())
             .build()
 
@@ -267,7 +308,7 @@ class MatcherGenerator(
     )
 
     private fun getBuilderFieldType() = ParameterizedTypeName.get(
-        ClassName.get(BeanPropertyMatcher::class.java),
+        BeanPropertyMatcherTypeFactory.unqualifiedClassName,
         baseType.typeNameWithWildCards
     )
 

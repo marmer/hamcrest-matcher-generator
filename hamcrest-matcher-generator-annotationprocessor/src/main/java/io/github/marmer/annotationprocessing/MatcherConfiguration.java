@@ -1,4 +1,4 @@
-package io.github.marmer.testutils.generators.beanmatcher.dependencies;
+package io.github.marmer.annotationprocessing;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,6 +15,14 @@ public @interface MatcherConfiguration {
      * @return Package names and full qualified class names
      */
     String[] value();
+
+    /**
+     * Package names and/or full qualified class names to exclude from the scan configured by {@link #value()}.
+     * Package entries exclude the package itself including all of its subpackages.
+     *
+     * @return Package names and full qualified class names to exclude
+     */
+    String[] exclude() default {};
 
     /**
      * Configuration of how to generate something.
