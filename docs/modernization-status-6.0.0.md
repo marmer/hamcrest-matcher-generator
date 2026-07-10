@@ -105,19 +105,21 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 ## Phase 6 — Release 6.0.0
 
 - [x] Migrationsguide finalisiert (README-Changelog „6.0.0")
-- [x] Release-Pipeline vorbereitet: `.github/workflows/release.yml` (workflow_dispatch) deployt via `-P release -s server-settings.xml` mit `gpg.signer=bc` (kein gpg-Binary nötig; Key aus `MAVEN_GPG_KEY`-Env)
+- [x] Release-Pipeline: `.github/workflows/release.yml` deployt via `-P release -s server-settings.xml` mit `gpg.signer=bc` (kein gpg-Binary nötig; Key aus `MAVEN_GPG_KEY`-Env)
+- [x] **Automatischer Release bei Merge auf `master`**: Der Workflow triggert auf jeden Push auf `master` (plus manuelles `workflow_dispatch` als Fallback). Ein Check-Job überspringt den Release, wenn die pom-Version a) ein `-SNAPSHOT` ist, b) bereits ein gleichnamiger Git-Tag existiert (bestehende Konvention: Tag = Versionsnummer) oder c) die Version schon auf Maven Central liegt. Nach erfolgreichem Deploy wird der Release-Tag automatisch gesetzt und gepusht.
 - [ ] ⚠️ **Manuelle Schritte (nur Maintainer, blockiert auf Secrets):**
   1. Central-Portal-Namespace `io.github.marmer.testutils` verifizieren und User-Token erzeugen (https://central.sonatype.com)
   2. Repo-Secrets anlegen: `CENTRAL_TOKEN_USERNAME`, `CENTRAL_TOKEN_PASSWORD`, `MAVEN_GPG_KEY` (ASCII-armored Private Key), `MAVEN_GPG_PASSPHRASE`
-  3. PR #50 mergen
+  3. PR #50 mergen (nach `development`)
   4. Version setzen: `./mvnw versions:set -DnewVersion=6.0.0 -DgenerateBackupPoms=false`, committen
-  5. Release-Workflow (Actions → Release) auf diesem Stand auslösen
-  6. Tag `6.0.0` setzen, danach Version auf nächsten `-SNAPSHOT` bumpen
+  5. `development` auf `master` mergen → Release + Tag laufen automatisch
+  6. Danach `development` auf nächsten `-SNAPSHOT` bumpen
 - [ ] Danach separat: 6.1.0 Kotlin-DSL (eigene Design-Runde, laut Plan bewusst nicht in 6.0.0)
 
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-10** — Release-Automatisierung: `release.yml` triggert jetzt automatisch bei Push/Merge auf `master`; Check-Job überspringt bereits releaste Versionen (Git-Tag oder Maven Central) und Snapshots; erfolgreicher Deploy taggt automatisch. CI auf PR #50 komplett grün (inkl. Sonar-Quality-Gate nach JaCoCo-Fix).
 - **2026-07-09** — Phase 6 soweit wie autonom möglich abgeschlossen: Release-Workflow (`release.yml`, workflow_dispatch, Central Portal + BC-Signer) angelegt, Migrationsguide finalisiert, manuelle Restschritte dokumentiert. Obsoletes `useAgent` aus gpg-Konfiguration entfernt.
 - **2026-07-09** — Phase 5 abgeschlossen: Referenzobjekt-Matcher, Exclude-Konfiguration, Strict Mode inkl. IT-/E2E-Tests und README-Doku. CI-Fixes: CodeQL auf JDK 21, JaCoCo-Coverage für Failsafe-ITs repariert (Sonar-Quality-Gate-Ursache).
 - **2026-07-09** — Phase 4 abgeschlossen: Multi-line Property-Diff im Mismatch (nur fehlschlagende Properties, `foo: expected "bar" but was "baz"`), E2E-Formattests, README-Changelog. Voller Build grün.

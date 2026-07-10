@@ -1,26 +1,89 @@
 name: Release
 
-# Publishes the checked-out revision to Maven Central via the Sonatype Central Portal.
+# Publishes to Maven Central via the Sonatype Central Portal.
+#
+# Runs automatically on every push (merge) to master and releases the version
+# found in the pom.xml — unless that version was already released at some
+# point (existing git tag or already present on Maven Central) or is a
+# -SNAPSHOT version. Can also be triggered manually via workflow_dispatch.
+#
+# After a successful deploy, the released version is tagged (tag name = version,
+# matching the existing tag convention, e.g. "6.0.0").
 #
 # Required repository secrets:
 #   CENTRAL_TOKEN_USERNAME / CENTRAL_TOKEN_PASSWORD - Central Portal publishing token
 #     (https://central.sonatype.com -> Account -> Generate User Token)
 #   MAVEN_GPG_KEY        - ASCII-armored private signing key
 #   MAVEN_GPG_PASSPHRASE - its passphrase
-#
-# Release procedure:
-#   1. Set the release version (remove -SNAPSHOT) and commit, e.g.
-#        ./mvnw versions:set -DnewVersion=6.0.0 -DgenerateBackupPoms=false
-#   2. Run this workflow for that revision (workflow_dispatch).
-#   3. Tag the release and bump to the next -SNAPSHOT version.
 
 on:
+  push:
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
+  check:
+    name: Check whether this version needs a release
+    runs-on: ubuntu-latest
+    outputs:
+      release-needed: ${{ steps.decide.outputs.release-needed }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so all existing release tags are visible
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Determine project version
+        id: version
+        run: |
+          VERSION=$(./mvnw -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Project version: $VERSION"
+
+      - name: Decide whether to release
+        id: decide
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if [[ "$VERSION" == *-SNAPSHOT ]]; then
+            echo "Version $VERSION is a snapshot - skipping release."
+            echo "release-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$(git tag -l "$VERSION")" ]; then
+            echo "Tag $VERSION already exists - version was already released. Skipping."
+            echo "release-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://repo1.maven.org/maven2/io/github/marmer/testutils/hamcrest-matcher-generator-annotationprocessor/$VERSION/hamcrest-matcher-generator-annotationprocessor-$VERSION.pom")
+          if [ "$STATUS" = "200" ]; then
+            echo "Version $VERSION is already on Maven Central - skipping release."
+            echo "release-needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Version $VERSION has not been released yet - releasing."
+          echo "release-needed=true" >> "$GITHUB_OUTPUT"
+
   release:
     name: Deploy to Maven Central
+    needs: check
+    if: needs.check.outputs.release-needed == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to push the release tag
     steps:
       - uses: actions/checkout@v4
 
@@ -47,3 +110,11 @@ jobs:
           MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         run: ./mvnw -B clean deploy -P release -s server-settings.xml -Dgpg.signer=bc
+
+      - name: Tag release
+        run: |
+          VERSION="${{ needs.check.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
