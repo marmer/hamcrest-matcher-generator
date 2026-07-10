@@ -49,11 +49,26 @@ class MatcherGenerationProcessorWorker(
     }
 
     private fun Element.getAllTypeElementsFor(): List<TypeElement> {
-        return getMatcherConfiguration()
+        val configuration = getMatcherConfiguration()
+        return configuration
             .value
             .distinct()
             .flatMap { getAllTypeElementsFor(it, this) }
             .distinct()
+            .filterNot { it.isExcludedBy(configuration.exclude) }
+    }
+
+    private fun TypeElement.isExcludedBy(excludes: Array<String>): Boolean {
+        val packageName = processingEnv.elementUtils.getPackageOf(this).qualifiedName.toString()
+        val excluded = excludes.any { exclude ->
+            qualifiedName.toString() == exclude ||
+                    packageName == exclude ||
+                    packageName.startsWith(exclude + ".")
+        }
+        if (excluded) {
+            processingEnv.logNote("Matcher generation skipped for excluded type: " + qualifiedName)
+        }
+        return excluded
     }
 
     private fun Element.getMatcherConfiguration() = getAnnotation(MatcherConfiguration::class.java)

@@ -14,7 +14,7 @@ um bei "continue" / "führe fort" an der richtigen Stelle weiterzumachen.
 | 2 | Dependency-Modernisierung | ✅ abgeschlossen |
 | 3 | Artefakt-Restrukturierung | ✅ abgeschlossen |
 | 4 | Mismatch-Messages (Property-Diff) | ✅ abgeschlossen |
-| 5 | Features (Referenzobjekt, Exclude, Strict) | ⬜ offen |
+| 5 | Features (Referenzobjekt, Exclude, Strict) | ✅ abgeschlossen |
 | 6 | Release 6.0.0 | ⬜ offen |
 
 Legende: ⬜ offen · 🔄 in Arbeit · ✅ abgeschlossen · ⚠️ blockiert/Anmerkung
@@ -90,10 +90,17 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 
 ## Phase 5 — Features
 
-- [ ] Referenzobjekt-Matcher (`isSomePojoEqualTo(expected)` / `withAllPropertiesOf`)
-- [ ] Exclude-Konfiguration (`@MatcherConfiguration(exclude = …)`)
-- [ ] Strict Mode (`.strict()`)
-- [ ] Jeweils compile-testing-ITs + End-to-End-Abdeckung + README-Doku
+- [x] Referenzobjekt-Matcher: generierte Matcher haben `withAllPropertiesOf(other)` + statisches `is<Typ>EqualTo(other)`; Runtime-Seite `withAllEqualTo(other, props…)` liest Properties reflektiv (get/is/Record-Accessor) und setzt equalTo-Expectations. `class`-Property ist bewusst ausgenommen (instanceOf-Check deckt Typ ab; dokumentiert).
+- [x] Exclude-Konfiguration: `@MatcherConfiguration(exclude = …)`-Attribut; Worker filtert Typen nach FQN-Gleichheit, Package-Gleichheit oder Subpackage-Präfix und loggt Note „Matcher generation skipped for excluded type: …".
+- [x] Strict Mode: `strict()` am generierten Matcher übergibt die Property-Liste an die Runtime (`strict(props…)`); `matchesSafely` verlangt zusätzlich Expectations für alle Properties; Mismatch listet `foo: unchecked property (strict mode)` zeilenweise. `class` ausgenommen.
+- [x] compile-testing-ITs: bestehende 26 Erwartungen per Skript um die 3 neuen Methoden je Matcher-Klasse (33 Klassen) erweitert; neuer IT „Matcher generation should skip excluded types and packages" (27 Tests grün).
+- [x] E2E: `NewFeaturesTest` (plain-java-minimal) mit 6 Tests: Referenz-Matcher (match/diff/override), Strict (pass/fail+Meldung), Exclude (Matcher-Klasse existiert nicht).
+- [x] README: Abschnitte für alle drei Features + Changelog-Einträge.
+
+### CI-Fixes (aus PR-Checks, nebenbei)
+
+- CodeQL-Workflow: JDK 11 → 21 (Autobuild scheiterte an der Java-17-Baseline).
+- Sonar „0% Coverage on New Code": Failsafe-`argLine` im AP-POM überschrieb die JaCoCo-Agent-argLine → ITs liefen ohne Coverage. Fix: `@{argLine}`-Präfix (late binding) + leere Default-Property `argLine` im Root-POM.
 
 ## Phase 6 — Release 6.0.0
 
@@ -104,6 +111,7 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-09** — Phase 5 abgeschlossen: Referenzobjekt-Matcher, Exclude-Konfiguration, Strict Mode inkl. IT-/E2E-Tests und README-Doku. CI-Fixes: CodeQL auf JDK 21, JaCoCo-Coverage für Failsafe-ITs repariert (Sonar-Quality-Gate-Ursache).
 - **2026-07-09** — Phase 4 abgeschlossen: Multi-line Property-Diff im Mismatch (nur fehlschlagende Properties, `foo: expected "bar" but was "baz"`), E2E-Formattests, README-Changelog. Voller Build grün.
 - **2026-07-09** — Phase 3 abgeschlossen: Single-Artifact-Struktur (`dependencies`-Modul entfernt), `@MatcherConfiguration` in `io.github.marmer.annotationprocessing`, generierte Matcher self-contained (nested `BeanPropertyMatcher`), README + Migrationsguide aktualisiert. Voller Build grün.
 - **2026-07-09** — Phase 2 abgeschlossen: alle Dependencies modernisiert (Hamcrest 3.0, Mockito 5.23, Palantir JavaPoet 0.17, JUnit 5.14.4, …), Ungenutztes entfernt. Build nach jedem Teilschritt grün. Draft-PR #50 erstellt.

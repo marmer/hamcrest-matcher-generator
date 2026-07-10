@@ -194,6 +194,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringProperty", "somePrimitiveBooleanProperty", "someNonePrimitiveBooleanProperty");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("someStringProperty", "somePrimitiveBooleanProperty", "someNonePrimitiveBooleanProperty");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {
@@ -251,6 +265,20 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerStaticPojoMatcher isInnerStaticPojo() {
                         return new InnerStaticPojoMatcher();
                     }
+
+public InnerStaticPojoMatcher withAllPropertiesOf(final SimplePojo.InnerStaticPojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "innerStaticPojoProperty");
+    return this;
+}
+
+public InnerStaticPojoMatcher strict() {
+    beanPropertyMatcher.strict("innerStaticPojoProperty");
+    return this;
+}
+
+public static InnerStaticPojoMatcher isInnerStaticPojoEqualTo(final SimplePojo.InnerStaticPojo other) {
+    return new InnerStaticPojoMatcher().withAllPropertiesOf(other);
+}
                     @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {
                         private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
@@ -292,6 +320,20 @@ internal class MatcherGenerationProcessorIT {
                         public static InnerInnerStaticPojoMatcher isInnerInnerStaticPojo() {
                             return new InnerInnerStaticPojoMatcher();
                         }
+
+public InnerInnerStaticPojoMatcher withAllPropertiesOf(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerInnerStaticPojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerInnerStaticPojoMatcher isInnerInnerStaticPojoEqualTo(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo other) {
+    return new InnerInnerStaticPojoMatcher().withAllPropertiesOf(other);
+}
                     }
                 }
             $embeddedBeanPropertyMatcher
@@ -398,6 +440,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
+
+public SimplePojoInterfaceMatcher withAllPropertiesOf(final SimplePojoInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringProperty");
+    return this;
+}
+
+public SimplePojoInterfaceMatcher strict() {
+    beanPropertyMatcher.strict("someStringProperty");
+    return this;
+}
+
+public static SimplePojoInterfaceMatcher isSimplePojoInterfaceEqualTo(final SimplePojoInterface other) {
+    return new SimplePojoInterfaceMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -508,6 +564,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
+
+public SimplePojoInterfaceMatcher withAllPropertiesOf(final SimplePojoInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other, "conflictProperty");
+    return this;
+}
+
+public SimplePojoInterfaceMatcher strict() {
+    beanPropertyMatcher.strict("conflictProperty");
+    return this;
+}
+
+public static SimplePojoInterfaceMatcher isSimplePojoInterfaceEqualTo(final SimplePojoInterface other) {
+    return new SimplePojoInterfaceMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -643,6 +713,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
+
+public SimplePojoInterfaceMatcher withAllPropertiesOf(final SimplePojoInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringProperty");
+    return this;
+}
+
+public SimplePojoInterfaceMatcher strict() {
+    beanPropertyMatcher.strict("someStringProperty");
+    return this;
+}
+
+public static SimplePojoInterfaceMatcher isSimplePojoInterfaceEqualTo(final SimplePojoInterface other) {
+    return new SimplePojoInterfaceMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -751,6 +835,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
+
+public SimplePojoInterfaceMatcher withAllPropertiesOf(final SimplePojoInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringProperty");
+    return this;
+}
+
+public SimplePojoInterfaceMatcher strict() {
+    beanPropertyMatcher.strict("someStringProperty");
+    return this;
+}
+
+public static SimplePojoInterfaceMatcher isSimplePojoInterfaceEqualTo(final SimplePojoInterface other) {
+    return new SimplePojoInterfaceMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -930,6 +1028,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
                     return new SimplePojoInterfaceMatcher();
                 }
+
+public SimplePojoInterfaceMatcher withAllPropertiesOf(final SimplePojoInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringArray", "someMultidimensionalStringArray", "someInnerTypeArray", "somePrimitiveArray", "someMultidimensionalPrimitiveArray");
+    return this;
+}
+
+public SimplePojoInterfaceMatcher strict() {
+    beanPropertyMatcher.strict("someStringArray", "someMultidimensionalStringArray", "someInnerTypeArray", "somePrimitiveArray", "someMultidimensionalPrimitiveArray");
+    return this;
+}
+
+public static SimplePojoInterfaceMatcher isSimplePojoInterfaceEqualTo(final SimplePojoInterface other) {
+    return new SimplePojoInterfaceMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1036,6 +1148,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SomeClassMatcher isSomeClass() {
                     return new SomeClassMatcher();
                 }
+
+public SomeClassMatcher withAllPropertiesOf(final SomeClass other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SomeClassMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SomeClassMatcher isSomeClassEqualTo(final SomeClass other) {
+    return new SomeClassMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {
@@ -1078,6 +1204,20 @@ internal class MatcherGenerationProcessorIT {
                     public static SomeNonStaticInnerClassMatcher isSomeNonStaticInnerClass() {
                         return new SomeNonStaticInnerClassMatcher();
                     }
+
+public SomeNonStaticInnerClassMatcher withAllPropertiesOf(final SomeClass.SomeNonStaticInnerClass other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SomeNonStaticInnerClassMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SomeNonStaticInnerClassMatcher isSomeNonStaticInnerClassEqualTo(final SomeClass.SomeNonStaticInnerClass other) {
+    return new SomeNonStaticInnerClassMatcher().withAllPropertiesOf(other);
+}
                 }
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
@@ -1184,6 +1324,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SomePojoMatcher isSomePojo() {
                     return new SomePojoMatcher();
                 }
+
+public SomePojoMatcher withAllPropertiesOf(final SomePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SomePojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SomePojoMatcher isSomePojoEqualTo(final SomePojo other) {
+    return new SomePojoMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
@@ -1211,6 +1365,20 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerInterfaceMatcher isInnerInterface() {
                         return new InnerInterfaceMatcher();
                     }
+
+public InnerInterfaceMatcher withAllPropertiesOf(final SomePojo.InnerInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerInterfaceMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerInterfaceMatcher isInnerInterfaceEqualTo(final SomePojo.InnerInterface other) {
+    return new InnerInterfaceMatcher().withAllPropertiesOf(other);
+}
                 }
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
@@ -1349,6 +1517,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoEnumMatcher isSimplePojoEnum() {
                     return new SimplePojoEnumMatcher();
                 }
+
+public SimplePojoEnumMatcher withAllPropertiesOf(final SimplePojoEnum other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someStringProperty", "declaringClass");
+    return this;
+}
+
+public SimplePojoEnumMatcher strict() {
+    beanPropertyMatcher.strict("someStringProperty", "declaringClass");
+    return this;
+}
+
+public static SimplePojoEnumMatcher isSimplePojoEnumEqualTo(final SimplePojoEnum other) {
+    return new SimplePojoEnumMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1499,6 +1681,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "propertyOfBothClasses", "parentPojoProperty");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("propertyOfBothClasses", "parentPojoProperty");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1619,6 +1815,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1724,6 +1934,20 @@ internal class MatcherGenerationProcessorIT {
                 public static ArgumentMatchersMatcher isArgumentMatchers() {
                     return new ArgumentMatchersMatcher();
                 }
+
+public ArgumentMatchersMatcher withAllPropertiesOf(final ArgumentMatchers other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public ArgumentMatchersMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static ArgumentMatchersMatcher isArgumentMatchersEqualTo(final ArgumentMatchers other) {
+    return new ArgumentMatchersMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1836,6 +2060,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojo1Matcher isSimplePojo1() {
                     return new SimplePojo1Matcher();
                 }
+
+public SimplePojo1Matcher withAllPropertiesOf(final SimplePojo1 other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SimplePojo1Matcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SimplePojo1Matcher isSimplePojo1EqualTo(final SimplePojo1 other) {
+    return new SimplePojo1Matcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -1906,6 +2144,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojo2Matcher isSimplePojo2() {
                     return new SimplePojo2Matcher();
                 }
+
+public SimplePojo2Matcher withAllPropertiesOf(final SimplePojo2 other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SimplePojo2Matcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SimplePojo2Matcher isSimplePojo2EqualTo(final SimplePojo2 other) {
+    return new SimplePojo2Matcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -2046,6 +2298,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -2155,6 +2421,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "someProperty");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("someProperty");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
@@ -2183,6 +2463,20 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerTypeMatcher isInnerType() {
                         return new InnerTypeMatcher();
                     }
+
+public InnerTypeMatcher withAllPropertiesOf(final SimplePojo.InnerType other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerTypeMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerTypeMatcher isInnerTypeEqualTo(final SimplePojo.InnerType other) {
+    return new InnerTypeMatcher().withAllPropertiesOf(other);
+}
             
                     @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {
@@ -2241,6 +2535,20 @@ internal class MatcherGenerationProcessorIT {
                         public static InnerEnumMatcher isInnerEnum() {
                             return new InnerEnumMatcher();
                         }
+
+public InnerEnumMatcher withAllPropertiesOf(final SimplePojo.InnerType.InnerEnum other) {
+    beanPropertyMatcher.withAllEqualTo(other, "declaringClass");
+    return this;
+}
+
+public InnerEnumMatcher strict() {
+    beanPropertyMatcher.strict("declaringClass");
+    return this;
+}
+
+public static InnerEnumMatcher isInnerEnumEqualTo(final SimplePojo.InnerType.InnerEnum other) {
+    return new InnerEnumMatcher().withAllPropertiesOf(other);
+}
                     }
                 }
             $embeddedBeanPropertyMatcher
@@ -2334,6 +2642,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
@@ -2362,6 +2684,20 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerTypeMatcher isInnerType() {
                         return new InnerTypeMatcher();
                     }
+
+public InnerTypeMatcher withAllPropertiesOf(final SimplePojo.InnerType other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerTypeMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerTypeMatcher isInnerTypeEqualTo(final SimplePojo.InnerType other) {
+    return new InnerTypeMatcher().withAllPropertiesOf(other);
+}
             
                     @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                     public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {
@@ -2390,6 +2726,20 @@ internal class MatcherGenerationProcessorIT {
                         public static InnerInnerTypeMatcher isInnerInnerType() {
                             return new InnerInnerTypeMatcher();
                         }
+
+public InnerInnerTypeMatcher withAllPropertiesOf(final SimplePojo.InnerType.InnerInnerType other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerInnerTypeMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerInnerTypeMatcher isInnerInnerTypeEqualTo(final SimplePojo.InnerType.InnerInnerType other) {
+    return new InnerInnerTypeMatcher().withAllPropertiesOf(other);
+}
                     }
                 }
             $embeddedBeanPropertyMatcher
@@ -2487,6 +2837,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "property");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("property");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -2631,6 +2995,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo<?, ?> other) {
+    beanPropertyMatcher.withAllEqualTo(other, "property", "nestedGenericProperty", "wildcardProperty");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("property", "nestedGenericProperty", "wildcardProperty");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo<?, ?> other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -2884,6 +3262,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SimplePojoMatcher isSimplePojo() {
                     return new SimplePojoMatcher();
                 }
+
+public SimplePojoMatcher withAllPropertiesOf(final SimplePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other, "intProperty", "shortProperty", "longProperty", "doubleProperty", "floatProperty", "charProperty", "byteProperty", "booleanProperty");
+    return this;
+}
+
+public SimplePojoMatcher strict() {
+    beanPropertyMatcher.strict("intProperty", "shortProperty", "longProperty", "doubleProperty", "floatProperty", "charProperty", "byteProperty", "booleanProperty");
+    return this;
+}
+
+public static SimplePojoMatcher isSimplePojoEqualTo(final SimplePojo other) {
+    return new SimplePojoMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -3021,6 +3413,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SomePojoMatcher isSomePojo() {
                     return new SomePojoMatcher();
                 }
+
+public SomePojoMatcher withAllPropertiesOf(final SomePojo other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public SomePojoMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static SomePojoMatcher isSomePojoEqualTo(final SomePojo other) {
+    return new SomePojoMatcher().withAllPropertiesOf(other);
+}
             
                 @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
                 public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
@@ -3048,6 +3454,20 @@ internal class MatcherGenerationProcessorIT {
                     public static InnerInterfaceMatcher isInnerInterface() {
                         return new InnerInterfaceMatcher();
                     }
+
+public InnerInterfaceMatcher withAllPropertiesOf(final SomePojo.InnerInterface other) {
+    beanPropertyMatcher.withAllEqualTo(other);
+    return this;
+}
+
+public InnerInterfaceMatcher strict() {
+    beanPropertyMatcher.strict();
+    return this;
+}
+
+public static InnerInterfaceMatcher isInnerInterfaceEqualTo(final SomePojo.InnerInterface other) {
+    return new InnerInterfaceMatcher().withAllPropertiesOf(other);
+}
                 }
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
@@ -3169,6 +3589,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SomeRecordMatcher isSomeRecord() {
                     return new SomeRecordMatcher();
                 }
+
+public SomeRecordMatcher withAllPropertiesOf(final SomeRecord other) {
+    beanPropertyMatcher.withAllEqualTo(other, "name");
+    return this;
+}
+
+public SomeRecordMatcher strict() {
+    beanPropertyMatcher.strict("name");
+    return this;
+}
+
+public static SomeRecordMatcher isSomeRecordEqualTo(final SomeRecord other) {
+    return new SomeRecordMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -3305,6 +3739,20 @@ internal class MatcherGenerationProcessorIT {
                 public static SomeRecordMatcher isSomeRecord() {
                     return new SomeRecordMatcher();
                 }
+
+public SomeRecordMatcher withAllPropertiesOf(final SomeRecord other) {
+    beanPropertyMatcher.withAllEqualTo(other, "name", "age");
+    return this;
+}
+
+public SomeRecordMatcher strict() {
+    beanPropertyMatcher.strict("name", "age");
+    return this;
+}
+
+public static SomeRecordMatcher isSomeRecordEqualTo(final SomeRecord other) {
+    return new SomeRecordMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -3440,6 +3888,20 @@ internal class MatcherGenerationProcessorIT {
                 public static PersonRecordMatcher isPersonRecord() {
                     return new PersonRecordMatcher();
                 }
+
+public PersonRecordMatcher withAllPropertiesOf(final PersonRecord other) {
+    beanPropertyMatcher.withAllEqualTo(other, "firstName", "lastName");
+    return this;
+}
+
+public PersonRecordMatcher strict() {
+    beanPropertyMatcher.strict("firstName", "lastName");
+    return this;
+}
+
+public static PersonRecordMatcher isPersonRecordEqualTo(final PersonRecord other) {
+    return new PersonRecordMatcher().withAllPropertiesOf(other);
+}
             $embeddedBeanPropertyMatcher
 }""".trimIndent()
         )
@@ -3453,6 +3915,141 @@ internal class MatcherGenerationProcessorIT {
             .and()
             .generatesSources(expectedOutput)
     }
+    @Test
+    fun `Matcher generation should skip excluded types and packages`() {
+        // Preparation
+        @Language("JAVA") val configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration", """
+            package some.pck;
+            
+            import io.github.marmer.annotationprocessing.MatcherConfiguration;
+            
+            @MatcherConfiguration(
+                value = {"some.pck.model", "some.pck.model.sub"},
+                exclude = {"some.pck.model.ExcludedPojo", "some.pck.model.sub"})
+            public final class SomeConfiguration{
+                
+            }""".trimIndent()
+        )
+        @Language("JAVA") val includedPojo = JavaFileObjects.forSourceLines(
+            "some.pck.model.IncludedPojo", """
+            package some.pck.model;
+            
+            public class IncludedPojo {
+            }""".trimIndent()
+        )
+        @Language("JAVA") val excludedPojo = JavaFileObjects.forSourceLines(
+            "some.pck.model.ExcludedPojo", """
+            package some.pck.model;
+            
+            public class ExcludedPojo {
+            }""".trimIndent()
+        )
+        @Language("JAVA") val excludedPackagePojo = JavaFileObjects.forSourceLines(
+            "some.pck.model.sub.ExcludedPackagePojo", """
+            package some.pck.model.sub;
+            
+            public class ExcludedPackagePojo {
+            }""".trimIndent()
+        )
+        val now = LocalDateTime.now()
+        @Language("JAVA") val expectedOutput = JavaFileObjects.forSourceString(
+            "some.pck.model.IncludedPojoMatcher", """
+            package some.pck.model;
+            
+            import java.lang.AssertionError;
+            import java.lang.Character;
+            import java.lang.Class;
+            import java.lang.NoSuchMethodException;
+            import java.lang.Object;
+            import java.lang.Override;
+            import java.lang.ReflectiveOperationException;
+            import java.lang.String;
+            import java.lang.SuppressWarnings;
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.LinkedHashMap;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.stream.Collectors;
+            import javax.annotation.processing.Generated;
+            import org.hamcrest.Description;
+            import org.hamcrest.FeatureMatcher;
+            import org.hamcrest.Matcher;
+            import org.hamcrest.Matchers;
+            import org.hamcrest.TypeSafeMatcher;
+            
+            @Generated(value = "${MatcherGenerationProcessor::class.qualifiedName}", date = "$now")
+            public class IncludedPojoMatcher extends TypeSafeMatcher<IncludedPojo> {
+                private final BeanPropertyMatcher<IncludedPojo> beanPropertyMatcher;
+            
+                public IncludedPojoMatcher() {
+                    beanPropertyMatcher = new BeanPropertyMatcher<IncludedPojo>(IncludedPojo.class);
+                }
+            
+                public IncludedPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
+                    beanPropertyMatcher.with("class", matcher);
+                    return this;
+                }
+            
+                public IncludedPojoMatcher resetClass() {
+                    beanPropertyMatcher.reset("class");
+                    return this;
+                }
+            
+                public IncludedPojoMatcher withClass(final Class<?> value) {
+                    beanPropertyMatcher.with("class", Matchers.equalTo(value));
+                    return this;
+                }
+            
+                @Override
+                public void describeTo(final Description description) {
+                    beanPropertyMatcher.describeTo(description);
+                }
+            
+                @Override
+                protected boolean matchesSafely(final IncludedPojo item) {
+                    return beanPropertyMatcher.matches(item);
+                }
+            
+                @Override
+                protected void describeMismatchSafely(final IncludedPojo item, final Description description) {
+                    beanPropertyMatcher.describeMismatch(item, description);
+                }
+            
+                public static IncludedPojoMatcher isIncludedPojo() {
+                    return new IncludedPojoMatcher();
+                }
+            
+                public IncludedPojoMatcher withAllPropertiesOf(final IncludedPojo other) {
+                    beanPropertyMatcher.withAllEqualTo(other);
+                    return this;
+                }
+            
+                public IncludedPojoMatcher strict() {
+                    beanPropertyMatcher.strict();
+                    return this;
+                }
+            
+                public static IncludedPojoMatcher isIncludedPojoEqualTo(final IncludedPojo other) {
+                    return new IncludedPojoMatcher().withAllPropertiesOf(other);
+                }
+            $embeddedBeanPropertyMatcher
+            }""".trimIndent()
+        )
+
+        // Execution
+        Truth.assert_()
+            .about(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(configuration, includedPojo, excludedPojo, excludedPackagePojo))
+            .processedWith(MatcherGenerationProcessor { now }) // Assertion
+            .compilesWithoutError()
+            .and()
+            .generatesSources(expectedOutput)
+            .withNoteContaining("Matcher generation skipped for excluded type: some.pck.model.ExcludedPojo")
+            .and()
+            .withNoteContaining("Matcher generation skipped for excluded type: some.pck.model.sub.ExcludedPackagePojo")
+    }
 }
 
 private val embeddedBeanPropertyMatcher = """
@@ -3462,6 +4059,8 @@ private val embeddedBeanPropertyMatcher = """
     private final Matcher<?> instanceOfMatcher;
 
     private final Class<? super T> expectedClass;
+
+    private String[] strictProperties;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
       this.expectedClass = expectedClass;
@@ -3475,7 +4074,7 @@ private val embeddedBeanPropertyMatcher = """
 
     @Override
     protected boolean matchesSafely(final T item) {
-      return getFullInnerMatcher().matches(item);
+      return getFullInnerMatcher().matches(item) && uncheckedProperties().isEmpty();
     }
 
     private Matcher<?> getFullInnerMatcher() {
@@ -3499,6 +4098,34 @@ private val embeddedBeanPropertyMatcher = """
 
     public void reset(final String propertyName) {
       expectations.remove(propertyName);
+    }
+
+    public BeanPropertyMatcher<T> withAllEqualTo(final T other, final String... propertyNames) {
+      for (final String propertyName : propertyNames) {
+        try {
+          with(propertyName, Matchers.equalTo(readProperty(other, propertyName)));
+        } catch (final ReflectiveOperationException e) {
+          throw new AssertionError("Could not read property '" + propertyName + "' of the reference object", e);
+        }
+      }
+      return this;
+    }
+
+    public BeanPropertyMatcher<T> strict(final String... propertyNames) {
+      strictProperties = propertyNames;
+      return this;
+    }
+
+    private List<String> uncheckedProperties() {
+      final List<String> unchecked = new ArrayList<>();
+      if (strictProperties != null) {
+        for (final String propertyName : strictProperties) {
+          if (!expectations.containsKey(propertyName)) {
+            unchecked.add(propertyName);
+          }
+        }
+      }
+      return unchecked;
     }
 
     @SuppressWarnings("unchecked")
@@ -3545,6 +4172,13 @@ private val embeddedBeanPropertyMatcher = """
           describePropertyMismatch(item, expectation, mismatchDescription);
           mismatchDescriptionAlreadyAdded = true;
         }
+      }
+      for (final String propertyName : uncheckedProperties()) {
+        if (mismatchDescriptionAlreadyAdded) {
+          mismatchDescription.appendText("\n");
+        }
+        mismatchDescription.appendText(propertyName + ": unchecked property (strict mode)");
+        mismatchDescriptionAlreadyAdded = true;
       }
     }
 

@@ -56,6 +56,9 @@ class MatcherGenerator(
             .addMethods(getPropertyEqualsMatcherMethods())
             .addMethods(getMatcherMethods())
             .addMethod(getApiInitializer())
+            .addMethod(getWithAllPropertiesOf())
+            .addMethod(getStrictModeConfigurator())
+            .addMethod(getReferenceApiInitializer())
             .addTypes(getInnerMatchers())
             .addOriginatingElement(baseType)
 
@@ -193,6 +196,45 @@ class MatcherGenerator(
         methodBuilder("is${baseType.simpleName}")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addStatement("return new \$T()", getGeneratedTypeName())
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private val referencePropertyNames: List<String>
+        get() = baseType.properties
+            .distinctBy { it.name }
+            .map { it.name }
+            .filter { it != "class" }
+
+    private fun getWithAllPropertiesOf() =
+        methodBuilder("withAllPropertiesOf")
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(baseType.typeNameWithWildCards, "other", Modifier.FINAL)
+            .addStatement(
+                "\$L.withAllEqualTo(other\$L)",
+                builderFieldName,
+                referencePropertyNames.joinToString("") { ", \"$it\"" }
+            )
+            .addStatement(RETURN_THIS)
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getStrictModeConfigurator() =
+        methodBuilder("strict")
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement(
+                "\$L.strict(\$L)",
+                builderFieldName,
+                referencePropertyNames.joinToString(", ") { "\"$it\"" }
+            )
+            .addStatement(RETURN_THIS)
+            .returns(getGeneratedTypeName())
+            .build()
+
+    private fun getReferenceApiInitializer() =
+        methodBuilder("is${baseType.simpleName}EqualTo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addParameter(baseType.typeNameWithWildCards, "other", Modifier.FINAL)
+            .addStatement("return new \$T().withAllPropertiesOf(other)", getGeneratedTypeName())
             .returns(getGeneratedTypeName())
             .build()
 

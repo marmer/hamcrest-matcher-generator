@@ -70,6 +70,13 @@ internal object BeanPropertyMatcherTypeFactory {
                 FieldSpec.builder(classOfSuperT, "expectedClass", Modifier.PRIVATE, Modifier.FINAL)
                     .build()
             )
+            .addField(
+                FieldSpec.builder(
+                    com.palantir.javapoet.ArrayTypeName.of(ClassName.get(String::class.java)),
+                    "strictProperties",
+                    Modifier.PRIVATE
+                ).build()
+            )
             .addMethod(
                 MethodSpec.constructorBuilder()
                     .addModifiers(Modifier.PUBLIC)
@@ -92,7 +99,7 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addModifiers(Modifier.PROTECTED)
                     .addParameter(t, "item", Modifier.FINAL)
                     .returns(TypeName.BOOLEAN)
-                    .addStatement("return getFullInnerMatcher().matches(item)")
+                    .addStatement("return getFullInnerMatcher().matches(item) && uncheckedProperties().isEmpty()")
                     .build()
             )
             .addMethod(
@@ -146,6 +153,74 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addModifiers(Modifier.PUBLIC)
                     .addParameter(String::class.java, "propertyName", Modifier.FINAL)
                     .addStatement("expectations.remove(propertyName)")
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("withAllEqualTo")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(t, "other", Modifier.FINAL)
+                    .addParameter(
+                        com.palantir.javapoet.ArrayTypeName.of(ClassName.get(String::class.java)),
+                        "propertyNames",
+                        Modifier.FINAL
+                    )
+                    .varargs()
+                    .returns(selfWithT)
+                    .beginControlFlow("for (final \$T propertyName : propertyNames)", String::class.java)
+                    .beginControlFlow("try")
+                    .addStatement(
+                        "with(propertyName, \$T.equalTo(readProperty(other, propertyName)))",
+                        Matchers::class.java
+                    )
+                    .nextControlFlow("catch (final \$T e)", ReflectiveOperationException::class.java)
+                    .addStatement(
+                        "throw new \$T(\$S + propertyName + \$S, e)",
+                        AssertionError::class.java,
+                        "Could not read property '",
+                        "' of the reference object"
+                    )
+                    .endControlFlow()
+                    .endControlFlow()
+                    .addStatement("return this")
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("strict")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(
+                        com.palantir.javapoet.ArrayTypeName.of(ClassName.get(String::class.java)),
+                        "propertyNames",
+                        Modifier.FINAL
+                    )
+                    .varargs()
+                    .returns(selfWithT)
+                    .addStatement("strictProperties = propertyNames")
+                    .addStatement("return this")
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("uncheckedProperties")
+                    .addModifiers(Modifier.PRIVATE)
+                    .returns(
+                        ParameterizedTypeName.get(
+                            ClassName.get(java.util.List::class.java),
+                            ClassName.get(String::class.java)
+                        )
+                    )
+                    .addStatement(
+                        "final \$T<\$T> unchecked = new \$T<>()",
+                        java.util.List::class.java,
+                        String::class.java,
+                        java.util.ArrayList::class.java
+                    )
+                    .beginControlFlow("if (strictProperties != null)")
+                    .beginControlFlow("for (final \$T propertyName : strictProperties)", String::class.java)
+                    .beginControlFlow("if (!expectations.containsKey(propertyName))")
+                    .addStatement("unchecked.add(propertyName)")
+                    .endControlFlow()
+                    .endControlFlow()
+                    .endControlFlow()
+                    .addStatement("return unchecked")
                     .build()
             )
             .addMethod(
@@ -237,6 +312,16 @@ internal object BeanPropertyMatcherTypeFactory {
                     .addStatement("describePropertyMismatch(item, expectation, mismatchDescription)")
                     .addStatement("mismatchDescriptionAlreadyAdded = true")
                     .endControlFlow()
+                    .endControlFlow()
+                    .beginControlFlow("for (final \$T propertyName : uncheckedProperties())", String::class.java)
+                    .beginControlFlow("if (mismatchDescriptionAlreadyAdded)")
+                    .addStatement("mismatchDescription.appendText(\$S)", "\n")
+                    .endControlFlow()
+                    .addStatement(
+                        "mismatchDescription.appendText(propertyName + \$S)",
+                        ": unchecked property (strict mode)"
+                    )
+                    .addStatement("mismatchDescriptionAlreadyAdded = true")
                     .endControlFlow()
                     .build()
             )

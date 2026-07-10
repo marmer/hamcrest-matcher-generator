@@ -41,6 +41,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.code.style>official</kotlin.code.style>
+        <!-- Extended by jacoco:prepare-agent; referenced late-bound via @{argLine} in surefire/failsafe -->
+        <argLine></argLine>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
 
         <!-- Sonar -->

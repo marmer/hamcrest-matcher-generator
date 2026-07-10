@@ -123,6 +123,53 @@ public class SomePojo extends ParentPojo {
 This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and
 for matchers for each field.
 
+Reference object matcher
+------------------------
+To compare a whole object against a reference instance, every generated matcher provides an `is<Type>EqualTo` factory
+method (and a `withAllPropertiesOf` instance method). It initializes the matcher with an equality expectation for every
+generated property of the reference object. Individual expectations can be overridden afterwards via `reset<Property>()`
+and `with<Property>(...)`:
+
+```java
+assertThat(actual, isSomePojoEqualTo(expected));
+
+// equivalent to
+assertThat(actual, isSomePojo().withAllPropertiesOf(expected));
+
+// with an overridden expectation for one property
+assertThat(actual, isSomePojoEqualTo(expected)
+    .resetPojoField()
+    .withPojoField("someOtherValue"));
+```
+
+Combined with the property-diff mismatch messages, whole-object comparison with a readable diff becomes a one-liner.
+The `class` property is not part of the reference comparison (the matcher already checks the instance type).
+
+Exclude configuration
+---------------------
+Single types or packages (including their subpackages) can be exempted from a package scan with the `exclude` attribute:
+
+```java
+@MatcherConfiguration(
+    value = "foo.bar.model",
+    exclude = {"foo.bar.model.internal", "foo.bar.model.LegacyThing"}
+)
+public class PackageConfiguration {
+}
+```
+
+Strict mode
+-----------
+An opt-in mode that additionally fails when the matched object has generated properties for which *no* expectation was
+configured — protecting tests from silently ignoring newly added fields. The mismatch output lists the unchecked
+properties (the `class` property is exempt):
+
+```java
+assertThat(actual, isSomePojo().strict().withFoo("bar"));
+// fails with e.g.:
+// baz: unchecked property (strict mode)
+```
+
 Kotlin-JVM
 ----------
 
@@ -270,6 +317,11 @@ Migration guide 5.x → 6.0.0:
 * **Mismatch message format changed** to a multi-line property diff: only the *failing* properties are listed, one per
   line, each with expected vs. actual (e.g. `pojoField: expected "bar" but was "baz"`). Assertions on the old message
   text need updating.
+* **New: reference object matcher** — `is<Type>EqualTo(expected)` / `withAllPropertiesOf(expected)` initialize the
+  matcher with equality expectations for all generated properties of a reference instance.
+* **New: exclude configuration** — `@MatcherConfiguration(exclude = ...)` exempts types or (sub)packages from a scan.
+* **New: strict mode** — `is<Type>().strict()` additionally fails on generated properties without configured
+  expectations and lists them in the mismatch output.
 
 ### 5.1.0
 * Ability to reset properties with *reset** methods to be able to set/reconfigure individual properties at complex matcher configurations
