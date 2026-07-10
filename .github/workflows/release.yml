@@ -1,0 +1,49 @@
+name: Release
+
+# Publishes the checked-out revision to Maven Central via the Sonatype Central Portal.
+#
+# Required repository secrets:
+#   CENTRAL_TOKEN_USERNAME / CENTRAL_TOKEN_PASSWORD - Central Portal publishing token
+#     (https://central.sonatype.com -> Account -> Generate User Token)
+#   MAVEN_GPG_KEY        - ASCII-armored private signing key
+#   MAVEN_GPG_PASSPHRASE - its passphrase
+#
+# Release procedure:
+#   1. Set the release version (remove -SNAPSHOT) and commit, e.g.
+#        ./mvnw versions:set -DnewVersion=6.0.0 -DgenerateBackupPoms=false
+#   2. Run this workflow for that revision (workflow_dispatch).
+#   3. Tag the release and bump to the next -SNAPSHOT version.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Deploy to Maven Central
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-release-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-release-
+
+      - name: Deploy
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: ./mvnw -B clean deploy -P release -s server-settings.xml -Dgpg.signer=bc

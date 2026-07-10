@@ -411,9 +411,6 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
-                                <configuration>
-                                    <useAgent>true</useAgent>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

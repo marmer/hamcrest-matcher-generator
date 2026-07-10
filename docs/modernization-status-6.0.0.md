@@ -15,7 +15,7 @@ um bei "continue" / "führe fort" an der richtigen Stelle weiterzumachen.
 | 3 | Artefakt-Restrukturierung | ✅ abgeschlossen |
 | 4 | Mismatch-Messages (Property-Diff) | ✅ abgeschlossen |
 | 5 | Features (Referenzobjekt, Exclude, Strict) | ✅ abgeschlossen |
-| 6 | Release 6.0.0 | ⬜ offen |
+| 6 | Release 6.0.0 | ⚠️ vorbereitet — Release selbst braucht Maintainer-Secrets (siehe Phase 6) |
 
 Legende: ⬜ offen · 🔄 in Arbeit · ✅ abgeschlossen · ⚠️ blockiert/Anmerkung
 
@@ -104,13 +104,21 @@ Anmerkung: `BeanPropertyMatcherTest.java` entfiel mit dem Modul; Verhaltensabdec
 
 ## Phase 6 — Release 6.0.0
 
-- [ ] Migrationsguide finalisieren (siehe Plan)
-- [ ] Release über neue Central-Portal-Pipeline
-- [ ] Danach separat: 6.1.0 Kotlin-DSL (eigene Design-Runde)
+- [x] Migrationsguide finalisiert (README-Changelog „6.0.0")
+- [x] Release-Pipeline vorbereitet: `.github/workflows/release.yml` (workflow_dispatch) deployt via `-P release -s server-settings.xml` mit `gpg.signer=bc` (kein gpg-Binary nötig; Key aus `MAVEN_GPG_KEY`-Env)
+- [ ] ⚠️ **Manuelle Schritte (nur Maintainer, blockiert auf Secrets):**
+  1. Central-Portal-Namespace `io.github.marmer.testutils` verifizieren und User-Token erzeugen (https://central.sonatype.com)
+  2. Repo-Secrets anlegen: `CENTRAL_TOKEN_USERNAME`, `CENTRAL_TOKEN_PASSWORD`, `MAVEN_GPG_KEY` (ASCII-armored Private Key), `MAVEN_GPG_PASSPHRASE`
+  3. PR #50 mergen
+  4. Version setzen: `./mvnw versions:set -DnewVersion=6.0.0 -DgenerateBackupPoms=false`, committen
+  5. Release-Workflow (Actions → Release) auf diesem Stand auslösen
+  6. Tag `6.0.0` setzen, danach Version auf nächsten `-SNAPSHOT` bumpen
+- [ ] Danach separat: 6.1.0 Kotlin-DSL (eigene Design-Runde, laut Plan bewusst nicht in 6.0.0)
 
 ## Verlauf
 
 - **2026-07-09** — Statusdokument angelegt; Phase 1 begonnen (Baseline-Build gestartet, Root-POM & CI analysiert).
+- **2026-07-09** — Phase 6 soweit wie autonom möglich abgeschlossen: Release-Workflow (`release.yml`, workflow_dispatch, Central Portal + BC-Signer) angelegt, Migrationsguide finalisiert, manuelle Restschritte dokumentiert. Obsoletes `useAgent` aus gpg-Konfiguration entfernt.
 - **2026-07-09** — Phase 5 abgeschlossen: Referenzobjekt-Matcher, Exclude-Konfiguration, Strict Mode inkl. IT-/E2E-Tests und README-Doku. CI-Fixes: CodeQL auf JDK 21, JaCoCo-Coverage für Failsafe-ITs repariert (Sonar-Quality-Gate-Ursache).
 - **2026-07-09** — Phase 4 abgeschlossen: Multi-line Property-Diff im Mismatch (nur fehlschlagende Properties, `foo: expected "bar" but was "baz"`), E2E-Formattests, README-Changelog. Voller Build grün.
 - **2026-07-09** — Phase 3 abgeschlossen: Single-Artifact-Struktur (`dependencies`-Modul entfernt), `@MatcherConfiguration` in `io.github.marmer.annotationprocessing`, generierte Matcher self-contained (nested `BeanPropertyMatcher`), README + Migrationsguide aktualisiert. Voller Build grün.
