@@ -91,3 +91,7 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root (created lazily). The human-facing arc42 docs (`docs/arc42.adoc`, `docs/src/`) must be kept in sync with them. See `docs/agents/domain.md`.
+
+### Implementation process
+
+Implementation tickets name their implementer model (default Haiku, escalated by the orchestrator on poor quality), and every session ends with `/retro`. See `docs/agents/implementation.md`.
