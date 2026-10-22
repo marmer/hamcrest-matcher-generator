@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ```bash
-# Full build (dev profile, all 5 modules)
+# Full build (dev profile)
 ./mvnw clean install
 
 # Build + run integration tests
@@ -20,22 +20,15 @@ JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin
 # Single integration test class
 ./mvnw failsafe:integration-test -pl hamcrest-matcher-generator-annotationprocessor -Dit.test=ClassName
 
-# Release build (adds GPG signing, Javadoc, Nexus staging)
+# Release build (adds GPG signing, Javadoc; still targets the dead OSSRH, see wayfinder map #52)
 ./mvnw clean install -P release
 ```
 
-Maven profiles: `dev` (default, all 5 modules), `release`.
+Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<profiles>`); read them there.
 
 ## Module Structure
 
-```
-hamcrest-matcher-generator/
-├── hamcrest-matcher-generator-dependencies/         # @MatcherConfiguration annotation + BeanPropertyMatcher runtime base
-├── hamcrest-matcher-generator-annotationprocessor/  # APT processor — core generation logic
-├── hamcrest-matcher-generator-endtoend-plain-java-minimal/
-├── hamcrest-matcher-generator-endtoend-mixed-kotlin-java/
-└── hamcrest-matcher-generator-endtoend-plain-kotlin/
-```
+The core modules are `hamcrest-matcher-generator-dependencies` (`@MatcherConfiguration` + `BeanPropertyMatcher` runtime base) and `hamcrest-matcher-generator-annotationprocessor` (the processor). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
 
 ## Architecture: Generation Flow
 
@@ -77,6 +70,7 @@ End-to-end modules are the final validation layer: they apply `@MatcherConfigura
 - **KAPT generated sources not found**: use `build-helper-maven-plugin:add-test-source` to register `target/generated-sources/kapt/test` *before* the compile phase; do not use antrun to move files.
 - **JDK 25 implicit annotation processing disabled**: `@AutoService` was removed from `MatcherGenerationProcessor.java`; a manual `META-INF/services/javax.annotation.processing.Processor` resource is used instead. The `endtoend-plain-java-minimal` module uses `<annotationProcessorPaths>` to declare the AP explicitly.
 - **Lombok on JDK 25**: requires Lombok ≥ 1.18.44; version 1.18.36 does not support JDK 25.
+- **Maven Central HTTP 429** (rate limit, frequent with parallel subagents sharing `~/.m2`): Maven may store the 429 error text as a `.pom` in `~/.m2/repository`, failing later builds with "Non-parseable POM". Delete that file and rebuild offline with `-o`; the SessionStart hook pre-fetches dependencies for that.
 
 ## Agent skills
 
