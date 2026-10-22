@@ -10,6 +10,30 @@ How the engineering skills should consume this repo's domain documentation when 
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
+## arc42 documentation (human-facing)
+
+This repo also has arc42 architecture documentation in `docs/arc42.adoc`, with one AsciiDoc file per chapter in `docs/src/`. It is published to GitHub Pages and is written **primarily for humans**. Read the chapters relevant to the topic as well:
+
+| Topic                     | arc42 chapter                                                   | Agent-facing counterpart |
+| ------------------------- | --------------------------------------------------------------- | ------------------------ |
+| Goals, quality goals      | `docs/src/01_introduction_and_goals.adoc`                       | none                     |
+| Constraints, context      | `docs/src/02_architecture_constraints.adoc`, `03_context_and_scope.adoc` | none            |
+| Building blocks, runtime  | `docs/src/05_building_block_view.adoc`, `06_runtime_view.adoc`  | none                     |
+| Cross-cutting concepts    | `docs/src/08_concepts.adoc`                                     | none                     |
+| Architecture decisions    | `docs/src/09_architecture_decisions.adoc`                       | `docs/adr/`              |
+| Glossary                  | `docs/src/12_glossary.adoc`                                     | `GLOSSARY.md`            |
+
+### Redundancy rules
+
+Redundant documentation for agents is welcome, **as long as the human-facing arc42 docs are kept in sync**:
+
+- **Writing a glossary term** to `GLOSSARY.md`: also add or update the matching row in the table in `docs/src/12_glossary.adoc`.
+- **Writing an ADR** to `docs/adr/`: also add a human-readable summary to `docs/src/09_architecture_decisions.adoc`: title, status, a short rationale, and a link to the ADR file.
+- **Changing architecture** (new module, changed generation flow, changed build setup): update the affected arc42 chapter in the same change, not in a follow-up.
+- Write the arc42 entries for a human reader: full sentences, context first, and none of the terse agent-only shorthand.
+- Remove any template placeholder rows (e.g. `<Term-1>`) from a chapter when you add its first real entry.
+- If the agent docs and arc42 disagree, don't silently pick one. Surface the conflict and resolve it in both places.
+
 ## File structure
 
 Single-context repo (most repos):
