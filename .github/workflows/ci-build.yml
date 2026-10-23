@@ -49,7 +49,10 @@ jobs:
         run: ./mvnw -B org.jacoco:jacoco-maven-plugin:prepare-agent verify org.jacoco:jacoco-maven-plugin:report org.jacoco:jacoco-maven-plugin:report-aggregate
         if: success()
 
+      # Temporarily non-blocking: SONAR_TOKEN is no longer authorized. The SonarCloud setup is decided in
+      # wayfinder map #52 ("Quality gates: what blocks a merge and what runs locally", #62).
       - name: Sonar
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
