@@ -488,7 +488,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_concept_n">8.3. <em>&lt;Concept n&gt;</em></a></li>
 </ul>
 </li>
-<li><a href="#section-design-decisions">9. Architecture Decisions</a></li>
+<li><a href="#section-design-decisions">9. Architecture Decisions</a>
+<ul class="sectlevel2">
+<li><a href="#_adr_0001_shared_property_model_with_separate_library_backends">9.1. ADR 0001: Shared property model with separate library backends</a></li>
+</ul>
+</li>
 <li><a href="#section-quality-scenarios">10. Quality Requirements</a>
 <ul class="sectlevel2">
 <li><a href="#_quality_requirements_overview">10.1. Quality Requirements Overview</a></li>
@@ -1009,7 +1013,19 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div class="sect1">
 <h2 id="section-design-decisions">9. Architecture Decisions</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_adr_0001_shared_property_model_with_separate_library_backends">9.1. ADR 0001: Shared property model with separate library backends</h3>
+<div class="paragraph">
+<p><strong>Status:</strong> accepted (6.0.0 planning)</p>
+</div>
+<div class="paragraph">
+<p>Version 6.0.0 generates assertions for both Hamcrest and AssertJ from a single configuration. To keep the two libraries cleanly apart, a library-independent core module builds a property model of each configured type, and each assertion library has its own backend module that turns this model into code. Backends depend only on the core and are discovered via Java&#8217;s <code>ServiceLoader</code>, so users pick a library simply by adding its artifact to the annotation processor path. The dependency rules are enforced by Maven Enforcer and ArchUnit. The existing <code>@MatcherConfiguration</code> annotation keeps working unchanged as a deprecated alias, and the migration is carried out behind the existing automated tests.</p>
+</div>
+<div class="paragraph">
+<p>Details: <a href="../adr/0001-shared-property-model-and-backend-spi.md">ADR 0001</a></p>
+</div>
 <div style="page-break-after: always;"></div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1047,12 +1063,20 @@ building block instances depicted in this diagram.&gt;</em></p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;Term-1&gt;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;definition-1&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Property model</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The description of a configured type and its properties that does not depend on any assertion library. All backends share it.</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;Term-2&gt;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;definition-2&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Property</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A readable value of a bean (via its getter) or a record (via its component accessor) that generated assertions can check.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Backend</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A generator that turns the property model into assertion code for one specific assertion library, such as Hamcrest or AssertJ.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Configuration</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.</em></p></td>
 </tr>
 </tbody>
 </table>
@@ -1062,7 +1086,7 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div id="footer">
 <div id="footer-text">
 Version {revnumber}<br>
-Last updated 2026-10-23 05:55:22 UTC
+Last updated 2026-10-23 16:25:53 UTC
 </div>
 </div>
 </body>
