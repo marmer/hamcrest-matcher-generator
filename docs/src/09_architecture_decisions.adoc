@@ -3,7 +3,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-design-decisions]]
 == Architecture Decisions
 
+=== ADR 0001: Shared property model with separate library backends
 
+*Status:* accepted (6.0.0 planning)
 
+Version 6.0.0 generates assertions for both Hamcrest and AssertJ from a single configuration. To keep the two libraries cleanly apart, a library-independent core module builds a property model of each configured type, and each assertion library has its own backend module that turns this model into code. Backends depend only on the core and are discovered via Java's `ServiceLoader`, so users pick a library simply by adding its artifact to the annotation processor path. The dependency rules are enforced by Maven Enforcer and ArchUnit. The existing `@MatcherConfiguration` annotation keeps working unchanged as a deprecated alias, and the migration is carried out behind the existing automated tests.
 
-
+Details: link:../adr/0001-shared-property-model-and-backend-spi.md[ADR 0001]

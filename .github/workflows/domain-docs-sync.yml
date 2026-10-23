@@ -1,0 +1,18 @@
+name: "Domain docs sync"
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  domain-docs-sync:
+    name: Domain docs in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check GLOSSARY.md and ADRs are mirrored in arc42 docs
+        run: python3 scripts/agents/check-domain-docs-sync.py

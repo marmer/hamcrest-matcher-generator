@@ -3,17 +3,19 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-glossary]]
 == Glossary
 
-
-
-
-
 [cols="e,2e" options="header"]
 |===
 |Term |Definition
 
-|<Term-1>
-|<definition-1>
+|Property model
+|The description of a configured type and its properties that does not depend on any assertion library. All backends share it.
 
-|<Term-2>
-|<definition-2>
+|Property
+|A readable value of a bean (via its getter) or a record (via its component accessor) that generated assertions can check.
+
+|Backend
+|A generator that turns the property model into assertion code for one specific assertion library, such as Hamcrest or AssertJ.
+
+|Configuration
+|The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.
 |===
