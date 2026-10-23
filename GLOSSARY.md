@@ -19,3 +19,11 @@ _Avoid_: plugin, flavour, target
 **Configuration**:
 The single annotation-based declaration of which types assertions are generated for; it is the same for every backend.
 _Avoid_: backend settings
+
+**Reference object**:
+An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison.
+_Avoid_: template, prototype object
+
+**Completeness check**:
+The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted.
+_Avoid_: strict mode, exhaustiveness
