@@ -52,3 +52,6 @@ hs_err_pid*
 
 .*.md.html
 docs/build/
+
+# Claude Code agent worktrees
+.claude/worktrees/
