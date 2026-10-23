@@ -32,6 +32,7 @@ Redundant documentation for agents is welcome, **as long as the human-facing arc
 - **Changing architecture** (new module, changed generation flow, changed build setup): update the affected arc42 chapter in the same change, not in a follow-up.
 - Write the arc42 entries for a human reader: full sentences, context first, and none of the terse agent-only shorthand.
 - Remove any template placeholder rows (e.g. `<Term-1>`) from a chapter when you add its first real entry.
+- `scripts/agents/check-domain-docs-sync.py` checks these rules in CI (job `domain-docs-sync` in `codeql-analysis.yml`) and can be run locally with `python3 scripts/agents/check-domain-docs-sync.py`.
 - If the agent docs and arc42 disagree, don't silently pick one. Surface the conflict and resolve it in both places.
 
 ## File structure
