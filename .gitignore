@@ -55,3 +55,4 @@ docs/build/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+__pycache__/
