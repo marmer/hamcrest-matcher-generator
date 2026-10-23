@@ -611,6 +611,44 @@ Balance readability of this document with potential redundancy w.r.t to requirem
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<div class="title">Planned feature set of 6.0.0, the final feature release</div>
+<p>Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are driven by the same configuration. Its features are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Completeness check</strong> (the lead feature, for both backends): every property of a type is either checked or deliberately ignored.</p>
+</li>
+<li>
+<p><strong>Reference-object matcher</strong> (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. AssertJ users get the same with AssertJ&#8217;s built-in recursive comparison, which the documentation shows side by side.</p>
+</li>
+<li>
+<p><strong>Readable mismatches</strong> (Hamcrest): only the failing properties are listed, one per line, with nested property paths such as <code>customer.address.city</code>. AssertJ keeps its native message style.</p>
+</li>
+<li>
+<p><strong>Exclude configuration</strong>: packages or classes can be excluded from generation, for every backend.</p>
+</li>
+<li>
+<p><strong>Null-safety annotations</strong> (JSpecify) in the generated code and the Hamcrest runtime, which mainly makes the API type-safe for Kotlin.</p>
+</li>
+<li>
+<p><strong>Clear compiler diagnostics</strong>: errors for unresolvable names and generated method names that clash with inherited ones, warnings for configured types without properties and for exclusions that match nothing.</p>
+</li>
+<li>
+<p><strong>Kotlin support</strong>: correct detection of Kotlin boolean and <code>is</code>-prefixed properties, and a Kotlin DSL.</p>
+</li>
+<li>
+<p><strong>Java module names</strong>: every published jar declares an <code>Automatic-Module-Name</code>.</p>
+</li>
+<li>
+<p><strong>AssertJ assertions</strong> with <code>hasFoo</code>, <code>hasFooSatisfying</code>, <code>isFoo</code>/<code>isNotFoo</code>, an <code>InstanceOfAssertFactory</code> per type and soft-assertion support.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>After 6.0.0 no further features are planned; the project receives only fixes and automated dependency updates.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_quality_goals">1.2. Quality Goals</h3>
@@ -1091,6 +1129,14 @@ building block instances depicted in this diagram.&gt;</em></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Configuration</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.</em></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Reference object</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Completeness check</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The check that every property of a type is either asserted or deliberately ignored. It makes sure that a property added later cannot go unchecked without anyone noticing.</em></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1099,7 +1145,7 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div id="footer">
 <div id="footer-text">
 Version {revnumber}<br>
-Last updated 2026-10-23 19:13:08 UTC
+Last updated 2026-10-23 20:02:44 UTC
 </div>
 </div>
 </body>
