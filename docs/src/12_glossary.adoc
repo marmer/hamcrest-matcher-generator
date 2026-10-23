@@ -18,4 +18,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 |Configuration
 |The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.
+
+|Reference object
+|An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step.
+
+|Completeness check
+|The check that every property of a type is either asserted or deliberately ignored. It makes sure that a property added later cannot go unchecked without anyone noticing.
 |===

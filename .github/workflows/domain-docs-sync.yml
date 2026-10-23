@@ -16,3 +16,14 @@ jobs:
 
       - name: Check GLOSSARY.md and ADRs are mirrored in arc42 docs
         run: python3 scripts/agents/check-domain-docs-sync.py
+
+      - name: Check agent scripts with a shebang are executable in git
+        run: |
+          status=0
+          for f in $(git ls-files 'scripts/*'); do
+            if head -c2 "$f" | grep -q '^#!' && [ "$(git ls-files -s "$f" | cut -c1-6)" != "100755" ]; then
+              echo "::error file=$f::has a shebang but no executable bit (git update-index --chmod=+x $f)"
+              status=1
+            fi
+          done
+          exit $status

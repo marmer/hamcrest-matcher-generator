@@ -22,6 +22,7 @@ This repo also has arc42 architecture documentation in `docs/arc42.adoc`, with o
 | Cross-cutting concepts    | `docs/src/08_concepts.adoc`                                     | none                     |
 | Architecture decisions    | `docs/src/09_architecture_decisions.adoc`                       | `docs/adr/`              |
 | Glossary                  | `docs/src/12_glossary.adoc`                                     | `GLOSSARY.md`            |
+| Resolved wayfinder decision without an ADR | features/requirements → `01_introduction_and_goals.adoc`; quality goals → `01` (Quality Goals) and `10_quality_requirements.adoc`; quality gates, CI → `08_concepts.adoc`; release, publishing → `07_deployment_view.adoc` | the ticket's resolution comment |
 
 ### Redundancy rules
 
@@ -32,7 +33,7 @@ Redundant documentation for agents is welcome, **as long as the human-facing arc
 - **Changing architecture** (new module, changed generation flow, changed build setup): update the affected arc42 chapter in the same change, not in a follow-up.
 - Write the arc42 entries for a human reader: full sentences, context first, and none of the terse agent-only shorthand.
 - Remove any template placeholder rows (e.g. `<Term-1>`) from a chapter when you add its first real entry.
-- `scripts/agents/check-domain-docs-sync.py` checks these rules in CI (job `domain-docs-sync` in `codeql-analysis.yml`) and can be run locally with `python3 scripts/agents/check-domain-docs-sync.py`.
+- `scripts/agents/check-domain-docs-sync.py` checks these rules in CI (job `domain-docs-sync` in `.github/workflows/domain-docs-sync.yml`) and can be run locally with `python3 scripts/agents/check-domain-docs-sync.py`.
 - If the agent docs and arc42 disagree, don't silently pick one. Surface the conflict and resolve it in both places.
 
 ## File structure
