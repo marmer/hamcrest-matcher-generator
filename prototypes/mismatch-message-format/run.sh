@@ -12,3 +12,5 @@ javac --release 17 -nowarn -d out -cp "$CP" $(find src -name '*.java') 2>&1 | gr
 java -cp "out:$CP" proto.Demo 2>&1 | grep -v '^Picked up'
 echo "##### lists"
 java -cp "out:$CP" proto.Demo lists 2>&1 | grep -v "^Picked up"
+echo "##### unordered"
+java -cp "out:$CP" proto.Demo unordered 2>&1 | grep -v "^Picked up"

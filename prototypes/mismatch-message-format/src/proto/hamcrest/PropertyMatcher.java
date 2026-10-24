@@ -37,7 +37,24 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         this.type = type;
     }
 
-    protected void property(String name, Function<T, ?> getter) { properties.put(name, getter); }
+    protected void property(String name, Function<T, ?> getter) {
+        properties.put(name, getter);
+        VALUE_RENDERERS.computeIfAbsent(type, k -> new LinkedHashMap<>()).put(name, getter);
+    }
+
+    // ---- rendering actual values of generated types (they often have no toString) -------
+
+    private static final Map<Class<?>, Map<String, Function<?, ?>>> VALUE_RENDERERS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** {@code OrderLine {sku "B-2", quantity <2>}} for generated types, Hamcrest's value text otherwise. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static String describeValue(Object value) {
+        Map<String, Function<?, ?>> getters = value == null ? null : VALUE_RENDERERS.get(value.getClass());
+        if (getters == null) return StringDescription.toString(new ValueOnly(value));
+        List<String> parts = new ArrayList<>();
+        getters.forEach((name, g) -> parts.add(name + " " + describeValue(((Function) g).apply(value))));
+        return value.getClass().getSimpleName() + " {" + String.join(", ", parts) + "}";
+    }
     protected SELF check(String name, Matcher<?> m) { checks.put(name, m); return self(); }
     protected SELF ignore(String name) { checks.put(name, IGNORED); return self(); }
     protected SELF reset(String name) { checks.remove(name); return self(); }
@@ -61,6 +78,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
             if (m == IGNORED) return;
             if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(prefix + name + ".", out);
             else if (m instanceof ItemsInOrder<?> items) items.collectChecks(prefix + name, out);
+            else if (m instanceof ItemsInAnyOrder<?> items) items.collectChecks(prefix + name, out);
             else out.add(new Check(prefix + name, m));
         });
     }
@@ -74,6 +92,8 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 nested.collectFailures(value, prefix + name + ".", failures, unaddressed);
             } else if (m instanceof ItemsInOrder<?> items && value instanceof List<?> list) {
                 items.collectFailures(list, prefix + name, failures, unaddressed);
+            } else if (m instanceof ItemsInAnyOrder<?> items && value instanceof java.util.Collection<?> c) {
+                items.collectFailures(c, prefix + name, failures);
             } else {
                 String mismatch = foreignMismatch(m, value);
                 if (mismatch != null) failures.add(new Failure(prefix + name, m, value, mismatch));
@@ -166,6 +186,75 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         @Override public void describeTo(Description d) { d.appendText(items.size() + " items in order"); }
     }
 
+    // ---- unordered collections: match without index (candidate U2) --------------------------
+
+    /** Runtime-provided matcher for unordered collections: every item matcher needs its own item, no extra items. */
+    @SafeVarargs
+    public static <E> ItemsInAnyOrder<E> itemsInAnyOrder(Matcher<? super E>... itemMatchers) {
+        return new ItemsInAnyOrder<E>(java.util.Arrays.asList(itemMatchers));
+    }
+
+    public static <E> ItemsInAnyOrder<E> itemsInAnyOrder(List<? extends Matcher<? super E>> itemMatchers) {
+        return new ItemsInAnyOrder<>(itemMatchers);
+    }
+
+    public static final class ItemsInAnyOrder<E> extends org.hamcrest.TypeSafeMatcher<java.util.Collection<?>> {
+        private final List<? extends Matcher<? super E>> items;
+
+        ItemsInAnyOrder(List<? extends Matcher<? super E>> items) { this.items = items; }
+
+        void collectChecks(String path, List<Check> out) {
+            for (Matcher<?> m : items) {
+                if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(path + "[any].", out);
+                else out.add(new Check(path + "[any]", m));
+            }
+        }
+
+        void collectFailures(java.util.Collection<?> actual, String path, List<Failure> failures) {
+            List<Object> unused = new ArrayList<>(actual);
+            List<Matcher<?>> missing = new ArrayList<>();
+            for (Matcher<?> m : items) {
+                Object hit = null;
+                for (Object a : unused) if (foreignMismatch(m, a) == null) { hit = a; break; }
+                if (hit != null) unused.remove(hit); else missing.add(m);
+            }
+            for (Matcher<?> m : missing) {
+                String text = "missing " + foreignDescription(m);
+                Object closest = null;
+                List<Failure> closestDiff = null;
+                if (m instanceof PropertyMatcher<?, ?> pm) {
+                    for (Object a : unused) {
+                        if (!pm.type.isInstance(a)) continue;
+                        List<Failure> diff = new ArrayList<>();
+                        pm.collectFailures(a, "", diff, new ArrayList<>());
+                        if (closestDiff == null || diff.size() < closestDiff.size()) { closest = a; closestDiff = diff; }
+                    }
+                }
+                if (closest != null) {
+                    unused.remove(closest);
+                    List<String> parts = new ArrayList<>();
+                    for (Failure f : closestDiff) parts.add(oneLine(f));
+                    text += "; closest " + describeValue(closest) + " differs in " + String.join(", ", parts);
+                }
+                failures.add(new Failure(path, null, actual, text));
+            }
+            for (Object a : unused) failures.add(new Failure(path, null, actual, "unexpected " + describeValue(a)));
+        }
+
+        @Override protected boolean matchesSafely(java.util.Collection<?> c) {
+            List<Failure> f = new ArrayList<>();
+            collectFailures(c, "", f);
+            return f.isEmpty();
+        }
+
+        @Override public void describeTo(Description d) { d.appendText(items.size() + " items in any order"); }
+    }
+
+    private static String oneLine(Failure f) {
+        if (f.expected == null) return f.path + ": " + f.mismatch;
+        return f.path + ": expected " + foreignDescription(compact(f.expected)) + " but " + f.mismatch;
+    }
+
     private record SizeIs(int size) implements Matcher<Object> {
         @Override public boolean matches(Object o) { return false; }
         @Override public void describeMismatch(Object o, Description d) { }
@@ -185,8 +274,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         if (insideForeign()) {
             List<String> parts = new ArrayList<>();
             for (Failure f : failures) {
-                parts.add(format == Format.A_PATH_LIST ? f.path + ": " + f.mismatch
-                        : f.path + ": expected " + foreignDescription(compact(f.expected)) + " but " + f.mismatch);
+                parts.add(format == Format.A_PATH_LIST ? f.path + ": " + f.mismatch : oneLine(f));
             }
             if (!unaddressed.isEmpty()) parts.add(unaddressedLine(unaddressed));
             mismatch.appendText(type.getSimpleName() + " {" + String.join(", ", parts) + "}");
@@ -205,8 +293,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
             case B_INLINE -> {
                 String sep = "";
                 for (Failure f : failures) {
-                    mismatch.appendText(sep).appendText(f.path + ": expected ")
-                            .appendText(foreignDescription(compact(f.expected))).appendText(" but " + f.mismatch);
+                    mismatch.appendText(sep).appendText(oneLine(f));
                     sep = INDENT;
                 }
                 if (!unaddressed.isEmpty()) mismatch.appendText(sep).appendText(unaddressedLine(unaddressed));
@@ -216,9 +303,13 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 collectChecks("", all);
                 mismatch.appendText(failures.size() + " of " + all.size() + " property checks failed");
                 for (Failure f : failures) {
+                    if (f.expected == null) {
+                        mismatch.appendText(INDENT + "  " + f.path).appendText(INDENT + "    " + f.mismatch);
+                        continue;
+                    }
                     mismatch.appendText(INDENT + "  " + f.path)
                             .appendText(INDENT + "    expected: ").appendText(foreignDescription(compact(f.expected)))
-                            .appendText(INDENT + "    actual:   ").appendValue(f.actual);
+                            .appendText(INDENT + "    actual:   " + describeValue(f.actual));
                     String plain = "was " + StringDescription.toString(new ValueOnly(f.actual));
                     if (!f.mismatch.equals(plain)) mismatch.appendText(INDENT + "    because:  " + f.mismatch);
                 }

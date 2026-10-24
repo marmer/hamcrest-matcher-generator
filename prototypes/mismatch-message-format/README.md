@@ -17,3 +17,7 @@ and AssertJ 3.27.3. `./run.sh` prints every scenario:
   matchers inside Hamcrest's `contains`/`hasItem` with multi-line vs one-line rendering
   (`PropertyMatcher.oneLineInsideForeignMatchers`), a runtime `itemsInOrder(..)` with indexed paths,
   shallow vs deep reference object, and the AssertJ path into lists (`PropertyAssert.pathIntoCollections`).
+- **Unordered collections** (`Demo unordered`): `Wishlist` with `Set<OrderLine>`; Hamcrest's
+  `containsInAnyOrder`, a runtime `itemsInAnyOrder(..)` reporting missing items with their closest
+  match, shallow vs deep reference object, AssertJ `satisfiesExactlyInAnyOrder` with and without a
+  generated `Representation`.

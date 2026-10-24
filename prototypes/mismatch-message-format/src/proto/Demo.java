@@ -16,6 +16,11 @@ import static proto.hamcrest.CartMatcher.isCartLikeDeep;
 import static proto.hamcrest.OrderLineMatcher.isOrderLine;
 import static proto.hamcrest.PropertyMatcher.itemsInOrder;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static proto.hamcrest.PropertyMatcher.itemsInAnyOrder;
+import static proto.hamcrest.WishlistMatcher.isWishlist;
+import static proto.hamcrest.WishlistMatcher.isWishlistLike;
+import static proto.hamcrest.WishlistMatcher.isWishlistLikeDeep;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,6 +41,10 @@ import proto.assertj.OrderLineAssert;
 import proto.model.Address;
 import proto.model.Cart;
 import proto.model.OrderLine;
+import proto.model.Wishlist;
+import proto.assertj.WishlistAssert;
+import proto.assertj.GeneratedRepresentation;
+import java.util.LinkedHashSet;
 import proto.model.Customer;
 import proto.model.Order;
 import proto.model.Person;
@@ -60,6 +69,10 @@ public class Demo {
     static final Cart EXPECTED_CART = new Cart("Ada", List.of(new OrderLine("A-1", 1), new OrderLine("B-2", 3)));
 
     public static void main(String[] args) {
+        if (args.length > 0 && args[0].equals("unordered")) {
+            unordered();
+            return;
+        }
         if (args.length > 0 && args[0].equals("lists")) {
             lists();
             return;
@@ -133,6 +146,55 @@ public class Demo {
                     softly.assertThat(ADA).hasName("Bob").hasAge(37).hasEmail("ada@example.org");
                     softly.assertAll();
                 });
+    }
+
+    // LinkedHashSet only to keep the printed order stable; the matchers treat it as a Set.
+    static final Wishlist WISHLIST = new Wishlist("Ada", new LinkedHashSet<>(List.of(
+            new OrderLine("C-3", 1), new OrderLine("B-2", 2), new OrderLine("A-1", 1))));
+    static final Wishlist EXPECTED_WISHLIST = new Wishlist("Ada", new LinkedHashSet<>(List.of(
+            new OrderLine("A-1", 1), new OrderLine("B-2", 3))));
+
+    static void unordered() {
+        hamcrest("U1 Set of generated types inside Hamcrest containsInAnyOrder(..): B-2 has quantity 2, not 3",
+                () -> isWishlist().withItems(containsInAnyOrder(isOrderLine().withSku("A-1").withQuantity(1),
+                        isOrderLine().withSku("B-2").withQuantity(3), isOrderLine().withSku("C-3").withQuantity(1))),
+                () -> bean(Wishlist.class).with("items", containsInAnyOrder(
+                        bean(OrderLine.class).with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
+                        bean(OrderLine.class).with("sku", equalTo("B-2")).with("quantity", equalTo(3)),
+                        bean(OrderLine.class).with("sku", equalTo("C-3")).with("quantity", equalTo(1)))),
+                WISHLIST);
+
+        hamcrest("U2 candidate: runtime itemsInAnyOrder(..): missing item with its closest match",
+                () -> isWishlist().withItems(itemsInAnyOrder(isOrderLine().withSku("A-1").withQuantity(1),
+                        isOrderLine().withSku("B-2").withQuantity(3), isOrderLine().withSku("C-3").withQuantity(1))),
+                null, WISHLIST);
+
+        hamcrest("U3 itemsInAnyOrder(..): same items in another order -> passes",
+                () -> isWishlist().withItems(itemsInAnyOrder(isOrderLine().withSku("A-1"),
+                        isOrderLine().withSku("B-2"), isOrderLine().withSku("C-3"))),
+                null, WISHLIST);
+
+        hamcrest("U4 reference object, shallow: the Set compared with equals",
+                () -> isWishlistLike(EXPECTED_WISHLIST), null, WISHLIST);
+
+        hamcrest("U5 reference object, deep: a non-List collection is matched in any order",
+                () -> isWishlistLikeDeep(EXPECTED_WISHLIST), null, WISHLIST);
+
+        assertj("U6 Set via AssertJ satisfiesExactlyInAnyOrder(..), default representation",
+                () -> WishlistAssert.assertThat(WISHLIST).hasItemsSatisfying(s -> Assertions.assertThat(s)
+                        .satisfiesExactlyInAnyOrder(
+                                a -> OrderLineAssert.assertThat(a).hasSku("A-1").hasQuantity(1),
+                                b -> OrderLineAssert.assertThat(b).hasSku("B-2").hasQuantity(3),
+                                c -> OrderLineAssert.assertThat(c).hasSku("C-3").hasQuantity(1))));
+
+        Assertions.useRepresentation(new GeneratedRepresentation());
+        assertj("U7 same, with a generated Representation registered",
+                () -> WishlistAssert.assertThat(WISHLIST).hasItemsSatisfying(s -> Assertions.assertThat(s)
+                        .satisfiesExactlyInAnyOrder(
+                                a -> OrderLineAssert.assertThat(a).hasSku("A-1").hasQuantity(1),
+                                b -> OrderLineAssert.assertThat(b).hasSku("B-2").hasQuantity(3),
+                                c -> OrderLineAssert.assertThat(c).hasSku("C-3").hasQuantity(1))));
+        Assertions.useDefaultRepresentation();
     }
 
     static void lists() {
