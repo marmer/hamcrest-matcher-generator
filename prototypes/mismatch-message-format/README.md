@@ -13,3 +13,7 @@ and AssertJ 3.27.3. `./run.sh` prints every scenario:
   property path from the root (`assertj/PropertyAssert.java`, switch `PropertyAssert.withPath`).
 - **Reference object**: `isOrderLike` (equalTo per property) vs `isOrderLikeDeep` (recursing into
   nested generated matchers).
+- **Nested lists** (`./run.sh` second part, `Demo lists`): `Cart` with `List<OrderLine>`; generated
+  matchers inside Hamcrest's `contains`/`hasItem` with multi-line vs one-line rendering
+  (`PropertyMatcher.oneLineInsideForeignMatchers`), a runtime `itemsInOrder(..)` with indexed paths,
+  shallow vs deep reference object, and the AssertJ path into lists (`PropertyAssert.pathIntoCollections`).

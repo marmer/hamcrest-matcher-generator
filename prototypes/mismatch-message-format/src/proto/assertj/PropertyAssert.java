@@ -14,6 +14,9 @@ public abstract class PropertyAssert<SELF extends PropertyAssert<SELF, A>, A> ex
 
     public static boolean withPath = false;
 
+    /** false: a collection-valued property starts a fresh path (elements read "OrderLine.sku"). */
+    public static boolean pathIntoCollections = false;
+
     /** J2: the path of the value currently asserted inside a hasFooSatisfying(..) lambda. */
     private static final ThreadLocal<Deque<String>> CONTEXT = ThreadLocal.withInitial(ArrayDeque::new);
 
@@ -22,7 +25,7 @@ public abstract class PropertyAssert<SELF extends PropertyAssert<SELF, A>, A> ex
     protected PropertyAssert(A actual, Class<?> selfType, String typeName) {
         super(actual, selfType);
         String outer = CONTEXT.get().peek();
-        this.path = outer != null ? outer : typeName;
+        this.path = outer != null && !outer.isEmpty() ? outer : typeName;
     }
 
     private void requireActual() {
@@ -48,7 +51,8 @@ public abstract class PropertyAssert<SELF extends PropertyAssert<SELF, A>, A> ex
 
     protected <V> SELF hasPropertySatisfying(String name, V value, Consumer<? super V> requirements) {
         requireActual();
-        CONTEXT.get().push(path + "." + name);
+        boolean collection = value instanceof Iterable || (value != null && value.getClass().isArray());
+        CONTEXT.get().push(collection && !pathIntoCollections ? "" : path + "." + name);
         try {
             requirements.accept(value);
         } finally {

@@ -10,6 +10,12 @@ import static proto.hamcrest.OrderMatcher.isOrder;
 import static proto.hamcrest.OrderMatcher.isOrderLike;
 import static proto.hamcrest.OrderMatcher.isOrderLikeDeep;
 import static proto.hamcrest.PersonMatcher.isPerson;
+import static proto.hamcrest.CartMatcher.isCart;
+import static proto.hamcrest.CartMatcher.isCartLike;
+import static proto.hamcrest.CartMatcher.isCartLikeDeep;
+import static proto.hamcrest.OrderLineMatcher.isOrderLine;
+import static proto.hamcrest.PropertyMatcher.itemsInOrder;
+import static org.hamcrest.Matchers.contains;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,7 +31,11 @@ import proto.assertj.ProtoSoftAssertions;
 import proto.hamcrest.PropertyMatcher;
 import proto.hamcrest.PropertyMatcher.Format;
 import proto.legacy.BeanPropertyMatcher;
+import proto.assertj.CartAssert;
+import proto.assertj.OrderLineAssert;
 import proto.model.Address;
+import proto.model.Cart;
+import proto.model.OrderLine;
 import proto.model.Customer;
 import proto.model.Order;
 import proto.model.Person;
@@ -45,7 +55,15 @@ public class Demo {
             new Customer("Ada", "+44 20 0000", new Address("1 Rue de Rivoli", "Berlin", "75001")),
             new BigDecimal("10.00"), List.of("books", "sale"));
 
+    static final Cart CART = new Cart("Ada", List.of(
+            new OrderLine("A-1", 1), new OrderLine("B-2", 2), new OrderLine("C-3", 1)));
+    static final Cart EXPECTED_CART = new Cart("Ada", List.of(new OrderLine("A-1", 1), new OrderLine("B-2", 3)));
+
     public static void main(String[] args) {
+        if (args.length > 0 && args[0].equals("lists")) {
+            lists();
+            return;
+        }
         hamcrest("S1 flat POJO: two properties differ",
                 () -> isPerson().withName("Bob").withAge(36).withEmail(startsWith("bob@")),
                 () -> bean(Person.class).with("name", equalTo("Bob")).with("age", equalTo(36))
@@ -115,6 +133,70 @@ public class Demo {
                     softly.assertThat(ADA).hasName("Bob").hasAge(37).hasEmail("ada@example.org");
                     softly.assertAll();
                 });
+    }
+
+    static void lists() {
+        PropertyMatcher.oneLineInsideForeignMatchers = false;
+        hamcrest("L1-before list of generated types inside Hamcrest contains(..): item 1 differs in two properties (multi-line rendering inside contains)",
+                () -> isCart().withLines(contains(isOrderLine().withSku("A-1").withQuantity(1),
+                        isOrderLine().withSku("X-9").withQuantity(3), isOrderLine().withSku("C-3"))),
+                () -> bean(Cart.class).with("lines", contains(
+                        bean(OrderLine.class).with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
+                        bean(OrderLine.class).with("sku", equalTo("X-9")).with("quantity", equalTo(3)),
+                        bean(OrderLine.class).with("sku", equalTo("C-3")))),
+                CART);
+
+        hamcrest("L2-before list of generated types inside Hamcrest hasItem(..): no item matches (multi-line rendering inside hasItem)",
+                () -> isCart().withLines(hasItem(isOrderLine().withSku("D-4").withQuantity(2))),
+                () -> bean(Cart.class).with("lines", hasItem(
+                        bean(OrderLine.class).with("sku", equalTo("D-4")).with("quantity", equalTo(2)))),
+                CART);
+
+        PropertyMatcher.oneLineInsideForeignMatchers = true;
+        hamcrest("L1 list of generated types inside Hamcrest contains(..): item 1 differs in two properties (one-line rendering inside contains)",
+                () -> isCart().withLines(contains(isOrderLine().withSku("A-1").withQuantity(1),
+                        isOrderLine().withSku("X-9").withQuantity(3), isOrderLine().withSku("C-3"))),
+                () -> bean(Cart.class).with("lines", contains(
+                        bean(OrderLine.class).with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
+                        bean(OrderLine.class).with("sku", equalTo("X-9")).with("quantity", equalTo(3)),
+                        bean(OrderLine.class).with("sku", equalTo("C-3")))),
+                CART);
+
+        hamcrest("L2 list of generated types inside Hamcrest hasItem(..): no item matches (one-line rendering inside hasItem)",
+                () -> isCart().withLines(hasItem(isOrderLine().withSku("D-4").withQuantity(2))),
+                () -> bean(Cart.class).with("lines", hasItem(
+                        bean(OrderLine.class).with("sku", equalTo("D-4")).with("quantity", equalTo(2)))),
+                CART);
+
+        hamcrest("L3 candidate: runtime itemsInOrder(..) flattens items into indexed paths",
+                () -> isCart().withLines(itemsInOrder(isOrderLine().withSku("A-1").withQuantity(1),
+                        isOrderLine().withSku("X-9").withQuantity(3), isOrderLine().withSku("C-3"))),
+                null, CART);
+
+        hamcrest("L4 reference object, shallow: lines compared with equals",
+                () -> isCartLike(EXPECTED_CART), null, CART);
+
+        hamcrest("L5 reference object, deep: lines item by item, indexed paths",
+                () -> isCartLikeDeep(EXPECTED_CART), null, CART);
+
+        PropertyAssert.pathIntoCollections = true;
+        assertj("L6-before list via AssertJ satisfiesExactly(..), path carried into the list",
+                () -> CartAssert.assertThat(CART).hasLinesSatisfying(l -> Assertions.assertThat(l).satisfiesExactly(
+                        a -> OrderLineAssert.assertThat(a).hasSku("A-1").hasQuantity(1),
+                        b -> OrderLineAssert.assertThat(b).hasSku("X-9").hasQuantity(3),
+                        c -> OrderLineAssert.assertThat(c).hasSku("C-3"))));
+        PropertyAssert.pathIntoCollections = false;
+        assertj("L6 list via AssertJ satisfiesExactly(..), path restarts at the element type",
+                () -> CartAssert.assertThat(CART).hasLinesSatisfying(l -> Assertions.assertThat(l).satisfiesExactly(
+                        a -> OrderLineAssert.assertThat(a).hasSku("A-1").hasQuantity(1),
+                        b -> OrderLineAssert.assertThat(b).hasSku("X-9").hasQuantity(3),
+                        c -> OrderLineAssert.assertThat(c).hasSku("C-3"))));
+
+        assertj("L7 list via AssertJ element navigation: element(1, as(..))",
+                () -> CartAssert.assertThat(CART).extracting(Cart::getLines,
+                                org.assertj.core.api.InstanceOfAssertFactories.list(OrderLine.class))
+                        .element(1, new org.assertj.core.api.InstanceOfAssertFactory<>(OrderLine.class, OrderLineAssert::new))
+                        .hasSku("X-9").hasQuantity(3));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

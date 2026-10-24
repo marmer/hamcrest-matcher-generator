@@ -60,6 +60,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         checks.forEach((name, m) -> {
             if (m == IGNORED) return;
             if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(prefix + name + ".", out);
+            else if (m instanceof ItemsInOrder<?> items) items.collectChecks(prefix + name, out);
             else out.add(new Check(prefix + name, m));
         });
     }
@@ -71,15 +72,105 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
             Object value = properties.get(name).apply(t);
             if (m instanceof PropertyMatcher<?, ?> nested && nested.type.isInstance(value)) {
                 nested.collectFailures(value, prefix + name + ".", failures, unaddressed);
-            } else if (!m.matches(value)) {
-                StringDescription mismatch = new StringDescription();
-                m.describeMismatch(value, mismatch);
-                failures.add(new Failure(prefix + name, m, value, mismatch.toString()));
+            } else if (m instanceof ItemsInOrder<?> items && value instanceof List<?> list) {
+                items.collectFailures(list, prefix + name, failures, unaddressed);
+            } else {
+                String mismatch = foreignMismatch(m, value);
+                if (mismatch != null) failures.add(new Failure(prefix + name, m, value, mismatch));
             }
         });
         if (checkingAllProperties) {
             properties.keySet().stream().filter(p -> !checks.containsKey(p)).forEach(p -> unaddressed.add(prefix + p));
         }
+    }
+
+    // ---- generated matchers inside foreign matchers (contains, hasItem, ...) -------------
+
+    /** Depth of foreign (non-generated) matchers on the stack: > 0 means "render on one line". */
+    private static final ThreadLocal<int[]> FOREIGN = ThreadLocal.withInitial(() -> new int[1]);
+
+    public static boolean oneLineInsideForeignMatchers = true; // switch for the before/after comparison
+
+    private static boolean insideForeign() { return oneLineInsideForeignMatchers && FOREIGN.get()[0] > 0; }
+
+    /** Mismatch text of a foreign matcher, or null if it matches. */
+    private static String foreignMismatch(Matcher<?> m, Object value) {
+        FOREIGN.get()[0]++;
+        try {
+            if (m.matches(value)) return null;
+            StringDescription mismatch = new StringDescription();
+            m.describeMismatch(value, mismatch);
+            return mismatch.toString();
+        } finally {
+            FOREIGN.get()[0]--;
+        }
+    }
+
+    private static String foreignDescription(org.hamcrest.SelfDescribing m) {
+        FOREIGN.get()[0]++;
+        try {
+            return StringDescription.toString(m);
+        } finally {
+            FOREIGN.get()[0]--;
+        }
+    }
+
+    // ---- lists: item-by-item, indexed paths (candidate L3) --------------------------------
+
+    /** Runtime-provided list matcher: one matcher per item, in order; failures get paths like {@code lines[1].quantity}. */
+    public static <E> ItemsInOrder<E> itemsInOrder(List<? extends Matcher<? super E>> itemMatchers) {
+        return new ItemsInOrder<>(itemMatchers);
+    }
+
+    @SafeVarargs
+    public static <E> ItemsInOrder<E> itemsInOrder(Matcher<? super E>... itemMatchers) {
+        return new ItemsInOrder<E>(java.util.Arrays.asList(itemMatchers));
+    }
+
+    public static final class ItemsInOrder<E> extends org.hamcrest.TypeSafeMatcher<List<?>> {
+        private final List<? extends Matcher<? super E>> items;
+
+        ItemsInOrder(List<? extends Matcher<? super E>> items) { this.items = items; }
+
+        void collectChecks(String path, List<Check> out) {
+            for (int i = 0; i < items.size(); i++) {
+                Matcher<?> m = items.get(i);
+                if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(path + "[" + i + "].", out);
+                else out.add(new Check(path + "[" + i + "]", m));
+            }
+        }
+
+        void collectFailures(List<?> list, String path, List<Failure> failures, List<String> unaddressed) {
+            if (list.size() != items.size()) {
+                failures.add(new Failure(path, new SizeIs(items.size()), list,
+                        "was " + list.size() + " items"));
+            }
+            for (int i = 0; i < Math.min(list.size(), items.size()); i++) {
+                Object value = list.get(i);
+                Matcher<?> m = items.get(i);
+                if (m instanceof PropertyMatcher<?, ?> nested && nested.type.isInstance(value)) {
+                    nested.collectFailures(value, path + "[" + i + "].", failures, unaddressed);
+                } else {
+                    String mismatch = foreignMismatch(m, value);
+                    if (mismatch != null) failures.add(new Failure(path + "[" + i + "]", m, value, mismatch));
+                }
+            }
+        }
+
+        @Override protected boolean matchesSafely(List<?> list) {
+            List<Failure> f = new ArrayList<>();
+            collectFailures(list, "", f, new ArrayList<>());
+            return f.isEmpty();
+        }
+
+        @Override public void describeTo(Description d) { d.appendText(items.size() + " items in order"); }
+    }
+
+    private record SizeIs(int size) implements Matcher<Object> {
+        @Override public boolean matches(Object o) { return false; }
+        @Override public void describeMismatch(Object o, Description d) { }
+        @Override public void describeTo(Description d) { d.appendText(size + " items"); }
+        @SuppressWarnings("deprecation") @Override public void _dont_implement_Matcher___instead_extend_BaseMatcher_() { }
     }
 
     // ---- Hamcrest hooks ------------------------------------------------------------------
@@ -90,6 +181,17 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         List<String> unaddressed = new ArrayList<>();
         collectFailures(item, "", failures, unaddressed);
         if (failures.isEmpty() && unaddressed.isEmpty()) return true;
+
+        if (insideForeign()) {
+            List<String> parts = new ArrayList<>();
+            for (Failure f : failures) {
+                parts.add(format == Format.A_PATH_LIST ? f.path + ": " + f.mismatch
+                        : f.path + ": expected " + foreignDescription(compact(f.expected)) + " but " + f.mismatch);
+            }
+            if (!unaddressed.isEmpty()) parts.add(unaddressedLine(unaddressed));
+            mismatch.appendText(type.getSimpleName() + " {" + String.join(", ", parts) + "}");
+            return false;
+        }
 
         switch (format) {
             case A_PATH_LIST -> {
@@ -104,7 +206,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 String sep = "";
                 for (Failure f : failures) {
                     mismatch.appendText(sep).appendText(f.path + ": expected ")
-                            .appendDescriptionOf(compact(f.expected)).appendText(" but " + f.mismatch);
+                            .appendText(foreignDescription(compact(f.expected))).appendText(" but " + f.mismatch);
                     sep = INDENT;
                 }
                 if (!unaddressed.isEmpty()) mismatch.appendText(sep).appendText(unaddressedLine(unaddressed));
@@ -115,7 +217,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 mismatch.appendText(failures.size() + " of " + all.size() + " property checks failed");
                 for (Failure f : failures) {
                     mismatch.appendText(INDENT + "  " + f.path)
-                            .appendText(INDENT + "    expected: ").appendDescriptionOf(compact(f.expected))
+                            .appendText(INDENT + "    expected: ").appendText(foreignDescription(compact(f.expected)))
                             .appendText(INDENT + "    actual:   ").appendValue(f.actual);
                     String plain = "was " + StringDescription.toString(new ValueOnly(f.actual));
                     if (!f.mismatch.equals(plain)) mismatch.appendText(INDENT + "    because:  " + f.mismatch);
@@ -134,9 +236,15 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
     public void describeTo(Description d) {
         List<Check> all = new ArrayList<>();
         collectChecks("", all);
+        if (insideForeign()) {
+            List<String> parts = new ArrayList<>();
+            for (Check c : all) parts.add(c.path + " " + foreignDescription(c.matcher));
+            d.appendText(type.getSimpleName() + " {" + String.join(", ", parts) + "}");
+            return;
+        }
         if (format == Format.A_PATH_LIST) {
             d.appendText(type.getSimpleName());
-            for (Check c : all) d.appendText(INDENT + "  " + c.path + ": ").appendDescriptionOf(c.matcher);
+            for (Check c : all) d.appendText(INDENT + "  " + c.path + ": ").appendText(foreignDescription(c.matcher));
             if (checkingAllProperties) d.appendText(INDENT + "  with every property checked or ignored");
         } else {
             d.appendText(type.getSimpleName() + " with " + all.size() + " property checks");
@@ -155,7 +263,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 d.appendText("a " + pm.type.getSimpleName() + " with ");
                 String sep = "";
                 for (Check c : all) {
-                    d.appendText(sep + c.path + " ").appendDescriptionOf(c.matcher);
+                    d.appendText(sep + c.path + " ").appendText(foreignDescription(c.matcher));
                     sep = ", ";
                 }
             }
