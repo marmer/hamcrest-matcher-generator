@@ -76,7 +76,7 @@ End-to-end modules are the final validation layer: they apply `@MatcherConfigura
 
 ### Issue tracker
 
-Issues live in this repo's GitHub Issues (marmer/hamcrest-matcher-generator), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in this repo's GitHub Issues (marmer/hamcrest-matcher-generator), managed via `gh api` (REST) or `scripts/agents/issue.py`; `gh issue`/`gh pr` fail in cloud sessions (GraphQL blocked). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

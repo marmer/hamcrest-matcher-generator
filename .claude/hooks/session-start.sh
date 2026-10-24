@@ -34,4 +34,12 @@ else
   remove_rate_limit_artifacts
   echo "Maven pre-fetch failed; see the Maven output above (an HTTP 429 from Maven Central is a common cause). Builds fall back to online resolution." >&2
 fi
+
+# Jars for throwaway API prototypes (scripts/agents/prototype-classpath.sh reads ~/.m2 first).
+# AssertJ is a decided 6.0.0 dependency; ByteBuddy backs its soft assertions.
+for gav in org.assertj:assertj-core:3.27.3 net.bytebuddy:byte-buddy:1.15.11; do
+  ./mvnw -B -q dependency:get -Dartifact="$gav" -Dtransitive=false \
+    || echo "Prototype jar $gav not pre-fetched; prototype-classpath.sh falls back to curl." >&2
+done
+remove_rate_limit_artifacts
 exit 0
