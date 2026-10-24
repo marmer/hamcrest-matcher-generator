@@ -26,7 +26,8 @@ SPEC.json holds the page text, all optional except "title":
     }
 
 Each scenario goes to the first section whose "match" regex matches "<GROUP> <ID>"; without sections,
-one section per GROUP. "code" shows the test code above a scenario; "picks" marks variants as recommended.
+one section per GROUP. "code" shows the test code above a scenario ("GROUP ID") or above one variant's output ("GROUP ID/VARIANT", for
+candidates that differ in their call site); "picks" marks variants as recommended.
 """
 import html
 import json
@@ -52,7 +53,7 @@ h2 { font: 600 1.35rem/1.2 var(--display); margin: 8px 0 0; text-wrap: balance; 
 h3 { font-size: 1rem; margin: 0; font-weight: 600; text-wrap: balance; }
 p, li { max-width: 68ch; } p { margin: 0; }
 a { color: var(--accent); }
-code { font: .88em var(--mono); background: var(--console); padding: 1px 4px; border-radius: 3px; }
+code { font: .88em var(--mono); background: var(--console); padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
 .eyebrow { font: 500 .75rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .intro, .decisions, .group { display: grid; gap: 12px; }
 .decision, .scenario { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
@@ -100,8 +101,10 @@ def card(sc, spec):
     parts.append('<div class="variants">')
     for name, text in sc["variants"]:
         pick = ' <span class="pick">recommended</span>' if name in picks else ""
+        snippet = code.get(f"{key}/{name}")
+        snippet = f'<pre class="code">{html.escape(snippet)}</pre>' if snippet else ""
         parts.append(f'<div class="variant"><div class="vname">{html.escape(labels.get(name, name))}{pick}</div>'
-                     f'<pre>{html.escape(text)}</pre></div>')
+                     f'{snippet}<pre>{html.escape(text)}</pre></div>')
     parts.append("</div></article>")
     return "\n".join(parts)
 
