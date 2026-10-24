@@ -24,6 +24,10 @@ _Avoid_: backend settings
 An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison.
 _Avoid_: template, prototype object
 
+**Property path**:
+The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
+_Avoid_: property chain, field path
+
 **Completeness check**:
 The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted.
 _Avoid_: strict mode, exhaustiveness
