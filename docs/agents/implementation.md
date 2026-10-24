@@ -24,6 +24,7 @@ The orchestrator usually runs on Sonnet. It starts each implementer subagent on 
 - **Escalate Haiku at once** when the orchestrator judges it has taken a fundamentally wrong direction (e.g. misread the ticket, built in the wrong place, worked around the design instead of following it), since follow-ups won't recover that.
 - **Sonnet and Opus get one follow-up** instruction; if the result still misses the bar, escalate (`sonnet` → `opus`). If Opus still misses it, stop and ask the user.
 - **Record every escalation** as a comment on the ticket: from which model to which, and why. These comments feed the retro.
+- **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments.
 - **Keep the spec's status current**: after each claim, merge or ticket close, run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
 
 ## Retro at the end of every session
