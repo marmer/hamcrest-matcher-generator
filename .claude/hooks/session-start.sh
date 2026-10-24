@@ -9,6 +9,10 @@ fi
 
 cd "$CLAUDE_PROJECT_DIR"
 
+# Keep a record of this run; CLAUDE.md "Known Pitfalls" points agents here.
+exec > >(tee /tmp/session-start.log) 2>&1
+echo "session-start: $(date -u +%FT%TZ)"
+
 # Maven may store a 429 response body as a .pom or .jar, which breaks every later build
 # ("Non-parseable POM", NoClassDefFoundError). Drop the whole version directory so it is re-fetched.
 remove_rate_limit_artifacts() {
