@@ -621,10 +621,16 @@ Balance readability of this document with potential redundancy w.r.t to requirem
 <p><strong>Completeness check</strong> (the lead feature, for both backends): every property of a type is either checked or deliberately ignored. Users opt in per assertion and the check runs when the test runs: Hamcrest matchers offer <code>checkingAllProperties()</code>, AssertJ assertions offer the scope <code>satisfiesCheckingAllProperties(&#8230;&#8203;)</code> and the closing call <code>hasAllPropertiesChecked()</code>, and <code>ignoringFoo()</code> marks a property as deliberately ignored. Without the opt-in, matchers behave as in 5.x.</p>
 </li>
 <li>
-<p><strong>Reference-object matcher</strong> (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. AssertJ users get the same with AssertJ&#8217;s built-in recursive comparison, which the documentation shows side by side.</p>
+<p><strong>Reference-object matcher</strong> (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. The comparison goes deep: a nested value whose type has a generated matcher is compared property by property, a list item by item in order, any other collection in any order, and a map key by key. Everything else is compared with <code>equals</code>. AssertJ users get the same with AssertJ&#8217;s built-in recursive comparison, which the documentation shows side by side.</p>
 </li>
 <li>
-<p><strong>Readable mismatches</strong> (Hamcrest): only the failing properties are listed, one per line, with nested property paths such as <code>customer.address.city</code>. AssertJ keeps its native message style.</p>
+<p><strong>Readable mismatches</strong> (Hamcrest): only the failing checks are listed, one per line, each with its property path and both values, for example <code>customer.address.city: expected "Berlin" but was "Paris"</code>. Paths reach into lists (<code>lines[1].quantity</code>) and maps (<code>bySku["B-2"].quantity</code>); missing and unexpected items or keys get their own line. A generated matcher used inside one of Hamcrest&#8217;s own matchers, such as <code>contains(&#8230;&#8203;)</code>, prints on a single line. Values of generated types are shown with their properties instead of their <code>toString()</code>.</p>
+</li>
+<li>
+<p><strong>Collection matchers</strong> (Hamcrest runtime): <code>itemsInOrder(&#8230;&#8203;)</code>, <code>itemsInAnyOrder(&#8230;&#8203;)</code> and <code>entries(&#8230;&#8203;)</code> (names not final) check every item of a list or collection, or every entry of a map, and produce the paths above. Hamcrest&#8217;s own collection matchers keep working but print Hamcrest&#8217;s less specific messages.</p>
+</li>
+<li>
+<p><strong>AssertJ messages</strong> keep AssertJ&#8217;s native <code>Expecting &#8230;&#8203; to be &#8230;&#8203; but was &#8230;&#8203;</code> style and name the property path from the asserted object, for example <code>Expecting Order.customer.address.city to be: "Berlin"</code>. Inside a collection or map, the path starts again at the element type, because AssertJ reports the element&#8217;s index itself. An optional generated <code>Representation</code> shows generated types with their properties in AssertJ&#8217;s own messages.</p>
 </li>
 <li>
 <p><strong>Exclude configuration</strong>: packages or classes can be excluded from generation, for every backend.</p>
@@ -1134,6 +1140,10 @@ building block instances depicted in this diagram.&gt;</em></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step.</em></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Property path</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The route from the asserted object to the value that was checked, written with dots between property names, <code>[index]</code> for list items and <code>[key]</code> for map entries. Mismatch messages use it to say exactly which value differs, for example <code>customer.address.city</code> or <code>lines[1].quantity</code>.</em></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Completeness check</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>The check that every property of a type is either asserted or deliberately ignored. It makes sure that a property added later cannot go unchecked without anyone noticing.</em></p></td>
 </tr>
@@ -1145,7 +1155,7 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div id="footer">
 <div id="footer-text">
 Version {revnumber}<br>
-Last updated 2026-10-24 09:21:21 UTC
+Last updated 2026-10-24 11:32:37 UTC
 </div>
 </div>
 </body>
