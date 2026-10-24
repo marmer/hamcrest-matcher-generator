@@ -4,6 +4,6 @@
 
 Compatibility goal: a 5.x user test compiles after a version bump alone, with the same generated class names, packages, and `isX()`/`withFoo`/`resetFoo` API. The artifact switch is the only allowed break, and the relocation POM covers it. Everything else that breaks goes into the migration guide.
 
-Fallback: whether the `io.github.marmer` namespace survived the OSSRH shutdown in the Central Portal is checked in a one-time HITL task. If it cannot be used, the group ID becomes `online.marmer.testutils` (verified via DNS TXT on `marmer.online`) and the new packages become `online.marmer.matchergenerator.*`. Nothing else changes.
+Namespace: `io.github.marmer` survived the OSSRH shutdown. It is listed as verified in the Central Portal under the owner's migrated legacy account (checked 2026-10-24), so the `online.marmer` fallback is not needed.
 
 Rejected: a neutral repository rename (it loses the established name for little gain) and a uniform `hamcrest-matcher-generator-*` prefix (it is misleading for the AssertJ artifact).
