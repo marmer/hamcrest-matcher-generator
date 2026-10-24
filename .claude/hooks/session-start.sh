@@ -23,11 +23,16 @@ remove_rate_limit_artifacts() {
   echo "$dirs" | xargs -r rm -rf
 }
 
+# Every JVM prints "Picked up JAVA_TOOL_OPTIONS: ..." (the proxy config) on stderr; keep those lines out of
+# the agent's context. JAVA_TOOL_OPTIONS itself stays set. `|| true` keeps "no lines matched" from failing the
+# pipeline, so pipefail still reports Maven's exit code.
+quiet_jvm() { grep -v '^Picked up JAVA_TOOL_OPTIONS' || true; }
+
 remove_rate_limit_artifacts
 # A full install with one fast unit test and one integration test class: surefire and failsafe resolve
 # their test providers only when they actually run tests, which dependency:go-offline misses.
 if ./mvnw -B -q install -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerationProcessorIT \
-    -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false \
+    -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false 2>&1 | quiet_jvm \
     && ! remove_rate_limit_artifacts; then
   echo "Maven dependencies pre-fetched; subagents can build with -o." >&2
 else
@@ -38,7 +43,7 @@ fi
 # Jars for throwaway API prototypes (scripts/agents/prototype-classpath.sh reads ~/.m2 first).
 # AssertJ is a decided 6.0.0 dependency; ByteBuddy backs its soft assertions.
 for gav in org.assertj:assertj-core:3.27.3 net.bytebuddy:byte-buddy:1.15.11; do
-  ./mvnw -B -q dependency:get -Dartifact="$gav" -Dtransitive=false \
+  ./mvnw -B -q dependency:get -Dartifact="$gav" -Dtransitive=false 2>&1 | quiet_jvm \
     || echo "Prototype jar $gav not pre-fetched; prototype-classpath.sh falls back to curl." >&2
 done
 remove_rate_limit_artifacts

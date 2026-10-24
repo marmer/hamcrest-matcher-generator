@@ -9,6 +9,7 @@ Usage:
   scripts/agents/issue-status.py <parent-number>           # update the parent's body
   scripts/agents/issue-status.py <parent-number> --print   # print the section only
   scripts/agents/issue-status.py <parent-number> --json    # print the raw status data
+  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets (no map write)
 """
 import json
 import subprocess
@@ -59,10 +60,21 @@ def collect(parent):
     return tickets
 
 
+def kind(ticket):
+    """The wayfinder:<type> label suffix, else the first label, else None."""
+    typed = next((name.split(":", 1)[1] for name in ticket["labels"] if name.startswith("wayfinder:")), None)
+    return typed or (ticket["labels"][0] if ticket["labels"] else None)
+
+
+def frontier_line(ticket):
+    suffix = f" ({kind(ticket)})" if kind(ticket) else ""
+    return f"#{ticket['number']} {ticket['title']}{suffix}"
+
+
 def label(ticket, width=48):
     title = ticket["title"] if len(ticket["title"]) <= width else ticket["title"][: width - 1] + "…"
-    kind = next((name.split(":", 1)[1] for name in ticket["labels"] if name.startswith("wayfinder:")), None)
-    suffix = f"<br/><i>{kind}</i>" if kind else ""
+    typed = kind(ticket)
+    suffix = f"<br/><i>{typed}</i>" if typed else ""
     # Mermaid entity codes: "#35;" renders "#", "#quot;" renders a double quote.
     return f"#35;{ticket['number']} " + title.replace('"', "#quot;") + suffix
 
@@ -103,6 +115,11 @@ def main():
     tickets = collect(parent)
     if "--json" in sys.argv:
         print(json.dumps(tickets, indent=2))
+        return
+    if "--frontier" in sys.argv:
+        for ticket in tickets:
+            if ticket["status"] == "ready":
+                print(frontier_line(ticket))
         return
     section = render(tickets)
     if "--print" in sys.argv:

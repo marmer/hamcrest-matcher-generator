@@ -9,6 +9,7 @@ Usage:
   scripts/agents/issue.py comment <n> --body-file F      # post F as a comment
   scripts/agents/issue.py close <n> [--reason completed|not_planned]
   scripts/agents/issue.py decide <map> <n> --gist "..."  # append a decision line to the map
+  scripts/agents/issue.py amend <map> <n> --gist "..."   # replace the existing decision line for <n>
   scripts/agents/issue.py scope <map> <n> --gist "..."   # append an out-of-scope line to the map
   scripts/agents/issue.py fog <map> [--remove TEXT] [--add TEXT]  # edit the Not-yet-specified bullets
   scripts/agents/issue.py child <map> --title T --type {research,prototype,grilling,task} --body-file F
@@ -78,6 +79,17 @@ def _join_section(body, newline, lines, start, end, section):
     return newline.join(new_lines)
 
 
+# a bullet that starts with a link to the ticket; the title is escape-aware (`\[`, `\]`) and ends at its own `](`,
+# so an inline link in the gist does not match
+def _linked_bullet_pattern(ticket):
+    return re.compile(rf"^\s*- \[(?:\\.|[^\]\\])*\]\({re.escape(REPO_URL)}/{ticket}\)", re.MULTILINE)
+
+
+def _linked_line(ticket, title, gist):
+    safe_title = title.replace("[", "\\[").replace("]", "\\]")
+    return f"- [{safe_title}]({REPO_URL}/{ticket}): {gist}"
+
+
 def add_linked_bullet(body, heading, ticket, title, gist):
     """Return `body` with `- [title](link): gist` appended as the last item of the `heading` section.
 
@@ -86,19 +98,43 @@ def add_linked_bullet(body, heading, ticket, title, gist):
     ticket inside other bullets' gists do not count.
     """
     newline, lines, start, end, section = _split_section(body, heading)
-    # the title is escape-aware (`\[`, `\]`) and ends at its own `](`, so an inline link in the gist does not match
-    if re.search(rf"^\s*- \[(?:\\.|[^\]\\])*\]\({re.escape(REPO_URL)}/{ticket}\)", "\n".join(section), re.MULTILINE):
+    if _linked_bullet_pattern(ticket).search("\n".join(section)):
         raise DecisionError(f"#{ticket} is already linked in '{heading}'; nothing changed")
-    safe_title = title.replace("[", "\\[").replace("]", "\\]")
     while section and not section[-1].strip():
         section.pop()
-    section.append(f"- [{safe_title}]({REPO_URL}/{ticket}): {gist}")
+    section.append(_linked_line(ticket, title, gist))
     return _join_section(body, newline, lines, start, end, section)
 
 
 def add_decision(body, ticket, title, gist):
     """Append a decision bullet to the Decisions-so-far section (see add_linked_bullet)."""
     return add_linked_bullet(body, DECISIONS, ticket, title, gist)
+
+
+def replace_linked_bullet(body, heading, ticket, title, gist):
+    """Return `body` with the bullet of `heading` that links `ticket` rewritten to the freshly built line.
+
+    Pure text manipulation, no API calls. Raises DecisionError (body unchanged) when the section is
+    missing, has no bullet linking the ticket, or has more than one. Indented continuation lines of
+    the replaced bullet are replaced with it.
+    """
+    newline, lines, start, end, section = _split_section(body, heading)
+    pattern = _linked_bullet_pattern(ticket)
+    hits = [i for i, line in enumerate(section) if pattern.match(line)]
+    if not hits:
+        raise DecisionError(f"no line linking #{ticket} in '{heading}'; nothing changed")
+    if len(hits) > 1:
+        raise DecisionError(f"{len(hits)} lines link #{ticket} in '{heading}'; nothing changed")
+    stop = hits[0] + 1
+    while stop < len(section) and section[stop].startswith("  "):
+        stop += 1
+    section[hits[0]:stop] = [_linked_line(ticket, title, gist)]
+    return _join_section(body, newline, lines, start, end, section)
+
+
+def amend_decision(body, ticket, title, gist):
+    """Replace the existing decision bullet for `ticket` in the Decisions-so-far section."""
+    return replace_linked_bullet(body, DECISIONS, ticket, title, gist)
 
 
 def edit_fog(body, remove=None, add=None):
@@ -146,6 +182,15 @@ def decide(args):
     new_body = add_decision(map_issue["body"] or "", args.ticket, title, args.gist)
     gh("-X", "PATCH", f"{REPO}/issues/{args.map}", "-f", f"body={new_body}")
     print(f"Recorded decision for #{args.ticket} in #{args.map}")
+
+
+def amend(args):
+    map_issue = gh(f"{REPO}/issues/{args.map}")
+    title = gh(f"{REPO}/issues/{args.ticket}")["title"]
+    new_body = amend_decision(map_issue["body"] or "", args.ticket, title, args.gist)
+    gh("-X", "PATCH", f"{REPO}/issues/{args.map}", "-f", f"body={new_body}")
+    print(f"Amended decision for #{args.ticket} in #{args.map}")
+    refresh_status(args.map)
 
 
 def scope(args):
@@ -212,6 +257,12 @@ def main():
     p.add_argument("ticket", type=int, help="resolved ticket number to link")
     p.add_argument("--gist", required=True, help="one-line summary of the decision")
     p.set_defaults(func=decide)
+
+    p = sub.add_parser("amend", help="replace the existing decision line for a ticket in the map")
+    p.add_argument("map", type=int, help="map issue number")
+    p.add_argument("ticket", type=int, help="resolved ticket number whose decision line to replace")
+    p.add_argument("--gist", required=True, help="one-line summary of the decision")
+    p.set_defaults(func=amend)
 
     p = sub.add_parser("scope", help="append an out-of-scope line to the map's Out-of-scope section")
     p.add_argument("map", type=int, help="map issue number")
