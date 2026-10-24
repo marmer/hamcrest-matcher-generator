@@ -32,6 +32,6 @@ if ./mvnw -B -q install -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerati
   echo "Maven dependencies pre-fetched; subagents can build with -o." >&2
 else
   remove_rate_limit_artifacts
-  echo "Maven pre-fetch incomplete (often a Maven Central HTTP 429); builds fall back to online resolution." >&2
+  echo "Maven pre-fetch failed; see the Maven output above (an HTTP 429 from Maven Central is a common cause). Builds fall back to online resolution." >&2
 fi
 exit 0
