@@ -82,10 +82,12 @@ def add_linked_bullet(body, heading, ticket, title, gist):
     """Return `body` with `- [title](link): gist` appended as the last item of the `heading` section.
 
     Pure text manipulation, no API calls. Raises DecisionError (body unchanged) when the section is
-    missing or the section already links the ticket.
+    missing or a bullet of the section already starts with a link to the ticket. Inline links to the
+    ticket inside other bullets' gists do not count.
     """
     newline, lines, start, end, section = _split_section(body, heading)
-    if re.search(rf"\]\({re.escape(REPO_URL)}/{ticket}\)", "\n".join(section)):
+    # the title is escape-aware (`\[`, `\]`) and ends at its own `](`, so an inline link in the gist does not match
+    if re.search(rf"^\s*- \[(?:\\.|[^\]\\])*\]\({re.escape(REPO_URL)}/{ticket}\)", "\n".join(section), re.MULTILINE):
         raise DecisionError(f"#{ticket} is already linked in '{heading}'; nothing changed")
     safe_title = title.replace("[", "\\[").replace("]", "\\]")
     while section and not section[-1].strip():
