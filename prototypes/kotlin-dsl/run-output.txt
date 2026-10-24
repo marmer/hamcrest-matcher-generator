@@ -1,0 +1,239 @@
+##### HAMCREST S1 flat POJO: two properties differ
+=== K0
+Expected: Person with 3 property checks
+     but: name: expected "Bob" but was "Ada"
+          email: expected a string starting with "bob@" but was "ada@example.org"
+=== K1
+Expected: Person with 3 property checks
+     but: name: expected "Bob" but was "Ada"
+          email: expected a string starting with "bob@" but was "ada@example.org"
+=== K2
+Expected: Person with 3 property checks
+     but: name: expected "Bob" but was "Ada"
+          email: expected a string starting with "bob@" but was "ada@example.org"
+=== K3
+Expected: Person with 3 property checks
+     but: name: expected "Bob" but was "Ada"
+          email: expected a string starting with "bob@" but was "ada@example.org"
+=== K4
+Expected: Person with 3 property checks
+     but: name: expected "Bob" but was "Ada"
+          email: expected a string starting with "bob@" but was "ada@example.org"
+##### HAMCREST S2 nested: Order -> Customer -> Address (record)
+=== K0
+Expected: Order with 4 property checks
+     but: total: expected <10.00> but was <9.99>
+          customer.address.city: expected "Berlin" but was "Paris"
+=== K1
+Expected: Order with 4 property checks
+     but: total: expected <10.00> but was <9.99>
+          customer.address.city: expected "Berlin" but was "Paris"
+=== K2
+Expected: Order with 4 property checks
+     but: total: expected <10.00> but was <9.99>
+          customer.address.city: expected "Berlin" but was "Paris"
+=== K3
+Expected: Order with 4 property checks
+     but: total: expected <10.00> but was <9.99>
+          customer.address.city: expected "Berlin" but was "Paris"
+=== K4
+Expected: Order with 4 property checks
+     but: total: expected <10.00> but was <9.99>
+          customer.address.city: expected "Berlin" but was "Paris"
+##### HAMCREST S3 record: two components differ
+=== K0
+Expected: Address with 2 property checks
+     but: city: expected "Berlin" but was "Paris"
+          zip: expected "10115" but was "75001"
+=== K1
+Expected: Address with 2 property checks
+     but: city: expected "Berlin" but was "Paris"
+          zip: expected "10115" but was "75001"
+=== K2
+Expected: Address with 2 property checks
+     but: city: expected "Berlin" but was "Paris"
+          zip: expected "10115" but was "75001"
+=== K3
+Expected: Address with 2 property checks
+     but: city: expected "Berlin" but was "Paris"
+          zip: expected "10115" but was "75001"
+=== K4
+Expected: Address with 2 property checks
+     but: city: expected "Berlin" but was "Paris"
+          zip: expected "10115" but was "75001"
+##### HAMCREST S4 nested value is null
+=== K0
+Expected: Order with 1 property checks
+     but: customer: expected a Customer with name "Ada" but was null
+=== K1
+Expected: Order with 1 property checks
+     but: customer: expected a Customer with name "Ada" but was null
+=== K2
+Expected: Order with 1 property checks
+     but: customer: expected a Customer with name "Ada" but was null
+=== K3
+Expected: Order with 1 property checks
+     but: customer: expected a Customer with name "Ada" but was null
+=== K4
+Expected: Order with 1 property checks
+     but: customer: expected a Customer with name "Ada" but was null
+##### HAMCREST S5 list of a generated type, in order
+=== K0
+Expected: Cart with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>
+=== K1
+Expected: Cart with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>
+=== K2
+Expected: Cart with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>
+=== K3
+Expected: Cart with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>
+=== K4
+Expected: Cart with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>
+##### HAMCREST S6 set of a generated type, any order
+=== K0
+Expected: Wishlist with 6 property checks
+     but: items: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
+=== K1
+Expected: Wishlist with 6 property checks
+     but: items: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
+=== K2
+Expected: Wishlist with 6 property checks
+     but: items: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
+=== K3
+Expected: Wishlist with 6 property checks
+     but: items: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
+=== K4
+Expected: Wishlist with 6 property checks
+     but: items: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
+##### HAMCREST S7 map from key to a generated type
+=== K0
+Expected: Inventory with 2 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <1>}
+=== K1
+Expected: Inventory with 2 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <1>}
+=== K2
+Expected: Inventory with 2 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <1>}
+=== K3
+Expected: Inventory with 2 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <1>}
+=== K4
+Expected: Inventory with 2 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <1>}
+##### HAMCREST S8 completeness check: phone neither checked nor ignored
+=== K0
+Expected: Person with 2 property checks, every property checked or ignored
+     but: name: expected "Bob" but was "Ada"
+          neither checked nor ignored: phone
+=== K1
+Expected: Person with 2 property checks, every property checked or ignored
+     but: name: expected "Bob" but was "Ada"
+          neither checked nor ignored: phone
+=== K2
+Expected: Person with 2 property checks, every property checked or ignored
+     but: name: expected "Bob" but was "Ada"
+          neither checked nor ignored: phone
+=== K3
+Expected: Person with 2 property checks, every property checked or ignored
+     but: name: expected "Bob" but was "Ada"
+          neither checked nor ignored: phone
+=== K4
+Expected: Person with 2 property checks, every property checked or ignored
+     but: name: expected "Bob" but was "Ada"
+          neither checked nor ignored: phone
+##### HAMCREST S9 JSpecify: null as expected value (phone is null) -> passes
+=== K0
+PASSED
+=== K1
+PASSED
+=== K2
+PASSED
+=== K3
+PASSED
+=== K4
+PASSED
+##### HAMCREST S10 completeness check on a record: zip neither checked nor ignored
+=== K0
+Expected: Address with 2 property checks, every property checked or ignored
+     but: neither checked nor ignored: zip
+=== K1
+Expected: Address with 2 property checks, every property checked or ignored
+     but: neither checked nor ignored: zip
+=== K2
+Expected: Address with 2 property checks, every property checked or ignored
+     but: neither checked nor ignored: zip
+=== K3
+Expected: Address with 2 property checks, every property checked or ignored
+     but: neither checked nor ignored: zip
+=== K4
+PASSED
+##### ASSERTJ A1 nested: Order -> Customer -> Address, as generated
+=== AS_IS
+Expecting city of:
+  Address[street=1 Rue de Rivoli, city=Paris, zip=75001]
+to be:
+  "Berlin"
+but was:
+  "Paris"
+##### ASSERTJ A2 list of a generated type, as generated
+=== AS_IS
+Expecting each element of:
+  [proto.model.OrderLine@1e6d1014,
+    proto.model.OrderLine@2b9627bc,
+    proto.model.OrderLine@76707e36]
+to satisfy the requirements at its index, but these elements did not:
+
+proto.model.OrderLine@2b9627bc
+- element index: 1
+- error: java.lang.AssertionError: 
+Expecting quantity of:
+  proto.model.OrderLine@2b9627bc
+to be:
+  3
+but was:
+  2
+	at proto.demo.assertj.AssertJKt.a2$lambda$0$2(AssertJ.kt:25)
+	at proto.demo.assertj.AssertJKt.a2$lambda$0$3(AssertJ.kt:25)
+	at proto.demo.assertj.AssertJKt.a2$lambda$0(AssertJ.kt:23)
+	...(8 remaining lines not displayed - this can be changed with Assertions.setMaxStackTraceElementsDisplayed)
+##### COMPILE N1 JSpecify: a nullable Matcher is rejected (value shorthand takes String?, the matcher overload does not)
+=== K0
+compile/N1_0_K0.kt:11:51: error: argument type mismatch: actual type is 'Matcher<String>?', but 'Matcher<in String>' was expected.
+=== K3
+compile/N1_1_K3.kt:8:47: error: argument type mismatch: actual type is 'Matcher<String>?', but 'Matcher<in String>' was expected.
+=== K4
+compile/N1_2_K4.kt:9:73: error: argument type mismatch: actual type is 'Matcher<String>?', but 'Matcher<in String!>' was expected.
+##### COMPILE N2 scope leak: Order.id written inside the customer block by mistake
+=== K1
+compiles
+=== K2
+compiles
+=== K3
+compile/N2_2_K3.kt:8:45: error: 'fun id(value: Long): Unit' cannot be called in this context with an implicit receiver. Use an explicit receiver if necessary.
+=== K4
+compile/N2_3_K4.kt:9:94: error: 'fun <V> KFunction1<Order, V>.eq(value: V): Unit' cannot be called in this context with an implicit receiver. Use an explicit receiver if necessary.
+##### COMPILE N3 wrong value type: age("36") instead of age(36)
+=== K0
+compile/N3_0_K0.kt:11:22: error: none of the following candidates is applicable:
+=== K3
+compile/N3_1_K3.kt:8:22: error: none of the following candidates is applicable:
+=== K4
+compiles
+##### COMPILE N4 K4 with Kotlin property syntax on a Java POJO (Person::name instead of Person::getName)
+=== K4
+compile/N4_0_K4.kt:10:37: error: the feature "references to synthetic java properties" is unsupported.
