@@ -8,7 +8,7 @@ Process rules for wayfinder maps and their tickets, used by `/wayfinder`. A map'
 
 ## Merging
 
-- **Owner rule**: PRs created in wayfinder sessions are merged by the session itself (squash via `gh api -X PUT .../pulls/<n>/merge`), even with red CI. The repo has no auto-merge, so when the owner asks for a PR ("`/pr`", "PR und merge"), the PR ends merged in the same session. Vendored skills (`.agents/skills/`, `skills-lock.json`) are never modified. After a squash merge, reset the session branch to the base before new work (git fetch origin development && git checkout -B <branch> origin/development && git push --force-with-lease); otherwise its already-merged commits conflict with the squash commit in the next PR.
+- **Owner rule**: PRs created in wayfinder sessions are merged by the session itself (squash via `gh api -X PUT .../pulls/<n>/merge`), even with red CI. When the owner asks for a PR ("`/pr`", "PR und merge"), the PR ends merged in the same session. Auto-merge is allowed on the repo but waits on nothing until `development` has required checks, so merge directly until then. Vendored skills (`.agents/skills/`, `skills-lock.json`) are never modified. After a squash merge, reset the session branch to the base before new work (git fetch origin development && git checkout -B <branch> origin/development && git push --force-with-lease); otherwise its already-merged commits conflict with the squash commit in the next PR.
 - **Clean branch**: every session leaves its branch with no commits outside a merged PR. At session start, check `git log --oneline origin/development..HEAD`; fold any leftover commit into a PR of its own, or name it explicitly in the PR that carries it.
 
 ## Grilling tickets
