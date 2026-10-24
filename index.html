@@ -618,7 +618,7 @@ Balance readability of this document with potential redundancy w.r.t to requirem
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Completeness check</strong> (the lead feature, for both backends): every property of a type is either checked or deliberately ignored.</p>
+<p><strong>Completeness check</strong> (the lead feature, for both backends): every property of a type is either checked or deliberately ignored. Users opt in per assertion and the check runs when the test runs: Hamcrest matchers offer <code>checkingAllProperties()</code>, AssertJ assertions offer the scope <code>satisfiesCheckingAllProperties(&#8230;&#8203;)</code> and the closing call <code>hasAllPropertiesChecked()</code>, and <code>ignoringFoo()</code> marks a property as deliberately ignored. Without the opt-in, matchers behave as in 5.x.</p>
 </li>
 <li>
 <p><strong>Reference-object matcher</strong> (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. AssertJ users get the same with AssertJ&#8217;s built-in recursive comparison, which the documentation shows side by side.</p>
@@ -1145,7 +1145,7 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div id="footer">
 <div id="footer-text">
 Version {revnumber}<br>
-Last updated 2026-10-23 20:02:44 UTC
+Last updated 2026-10-24 09:12:16 UTC
 </div>
 </div>
 </body>
