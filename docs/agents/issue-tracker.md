@@ -55,6 +55,8 @@ Read it as in **Read an issue** above.
 
 ## Wayfinding operations
 
+For process rules (status view, merging, per-ticket-type rules), read [`wayfinding.md`](wayfinding.md).
+
 Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
 - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh api -X POST $R/issues -f title=... -F body=@map.md -f 'labels[]=wayfinder:map'`.
