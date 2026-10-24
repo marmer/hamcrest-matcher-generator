@@ -79,6 +79,7 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
             if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(prefix + name + ".", out);
             else if (m instanceof ItemsInOrder<?> items) items.collectChecks(prefix + name, out);
             else if (m instanceof ItemsInAnyOrder<?> items) items.collectChecks(prefix + name, out);
+            else if (m instanceof Entries<?, ?> entries) entries.collectChecks(prefix + name, out);
             else out.add(new Check(prefix + name, m));
         });
     }
@@ -94,6 +95,8 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
                 items.collectFailures(list, prefix + name, failures, unaddressed);
             } else if (m instanceof ItemsInAnyOrder<?> items && value instanceof java.util.Collection<?> c) {
                 items.collectFailures(c, prefix + name, failures);
+            } else if (m instanceof Entries<?, ?> entries && value instanceof Map<?, ?> map) {
+                entries.collectFailures(map, prefix + name, failures, unaddressed);
             } else {
                 String mismatch = foreignMismatch(m, value);
                 if (mismatch != null) failures.add(new Failure(prefix + name, m, value, mismatch));
@@ -248,6 +251,70 @@ public abstract class PropertyMatcher<T, SELF extends PropertyMatcher<T, SELF>>
         }
 
         @Override public void describeTo(Description d) { d.appendText(items.size() + " items in any order"); }
+    }
+
+    // ---- maps: one matcher per key, key in the path (candidate M2) ---------------------------
+
+    /** Runtime-provided map matcher: exactly these keys; values checked per key, paths like {@code bySku["B-2"].quantity}. */
+    public static <K, V> Entries<K, V> entries(Map<K, ? extends Matcher<? super V>> valueMatchers) {
+        return new Entries<>(new LinkedHashMap<>(valueMatchers));
+    }
+
+    public static <K, V> Entries<K, V> entries(K k1, Matcher<? super V> v1, K k2, Matcher<? super V> v2) {
+        Map<K, Matcher<? super V>> m = new LinkedHashMap<>();
+        m.put(k1, v1);
+        m.put(k2, v2);
+        return new Entries<>(m);
+    }
+
+    public static final class Entries<K, V> extends org.hamcrest.TypeSafeMatcher<Map<?, ?>> {
+        private final Map<K, ? extends Matcher<? super V>> values;
+
+        Entries(Map<K, ? extends Matcher<? super V>> values) { this.values = values; }
+
+        /** {@code ["B-2"]} for strings, {@code [RED]}/{@code [42]} for other keys, properties for generated types. */
+        private static String key(Object k) {
+            if (k instanceof String str) return "[\"" + str + "\"]";
+            return "[" + (k != null && VALUE_RENDERERS.containsKey(k.getClass()) ? describeValue(k) : String.valueOf(k)) + "]";
+        }
+
+        void collectChecks(String path, List<Check> out) {
+            values.forEach((k, m) -> {
+                if (m instanceof PropertyMatcher<?, ?> nested) nested.collectChecks(path + key(k) + ".", out);
+                else out.add(new Check(path + key(k), m));
+            });
+        }
+
+        void collectFailures(Map<?, ?> actual, String path, List<Failure> failures, List<String> unaddressed) {
+            values.forEach((k, m) -> {
+                if (!actual.containsKey(k)) {
+                    failures.add(new Failure(path, null, actual,
+                            "missing key " + describeValue(k) + " with " + foreignDescription(m)));
+                    return;
+                }
+                Object value = actual.get(k);
+                if (m instanceof PropertyMatcher<?, ?> nested && nested.type.isInstance(value)) {
+                    nested.collectFailures(value, path + key(k) + ".", failures, unaddressed);
+                } else {
+                    String mismatch = foreignMismatch(m, value);
+                    if (mismatch != null) failures.add(new Failure(path + key(k), m, value, mismatch));
+                }
+            });
+            actual.forEach((k, v) -> {
+                if (!values.containsKey(k)) {
+                    failures.add(new Failure(path, null, actual,
+                            "unexpected key " + describeValue(k) + " with " + describeValue(v)));
+                }
+            });
+        }
+
+        @Override protected boolean matchesSafely(Map<?, ?> map) {
+            List<Failure> f = new ArrayList<>();
+            collectFailures(map, "", f, new ArrayList<>());
+            return f.isEmpty();
+        }
+
+        @Override public void describeTo(Description d) { d.appendText("a map with " + values.size() + " entries"); }
     }
 
     private static String oneLine(Failure f) {

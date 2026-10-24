@@ -17,6 +17,11 @@ import static proto.hamcrest.OrderLineMatcher.isOrderLine;
 import static proto.hamcrest.PropertyMatcher.itemsInOrder;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasEntry;
+import static proto.hamcrest.InventoryMatcher.isInventory;
+import static proto.hamcrest.InventoryMatcher.isInventoryLike;
+import static proto.hamcrest.InventoryMatcher.isInventoryLikeDeep;
+import static proto.hamcrest.PropertyMatcher.entries;
 import static proto.hamcrest.PropertyMatcher.itemsInAnyOrder;
 import static proto.hamcrest.WishlistMatcher.isWishlist;
 import static proto.hamcrest.WishlistMatcher.isWishlistLike;
@@ -24,6 +29,7 @@ import static proto.hamcrest.WishlistMatcher.isWishlistLikeDeep;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matcher;
@@ -42,6 +48,9 @@ import proto.model.Address;
 import proto.model.Cart;
 import proto.model.OrderLine;
 import proto.model.Wishlist;
+import proto.model.Inventory;
+import proto.assertj.InventoryAssert;
+import java.util.LinkedHashMap;
 import proto.assertj.WishlistAssert;
 import proto.assertj.GeneratedRepresentation;
 import java.util.LinkedHashSet;
@@ -69,6 +78,10 @@ public class Demo {
     static final Cart EXPECTED_CART = new Cart("Ada", List.of(new OrderLine("A-1", 1), new OrderLine("B-2", 3)));
 
     public static void main(String[] args) {
+        if (args.length > 0 && args[0].equals("maps")) {
+            maps();
+            return;
+        }
         if (args.length > 0 && args[0].equals("unordered")) {
             unordered();
             return;
@@ -153,6 +166,43 @@ public class Demo {
             new OrderLine("C-3", 1), new OrderLine("B-2", 2), new OrderLine("A-1", 1))));
     static final Wishlist EXPECTED_WISHLIST = new Wishlist("Ada", new LinkedHashSet<>(List.of(
             new OrderLine("A-1", 1), new OrderLine("B-2", 3))));
+
+    static Inventory inventory(OrderLine... lines) {
+        Map<String, OrderLine> bySku = new LinkedHashMap<>();
+        for (OrderLine l : lines) bySku.put(l.getSku(), l);
+        return new Inventory("Ada", bySku);
+    }
+
+    static final Inventory INVENTORY = inventory(new OrderLine("A-1", 1), new OrderLine("B-2", 2), new OrderLine("C-3", 1));
+    static final Inventory EXPECTED_INVENTORY = inventory(new OrderLine("A-1", 1), new OrderLine("B-2", 3), new OrderLine("D-4", 1));
+
+    static void maps() {
+        hamcrest("M1 Map value of a generated type inside Hamcrest hasEntry(..): B-2 has quantity 2, not 3",
+                () -> isInventory().withBySku(hasEntry(equalTo("B-2"), isOrderLine().withQuantity(3))),
+                () -> bean(Inventory.class).with("bySku", hasEntry(equalTo("B-2"),
+                        bean(OrderLine.class).with("quantity", equalTo(3)))),
+                INVENTORY);
+
+        hamcrest("M2 candidate: runtime entries(..): exactly these keys, the key in the path",
+                () -> isInventory().withBySku(entries(
+                        "A-1", isOrderLine().withQuantity(1),
+                        "B-2", isOrderLine().withQuantity(3))),
+                null, INVENTORY);
+
+        hamcrest("M3 reference object, shallow: the Map compared with equals",
+                () -> isInventoryLike(EXPECTED_INVENTORY), null, INVENTORY);
+
+        hamcrest("M4 reference object, deep: key by key, missing and unexpected keys",
+                () -> isInventoryLikeDeep(EXPECTED_INVENTORY), null, INVENTORY);
+
+        assertj("M5 Map via AssertJ hasEntrySatisfying(..) inside hasBySkuSatisfying(..)",
+                () -> InventoryAssert.assertThat(INVENTORY).hasBySkuSatisfying(m -> Assertions.assertThat(m)
+                        .hasEntrySatisfying("B-2", l -> OrderLineAssert.assertThat(l).hasQuantity(3))));
+
+        assertj("M6 Map via AssertJ containsOnlyKeys(..)",
+                () -> InventoryAssert.assertThat(INVENTORY).hasBySkuSatisfying(m -> Assertions.assertThat(m)
+                        .containsOnlyKeys("A-1", "B-2", "D-4")));
+    }
 
     static void unordered() {
         hamcrest("U1 Set of generated types inside Hamcrest containsInAnyOrder(..): B-2 has quantity 2, not 3",

@@ -21,3 +21,6 @@ and AssertJ 3.27.3. `./run.sh` prints every scenario:
   `containsInAnyOrder`, a runtime `itemsInAnyOrder(..)` reporting missing items with their closest
   match, shallow vs deep reference object, AssertJ `satisfiesExactlyInAnyOrder` with and without a
   generated `Representation`.
+- **Maps** (`Demo maps`): `Inventory` with `Map<String, OrderLine>`; Hamcrest's `hasEntry`, a runtime
+  `entries(..)` with the key in the path (`bySku["B-2"].quantity`), shallow vs deep reference object,
+  AssertJ `hasEntrySatisfying` and `containsOnlyKeys`.

@@ -51,7 +51,8 @@ public abstract class PropertyAssert<SELF extends PropertyAssert<SELF, A>, A> ex
 
     protected <V> SELF hasPropertySatisfying(String name, V value, Consumer<? super V> requirements) {
         requireActual();
-        boolean collection = value instanceof Iterable || (value != null && value.getClass().isArray());
+        boolean collection = value instanceof Iterable || value instanceof java.util.Map
+                || (value != null && value.getClass().isArray());
         CONTEXT.get().push(collection && !pathIntoCollections ? "" : path + "." + name);
         try {
             requirements.accept(value);
