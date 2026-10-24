@@ -42,7 +42,7 @@ Balance readability of this document with potential redundancy w.r.t to requirem
 .Planned feature set of 6.0.0, the final feature release
 Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are driven by the same configuration. Its features are:
 
-* *Completeness check* (the lead feature, for both backends): every property of a type is either checked or deliberately ignored.
+* *Completeness check* (the lead feature, for both backends): every property of a type is either checked or deliberately ignored. Users opt in per assertion and the check runs when the test runs: Hamcrest matchers offer `checkingAllProperties()`, AssertJ assertions offer the scope `satisfiesCheckingAllProperties(...)` and the closing call `hasAllPropertiesChecked()`, and `ignoringFoo()` marks a property as deliberately ignored. Without the opt-in, matchers behave as in 5.x.
 * *Reference-object matcher* (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. AssertJ users get the same with AssertJ's built-in recursive comparison, which the documentation shows side by side.
 * *Readable mismatches* (Hamcrest): only the failing properties are listed, one per line, with nested property paths such as `customer.address.city`. AssertJ keeps its native message style.
 * *Exclude configuration*: packages or classes can be excluded from generation, for every backend.
