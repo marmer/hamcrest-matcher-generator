@@ -14,6 +14,8 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 
 This repo also has arc42 architecture documentation in `docs/arc42.adoc`, with one AsciiDoc file per chapter in `docs/src/`. It is published to GitHub Pages and is written **primarily for humans**. Read the chapters relevant to the topic as well:
 
+When proposing content for an arc42 section, first read that section's template and examples at `https://docs.arc42.org/section-<n>/` and write in its form (e.g. quality scenarios in 10.2: Q42 short form or SEI long form, specific and measurable).
+
 | Topic                     | arc42 chapter                                                   | Agent-facing counterpart |
 | ------------------------- | --------------------------------------------------------------- | ------------------------ |
 | Goals, quality goals      | `docs/src/01_introduction_and_goals.adoc`                       | none                     |
@@ -72,7 +74,7 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 
 ## Language
 
-Repo artifacts (code, docs, ADRs, glossary, arc42) and issue-tracker content are written in English; chat replies follow the user's language.
+Repo artifacts (code, docs, ADRs, glossary, arc42) and issue-tracker content are written in English; chat replies follow the user's language. The owner writes German: reply in German, also when the invocation carries no prose (a bare `/wayfinder 52`).
 
 ## Flag ADR conflicts
 
