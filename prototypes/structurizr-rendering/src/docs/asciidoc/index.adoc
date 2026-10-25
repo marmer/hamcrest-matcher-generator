@@ -1,0 +1,28 @@
+= Test
+:diagram-cachedir: target/diagram-cache
+
+[structurizr,ctx,svg,view=Context]
+----
+include::workspace.dsl[]
+----
+
+[structurizr,cont,svg,view=Containers]
+----
+include::workspace.dsl[]
+----
+
+[structurizr,comp,svg,view=Components]
+----
+include::workspace.dsl[]
+----
+
+[structurizr,dyn,svg,view=Generation]
+----
+include::workspace.dsl[]
+----
+
+[structurizr,dep,svg,view=Deployment]
+----
+include::workspace.dsl[]
+----
+
