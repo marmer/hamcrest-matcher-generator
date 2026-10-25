@@ -6,7 +6,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import issue  # noqa: E402
-from issue import DECISIONS, REPO_URL, DecisionError, add_decision, amend_decision  # noqa: E402
+from issue import DECISIONS, NOTES, REPO_URL, DecisionError, add_decision, amend_decision, edit_notes  # noqa: E402
 
 
 def map_body(decision_lines):
@@ -134,6 +134,41 @@ class AmendDecisionTest(unittest.TestCase):
         result = amend_decision(body, 5, "Use [brackets]", "new")
 
         self.assertIn(f"- [Use \\[brackets\\]]({link(5)}): new", result)
+
+
+def notes_body():
+    """A map body with a Notes section holding a nested bullet, followed by Decisions-so-far."""
+    lines = ["# Map", "", NOTES, "", "- **Planning only**: decisions first.", "- **Fixed decisions**:",
+             "  - Java 11 minimum.", "  - Maven stays.", "- **Sonar is temporarily non-blocking**: token expired.",
+             "", DECISIONS, "", "- [First](x): gist", "", "---", "", "footer"]
+    return "\n".join(lines) + "\n"
+
+
+class EditNotesTest(unittest.TestCase):
+    def test_removes_bullet_with_its_sub_bullets(self):
+        result = edit_notes(notes_body(), remove="**Fixed decisions**")
+
+        self.assertNotIn("Fixed decisions", result)
+        self.assertNotIn("Java 11 minimum", result)
+        self.assertIn("- **Planning only**: decisions first.", result)
+        self.assertIn("- **Sonar is temporarily non-blocking**", result)
+
+    def test_replaces_stale_bullet_and_keeps_following_sections(self):
+        result = edit_notes(notes_body(), remove="temporarily non-blocking", add="**Sonar blocks merges**.")
+
+        self.assertNotIn("temporarily non-blocking", result)
+        self.assertIn("  - Maven stays.\n- **Sonar blocks merges**.\n\n" + DECISIONS, result)
+        self.assertTrue(result.endswith("---\n\nfooter\n"))
+
+    def test_text_matching_only_a_sub_bullet_changes_nothing(self):
+        body = notes_body()
+
+        with self.assertRaises(DecisionError):
+            edit_notes(body, remove="Maven stays")
+
+    def test_ambiguous_text_changes_nothing(self):
+        with self.assertRaises(DecisionError):
+            edit_notes(notes_body(), remove="**")
 
 
 if __name__ == "__main__":

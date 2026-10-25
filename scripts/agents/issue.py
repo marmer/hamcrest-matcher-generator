@@ -12,6 +12,7 @@ Usage:
   scripts/agents/issue.py amend <map> <n> --gist "..."   # replace the existing decision line for <n>
   scripts/agents/issue.py scope <map> <n> --gist "..."   # append an out-of-scope line to the map
   scripts/agents/issue.py fog <map> [--remove TEXT] [--add TEXT]  # edit the Not-yet-specified bullets
+  scripts/agents/issue.py note <map> [--remove TEXT] [--add TEXT]  # edit the Notes bullets
   scripts/agents/issue.py child <map> --title T --type {research,prototype,grilling,task} --body-file F
   scripts/agents/issue.py block <n> --by <m> [--by <m2> ...] [--map <map>]
 """
@@ -27,6 +28,7 @@ REPO_URL = "https://github.com/marmer/hamcrest-matcher-generator/issues"
 DECISIONS = "## Decisions so far"
 OUT_OF_SCOPE = "## Out of scope"
 FOG = "## Not yet specified"
+NOTES = "## Notes"
 STATUS_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "issue-status.py")
 
 
@@ -137,17 +139,17 @@ def amend_decision(body, ticket, title, gist):
     return replace_linked_bullet(body, DECISIONS, ticket, title, gist)
 
 
-def edit_fog(body, remove=None, add=None):
-    """Return `body` with one Not-yet-specified bullet removed and/or one appended.
+def edit_bullets(body, heading, remove=None, add=None):
+    """Return `body` with one top-level bullet of `heading` removed and/or one appended.
 
-    `remove` must match exactly one top-level bullet (substring match); `add` is the new bullet text
-    without the leading "- ". Raises DecisionError (body unchanged) otherwise.
+    `remove` must match exactly one top-level bullet (substring match); its indented sub-bullets go with it.
+    `add` is the new bullet text without the leading "- ". Raises DecisionError (body unchanged) otherwise.
     """
-    newline, lines, start, end, section = _split_section(body, FOG)
+    newline, lines, start, end, section = _split_section(body, heading)
     if remove:
         hits = [i for i, line in enumerate(section) if line.startswith("- ") and remove in line]
         if len(hits) != 1:
-            raise DecisionError(f"'{remove}' matches {len(hits)} bullets in '{FOG}'; nothing changed")
+            raise DecisionError(f"'{remove}' matches {len(hits)} bullets in '{heading}'; nothing changed")
         stop = hits[0] + 1
         while stop < len(section) and section[stop].startswith("  "):
             stop += 1
@@ -157,6 +159,14 @@ def edit_fog(body, remove=None, add=None):
             section.pop()
         section.append(f"- {add}")
     return _join_section(body, newline, lines, start, end, section)
+
+
+def edit_fog(body, remove=None, add=None):
+    return edit_bullets(body, FOG, remove, add)
+
+
+def edit_notes(body, remove=None, add=None):
+    return edit_bullets(body, NOTES, remove, add)
 
 
 def claim(args):
@@ -208,6 +218,15 @@ def fog(args):
     new_body = edit_fog(map_issue["body"] or "", args.remove, args.add)
     gh("-X", "PATCH", f"{REPO}/issues/{args.map}", "-f", f"body={new_body}")
     print(f"Updated '{FOG}' in #{args.map}")
+
+
+def note(args):
+    if not (args.remove or args.add):
+        sys.exit("note needs --remove and/or --add")
+    map_issue = gh(f"{REPO}/issues/{args.map}")
+    new_body = edit_notes(map_issue["body"] or "", args.remove, args.add)
+    gh("-X", "PATCH", f"{REPO}/issues/{args.map}", "-f", f"body={new_body}")
+    print(f"Updated '{NOTES}' in #{args.map}")
 
 
 def child(args):
@@ -275,6 +294,12 @@ def main():
     p.add_argument("--remove", metavar="TEXT", help="remove the one bullet containing TEXT")
     p.add_argument("--add", metavar="TEXT", help="append a bullet with TEXT")
     p.set_defaults(func=fog)
+
+    p = sub.add_parser("note", help="remove and/or add a bullet in the map's Notes section")
+    p.add_argument("map", type=int, help="map issue number")
+    p.add_argument("--remove", metavar="TEXT", help="remove the one top-level bullet containing TEXT, with its sub-bullets")
+    p.add_argument("--add", metavar="TEXT", help="append a bullet with TEXT")
+    p.set_defaults(func=note)
 
     p = sub.add_parser("child", help="create a wayfinder child ticket as a sub-issue of a map")
     p.add_argument("map", type=int, help="map issue number")
