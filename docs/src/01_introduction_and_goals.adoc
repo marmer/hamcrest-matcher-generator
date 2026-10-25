@@ -81,7 +81,7 @@ A table with quality goals and concrete scenarios, ordered by priorities
 
 | 1
 | Correctness
-| Generated matchers must be type-safe and compile without errors - broken generation is worse than no generation
+| Generated assertions (Hamcrest matchers and AssertJ assertions) must be type-safe, compile without errors and fail exactly when the checked object is wrong: no false green tests - broken generation is worse than no generation
 
 | 2
 | Non-intrusiveness
@@ -89,7 +89,7 @@ A table with quality goals and concrete scenarios, ordered by priorities
 
 | 3
 | Usability
-| The generated fluent API must be discoverable and ergonomic for test writers
+| The generated assertions (Hamcrest matchers and AssertJ assertions) must be discoverable and ergonomic for test writers
 
 | 4
 | Build-tool agnosticism

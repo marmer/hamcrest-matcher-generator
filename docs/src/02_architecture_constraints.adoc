@@ -7,3 +7,14 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 
 
+
+[options="header",cols="1,4"]
+|===
+| Constraint | Background
+
+| Java 11 baseline
+| The processor and the generated code run on Java 11 and later. Records are supported when the user's code is compiled on JDK 16 or later.
+
+| 5.x source compatibility
+| Tests written against 5.x keep compiling after a version bump alone: same matcher class names, packages and `isX()`/`withFoo`/`resetFoo` methods. The artifact switch is covered by a relocation POM; anything else goes into the migration guide (see ADR 0002).
+|===
