@@ -20,7 +20,7 @@ Process rules for wayfinder maps and their tickets, used by `/wayfinder`. A map'
 
 ## Prototype tickets
 
-- **Shown to the owner**: before asking for a verdict, publish an overview page as an Artifact (each candidate's code plus its real output) and link it; the owner often reviews on a phone and cannot browse branches there. Build it with `scripts/agents/prototype-page.py` from the run output.
+- **Shown to the owner**: before asking for a verdict, publish an overview page as an Artifact (each candidate's code plus its real output) and link it; the owner often reviews on a phone and cannot browse branches there. For API shape, build it with `scripts/agents/prototype-page.py` from the run output. For UI (pages, sites, layouts), publish a multi-file Artifact instead: each variant's rendered pages, Playwright screenshots at desktop and phone width, and an overview page linking into every variant. Example: branch `prototype/pages-site`.
 - **On API shape** (the vendored `prototype` skill has only LOGIC and UI branches): hand-write the code the generator would emit, add a property "later", compile and run each candidate against the real libraries (classpath: `scripts/agents/prototype-classpath.sh`), and show the real javac/Hamcrest/AssertJ output. Cover the full **sample set** in the first round: flat POJO, nested POJO, record, null nested value, list, set and map of a generated type, all without `toString`. Keep the worktree at `/home/user/prototypes/<name>` (the scratchpad path changes on session restart). Examples: branches `prototype/completeness-check`, `prototype/mismatch-message-format`.
 
 ## Research tickets
