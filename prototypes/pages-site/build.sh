@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# PROTOTYPE build: renders variants a, b, c with plain Asciidoctor into out/.
+# PROTOTYPE build: renders variants a, b, c, d with plain Asciidoctor into out/.
 # The real site builds with asciidoctor-maven-plugin in the docs module; this only shows the look.
 set -euo pipefail
 cd "$(dirname "$0")"
 here=$(pwd)
 AD=${ASCIIDOCTOR:-asciidoctor}
 rm -rf out && mkdir -p out
-for v in a b c; do
+for v in a b c d; do
   cat "$v/docinfo-footer.html" shared/switcher.html > "/tmp/docinfo-footer-$v.html"
   mkdir -p "out/$v/_di" && cp "$v"/docinfo*.html "out/$v/_di/" && cp "/tmp/docinfo-footer-$v.html" "out/$v/_di/docinfo-footer.html"
   extra=()
@@ -20,5 +20,6 @@ for v in a b c; do
       -o "$here/out/$v/${rel%.adoc}.html" "$f"
   done
   rm -rf "out/$v/_di"
+  [ -d "$v/images" ] && cp -r "$v/images" "out/$v/"
 done
 echo "rendered: $(find out -name '*.html' | sort | tr '\n' ' ')"

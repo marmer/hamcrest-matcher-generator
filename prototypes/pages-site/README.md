@@ -1,12 +1,13 @@
 # PROTOTYPE: GitHub Pages project site (throwaway, never merged)
 
 Answers the question of [GitHub Pages project site](https://github.com/marmer/hamcrest-matcher-generator/issues/68): what the landing page, the navigation, the theme and the maintainer footer look like.
-Three variants are rendered from the same AsciiDoc sources:
+Four variants are rendered from the same AsciiDoc sources:
 
 | Variant | Look |
 |---|---|
 | `a/` | Asciidoctor default stylesheet, left TOC, slim link bar, one-line footer |
 | `b/` | Own stylesheet (`b/theme.css`), sticky top bar, chapter sidebar, "on this page" TOC, hero landing, maintainer card footer, dark mode |
+| `d/` | Round 2, from the owner's feedback: B's look, landing page and footer card (with a photo) plus C's flat top navigation, where Guide, Architecture, Javadoc and GitHub stay visible as tabs at every width and the active section is underlined |
 | `c/` | Own stylesheet (`c/theme.css`), whole guide on one page with a sticky chapter rail, architecture separate, signature footer, dark mode |
 
 `shared/` holds the content all variants include (stand-ins for the example-module tag regions, the Getting started body, an arc42 §1 excerpt) and the floating variant switcher.
@@ -28,3 +29,4 @@ python3 -m http.server 8765 --directory out   # open http://localhost:8765/b/ind
 - **Ligature fonts** (JetBrains Mono) turn the XML callout `<!--1-->` into arrows; set `font-variant-ligatures: none` on code.
 - **`[tabs]` needs the asciidoctor-tabs extension**; the prototype uses titled blocks instead.
 - **Custom stylesheet replaces the default completely** (`-a stylesheet=...`): admonitions, callouts, tables and the TOC have to be styled by hand.
+- **Maintainer photo**: LinkedIn answers automated requests with HTTP 999 and its image URLs expire, so the site must host its own copy (`d/images/maintainer.jpg` is the GitHub avatar as a stand-in).

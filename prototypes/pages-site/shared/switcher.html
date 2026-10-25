@@ -8,19 +8,19 @@
 <nav id="proto-switch" aria-label="Prototype variant switcher"></nav>
 <script>
 (function () {
-  var names = {a: 'A · Asciidoctor stock', b: 'B · Docs shell', c: 'C · One page'};
-  var order = ['a', 'b', 'c'];
+  var names = {a: 'A · Asciidoctor stock', b: 'B · Docs shell', c: 'C · One page', d: 'D · B + C nav'};
+  var order = ['a', 'b', 'c', 'd'];
   var path = location.pathname;
-  var m = path.match(/^(.*\/)([abc])\/(.*)$/);
+  var m = path.match(/^(.*\/)([abcd])\/(.*)$/);
   if (!m) return;
   var root = m[1], v = m[2], rest = m[3] || 'index.html';
   var kind = /^architecture\//.test(rest) ? 'arch' : /^guide/.test(rest) || (v === 'c' && location.hash) ? 'guide' : 'landing';
   var target = {
-    landing: {a: 'index.html', b: 'index.html', c: 'index.html'},
-    guide: {a: 'guide/getting-started.html', b: 'guide/getting-started.html', c: 'index.html#getting-started'},
-    arch: {a: 'architecture/index.html', b: 'architecture/index.html', c: 'architecture/index.html'}
+    landing: {a: 'index.html', b: 'index.html', c: 'index.html', d: 'index.html'},
+    guide: {a: 'guide/getting-started.html', b: 'guide/getting-started.html', c: 'index.html#getting-started', d: 'guide/getting-started.html'},
+    arch: {a: 'architecture/index.html', b: 'architecture/index.html', c: 'architecture/index.html', d: 'architecture/index.html'}
   }[kind];
-  function go(d) { var n = order[(order.indexOf(v) + d + 3) % 3]; location.href = root + n + '/' + target[n]; }
+  function go(d) { var n = order[(order.indexOf(v) + d + 4) % 4]; location.href = root + n + '/' + target[n]; }
   var bar = document.getElementById('proto-switch');
   bar.innerHTML = '<a href="#" data-d="-1" aria-label="Previous variant">&larr;</a><span class="lbl">' + names[v] +
     '</span><a href="#" data-d="1" aria-label="Next variant">&rarr;</a><a href="' + root + 'index.html">Overview</a>';

@@ -1,0 +1,12 @@
+= Getting started
+:description: Add the dependencies, configure the types and write a first test with generated matchers.
+:page-kind: guide
+:toc: right
+:toc-title: On this page
+:relroot: ../
+
+include::{shared}/getting-started-body.adoc[leveloffset=-1]
+
+[.pager]
+link:../index.html[← Home]
+link:#[Configuration →]
