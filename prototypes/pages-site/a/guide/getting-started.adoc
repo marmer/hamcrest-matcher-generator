@@ -1,0 +1,6 @@
+= Getting started
+:description: Add the dependencies, configure the types and write a first test with generated matchers.
+:toc: left
+:relroot: ../
+
+include::{shared}/getting-started-body.adoc[leveloffset=-1]

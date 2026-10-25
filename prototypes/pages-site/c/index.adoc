@@ -1,0 +1,62 @@
+= hamcrest-matcher-generator
+:description: Generates Hamcrest matchers and AssertJ assertions for your model classes at compile time.
+:page-kind: onepage
+:toc: left
+:toclevels: 1
+:toc-title: Guide
+:sectnums:
+:relroot:
+
+[.lede]
+Generated Hamcrest matchers and AssertJ assertions for your model classes, at compile time, without touching production code.
+
+This page is the whole user guide.
+Read it top to bottom once, then come back for the chapter you need.
+The design rationale lives in the link:architecture/index.html[architecture documentation].
+
+[.lede-code]
+include::{shared}/snippets.adoc[tag=hamcrest]
+
+== Getting started
+
+include::{shared}/getting-started-body.adoc[]
+
+== Configuration
+
+`@GenerateMatchers` takes classes and packages, plus excludes.
+_(Prototype: chapter text follows the guide outline.)_
+
+== Hamcrest backend
+
+Every property `foo` gets `withFoo(value)`, `withFoo(matcher)` and `resetFoo()`.
+_(Prototype.)_
+
+== AssertJ backend
+
+Every property `foo` gets `hasFoo`, `hasFooSatisfying` and, for booleans, `isFoo`/`isNotFoo`.
+_(Prototype.)_
+
+== Completeness check
+
+Opt in per assertion with `checkingAllProperties()`; mark deliberate gaps with `ignoringFoo()`.
+_(Prototype.)_
+
+== Mismatch messages
+
+One line per failing check, with the property path.
+_(Prototype.)_
+
+== Kotlin
+
+KAPT, the getter rules and the Kotlin DSL.
+_(Prototype.)_
+
+== IDE setup
+
+IntelliJ IDEA, Eclipse and VS Code pick up the generated sources.
+_(Prototype.)_
+
+== Migrating from 5.x
+
+A version bump is enough for existing tests; the new names are optional.
+_(Prototype.)_

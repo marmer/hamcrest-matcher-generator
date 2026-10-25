@@ -1,0 +1,39 @@
+= hamcrest-matcher-generator
+:description: Generates Hamcrest matchers and AssertJ assertions for your model classes at compile time.
+:toc: left
+:relroot:
+
+Generated Hamcrest matchers and AssertJ assertions for your model classes, at compile time, without touching production code.
+Works with plain Java, records, Lombok and Kotlin.
+
+== Why
+
+* *Compile-safe*: no `hasProperty("naem")` typos; a renamed property breaks the build, not the test run.
+* *Readable failures*: the message names the property path and both values.
+* *Completeness check*: make a test fail when a new property is neither checked nor ignored.
+
+== Quick start
+
+include::{shared}/snippets.adoc[tag=maven]
+
+include::{shared}/snippets.adoc[tag=config]
+
+include::{shared}/snippets.adoc[tag=hamcrest]
+
+The full walk-through is in xref:guide/getting-started.adoc[Getting started].
+
+== Documentation
+
+.User guide
+. xref:guide/getting-started.adoc[Getting started]
+. Configuration
+. Hamcrest backend
+. AssertJ backend
+. Completeness check
+. Mismatch messages
+. Kotlin
+. IDE setup
+. Migrating from 5.x
+
+.Architecture
+* xref:architecture/index.adoc[Architecture documentation (arc42)]

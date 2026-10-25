@@ -1,0 +1,71 @@
+// PROTOTYPE: stand-ins for the tagged regions the real docs include from examples/example-*.
+// API names follow the map's decisions; attribute names of @GenerateMatchers are illustrative.
+
+// tag::maven[]
+[source,xml,subs="attributes+"]
+----
+<dependency>
+  <groupId>io.github.marmer.testutils</groupId>
+  <artifactId>matcher-generator-annotations</artifactId>
+  <version>{project-version}</version>
+  <scope>provided</scope>
+</dependency>
+<dependency>
+  <groupId>io.github.marmer.testutils</groupId>
+  <artifactId>hamcrest-matcher-generator</artifactId> <!--1-->
+  <version>{project-version}</version>
+  <scope>test</scope>
+</dependency>
+----
+<1> For AssertJ, use `assertj-assertion-generator` instead, or both.
+// end::maven[]
+
+// tag::gradle[]
+[source,kotlin,subs="attributes+"]
+----
+dependencies {
+    testCompileOnly("io.github.marmer.testutils:matcher-generator-annotations:{project-version}")
+    testImplementation("io.github.marmer.testutils:hamcrest-matcher-generator:{project-version}")
+    testAnnotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:{project-version}")
+}
+----
+// end::gradle[]
+
+// tag::config[]
+[source,java]
+----
+@GenerateMatchers(packages = "com.example.shop") // <1>
+class MatcherConfig {
+}
+----
+<1> Lives in your test sources. Your model classes stay untouched.
+// end::config[]
+
+// tag::hamcrest[]
+[source,java]
+----
+assertThat(order, isOrder()
+    .withId("A-1001")
+    .withCustomer(isCustomer().withName("Ada Lovelace"))
+    .withTotal(closeTo(42.0, 0.01)));
+----
+// end::hamcrest[]
+
+// tag::assertj[]
+[source,java]
+----
+assertThat(order)
+    .hasId("A-1001")
+    .hasCustomerSatisfying(c -> c.hasName("Ada Lovelace"))
+    .hasTotal(42.0);
+----
+// end::assertj[]
+
+// tag::mismatch[]
+[source,text]
+----
+Expected: an Order with customer.address.city "Berlin"
+     but: customer.address.city: expected "Berlin" but was "Paris"
+          lines[1].quantity: expected <2> but was <3>
+----
+// end::mismatch[]

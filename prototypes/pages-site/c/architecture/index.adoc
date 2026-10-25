@@ -1,0 +1,20 @@
+= Architecture
+:description: arc42 architecture documentation of hamcrest-matcher-generator.
+:page-kind: onepage arch
+:toc: left
+:toclevels: 1
+:toc-title: arc42
+:sectnums:
+:relroot: ../
+
+[.lede]
+How the processor, the shared property model and the two backends fit together, in the arc42 template.
+For using the library, read the link:../index.html[guide].
+
+== Introduction and goals
+
+include::{shared}/arc42-intro-body.adoc[]
+
+== Architecture constraints
+
+_(Prototype: chapters 2 to 12 follow the arc42 template.)_

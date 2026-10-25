@@ -1,0 +1,36 @@
+Three steps: add the dependencies, tell the processor which types to cover, write a test.
+
+=== Add the dependencies
+
+.Maven
+include::snippets.adoc[tag=maven]
+
+.Gradle (Kotlin DSL)
+include::snippets.adoc[tag=gradle]
+
+=== Configure the types
+
+Put one configuration class into your test sources.
+The processor generates a matcher (and, with the AssertJ backend, an assertion class) for every type it finds there.
+
+include::snippets.adoc[tag=config]
+
+Records, Lombok classes and Kotlin classes compiled through KAPT work the same way.
+
+=== Write a test
+
+.Hamcrest
+include::snippets.adoc[tag=hamcrest]
+
+.AssertJ
+include::snippets.adoc[tag=assertj]
+
+When a check fails, the message names the property path and both values:
+
+include::snippets.adoc[tag=mismatch]
+
+=== Next
+
+* Check every property with the completeness check.
+* Set up your IDE so it picks up the generated sources.
+* Coming from 5.x? Read the migration guide.

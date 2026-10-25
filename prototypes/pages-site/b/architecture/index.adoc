@@ -1,0 +1,8 @@
+= Introduction and goals
+:description: arc42 chapter 1: requirements, quality goals and stakeholders of hamcrest-matcher-generator.
+:page-kind: arch
+:toc: right
+:toc-title: On this page
+:relroot: ../
+
+include::{shared}/arc42-intro-body.adoc[leveloffset=-1]

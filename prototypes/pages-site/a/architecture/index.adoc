@@ -1,0 +1,9 @@
+= Architecture documentation
+:description: arc42 architecture documentation of hamcrest-matcher-generator.
+:toc: left
+:sectnums:
+:relroot: ../
+
+== Introduction and goals
+
+include::{shared}/arc42-intro-body.adoc[]

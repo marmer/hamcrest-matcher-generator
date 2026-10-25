@@ -1,0 +1,71 @@
+/* PROTOTYPE variant C: one page, typeset like a book chapter. Replaces the Asciidoctor default stylesheet.
+   Layout: a single reading column; the chapter list is a sticky rail on wide screens and a numbered index at the top on phones. */
+@import url("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  --paper: #fbfaf7; --ink: #1e1b18; --muted: #6b645c; --rule: #ddd8cf; --accent: #8a2433; --code: #f1eee8;
+  --serif: "Literata", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #191715; --ink: #ebe6de; --muted: #a39b90; --rule: #36312c; --accent: #e88a96; --code: #24211e; color-scheme: dark; }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.7 var(--serif); -webkit-text-size-adjust: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.c-mast { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; max-width: 1100px; margin: 0 auto; padding-block: 18px; border-bottom: 1px solid var(--ink); font: 500 .8rem var(--mono); }
+.c-mast > a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.c-ver { color: var(--muted); }
+.c-links { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.c-links a { color: var(--muted); text-decoration: none; }
+.c-links a:hover { color: var(--accent); }
+
+#header, #content, .c-foot { max-width: 1100px; margin: 0 auto; }
+#header { display: grid; padding-block: 48px 8px; }
+#header h1 { font: 700 clamp(1.9rem, 5vw, 2.8rem)/1.1 var(--serif); letter-spacing: -.01em; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+#content > *, #header h1 { max-width: 40rem; }
+p { margin: 0 0 1em; }
+.lede p { font-size: 1.3rem; line-height: 1.5; margin: 12px 0 18px; }
+h2 { font: 600 1.6rem/1.2 var(--serif); margin: 2.4em 0 .6em; padding-top: .6em; border-top: 1px solid var(--rule); text-wrap: balance; }
+h3 { font: 600 1.15rem/1.3 var(--serif); margin: 1.8em 0 .4em; text-wrap: balance; }
+.sectnum, h2 .sectnum { font: 500 .8em var(--mono); color: var(--accent); }
+.anchor { display: none; }
+em { color: var(--muted); }
+
+#toc { font: .85rem/1.5 var(--mono); margin: 24px auto; max-width: 1100px; }
+#toctitle { text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
+#toc ul { list-style: none; margin: 0; padding: 0; columns: 2 12rem; column-gap: 24px; }
+#toc li { break-inside: avoid; padding: 2px 0; }
+#toc a { color: var(--ink); text-decoration: none; }
+#toc a:hover { color: var(--accent); }
+@media (min-width: 1100px) {
+  body.toc2 #header, body.toc2 #content, body.toc2 .c-foot { padding-left: 240px; }
+  #toc.toc2 { position: fixed; top: 120px; width: 200px; margin: 0; left: max(24px, (100vw - 1100px) / 2 + 16px); }
+  #toc.toc2 ul { columns: auto; }
+  #toc.toc2 a.c-active { color: var(--accent); }
+}
+
+code { font: .82em var(--mono); background: var(--code); padding: 1px 4px; border-radius: 2px; overflow-wrap: anywhere; }
+.listingblock { margin: 0 0 1.4em; min-width: 0; }
+.listingblock .title, .tableblock caption, .olist .title, .ulist .title { font: 500 .72rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; }
+.listingblock pre { margin: 0; padding: 12px 0 12px 16px; border-left: 3px solid var(--accent); background: var(--code) !important; overflow-x: auto; font: 13.5px/1.6 var(--mono); }
+.listingblock pre, .listingblock pre span { color: var(--ink) !important; background: none !important; }
+.listingblock pre { background: var(--code) !important; }
+.listingblock pre code { background: none; padding: 0; font-size: inherit; }
+.lede-code .listingblock pre { font-size: 14.5px; }
+.conum { font: 500 .75rem var(--mono); color: var(--accent); }
+.colist table { border-collapse: collapse; margin: -6px 0 1.4em; font-size: .9rem; }
+.colist td { padding: 2px 8px 2px 0; vertical-align: top; }
+ul, ol { padding-left: 1.2em; }
+li p { margin: 0; }
+table.tableblock { border-collapse: collapse; margin: 0 0 1.5em; font-size: .9rem; display: block; overflow-x: auto; }
+table.tableblock th, table.tableblock td { border-top: 1px solid var(--rule); padding: 6px 14px 6px 0; text-align: left; vertical-align: top; }
+table.tableblock p { margin: 0; }
+
+.c-foot { border-top: 1px solid var(--ink); margin-top: 64px; padding-block: 18px 88px; }
+.c-foot p { margin: 0 0 4px; max-width: 40rem; }
+.c-fine { font: .78rem var(--mono); color: var(--muted); }

@@ -1,0 +1,40 @@
+// PROTOTYPE: shortened excerpt of docs/src/01_introduction_and_goals.adoc.
+
+=== Requirements overview
+
+* Generate Hamcrest matchers and AssertJ assertions for model classes at compile time.
+* No production-code pollution: the configuration lives in test sources and uses a SOURCE-retention annotation.
+* A compile-safe alternative to Hamcrest's `hasProperty()`.
+* Readable mismatch messages with property paths.
+* Plain Java, records, Lombok and Kotlin (via KAPT).
+
+=== Quality goals
+
+[cols="1,3"]
+|===
+|Goal |Scenario
+
+|Usability
+|A developer writes a first generated-matcher test within 10 minutes of reading Getting started.
+
+|Maintainability
+|Dependency updates, majors included, merge and release without owner action while every check is green.
+
+|Compatibility
+|5.x user tests compile after a version bump alone.
+|===
+
+=== Stakeholders
+
+[cols="1,2,3"]
+|===
+|Role |Contact |Expectations
+
+|Maintainer
+|Mariano Mertinat (https://de.linkedin.com/in/mariano-mertinat[LinkedIn])
+|Runs on autopilot after 6.0.0; intervenes only on red.
+
+|Library users
+|Java and Kotlin developers
+|Generated matchers that compile with their model and fail with clear messages.
+|===
