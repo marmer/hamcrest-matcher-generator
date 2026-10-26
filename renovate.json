@@ -1,0 +1,75 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "timezone": "Europe/Berlin",
+  "semanticCommits": "enabled",
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
+  "minimumReleaseAge": "3 days",
+  "separateMajorMinor": true,
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null
+  },
+  "packageRules": [
+    {
+      "description": "Maven: every dependency is a chore(deps) unless it reaches the consumer's classpath",
+      "matchManagers": ["maven"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Maven runtime-scope (compile and runtime) dependencies are fix(deps), i.e. patch releases",
+      "matchManagers": ["maven"],
+      "matchDepTypes": ["compile", "runtime"],
+      "semanticCommitType": "fix",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Non-major updates are grouped and raised weekly",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "non-major dependencies",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Majors stay in their own PRs, never grouped",
+      "matchUpdateTypes": ["major"],
+      "groupName": null
+    },
+    {
+      "description": "PIT, JaCoCo and the Sonar scanner each get their own PR",
+      "matchPackageNames": [
+        "org.pitest:pitest-maven",
+        "org.pitest:pitest-junit5-plugin",
+        "org.jacoco:jacoco-maven-plugin",
+        "org.sonarsource.scanner.maven:sonar-maven-plugin"
+      ],
+      "groupName": null
+    },
+    {
+      "description": "Structurizr updates as one group",
+      "matchPackageNames": ["com.structurizr:*"],
+      "groupName": "Structurizr"
+    },
+    {
+      "description": "The latest CI leg follows the newest GA JDK, not only LTS releases; compare by major version only",
+      "matchDatasources": ["java-version"],
+      "allowedVersions": "/^\\d+/",
+      "versioning": "regex:^(?<major>\\d+)(\\.\\d+)*(\\+\\d+)?$"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "JDK version of the newest-GA leg in the CI verify matrix (role: latest)",
+      "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "role: latest\\s+java-version: \"(?<currentValue>\\d+)\""
+      ],
+      "depNameTemplate": "java",
+      "packageNameTemplate": "java-jdk",
+      "datasourceTemplate": "java-version",
+      "autoReplaceStringTemplate": "role: latest\n            java-version: \"{{{newMajor}}}\""
+    }
+  ]
+}
