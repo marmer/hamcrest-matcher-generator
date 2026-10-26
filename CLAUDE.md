@@ -32,14 +32,14 @@ Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<pr
 
 ## Module Structure
 
-The core modules are `hamcrest-matcher-generator-dependencies` (`@MatcherConfiguration` + `BeanPropertyMatcher` runtime base) and `hamcrest-matcher-generator-annotationprocessor` (the processor). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
+The core modules are `hamcrest-matcher-generator-dependencies` (`@MatcherConfiguration` + `BeanPropertyMatcher` runtime base), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test) and `hamcrest-matcher-generator-annotationprocessor` (the Hamcrest backend, registered via `ServiceLoader`; its artifact ID is renamed later). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
 
 ## Architecture: Generation Flow
 
 1. Compiler detects `@MatcherConfiguration` on a type (SOURCE retention, in `dependencies` module)
-2. `MatcherGenerationProcessor.java` — APT entry point, delegates immediately to the worker
-3. `MatcherGenerationProcessorWorker.java` — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, passes each to `MatcherGenerator`
-4. `MatcherGenerator.java` — builds a `<TypeName>Matcher` class via JavaPoet; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
+2. `MatcherGenerationProcessor.java` (core) — APT entry point, delegates immediately to the worker and loads every `GeneratorBackend` via `ServiceLoader`
+3. `MatcherGenerationProcessorWorker.java` (core) — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, builds an immutable `TypeModel` per type with `TypeModelFactory`, runs every backend on it and writes the returned `GeneratedSource` (Java via `createSourceFile`, Kotlin via `createResource`)
+4. `HamcrestGeneratorBackend.java` / `MatcherGenerator.java` (Hamcrest backend, package `...annotationprocessing.hamcrest`) — builds a `<TypeName>Matcher` class via JavaPoet from the `TypeModel`; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
 
 **Generated matcher API** (per property `foo`):
 ```java
@@ -62,6 +62,8 @@ The flow must be: KAPT generates → `add-test-source` registers → javac compi
 ## Testing Approach
 
 Annotation processor tests (file `MatcherGenerationProcessorIT.java` in `hamcrest-matcher-generator-annotationprocessor/src/test/java`, class `MatcherGenerationProcessorIT`: use the class name for `-Dit.test`) use **Google Compile Testing**: they compile in-memory Java source strings and assert on the generated output. Expected generated sources are **golden files** under `src/test/resources/io/github/marmer/annotationprocessing/MatcherGenerationProcessorIT/<scenario>/`, compared character for character: `assertGeneratedSource` reads the golden file and `assertEquals`s it against the generated file's `getCharContent(true)`, so any whitespace difference fails. This runs as a Maven Failsafe integration test.
+
+Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with `-pl matcher-generator-core -Dit.test=CoreProcessorIT`) use the same harness with a **recording test backend** (registered via `META-INF/services` in the core test resources) and assert on the recorded `TypeModel` instead of generated Hamcrest code.
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit 5 unit tests.
 

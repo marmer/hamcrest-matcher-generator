@@ -1,0 +1,3 @@
+io.github.marmer.annotationprocessing.RecordingBackend
+io.github.marmer.annotationprocessing.FileOnlyBackends$SecondJavaBackend
+io.github.marmer.annotationprocessing.FileOnlyBackends$KotlinBackend

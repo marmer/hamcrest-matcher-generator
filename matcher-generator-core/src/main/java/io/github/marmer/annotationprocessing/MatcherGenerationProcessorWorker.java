@@ -1,6 +1,13 @@
 package io.github.marmer.annotationprocessing;
 
+import io.github.marmer.annotationprocessing.model.TypeModel;
+import io.github.marmer.annotationprocessing.spi.GeneratedSource;
+import io.github.marmer.annotationprocessing.spi.GenerationContext;
+import io.github.marmer.annotationprocessing.spi.GeneratorBackend;
 import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -21,20 +29,25 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 
 public class MatcherGenerationProcessorWorker {
     private final Supplier<LocalDateTime> timeProvider;
     private final ProcessingEnvironment processingEnv;
     private final String generatorName;
+    private final List<GeneratorBackend> backends;
 
     public MatcherGenerationProcessorWorker(
         final Supplier<LocalDateTime> timeProvider,
         final ProcessingEnvironment processingEnv,
-        final String generatorName
+        final String generatorName,
+        final List<GeneratorBackend> backends
     ) {
         this.timeProvider = timeProvider;
         this.processingEnv = processingEnv;
         this.generatorName = generatorName;
+        this.backends = List.copyOf(backends);
     }
 
     static AnnotationValue getAnnotationValueForField(final AnnotationMirror mirror, final String fieldName) {
@@ -103,16 +116,46 @@ public class MatcherGenerationProcessorWorker {
                 if (isSelfGenerated(typeElement)) {
                     printSkipNoteBecauseOfSelfGenerationFor(typeElement);
                 } else {
-                    new MatcherGenerator(
-                        processingEnv,
-                        typeElement,
-                        timeProvider,
-                        generatorName,
-                        List.of(configurationElement),
-                        getMatcherConfigurationMirror(configurationElement)
-                    ).generate();
+                    generateFor(typeElement, configurationElement);
                 }
             });
+    }
+
+    private void generateFor(final TypeElement typeElement, final Element configurationElement) {
+        final TypeModel model = new TypeModelFactory(processingEnv, getMatcherConfigurationMirror(configurationElement))
+            .create(typeElement);
+        final GenerationContext context = new GenerationContext(generatorName, timeProvider.get());
+        backends.forEach(backend -> write(
+            backend.generate(model, context),
+            typeElement,
+            configurationElement
+        ));
+    }
+
+    private void write(
+        final GeneratedSource source,
+        final TypeElement typeElement,
+        final Element configurationElement
+    ) {
+        final Filer filer = processingEnv.getFiler();
+        final Element[] originatingElements = {typeElement, configurationElement};
+        final String name = source.packageName().isEmpty()
+            ? source.simpleName()
+            : source.packageName() + "." + source.simpleName();
+        try {
+            final FileObject file = source.language() == GeneratedSource.Language.JAVA
+                ? filer.createSourceFile(name, originatingElements)
+                : filer.createResource(
+                    StandardLocation.SOURCE_OUTPUT,
+                    source.packageName(),
+                    source.simpleName() + "." + source.language().fileExtension(),
+                    originatingElements);
+            try (Writer writer = file.openWriter()) {
+                writer.write(source.content());
+            }
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private AnnotationMirror getMatcherConfigurationMirror(final Element configurationElement) {

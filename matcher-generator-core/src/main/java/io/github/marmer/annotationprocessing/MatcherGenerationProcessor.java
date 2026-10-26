@@ -1,6 +1,10 @@
 package io.github.marmer.annotationprocessing;
 
+import io.github.marmer.annotationprocessing.spi.GeneratorBackend;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
@@ -27,7 +31,18 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        worker = new MatcherGenerationProcessorWorker(timeProvider::get, processingEnv, getClass().getName());
+        worker = new MatcherGenerationProcessorWorker(
+            timeProvider::get,
+            processingEnv,
+            getClass().getName(),
+            loadBackends()
+        );
+    }
+
+    private List<GeneratorBackend> loadBackends() {
+        final List<GeneratorBackend> backends = new ArrayList<>();
+        ServiceLoader.load(GeneratorBackend.class, getClass().getClassLoader()).forEach(backends::add);
+        return backends;
     }
 
     @Override
