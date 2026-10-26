@@ -27,4 +27,8 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 |Completeness check
 |The check that every property of a type is either asserted or deliberately ignored. It makes sure that a property added later cannot go unchecked without anyone noticing.
+
+|DSL scope
+|The block in the Kotlin DSL that belongs to one configured type, for example `isOrder { … }`. Inside it, only checks for that type's properties can be written; a property whose type is itself configured opens a nested block, such as `customer { … }`.
+
 |===

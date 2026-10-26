@@ -31,3 +31,7 @@ _Avoid_: property chain, field path
 **Completeness check**:
 The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted.
 _Avoid_: strict mode, exhaustiveness
+
+**DSL scope**:
+The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`).
+_Avoid_: builder, spec block
