@@ -4,6 +4,12 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Glossary
 
 [cols="e,2e" options="header"]
+|Generated code
+|The source files that the processor writes into the user's project at compile time: matchers, assertions and Kotlin DSL files. They belong to the user and are not covered by the project's license.
+
+|Runtime library
+|The published artifact that generated code calls while the user's tests run, such as the Hamcrest `BeanPropertyMatcher`. Like every other artifact of the project, it is under the project's license (Apache-2.0).
+
 |===
 |Term |Definition
 
@@ -30,5 +36,11 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 |DSL scope
 |The block in the Kotlin DSL that belongs to one configured type, for example `isOrder { … }`. Inside it, only checks for that type's properties can be written; a property whose type is itself configured opens a nested block, such as `customer { … }`.
+
+|Generated code
+|The source files that the processor writes into the user's project at compile time: matchers, assertions and Kotlin DSL files. They belong to the user and are not covered by the project's license.
+
+|Runtime library
+|The published artifact that generated code calls while the user's tests run, such as the Hamcrest `BeanPropertyMatcher`. Like every other artifact of the project, it is under the project's license (Apache-2.0).
 
 |===

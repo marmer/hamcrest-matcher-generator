@@ -35,3 +35,11 @@ _Avoid_: strict mode, exhaustiveness
 **DSL scope**:
 The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`).
 _Avoid_: builder, spec block
+
+**Generated code**:
+The source files the processor writes into the user's project at compile time (matchers, assertions, Kotlin DSL files); they belong to the user and are not covered by the project license.
+_Avoid_: generated library, output artifact
+
+**Runtime library**:
+The published artifact that generated code calls at test time (e.g. the Hamcrest `BeanPropertyMatcher`); like every other artifact of the project, it is under the project license.
+_Avoid_: dependencies module, support code
