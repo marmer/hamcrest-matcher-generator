@@ -60,15 +60,23 @@ jobs:
         if: success()
 
   verify-matrix:
-    name: Verify JDK ${{ matrix.java-version }}
+    name: Verify JDK ${{ matrix.role }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [11, 17, 25]
+        include:
+          - role: "17"
+            java-version: "17"
+          - role: "21"
+            java-version: "21"
+          - role: "25"
+            java-version: "25"
+          - role: latest
+            java-version: latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ matrix.java-version }}
+      - name: Set up JDK ${{ matrix.role }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
@@ -81,8 +89,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-jdk${{ matrix.java-version }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-jdk${{ matrix.java-version }}-
+          key: ${{ runner.os }}-m2-jdk${{ matrix.role }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-jdk${{ matrix.role }}-
 
       - name: Verify
         run: ./mvnw -B clean verify
