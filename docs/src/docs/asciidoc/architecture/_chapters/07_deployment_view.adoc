@@ -48,3 +48,17 @@ _<diagram + explanation>_
 ==== _<Infrastructure Element n>_
 
 _<diagram + explanation>_
+
+
+=== Release pipeline
+
+Releases run on CI and need no machine of the owner.
+
+* `.github/workflows/pr-title.yml` (required check `PR title`) enforces Conventional Commits on pull request titles, because the squash-merged title is the commit that release-please reads.
+* `.github/workflows/release.yml` runs on every push to `main`. release-please (Maven mode, `skip-snapshot`, default bump rules, configured in `release-please-config.json` and `.release-please-manifest.json`) keeps a Release PR up to date, using an App token so that the PR runs its checks and the new tag triggers the docs deployment. Tags have no `v` prefix (`6.0.0`), matching the `[0-9]*` trigger of `docs.yml`.
+* Merging the Release PR creates the tag and the release page. In the same workflow the job `Release build` runs `mvnw verify` on the tag, and only if it is green the job `Publish to Maven Central` runs `mvnw -P release deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), attaches a build-provenance attestation (`actions/attest`) and makes sure the release page exists.
+* After a confirmed publish, the job `Announce release` comments on the merged Release PR with the App token, mentioning the owner and linking Maven Central, the release page and the CHANGELOG section.
+* A failed publish is re-run with `workflow_dispatch` and the existing tag as input; tags are never moved.
+* 6.0.0 is forced with `release-as` and merged by the owner. Auto-merge of Release PRs stays off until after 6.0.0.
+
+The credentials live in the repository environment `release` (`CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `MAVEN_GPG_KEY`, `MAVEN_GPG_PASSPHRASE`) and in the App settings (`RELEASE_APP_ID`, `RELEASE_APP_PRIVATE_KEY`).

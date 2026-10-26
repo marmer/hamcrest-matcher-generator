@@ -163,7 +163,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-x3]]QS-X3
 | Security / Integrity, Authenticity
 | *Releases are verifiable.* When a user or their supply-chain tooling downloads a release from Maven Central, the artifacts' GPG signatures, the GitHub build-provenance attestation (`gh attestation verify`) and the CycloneDX SBOM all verify; and while a pull request adds a dependency with a known vulnerability, dependency review blocks its merge.
-| Release workflow; Dependency review
+| Release workflow (`release.yml`); Dependency review
 
 | [[qs-x4]]QS-X4
 | Reliability / Fault tolerance
