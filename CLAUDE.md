@@ -24,8 +24,8 @@ JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin
 # Single integration test class
 ./mvnw failsafe:integration-test -pl hamcrest-matcher-generator-annotationprocessor -Dit.test=ClassName
 
-# Release build (adds GPG signing, Javadoc; still targets the dead OSSRH, see wayfinder map #52)
-./mvnw clean install -P release
+# Release build (adds GPG signing with the BC signer, sources/Dokka javadoc jars, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
+./mvnw verify -P release    # dry run, no publishing
 ```
 
 Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<profiles>`); read them there.
