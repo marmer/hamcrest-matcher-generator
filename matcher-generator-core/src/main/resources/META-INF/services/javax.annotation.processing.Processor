@@ -1,1 +1,1 @@
-io.github.marmer.annotationprocessing.MatcherGenerationProcessor
+io.github.marmer.matchergenerator.core.MatcherGenerationProcessor
