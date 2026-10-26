@@ -1,0 +1,93 @@
+package some.other.pck;
+
+import io.github.marmer.testutils.generators.beanmatcher.dependencies.BeanPropertyMatcher;
+import java.lang.Override;
+import javax.annotation.processing.Generated;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
+
+@Generated(value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor", date = "2020-01-01T00:00")
+public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
+    private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
+
+    public SimplePojoMatcher() {
+        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
+    }
+
+    @Override
+    public void describeTo(final Description description) {
+        beanPropertyMatcher.describeTo(description);
+    }
+
+    @Override
+    protected boolean matchesSafely(final SimplePojo item) {
+        return beanPropertyMatcher.matches(item);
+    }
+
+    @Override
+    protected void describeMismatchSafely(final SimplePojo item, final Description description) {
+        beanPropertyMatcher.describeMismatch(item, description);
+    }
+
+    public static SimplePojoMatcher isSimplePojo() {
+        return new SimplePojoMatcher();
+    }
+
+    @Generated(value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor", date = "2020-01-01T00:00")
+    public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
+        private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
+
+        public InnerTypeMatcher() {
+            beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType>(SimplePojo.InnerType.class);
+        }
+
+        @Override
+        public void describeTo(final Description description) {
+            beanPropertyMatcher.describeTo(description);
+        }
+
+        @Override
+        protected boolean matchesSafely(final SimplePojo.InnerType item) {
+            return beanPropertyMatcher.matches(item);
+        }
+
+        @Override
+        protected void describeMismatchSafely(final SimplePojo.InnerType item,
+                                              final Description description) {
+            beanPropertyMatcher.describeMismatch(item, description);
+        }
+
+        public static InnerTypeMatcher isInnerType() {
+            return new InnerTypeMatcher();
+        }
+
+        @Generated(value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor", date = "2020-01-01T00:00")
+        public static class InnerInnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerInnerType> {
+            private final BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType> beanPropertyMatcher;
+
+            public InnerInnerTypeMatcher() {
+                beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerInnerType>(SimplePojo.InnerType.InnerInnerType.class);
+            }
+
+            @Override
+            public void describeTo(final Description description) {
+                beanPropertyMatcher.describeTo(description);
+            }
+
+            @Override
+            protected boolean matchesSafely(final SimplePojo.InnerType.InnerInnerType item) {
+                return beanPropertyMatcher.matches(item);
+            }
+
+            @Override
+            protected void describeMismatchSafely(final SimplePojo.InnerType.InnerInnerType item,
+                                                  final Description description) {
+                beanPropertyMatcher.describeMismatch(item, description);
+            }
+
+            public static InnerInnerTypeMatcher isInnerInnerType() {
+                return new InnerInnerTypeMatcher();
+            }
+        }
+    }
+}
