@@ -7,9 +7,13 @@ import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +22,7 @@ import javax.tools.StandardLocation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -112,6 +117,96 @@ class CoreProcessorIT {
             ),
             describe(model.properties()));
         model.properties().forEach(property -> assertEquals(Nullability.UNSPECIFIED, property.nullability()));
+    }
+
+    @Test
+    @DisplayName("A Kotlin class is described by its Kotlin getters, whatever their return type")
+    void aKotlinClassIsDescribedByItsKotlinGetters() {
+        final JavaFileObject kotlinProbe = JavaFileObjects.forSourceLines(
+            "some.other.pck.KotlinProbe",
+            "package some.other.pck;",
+            "@kotlin.Metadata",
+            "public class KotlinProbe {",
+            "    public boolean getEnabled() { return true; }",
+            "    public Boolean isX() { return true; }",
+            "    public String isLabel() { return \"\"; }",
+            "    public boolean isPrimitive() { return true; }",
+            "    public String notAProperty() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("\"some.other.pck.KotlinProbe\""), kotlinProbe, KOTLIN_METADATA);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of(
+                "enabled:boolean:getEnabled",
+                "isX:java.lang.Boolean:isX",
+                "isLabel:java.lang.String:isLabel",
+                "primitive:boolean:isPrimitive",
+                CLASS_PROPERTY
+            ),
+            describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Kotlin getters whose names are not Java identifiers are skipped (QS-U4)")
+    void kotlinGettersWithMangledNamesAreSkipped(@TempDir final Path classes) throws IOException {
+        final JavaFileObject mangled = JavaFileObjects.forSourceLines(
+            "some.other.pck.Mangled",
+            "package some.other.pck;",
+            "@kotlin.Metadata",
+            "public class Mangled {",
+            "    public String getPlain() { return \"\"; }",
+            "    public String getXyzQ() { return \"\"; }",
+            "}"
+        );
+        final Compilation compiledMangled = Compiler.javac().compile(mangled, KOTLIN_METADATA);
+        CompilationSubject.assertThat(compiledMangled).succeeded();
+        writeClassFile(compiledMangled, classes, "some.other.pck.Mangled", "getXyzQ", "getX-zQ");
+        writeClassFile(compiledMangled, classes, "kotlin.Metadata", null, null);
+
+        final Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .withClasspath(classPathWith(classes))
+            .compile(configuration("\"some.other.pck.Mangled\""));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("plain:java.lang.String:getPlain", CLASS_PROPERTY),
+            describe(onlyModel().properties()));
+    }
+
+    /**
+     * The directory with the copied class files, followed by the test class path that compile-testing would use.
+     */
+    private static List<File> classPathWith(final Path classes) {
+        final List<File> entries = new ArrayList<>();
+        entries.add(classes.toFile());
+        Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
+            .map(File::new)
+            .forEach(entries::add);
+        return entries;
+    }
+
+    /**
+     * Copies a compiled class file into the class path, optionally renaming one method inside it. Kotlin emits names
+     * such as {@code getX-abc} for mangled accessors, which javac refuses to compile from source. The rename keeps the
+     * length, so the constant pool stays valid.
+     */
+    private static void writeClassFile(final Compilation compilation, final Path classes, final String name,
+                                       final String from, final String to) throws IOException {
+        final String path = name.replace('.', '/') + ".class";
+        final byte[] bytes = compilation.generatedFile(StandardLocation.CLASS_OUTPUT, path)
+            .orElseThrow()
+            .openInputStream()
+            .readAllBytes();
+        final String content = new String(bytes, StandardCharsets.ISO_8859_1);
+        final String renamed = from == null ? content : content.replace(from, to);
+        final Path target = classes.resolve(path);
+        Files.createDirectories(target.getParent());
+        Files.write(target, renamed.getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Test
@@ -372,6 +467,16 @@ class CoreProcessorIT {
     private static boolean contains(final byte[] bytes, final String text) {
         return new String(bytes, StandardCharsets.ISO_8859_1).contains(text);
     }
+
+    /**
+     * A stand-in for {@code kotlin.Metadata}, which marks the classes that Kotlin compiled. The core only checks the name.
+     */
+    private static final JavaFileObject KOTLIN_METADATA = JavaFileObjects.forSourceLines(
+        "kotlin.Metadata",
+        "package kotlin;",
+        "public @interface Metadata {",
+        "}"
+    );
 
     private static final JavaFileObject SOME_POJO = JavaFileObjects.forSourceLines(
         "some.other.pck.SomePojo",

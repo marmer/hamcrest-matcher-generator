@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -26,6 +27,8 @@ import javax.lang.model.type.TypeMirror;
  * Creates the {@link TypeModel} of a configured type.
  */
 class TypeModelFactory {
+    private static final String KOTLIN_METADATA = "kotlin.Metadata";
+
     private final ProcessingEnvironment processingEnv;
     private final AnnotationMirror configurationMirror;
 
@@ -36,6 +39,15 @@ class TypeModelFactory {
 
     private static String decapitalized(final String value) {
         return value.isEmpty() ? value : value.substring(0, 1).toLowerCase(Locale.ROOT) + value.substring(1);
+    }
+
+    /**
+     * Kotlin getters that Java bean rules skip, such as {@code getEnabled(): boolean}, are only recognised in types
+     * that Kotlin compiled. Java types keep the bean rules.
+     */
+    private static boolean isDeclaredInKotlin(final ExecutableElement element) {
+        return element.getEnclosingElement().getAnnotationMirrors().stream()
+            .anyMatch(mirror -> mirror.getAnnotationType().toString().equals(KOTLIN_METADATA));
     }
 
     private static boolean hasReturnType(final ExecutableElement element) {
@@ -164,7 +176,7 @@ class TypeModelFactory {
             });
         final List<PropertyModel> getterProperties = getters.stream()
             .map(element -> new PropertyModel(
-                withoutPropertyPrefix(element.getSimpleName().toString()),
+                propertyName(element),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
                 Nullability.UNSPECIFIED))
@@ -199,15 +211,33 @@ class TypeModelFactory {
         final ExecutableElement executable = (ExecutableElement) element;
         return MatcherGenerationProcessorWorker.isPublic(executable)
             && !MatcherGenerationProcessorWorker.isStatic(executable)
+            && SourceVersion.isIdentifier(executable.getSimpleName())
             && hasReturnTypeWithMatchingPropertyPrefix(executable)
             && hasNoParameters(executable);
     }
 
     private boolean hasReturnTypeWithMatchingPropertyPrefix(final ExecutableElement element) {
         final String name = element.getSimpleName().toString();
-        final TypeKind returnKind = element.getReturnType().getKind();
-        return (hasReturnType(element) && name.startsWith("get") && returnKind != TypeKind.BOOLEAN)
-            || (name.startsWith("is") && returnKind == TypeKind.BOOLEAN);
+        final boolean primitiveBoolean = element.getReturnType().getKind() == TypeKind.BOOLEAN;
+        if (name.startsWith("get")) {
+            return hasReturnType(element) && (!primitiveBoolean || isDeclaredInKotlin(element));
+        }
+        if (name.startsWith("is")) {
+            return isDeclaredInKotlin(element) ? hasReturnType(element) : primitiveBoolean;
+        }
+        return false;
+    }
+
+    /**
+     * A Kotlin {@code is} getter that does not return a primitive boolean keeps its full name, so {@code val isX:
+     * Boolean?} becomes {@code isX}, the name Kotlin gives the property.
+     */
+    private String propertyName(final ExecutableElement element) {
+        final String name = element.getSimpleName().toString();
+        if (name.startsWith("is") && element.getReturnType().getKind() != TypeKind.BOOLEAN) {
+            return decapitalized(name);
+        }
+        return withoutPropertyPrefix(name);
     }
 
     private String withoutPropertyPrefix(final String name) {
