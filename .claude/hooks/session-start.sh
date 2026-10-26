@@ -48,10 +48,11 @@ for gav in org.assertj:assertj-core:3.27.3 net.bytebuddy:byte-buddy:1.15.11; do
 done
 remove_rate_limit_artifacts
 
-# Non-fatal: warn when this branch carries commits that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
+# Non-fatal: warn when this branch carries changes that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
+# Compares content, not commits: after a squash merge the base is merged in, leaving old commits with an empty diff.
 git fetch -q origin development 2>/dev/null || true
-unmerged=$(git rev-list --count origin/development..HEAD 2>/dev/null || echo 0)
-if [ "${unmerged:-0}" -gt 0 ]; then
-  echo "session-start: warning: $unmerged commit(s) on this branch are not on origin/development; see the Merging section of docs/agents/wayfinding.md" >&2
+changed=$(git diff --name-only origin/development HEAD 2>/dev/null | wc -l)
+if [ "${changed:-0}" -gt 0 ]; then
+  echo "session-start: warning: $changed file(s) on this branch differ from origin/development; see the Merging section of docs/agents/wayfinding.md" >&2
 fi
 exit 0
