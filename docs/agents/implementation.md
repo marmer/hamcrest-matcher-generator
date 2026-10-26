@@ -26,6 +26,7 @@ The orchestrator usually runs on Sonnet. It starts each implementer subagent on 
 - **Record every escalation** as a comment on the ticket: from which model to which, and why. These comments feed the retro.
 - **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments.
 - **One hard-to-reverse step per tool call** (create PR, merge, close, push), so a denied or failed step leaves the others intact.
+- **Review per batch, not only at the end**: this overrides step 7 of `/implement-spec` (run `code-review` only once all tickets are complete). Run `code-review` on the integration branch after every batch the session works through, and at the latest after every 5 merged tickets, whatever the batch size. Review since the integration branch tip before the batch's first merge, so its Spec axis covers only that batch's tickets, and fix its findings in a single implementer subagent before the next batch starts.
 - **Keep the spec's status current**: pass `--map <spec>` to `issue.py claim`/`close`, and after a merge run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
 
 ## Retro at the end of every session
