@@ -17,6 +17,7 @@ Process rules for wayfinder maps and their tickets, used by `/wayfinder`. A map'
 - **Skills**: grilling tickets use `grilling` + `domain-modeling`. Keep `GLOSSARY.md`/`docs/adr/` in sync with arc42 (`docs/agents/domain.md`).
 - **Completion**: a round in which the owner accepts every answer and no question is left open counts as the confirmation of shared understanding; record the resolution without an extra confirmation round.
 - **Helper prototypes**: a feasibility check run while grilling (by you or a subagent) that a decision rests on is re-run once from a clean copy and pushed as an unmerged `prototype/<name>` branch with a README of its gotchas, and linked from the resolution comment. The scratchpad dies with the container. Example: `prototype/structurizr-rendering`.
+- **Helper research**: fact-finding a subagent does while grilling that a decision rests on is saved like a research ticket's findings: an unmerged `research/<name>` branch with the report under `docs/research/` (sources and unconfirmed points included), linked from the resolution comment. Examples: `research/sonarqube-cloud-token`, `research/pit-mutation-testing`.
 
 ## Prototype tickets
 
