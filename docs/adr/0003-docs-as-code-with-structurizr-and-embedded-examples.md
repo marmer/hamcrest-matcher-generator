@@ -4,7 +4,7 @@ All documentation is built and checked by `mvn verify`. A `docs` module renders 
 
 ## Consequences
 
-- Structurizr 6.x requires Java 21, so the `docs` module only builds in a JDK 21+ profile (like Error Prone and NullAway); the JDK 11/17 CI jobs skip it, the main JDK 21+ job always builds it. Structurizr versions are pinned and updated together, because driving asciidoctorj-diagram with the Maven jars instead of the Structurizr CLI is undocumented.
+- Structurizr 6.x requires Java 21, so the `docs` module only builds in a JDK 21+ profile (like Error Prone and NullAway); the JDK 17 CI job skips it, the main JDK 21+ job always builds it. Structurizr versions are pinned and updated together, because driving asciidoctorj-diagram with the Maven jars instead of the Structurizr CLI is undocumented.
 - The Docker-based docs build and the `gh-pages` branch go away; Pages is deployed with the official Pages actions on each release.
 
 ## Considered Options

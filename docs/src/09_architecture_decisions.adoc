@@ -34,3 +34,11 @@ Details: link:../adr/0003-docs-as-code-with-structurizr-and-embedded-examples.md
 Kotlin users get an optional, type-safe DSL such as `isOrder { customer { name("Ada") } }`, which builds on the generated Hamcrest matchers. Because it needs one wrapper per configured type, it is generated as well, by a separate opt-in artifact `hamcrest-matcher-generator-kotlin`. This artifact is another backend behind the same plug-in interface as Hamcrest and AssertJ; that interface therefore returns a Java or Kotlin source file. It is the only backend allowed to depend on another backend, the Hamcrest one, whose naming it reuses, and the build enforces that exception explicitly. The generator itself is written in Java and produces Kotlin with the KotlinPoet library, so the project's production code stays plain Java. It runs only under KAPT, the Kotlin compiler's way of running annotation processors; under plain javac it skips the DSL and prints one note.
 
 Details: link:../adr/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
+
+=== ADR 0005: Java 17 baseline for 6.0.0
+
+*Status:* accepted (6.0.0 planning)
+
+Version 6.0.0 needs Java 17 or newer, for the annotation processor, the runtime artifacts and the generated code. Earlier planning assumed Java 11, but the libraries and tools this project updates automatically have moved on: JUnit 6 and AssertJ 4 need Java 17, Maven 4 needs it to run, and some tools already need Java 21. With Java 11, every such update would stop and wait for the maintainer, which contradicts the goal of a project that maintains itself. A major release is the right moment for this break. Users who stay on Java 11 keep using 5.x; everyone on Java 17 or newer upgrades by changing the version number.
+
+Details: link:../adr/0005-java-17-baseline.md[ADR 0005]
