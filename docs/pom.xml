@@ -17,6 +17,7 @@
         <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
         <asciidoctorj.version>3.0.0</asciidoctorj.version>
         <jsoup.version>1.18.3</jsoup.version>
+        <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
         <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
         <maven.install.skip>true</maven.install.skip>
@@ -98,6 +99,7 @@
                                 <site-source-dir>${project.basedir}/src/docs/asciidoc</site-source-dir>
                                 <project-version>${project.version}</project-version>
                                 <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
                                 <revremark>Built with Maven</revremark>
                             </attributes>
                             <logHandler>

@@ -193,6 +193,21 @@ class RenderedDocsTest {
     }
 
     @Test
+    void noPageContainsAnUnresolvedAttributeReference() {
+        final Pattern reference = Pattern.compile("\\{[A-Za-z][\\w-]*}");
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final Element body = parse(page).body().clone();
+            body.select("pre, code").remove();
+            final Matcher matcher = reference.matcher(body.text());
+            while (matcher.find()) {
+                problems.add(OUTPUT.relativize(page) + ": " + matcher.group());
+            }
+        }
+        assertTrue(problems.isEmpty(), "unresolved attribute references:\n" + String.join("\n", problems));
+    }
+
+    @Test
     void linkCheckDetectsBrokenLinks() throws IOException {
         final Path page = OUTPUT.resolve("architecture/index.html");
         assertAll(
