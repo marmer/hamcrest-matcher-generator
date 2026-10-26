@@ -37,9 +37,9 @@ The core modules are `hamcrest-matcher-generator-dependencies` (`@MatcherConfigu
 ## Architecture: Generation Flow
 
 1. Compiler detects `@MatcherConfiguration` on a type (SOURCE retention, in `dependencies` module)
-2. `MatcherGenerationProcessor.java` — APT entry point, delegates immediately to the Kotlin worker
-3. `MatcherGenerationProcessorWorker.kt` — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, passes each to `MatcherGenerator`
-4. `MatcherGenerator.kt` — builds a `<TypeName>Matcher` class via JavaPoet; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
+2. `MatcherGenerationProcessor.java` — APT entry point, delegates immediately to the worker
+3. `MatcherGenerationProcessorWorker.java` — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, passes each to `MatcherGenerator`
+4. `MatcherGenerator.java` — builds a `<TypeName>Matcher` class via JavaPoet; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
 
 **Generated matcher API** (per property `foo`):
 ```java
