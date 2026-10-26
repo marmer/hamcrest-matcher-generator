@@ -5,50 +5,50 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 == Deployment View
 
-
-
-
-
 === Infrastructure Level 1
 
-
-
-
-
-_**<Overview Diagram>**_
+The project has no runtime infrastructure of its own: the processor runs inside the compiler of the user's build. What
+is deployed are the build artifacts and this documentation.
 
 Motivation::
 
-_<explanation in text form>_
+Users take the artifacts from Maven Central, and readers take the documentation from GitHub Pages. Both are produced
+by automated builds, so no manual upload step exists.
 
 Quality and/or Performance Features::
 
-_<explanation in text form>_
+Every published jar is signed and comes with a sources jar and a Javadoc jar, which Maven Central requires. A
+CycloneDX software bill of materials is attached to every published module, so users can see which dependencies it
+brings along.
 
 Mapping of Building Blocks to Infrastructure::
-_<description of the mapping>_
 
+[options="header",cols="2,4"]
+|===
+| Building block | Deployed to
+
+| `matcher-generator-annotations`, `matcher-generator-core`, `hamcrest-matcher-generator` and the two relocation POMs
+| Maven Central through the Central Portal.
+
+| `*-endtoend-*` modules, `docs`
+| Not published. The release bundle excludes them (`excludeArtifacts`).
+
+| Documentation
+| GitHub Pages, deployed by the `Docs` GitHub Actions workflow after the docs build and its link checks passed.
+|===
 
 === Infrastructure Level 2
 
+==== Release to Maven Central
 
+The `release` Maven profile signs the jars with GPG, attaches the sources jar, the Javadoc jar and the CycloneDX SBOM,
+and lets the `central-publishing-maven-plugin` upload one bundle to the Central Portal. The plugin publishes the
+bundle automatically and waits until it is published. The former OSSRH is not used any more.
 
+==== Documentation on GitHub Pages
 
-
-==== _<Infrastructure Element 1>_
-
-_<diagram + explanation>_
-
-==== _<Infrastructure Element 2>_
-
-_<diagram + explanation>_
-
-...
-
-==== _<Infrastructure Element n>_
-
-_<diagram + explanation>_
-
+The `Docs` workflow builds the `docs` module on JDK 21, uploads the rendered HTML as a Pages artifact and deploys it
+with the official Pages actions. It runs for version tags and on manual request.
 
 === Release pipeline
 

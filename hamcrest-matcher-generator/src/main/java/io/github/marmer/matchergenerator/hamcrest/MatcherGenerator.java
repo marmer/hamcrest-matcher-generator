@@ -11,11 +11,8 @@ import com.squareup.javapoet.WildcardTypeName;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
@@ -50,12 +47,6 @@ class MatcherGenerator {
         return value.isEmpty() ? value : value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
-    private static <T> List<T> distinctByName(final List<T> values, final java.util.function.Function<T, String> name) {
-        final Map<String, T> distinct = new LinkedHashMap<>();
-        values.forEach(value -> distinct.putIfAbsent(name.apply(value), value));
-        return new ArrayList<>(distinct.values());
-    }
-
     String simpleMatcherName() {
         return simpleMatcherName;
     }
@@ -78,7 +69,7 @@ class MatcherGenerator {
     }
 
     private List<MethodSpec> getPropertyHamcrestMatcherMethods() {
-        return distinctByName(model.properties(), PropertyModel::name).stream()
+        return PropertyModel.distinctByName(model.properties()).stream()
             .map(this::toHamcrestMatcher)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
@@ -91,7 +82,7 @@ class MatcherGenerator {
     }
 
     private List<MethodSpec> getPropertyHamcrestMatcherResetMethods() {
-        return distinctByName(model.properties(), PropertyModel::name).stream()
+        return PropertyModel.distinctByName(model.properties()).stream()
             .map(this::toHamcrestMatcherReset)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
