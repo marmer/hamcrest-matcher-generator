@@ -11,6 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build + run integration tests
 ./mvnw clean verify
 
+# Other JDKs in cloud sessions (the SessionStart hook installs Temurin 17 and the newest GA)
+JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify
+JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
+
 # Windows with jabba-managed JDK
 JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin:$PATH" ./mvnw clean install
 

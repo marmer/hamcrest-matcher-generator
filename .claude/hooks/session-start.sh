@@ -48,6 +48,27 @@ for gav in org.assertj:assertj-core:3.27.3 net.bytebuddy:byte-buddy:1.15.11; do
 done
 remove_rate_limit_artifacts
 
+# Agent worktrees branch off origin/HEAD; without it they start on the stale master (4976680).
+git remote set-head origin -a >/dev/null 2>&1 || true
+
+# Tickets must be green on JDK 17 and the newest GA; the container ships only JDK 21. Install Temurin
+# under ~/.jdks/17 and ~/.jdks/latest (CLAUDE.md "Build & Test Commands"). Non-fatal.
+install_jdk() { # <feature-version> <target-dir>
+  [ -x "$2/bin/java" ] && return 0
+  local tmp; tmp=$(mktemp -d)
+  if curl -fsSL "https://api.adoptium.net/v3/binary/latest/$1/ga/linux/x64/jdk/hotspot/normal/eclipse" -o "$tmp/jdk.tar.gz" \
+      && mkdir -p "$2" && tar -xzf "$tmp/jdk.tar.gz" -C "$2" --strip-components=1; then
+    echo "JDK $1 installed at $2"
+  else
+    rm -rf "$2"; echo "JDK $1 not installed; builds on it fall back to CI." >&2
+  fi
+  rm -rf "$tmp"
+}
+latest_jdk=$(curl -fsS https://api.adoptium.net/v3/info/available_releases 2>/dev/null \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["most_recent_feature_release"])' 2>/dev/null)
+install_jdk 17 "$HOME/.jdks/17"
+[ -n "$latest_jdk" ] && install_jdk "$latest_jdk" "$HOME/.jdks/latest"
+
 # Non-fatal: warn when this branch carries changes that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
 # Compares content, not commits: after a squash merge the base is merged in, leaving old commits with an empty diff.
 git fetch -q origin development 2>/dev/null || true
