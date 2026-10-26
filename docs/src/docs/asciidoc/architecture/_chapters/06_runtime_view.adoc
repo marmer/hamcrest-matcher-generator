@@ -5,7 +5,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Generation of matchers
 
-The compiler runs the processor in every round in which it finds `@MatcherConfiguration`. For every configured type
+The compiler runs the processor in every round in which it finds `@GenerateMatchers` or its 5.x alias `@MatcherConfiguration`. For every configured type
 the following happens:
 
 . `MatcherGenerationProcessor` hands the round to `MatcherGenerationProcessorWorker`, which resolves the configured

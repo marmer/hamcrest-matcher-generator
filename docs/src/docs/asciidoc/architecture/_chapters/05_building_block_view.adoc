@@ -5,9 +5,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 == Building Block View
 
-NOTE: Package and artifact names below describe the current state of the build. They change with the move to the
-6.0.0 coordinates (see ADR 0002).
-
 === Whitebox Overall System
 
 Motivation::
@@ -22,16 +19,19 @@ Contained Building Blocks::
 |===
 | Building block | Responsibility
 
-| `hamcrest-matcher-generator-dependencies`
-| The configuration annotation `@MatcherConfiguration` and the runtime base class `BeanPropertyMatcher` that generated
-Hamcrest matchers call at test time.
+| `matcher-generator-annotations`
+| The configuration annotation `@GenerateMatchers` and its deprecated 5.x alias `@MatcherConfiguration`.
 
 | `matcher-generator-core`
 | The processor entry point, the discovery of configured types, the library-free `TypeModel` and `PropertyModel`,
 diagnostics, and the `GeneratorBackend` interface. It has no assertion library on its classpath.
 
-| `hamcrest-matcher-generator-annotationprocessor`
-| The Hamcrest backend: it turns a `TypeModel` into the source of a `<Type>Matcher` class with JavaPoet.
+| `hamcrest-matcher-generator`
+| The Hamcrest backend: it turns a `TypeModel` into the source of a `<Type>Matcher` class with JavaPoet. It also
+contains the runtime base class `BeanPropertyMatcher` that the generated matchers call at test time.
+
+| `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
+| Relocation POMs without code that point 5.x users to `hamcrest-matcher-generator` (see ADR 0002).
 
 | `*-endtoend-*` modules
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
@@ -55,7 +55,7 @@ guard this.
 ==== White Box `matcher-generator-core`
 
 `MatcherGenerationProcessor`::
-The annotation processor registered through `META-INF/services`. It loads the backends and hands every round to the
+The annotation processor (package `io.github.marmer.matchergenerator.core`) registered through `META-INF/services`. It loads the backends and hands every round to the
 worker. It declares the processor option `kapt.kotlin.generated`.
 
 `MatcherGenerationProcessorWorker`::

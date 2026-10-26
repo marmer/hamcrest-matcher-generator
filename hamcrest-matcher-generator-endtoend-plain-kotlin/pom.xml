@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator</artifactId>
+        <artifactId>matcher-generator-parent</artifactId>
         <version>5.1.0</version>
         <relativePath>..</relativePath>
     </parent>
@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
-            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
             <version>5.1.0</version>
             <scope>test</scope>
         </dependency>
@@ -61,7 +61,7 @@
                             <annotationProcessorPaths>
                                 <annotationProcessorPath>
                                     <groupId>io.github.marmer.testutils</groupId>
-                                    <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+                                    <artifactId>hamcrest-matcher-generator</artifactId>
                                     <version>${project.version}</version>
                                 </annotationProcessorPath>
                             </annotationProcessorPaths>
