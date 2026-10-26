@@ -1,8 +1,8 @@
 package foo.bar.sample;
 
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
 
-@MatcherConfiguration({
+@GenerateMatchers({
     "foo.bar.sample.prodonly.model.SomeProdOnlyModel"
 })
 public class PackageConfigurationProduction {
