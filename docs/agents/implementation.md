@@ -14,6 +14,7 @@ Every implementation ticket names the model its implementer subagent starts with
 - **Exception: `sonnet`**, when the ticket is hard to break down for Haiku, e.g. a cross-cutting design inside the annotation processor or subtle generics handling. Add a one-line reason below the model line.
 - **Rare exception: `opus`**, only when even Sonnet is unlikely to succeed. Always add the reason.
 - A missing model line means `haiku`.
+- **Every checkable requirement is an acceptance criterion.** Implementers build to the criteria, so a constraint that lives only in "What to build" (e.g. "compared character by character") gets dropped; repeat it as a criterion.
 
 ## Orchestration with `/implement-spec`
 
@@ -24,12 +25,20 @@ The orchestrator usually runs on Sonnet. It starts each implementer subagent on 
 - **Escalate Haiku at once** when the orchestrator judges it has taken a fundamentally wrong direction (e.g. misread the ticket, built in the wrong place, worked around the design instead of following it), since follow-ups won't recover that.
 - **Sonnet and Opus get one follow-up** instruction; if the result still misses the bar, escalate (`sonnet` → `opus`). If Opus still misses it, stop and ask the user.
 - **Record every escalation** as a comment on the ticket: from which model to which, and why. These comments feed the retro.
-- **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments.
+- **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments. They tell it to take the commit attribution trailer from its own context and give only the `Claude-Session:` line, and to back every claim about the project's history or the code ("version X changed nothing") with the command that shows it, so the orchestrator can re-run it.
+- **A ticket is done when CI is green on the pushed integration branch**, not when the merge succeeds: after merging and pushing, read the check runs of the new head (`gh api $R/commits/<sha>/check-runs`) before closing the ticket. Workflow changes (`.github/workflows/`) cannot be verified locally at all, so for those wait for the run.
 - **One hard-to-reverse step per tool call** (create PR, merge, close, push), so a denied or failed step leaves the others intact.
-- **Review per batch, not only at the end**: this overrides step 7 of `/implement-spec` (run `code-review` only once all tickets are complete). Run `code-review` on the integration branch after every batch the session works through, and at the latest after every 5 merged tickets, whatever the batch size. Review since the integration branch tip before the batch's first merge, so its Spec axis covers only that batch's tickets, and fix its findings in a single implementer subagent before the next batch starts. Start that fix subagent right after the review, without asking the user first: brief it which findings to fix and which stay as they are (with the reason), pick its model by the rules in "Implementer model per ticket" above (default `haiku`, `sonnet` for cross-cutting processor or generics work) and judge it by the same quality bar and escalation rules. Ask the user only about findings that need their decision, and leave those out of the fix.
-- **Draft PR after every reviewed batch**: once a batch's review fixes are merged and pushed, open a draft PR from the integration branch into `development` with the `pr` skill, or, if one is already open, update its title and body to the new state. It closes the spec's resolved tickets and stays a draft until the spec is complete.
-- **Always watch the PRs you open or update**: subscribe to their activity right away, without asking, and drive them to green: fix CI failures and answer or address review comments until the PR is merged or closed.
 - **Keep the spec's status current**: pass `--map <spec>` to `issue.py claim`/`close`, and after a merge run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
+
+## Batch completion
+
+These steps override step 7 of `/implement-spec`, which reviews only once all tickets are complete. A **batch** ends when the session stops taking new tickets, and at the latest after 5 merged tickets, whatever the batch size. Then, in order and without asking the user:
+
+1. **Review**: run `code-review` on the integration branch since its tip before the batch's first merge, so the Spec axis covers only that batch's tickets.
+2. **Fix**: start a single implementer subagent on the findings. Brief it which findings to fix and which stay as they are (with the reason); pick its model by "Implementer model per ticket" above and judge it by the same quality bar and escalation rules. Ask the user only about findings that need their decision, and leave those out of the fix.
+3. **Green**: merge and push the fix; CI on the new head is green.
+4. **Draft PR**: open a draft PR from the integration branch into `development` with the `pr` skill, or update the open one's title and body to the new state. It closes the spec's resolved tickets and stays a draft until the spec is complete.
+5. **Watch**: subscribe to the PR's activity and drive it to green: fix CI failures and answer or address review comments until it is merged or closed.
 
 ## Retro at the end of every session
 
