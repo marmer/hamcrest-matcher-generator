@@ -496,6 +496,8 @@
                                 </goals>
                                 <configuration>
                                     <outputFormat>json</outputFormat>
+                                    <!-- The central-publishing extension replaces deploy, which the plugin does not see, so it would skip the BOM. -->
+                                    <skipNotDeployed>false</skipNotDeployed>
                                 </configuration>
                             </execution>
                         </executions>
