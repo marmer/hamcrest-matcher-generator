@@ -12,8 +12,6 @@ import java.util.Arrays;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MatcherGenerationProcessorIT {
@@ -27,15 +25,14 @@ class MatcherGenerationProcessorIT {
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
             """
+            package some.pck;
 
-                            package some.pck;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
 
-                            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            @MatcherConfiguration("some.other.pck.SimplePojo")
+            public final class SomeConfiguration{
 
-                            @MatcherConfiguration("some.other.pck.SimplePojo")
-                            public final class SomeConfiguration{
-
-                            }
+            }
             """);
         JavaFileObject javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SimplePojo",
@@ -93,9 +90,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -129,9 +124,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -166,9 +159,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -231,9 +222,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -271,9 +260,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -322,9 +309,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject, javaFileObjectWithComplexInnerTypes));
+        Compilation compilation = compile(configuration, javaFileObject, javaFileObjectWithComplexInnerTypes);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -360,9 +345,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -397,9 +380,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -436,9 +417,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -489,9 +468,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject, parentPojo));
+        Compilation compilation = compile(configuration, javaFileObject, parentPojo);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -540,9 +517,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -569,9 +544,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration));
+        Compilation compilation = compile(configuration);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -612,14 +585,13 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject1, javaFileObject2));
+        Compilation compilation = compile(configuration, javaFileObject1, javaFileObject2);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
-        assertGeneratedSource(compilation, "matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "some.other.pck.SimplePojo1Matcher");
-        assertGeneratedSource(compilation, "matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "some.other.pck.SimplePojo2Matcher");
+        final String scenario = "matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package";
+        assertGeneratedSource(compilation, scenario, "some.other.pck.SimplePojo1Matcher");
+        assertGeneratedSource(compilation, scenario, "some.other.pck.SimplePojo2Matcher");
     }
 
     @Test
@@ -648,9 +620,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -683,9 +653,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -725,9 +693,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -764,9 +730,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -802,9 +766,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -846,9 +808,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -905,9 +865,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -947,9 +905,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -986,9 +942,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -997,21 +951,19 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher should be generated for record with single String component")
-    @EnabledForJreRange(min = JRE.JAVA_16)
     void matcherShouldBeGeneratedForRecordWithSingleStringComponent() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
             """
+            package some.pck;
 
-                            package some.pck;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
 
-                            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            @MatcherConfiguration("some.other.pck.SomeRecord")
+            public final class SomeConfiguration{
 
-                            @MatcherConfiguration("some.other.pck.SomeRecord")
-                            public final class SomeConfiguration{
-
-                            }
+            }
             """);
         JavaFileObject javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomeRecord",
@@ -1022,9 +974,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -1033,21 +983,19 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher should be generated for record with multiple components")
-    @EnabledForJreRange(min = JRE.JAVA_16)
     void matcherShouldBeGeneratedForRecordWithMultipleComponents() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
             """
+            package some.pck;
 
-                            package some.pck;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
 
-                            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            @MatcherConfiguration("some.other.pck.SomeRecord")
+            public final class SomeConfiguration{
 
-                            @MatcherConfiguration("some.other.pck.SomeRecord")
-                            public final class SomeConfiguration{
-
-                            }
+            }
             """);
         JavaFileObject javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.SomeRecord",
@@ -1058,9 +1006,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -1069,21 +1015,19 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors")
-    @EnabledForJreRange(min = JRE.JAVA_16)
     void matcherForRecordShouldIncludeFactoryMethodBothWithXxxOverloadsResetMethodsAndDescriptors() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
             """
+            package some.pck;
 
-                            package some.pck;
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
 
-                            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+            @MatcherConfiguration("some.other.pck.PersonRecord")
+            public final class SomeConfiguration{
 
-                            @MatcherConfiguration("some.other.pck.PersonRecord")
-                            public final class SomeConfiguration{
-
-                            }
+            }
             """);
         JavaFileObject javaFileObject = JavaFileObjects.forSourceLines(
             "some.other.pck.PersonRecord",
@@ -1094,13 +1038,17 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = Compiler.javac()
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .compile(Arrays.asList(configuration, javaFileObject));
+        Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
         assertGeneratedSource(compilation, "matcher-for-record-should-include-factory-method-both-withxxx-overloads-reset-methods-and-descriptors", "some.other.pck.PersonRecordMatcher");
+    }
+
+    private static Compilation compile(final JavaFileObject... sources) {
+        return Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(sources));
     }
 
     private static void assertGeneratedSource(final Compilation compilation, final String scenario, final String qualifiedName) throws IOException {
