@@ -18,6 +18,9 @@
         <asciidoctorj.version>3.0.0</asciidoctorj.version>
         <jsoup.version>1.18.3</jsoup.version>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
+        <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
     <dependencies>
