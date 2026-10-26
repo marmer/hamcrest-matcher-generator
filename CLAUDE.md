@@ -57,7 +57,7 @@ The flow must be: KAPT generates → `add-test-source` registers → javac compi
 
 ## Testing Approach
 
-Annotation processor tests (file `MatcherGenerationProcessorIT.java` in `hamcrest-matcher-generator-annotationprocessor/src/test/java`, class `MatcherGenerationProcessorIT`: use the class name for `-Dit.test`) use **Google Compile Testing**: they compile in-memory Java source strings and assert on the generated output. Expected generated sources are **golden files** under `src/test/resources/io/github/marmer/annotationprocessing/MatcherGenerationProcessorIT/<scenario>/`, compared via `generatesSources(JavaFileObjects.forResource(...))`. This runs as a Maven Failsafe integration test.
+Annotation processor tests (file `MatcherGenerationProcessorIT.java` in `hamcrest-matcher-generator-annotationprocessor/src/test/java`, class `MatcherGenerationProcessorIT`: use the class name for `-Dit.test`) use **Google Compile Testing**: they compile in-memory Java source strings and assert on the generated output. Expected generated sources are **golden files** under `src/test/resources/io/github/marmer/annotationprocessing/MatcherGenerationProcessorIT/<scenario>/`, compared character for character: `assertGeneratedSource` reads the golden file and `assertEquals`s it against the generated file's `getCharContent(true)`, so any whitespace difference fails. This runs as a Maven Failsafe integration test.
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit 5 unit tests.
 

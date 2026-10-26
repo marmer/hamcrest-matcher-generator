@@ -242,8 +242,6 @@ JDK
 
 JDK 17 or higher is required to use the generated source code (since 6.0.0; 5.x supports JDK 11).
 
-Generated sources may also work with earlier JDK Versinos. This configuration will not be tested, however, so there is no guarantee!
-
 Hamcrest
 --------
 Because Hamcrest matchers are generated, you will also need a dependency on the library in order to be able to use the generated sources. You are free to choose your own version of Hamcrest.
