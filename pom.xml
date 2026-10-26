@@ -480,6 +480,7 @@
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-kotlin</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-java-records</excludeArtifact>
+                                <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>
