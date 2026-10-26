@@ -32,12 +32,6 @@ public class RecordingBackend implements GeneratorBackend {
     public GeneratedSource generate(final TypeModel model, final GenerationContext context) {
         MODELS.add(model);
         CONTEXTS.add(context);
-        final String simpleName = model.simpleName() + "Recorded";
-        return new GeneratedSource(
-            model.targetPackage(),
-            simpleName,
-            GeneratedSource.Language.JAVA,
-            "package " + model.targetPackage() + ";\npublic class " + simpleName + " {\n}\n"
-        );
+        return StubSources.emptyClass(model, "Recorded");
     }
 }

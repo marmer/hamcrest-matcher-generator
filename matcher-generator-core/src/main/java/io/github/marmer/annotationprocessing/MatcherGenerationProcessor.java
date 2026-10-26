@@ -51,6 +51,11 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     }
 
     @Override
+    public Set<String> getSupportedOptions() {
+        return Set.of(MatcherGenerationProcessorWorker.KAPT_KOTLIN_GENERATED);
+    }
+
+    @Override
     public SourceVersion getSupportedSourceVersion() {
         return worker.getSupportedSourceVersion();
     }

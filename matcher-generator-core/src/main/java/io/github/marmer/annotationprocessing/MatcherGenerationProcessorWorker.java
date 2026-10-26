@@ -8,31 +8,32 @@ import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherCon
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
-import javax.tools.StandardLocation;
 
 public class MatcherGenerationProcessorWorker {
+    /**
+     * The processor option KAPT passes with the directory Kotlin sources have to be written to.
+     */
+    static final String KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated";
+
     private final Supplier<LocalDateTime> timeProvider;
     private final ProcessingEnvironment processingEnv;
     private final String generatorName;
@@ -50,39 +51,14 @@ public class MatcherGenerationProcessorWorker {
         this.backends = List.copyOf(backends);
     }
 
-    static AnnotationValue getAnnotationValueForField(final AnnotationMirror mirror, final String fieldName) {
-        final Map<? extends ExecutableElement, ? extends AnnotationValue> values = mirror.getElementValues();
-        return values.get(values.keySet().stream()
-            .filter(key -> key.getSimpleName().contentEquals(fieldName))
-            .findFirst()
-            .orElseThrow());
-    }
-
-    static AnnotationValue getAnnotationValueForValue(final AnnotationMirror mirror) {
-        return getAnnotationValueForField(mirror, "value");
-    }
-
-    static void logNote(
-        final ProcessingEnvironment processingEnv,
-        final String message,
-        final Element element,
-        final AnnotationMirror annotationMirror,
-        final AnnotationValue annotationValue
-    ) {
-        processingEnv.getMessager()
-            .printMessage(Diagnostic.Kind.NOTE, message, element, annotationMirror, annotationValue);
-    }
-
-    static boolean isPublic(final Element element) {
-        return element.getModifiers().contains(Modifier.PUBLIC);
-    }
-
-    static boolean isStatic(final Element element) {
-        return element.getModifiers().contains(Modifier.STATIC);
-    }
-
     private static boolean isTypeOf(final AnnotationMirror mirror, final Class<?> annotationType) {
         return mirror.getAnnotationType().asElement().toString().equals(annotationType.getCanonicalName());
+    }
+
+    private static List<AnnotationMirror> matcherConfigurationMirrors(final Element element) {
+        return element.getAnnotationMirrors().stream()
+            .filter(mirror -> isTypeOf(mirror, MatcherConfiguration.class))
+            .collect(Collectors.toList());
     }
 
     public SourceVersion getSupportedSourceVersion() {
@@ -93,7 +69,7 @@ public class MatcherGenerationProcessorWorker {
         if (roundEnv.processingOver()) {
             return false;
         }
-        logNote(processingEnv, "Annotation processor for hamcrest matcher generation started", null, null, null);
+        ElementSupport.logNote(processingEnv, "Matcher generation started", null, null, null);
         if (containsMatcherConfiguration(annotations)) {
             roundEnv.getElementsAnnotatedWith(MatcherConfiguration.class)
                 .forEach(this::generateMatchers);
@@ -126,6 +102,7 @@ public class MatcherGenerationProcessorWorker {
             .create(typeElement);
         final GenerationContext context = new GenerationContext(generatorName, timeProvider.get());
         backends.forEach(backend -> write(
+            backend,
             backend.generate(model, context),
             typeElement,
             configurationElement
@@ -133,35 +110,57 @@ public class MatcherGenerationProcessorWorker {
     }
 
     private void write(
+        final GeneratorBackend backend,
         final GeneratedSource source,
         final TypeElement typeElement,
         final Element configurationElement
     ) {
-        final Filer filer = processingEnv.getFiler();
         final Element[] originatingElements = {typeElement, configurationElement};
-        final String name = source.packageName().isEmpty()
-            ? source.simpleName()
-            : source.packageName() + "." + source.simpleName();
         try {
-            final FileObject file = source.language() == GeneratedSource.Language.JAVA
-                ? filer.createSourceFile(name, originatingElements)
-                : filer.createResource(
-                    StandardLocation.SOURCE_OUTPUT,
-                    source.packageName(),
-                    source.simpleName() + "." + source.language().fileExtension(),
-                    originatingElements);
-            try (Writer writer = file.openWriter()) {
-                writer.write(source.content());
+            if (source.language() == GeneratedSource.Language.JAVA) {
+                writeJava(source, originatingElements);
+            } else {
+                writeKotlin(backend, source, typeElement);
             }
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
+    private void writeJava(final GeneratedSource source, final Element[] originatingElements) throws IOException {
+        final String name = source.packageName().isEmpty()
+            ? source.simpleName()
+            : source.packageName() + "." + source.simpleName();
+        final FileObject file = processingEnv.getFiler().createSourceFile(name, originatingElements);
+        try (Writer writer = file.openWriter()) {
+            writer.write(source.content());
+        }
+    }
+
+    private void writeKotlin(
+        final GeneratorBackend backend,
+        final GeneratedSource source,
+        final TypeElement typeElement
+    ) throws IOException {
+        final String outputDirectory = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED);
+        if (outputDirectory == null) {
+            processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.ERROR,
+                "Backend " + backend.getClass().getName() + " generated Kotlin for "
+                    + typeElement.getQualifiedName() + ", which is only compiled when the annotation processor runs"
+                    + " with KAPT (processor option '" + KAPT_KOTLIN_GENERATED + "' is missing)",
+                typeElement);
+            return;
+        }
+        final Path directory = Path.of(outputDirectory, source.packageName().split("\\."));
+        Files.createDirectories(directory);
+        Files.writeString(
+            directory.resolve(source.simpleName() + "." + source.language().fileExtension()),
+            source.content());
+    }
+
     private AnnotationMirror getMatcherConfigurationMirror(final Element configurationElement) {
-        final List<? extends AnnotationMirror> mirrors = configurationElement.getAnnotationMirrors().stream()
-            .filter(mirror -> isTypeOf(mirror, MatcherConfiguration.class))
-            .collect(Collectors.toList());
+        final List<AnnotationMirror> mirrors = matcherConfigurationMirrors(configurationElement);
         if (mirrors.size() != 1) {
             throw new IllegalStateException("Expected exactly one MatcherConfiguration on " + configurationElement);
         }
@@ -214,27 +213,26 @@ public class MatcherGenerationProcessorWorker {
         final Element configurationClass,
         final String qualifiedTypeOrPackageName
     ) {
-        configurationClass.getAnnotationMirrors().stream()
-            .filter(mirror -> isTypeOf(mirror, MatcherConfiguration.class))
+        matcherConfigurationMirrors(configurationClass)
             .forEach(mirror -> processingEnv.getMessager().printMessage(
                 Diagnostic.Kind.MANDATORY_WARNING,
                 "Neither a type nor a type exists for '" + qualifiedTypeOrPackageName + "'",
                 configurationClass,
                 mirror,
-                getAnnotationValueForValue(mirror)
+                ElementSupport.valueAttribute(processingEnv, mirror)
             ));
     }
 
     private void printSkipNoteBecauseOfSelfGenerationFor(final TypeElement typeElement) {
         typeElement.getAnnotationMirrors().stream()
             .filter(mirror -> isTypeOf(mirror, Generated.class))
-            .forEach(mirror -> logNote(
+            .forEach(mirror -> ElementSupport.logNote(
                 processingEnv,
                 "Generation skipped for: '" + typeElement.getQualifiedName()
                     + "' because is is already generated by this processor",
                 typeElement,
                 mirror,
-                getAnnotationValueForValue(mirror)
+                ElementSupport.valueAttribute(processingEnv, mirror)
             ));
     }
 

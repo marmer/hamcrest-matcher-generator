@@ -1,5 +1,9 @@
 package io.github.marmer.annotationprocessing.model;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.lang.model.type.TypeMirror;
 
@@ -18,5 +22,17 @@ public record PropertyModel(String name, TypeMirror type, String accessor, Nulla
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(accessor, "accessor");
         Objects.requireNonNull(nullability, "nullability");
+    }
+
+    /**
+     * Keeps the first property of every name, in the given order.
+     *
+     * @param properties properties, which may contain the same name more than once
+     * @return the properties with distinct names
+     */
+    public static List<PropertyModel> distinctByName(final List<PropertyModel> properties) {
+        final Map<String, PropertyModel> distinct = new LinkedHashMap<>();
+        properties.forEach(property -> distinct.putIfAbsent(property.name(), property));
+        return new ArrayList<>(distinct.values());
     }
 }

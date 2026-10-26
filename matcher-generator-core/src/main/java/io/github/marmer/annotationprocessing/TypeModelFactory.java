@@ -8,11 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -46,12 +44,6 @@ class TypeModelFactory {
         return element.getParameters().isEmpty();
     }
 
-    private static <T> List<T> distinctByName(final List<T> values, final Function<T, String> name) {
-        final Map<String, T> distinct = new LinkedHashMap<>();
-        values.forEach(value -> distinct.putIfAbsent(name.apply(value), value));
-        return new ArrayList<>(distinct.values());
-    }
-
     TypeModel create(final TypeElement type) {
         return create(type, getTargetPackage(type));
     }
@@ -79,7 +71,7 @@ class TypeModelFactory {
             .filter(TypeElement.class::isInstance)
             .map(TypeElement.class::cast)
             .forEach(nestedType -> {
-                if (MatcherGenerationProcessorWorker.isPublic(nestedType)) {
+                if (ElementSupport.isPublic(nestedType)) {
                     publicNestedTypes.add(create(nestedType, targetPackage));
                 } else {
                     logTypeSkipped(nestedType);
@@ -89,12 +81,12 @@ class TypeModelFactory {
     }
 
     private void logTypeSkipped(final TypeElement element) {
-        MatcherGenerationProcessorWorker.logNote(
+        ElementSupport.logNote(
             processingEnv,
             "Matcher generation skipped for non public type: " + element.getQualifiedName(),
             element,
             configurationMirror,
-            MatcherGenerationProcessorWorker.getAnnotationValueForValue(configurationMirror)
+            ElementSupport.valueAttribute(processingEnv, configurationMirror)
         );
     }
 
@@ -109,19 +101,11 @@ class TypeModelFactory {
     private String getConfiguredPackage() {
         final AnnotationMirror generation = getAnnotationMirrorValue(configurationMirror, "generation");
         final AnnotationMirror packageConfig = getAnnotationMirrorValue(generation, "packageConfig");
-        return (String) getAnnotationValue(packageConfig, "value").getValue();
+        return (String) ElementSupport.valueAttribute(processingEnv, packageConfig).getValue();
     }
 
     private AnnotationMirror getAnnotationMirrorValue(final AnnotationMirror mirror, final String name) {
-        return (AnnotationMirror) getAnnotationValue(mirror, name).getValue();
-    }
-
-    private AnnotationValue getAnnotationValue(final AnnotationMirror mirror, final String name) {
-        return processingEnv.getElementUtils().getElementValuesWithDefaults(mirror).entrySet().stream()
-            .filter(entry -> entry.getKey().getSimpleName().contentEquals(name))
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .orElseThrow();
+        return (AnnotationMirror) ElementSupport.annotationValue(processingEnv, mirror, name).getValue();
     }
 
     private PackageElement packageOf(final TypeElement type) {
@@ -132,8 +116,8 @@ class TypeModelFactory {
         return type.getEnclosedElements().stream()
             .filter(ExecutableElement.class::isInstance)
             .map(ExecutableElement.class::cast)
-            .filter(element -> MatcherGenerationProcessorWorker.isPublic(element)
-                && !MatcherGenerationProcessorWorker.isStatic(element)
+            .filter(element -> ElementSupport.isPublic(element)
+                && !ElementSupport.isStatic(element)
                 && hasNoParameters(element)
                 && hasReturnType(element)
                 && isRecordComponentAccessor(element))
@@ -173,7 +157,7 @@ class TypeModelFactory {
         if (type.getKind() == ElementKind.RECORD) {
             final List<PropertyModel> all = new ArrayList<>(recordComponentProperties(type));
             all.addAll(getterProperties);
-            return distinctByName(all, PropertyModel::name);
+            return PropertyModel.distinctByName(all);
         }
         return getterProperties;
     }
@@ -197,8 +181,8 @@ class TypeModelFactory {
             return false;
         }
         final ExecutableElement executable = (ExecutableElement) element;
-        return MatcherGenerationProcessorWorker.isPublic(executable)
-            && !MatcherGenerationProcessorWorker.isStatic(executable)
+        return ElementSupport.isPublic(executable)
+            && !ElementSupport.isStatic(executable)
             && hasReturnTypeWithMatchingPropertyPrefix(executable)
             && hasNoParameters(executable);
     }
