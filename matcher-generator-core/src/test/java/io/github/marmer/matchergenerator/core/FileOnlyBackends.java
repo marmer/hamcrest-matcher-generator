@@ -19,13 +19,7 @@ final class FileOnlyBackends {
     public static class SecondJavaBackend implements GeneratorBackend {
         @Override
         public GeneratedSource generate(final TypeModel model, final GenerationContext context) {
-            final String simpleName = model.simpleName() + "Second";
-            return new GeneratedSource(
-                model.targetPackage(),
-                simpleName,
-                GeneratedSource.Language.JAVA,
-                "package " + model.targetPackage() + ";\npublic class " + simpleName + " {\n}\n"
-            );
+            return StubSources.emptyClass(model, "Second");
         }
     }
 

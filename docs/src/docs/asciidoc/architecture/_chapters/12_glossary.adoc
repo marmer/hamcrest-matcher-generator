@@ -14,7 +14,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Term |Definition
 
 |Property model
-|The description of a configured type and its properties that does not depend on any assertion library. All backends share it.
+|The description of a configured type and its properties that does not depend on any assertion library. All backends share it. In code it consists of `TypeModel` (a whole type with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (whether the type is a plain `POJO` or a `RECORD`).
 
 |Property
 |A readable value of a bean (via its getter) or a record (via its component accessor) that generated assertions can check.

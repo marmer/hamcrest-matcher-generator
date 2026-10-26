@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -25,6 +26,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -44,18 +46,21 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The architecture document is rendered")
     void architectureDocumentIsRendered() {
         assertTrue(Files.isRegularFile(OUTPUT.resolve("architecture/index.html")),
             "architecture/index.html is missing in " + OUTPUT);
     }
 
     @Test
+    @DisplayName("Included chapters are not rendered as pages of their own")
     void chaptersAreNotRenderedAsPagesOfTheirOwn() {
         assertFalse(pages.stream().anyMatch(page -> page.toString().contains("_chapters")),
             "included chapters must not be rendered standalone: " + pages);
     }
 
     @Test
+    @DisplayName("Internal links and anchors resolve")
     void internalLinksAndAnchorsResolve() {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
@@ -67,6 +72,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Images exist and are not empty")
     void imagesExistAndAreNotEmpty() {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
@@ -78,6 +84,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Every page has the top bar with its tabs in order")
     void everyPageHasTheTopBarWithItsTabsInOrder() {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
@@ -93,6 +100,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The active section is marked by the page kind")
     void theActiveSectionIsMarkedByThePageKind() {
         assertAll(
             () -> assertTrue(parse(OUTPUT.resolve("index.html")).body().hasClass("page-landing"), "landing"),
@@ -101,6 +109,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The architecture sidebar lists every chapter and links to its section")
     void architectureSidebarListsEveryChapterAndLinksToItsSection() {
         final Document architecture = parse(OUTPUT.resolve("architecture/index.html"));
         final List<String> chapterIds = architecture.select("#content > .sect1 > h2[id], #content .sect1 > h2[id]").eachAttr("id");
@@ -111,6 +120,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The guide sidebar lists every guide page and marks the current one")
     void guideSidebarListsEveryGuidePageAndMarksTheCurrentOne() {
         final long guidePages = pages.stream().filter(page -> page.getParent().endsWith("guide")).count();
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
@@ -122,6 +132,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Guide pages end with a pager")
     void guidePagesEndWithAPager() {
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
         assertAll(
@@ -130,6 +141,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The landing page has the hero with its calls to action")
     void landingPageHasTheHeroWithItsCallsToAction() {
         final Document landing = parse(OUTPUT.resolve("index.html"));
         assertAll(
@@ -141,6 +153,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Every page has the maintainer footer")
     void everyPageHasTheMaintainerFooter() {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
@@ -167,6 +180,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The stylesheet and fonts are local and exist")
     void stylesheetAndFontsAreLocalAndExist() throws IOException {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
@@ -193,6 +207,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("No page contains an unresolved attribute reference")
     void noPageContainsAnUnresolvedAttributeReference() {
         final Pattern reference = Pattern.compile("\\{[A-Za-z][\\w-]*}");
         final List<String> problems = new ArrayList<>();
@@ -208,6 +223,7 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The link check detects broken links")
     void linkCheckDetectsBrokenLinks() throws IOException {
         final Path page = OUTPUT.resolve("architecture/index.html");
         assertAll(
@@ -220,48 +236,48 @@ class RenderedDocsTest {
         assertTrue(checkImage(page, "").isPresent(), "empty image source");
     }
 
-    private static java.util.Optional<String> checkLink(final Path page, final String href) {
+    private static Optional<String> checkLink(final Path page, final String href) {
         if (href.isEmpty() || isExternal(href)) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         final URI uri = toUri(href);
         final String path = uri.getPath() == null ? "" : uri.getPath();
         final String fragment = uri.getFragment();
         final Path target = path.isEmpty() ? page : resolve(page, path);
         if (!Files.exists(target)) {
-            return java.util.Optional.of("'" + href + "' points to a missing file");
+            return Optional.of("'" + href + "' points to a missing file");
         }
         if (fragment != null && !fragment.isEmpty() && target.toString().endsWith(".html")
             && !hasAnchor(parse(target), fragment)) {
-            return java.util.Optional.of("'" + href + "' points to a missing anchor");
+            return Optional.of("'" + href + "' points to a missing anchor");
         }
-        return java.util.Optional.empty();
+        return Optional.empty();
     }
 
-    private static java.util.Optional<String> checkImage(final Path page, final String src) {
+    private static Optional<String> checkImage(final Path page, final String src) {
         if (src.isEmpty()) {
-            return java.util.Optional.of("image without source");
+            return Optional.of("image without source");
         }
         if (src.startsWith("data:")) {
             return src.indexOf(',') < 0 || src.indexOf(',') == src.length() - 1
-                ? java.util.Optional.of("empty data URI image")
-                : java.util.Optional.empty();
+                ? Optional.of("empty data URI image")
+                : Optional.empty();
         }
         if (isExternal(src)) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         final Path target = resolve(page, toUri(src).getPath());
         try {
             if (!Files.isRegularFile(target)) {
-                return java.util.Optional.of("image '" + src + "' is missing");
+                return Optional.of("image '" + src + "' is missing");
             }
             if (Files.size(target) == 0) {
-                return java.util.Optional.of("image '" + src + "' is empty");
+                return Optional.of("image '" + src + "' is empty");
             }
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
-        return java.util.Optional.empty();
+        return Optional.empty();
     }
 
     private static boolean isExternal(final String reference) {
