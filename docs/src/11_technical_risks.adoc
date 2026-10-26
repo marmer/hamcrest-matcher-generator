@@ -21,4 +21,8 @@ The list is ordered by priority, highest first.
 |Risk: the Kotlin DSL needs KAPT
 |The Kotlin DSL is only generated when the annotation processor runs under KAPT, the Kotlin compiler's way of running Java annotation processors. JetBrains puts its new development into KSP, which is out of scope for this project. If a future Kotlin release dropped KAPT, the DSL could no longer be generated.
 |The DSL is optional: the generated Java matchers work from Kotlin without it, and they do not depend on KAPT. Renovate keeps the tested Kotlin version current, so a removal of KAPT shows up as a failing update instead of a surprise for users.
+
+|Risk: the generator's run time is not measured
+|Scenario <<qs-x5,QS-X5>> asks that generating assertions for 200 configured types adds at most 2 seconds to a compilation. No check measures this, so a change that slows down the annotation processor would go unnoticed until users complain about slow builds.
+|The risk is accepted: projects configure far fewer types than that, and a run-time check on shared CI runners would produce unreliable results. Should users report slow builds, a benchmark module can be added later.
 |===

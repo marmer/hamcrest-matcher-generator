@@ -56,6 +56,7 @@ Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are drive
 
 After 6.0.0 no further features are planned; the project receives only fixes and automated dependency updates.
 
+[[section-quality-goals]]
 === Quality Goals
 
 [role="arc42help"]
@@ -75,29 +76,34 @@ If you as an architect do not know how the quality of your work will be judged â
 A table with quality goals and concrete scenarios, ordered by priorities
 ****
 
-[options="header",cols="1,2,4"]
+[options="header",cols="1,2,4,2"]
 |===
-| Priority | Quality | Motivation
+| Priority | Quality | Motivation | Scenarios
 
 | 1
 | Correctness
 | Generated assertions (Hamcrest matchers and AssertJ assertions) must be type-safe, compile without errors and fail exactly when the checked object is wrong: no false green tests - broken generation is worse than no generation
+| <<qs-c1,QS-C1>>, <<qs-c2,QS-C2>>, <<qs-c3,QS-C3>>, <<qs-c4,QS-C4>>
 
 | 2
 | Non-intrusiveness
 | The core design promise: zero footprint on production code; SOURCE retention means no runtime dependency bleeds into model classes
+| <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>
 
 | 3
 | Usability
 | The generated assertions (Hamcrest matchers and AssertJ assertions) must be discoverable and ergonomic for test writers
+| <<qs-u1,QS-U1>>, <<qs-u2,QS-U2>>, <<qs-u3,QS-U3>>, <<qs-u4,QS-U4>>
 
 | 4
 | Build-tool agnosticism
 | Works via standard APT (javac) and KAPT (kotlinc); no coupling to a specific build plugin
+| <<qs-b1,QS-B1>>, <<qs-b2,QS-B2>>
 
 | 5
 | Maintainability
 | The generator codebase must remain understandable and extensible for contributors
+| <<qs-m1,QS-M1>>, <<qs-m2,QS-M2>>, <<qs-m3,QS-M3>>, <<qs-m4,QS-M4>>
 |===
 
 === Stakeholders

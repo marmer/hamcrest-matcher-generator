@@ -3,23 +3,175 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-quality-scenarios]]
 == Quality Requirements
 
-
-
-
-
-
+The quality requirements refine the five quality goals from <<section-quality-goals,chapter 1.2>> into concrete, measurable scenarios.
+They are classified by the quality model of ISO/IEC 25010:2023.
+Characteristics that are not a quality goal of their own were checked for gaps; where they matter for a build-time test library, they got scenarios as well.
 
 === Quality Requirements Overview
 
+The table maps every quality goal and every further relevant ISO/IEC 25010:2023 characteristic to its scenarios in <<section-quality-scenarios-list,chapter 10.2>>.
 
+[options="header",cols="2,3,2"]
+|===
+| Quality goal | ISO/IEC 25010:2023 characteristic / sub-characteristic | Scenarios
 
+| 1 Correctness
+| Functional suitability / Functional correctness; Reliability / Faultlessness
+| <<qs-c1,QS-C1>>, <<qs-c2,QS-C2>>, <<qs-c3,QS-C3>>, <<qs-c4,QS-C4>>
 
+| 2 Non-intrusiveness
+| Compatibility / Co-existence
+| <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>
 
+| 3 Usability
+| Interaction capability / User error protection, Self-descriptiveness, Learnability, Operability
+| <<qs-u1,QS-U1>>, <<qs-u2,QS-U2>>, <<qs-u3,QS-U3>>, <<qs-u4,QS-U4>>
 
+| 4 Build-tool agnosticism
+| Compatibility / Interoperability; Flexibility / Adaptability
+| <<qs-b1,QS-B1>>, <<qs-b2,QS-B2>>
+
+| 5 Maintainability
+| Maintainability / Modifiability, Modularity, Analysability
+| <<qs-m1,QS-M1>>, <<qs-m2,QS-M2>>, <<qs-m3,QS-M3>>, <<qs-m4,QS-M4>>
+
+| No quality goal
+| Compatibility / Co-existence; Flexibility / Replaceability; Security / Integrity, Authenticity; Reliability / Fault tolerance; Performance efficiency / Time behaviour
+| <<qs-x1,QS-X1>>, <<qs-x2,QS-X2>>, <<qs-x3,QS-X3>>, <<qs-x4,QS-X4>>, <<qs-x5,QS-X5>>
+|===
+
+The remaining characteristics have no scenarios, for these reasons:
+
+* *Safety*: the library has no physical effect on people or the environment.
+* *Reliability / Availability and Recoverability*: the library is not a service; it only runs while a project compiles and tests.
+* *Security / Confidentiality, Non-repudiation and Accountability*: the library processes no user data and has no users of its own; integrity and authenticity of the released artifacts are covered by QS-X3.
+* *Interaction capability / Inclusivity and User engagement*: the library has no user interface; the project site's accessibility is not a quality of the architecture.
+* *Performance efficiency / Resource utilization and Capacity, Flexibility / Scalability*: the only load is the number of configured types at compile time, which QS-X5 covers.
+* *Flexibility / Installability*: adding the library is a plain build dependency; QS-U3 and QS-B1 cover it.
+
+[[section-quality-scenarios-list]]
 === Quality Scenarios
 
+Each scenario is one sentence that names all elements of the SEI scenario form (source, stimulus, environment, artifact, response and response measure), following this pattern:
 
+[quote]
+When _source_ _stimulus_ while _environment_, _artifact_ _response_; _response measure_.
 
+Scenarios describe either a use of the library at runtime (a test developer compiles or runs tests) or a change to the system or its environment (a contributor, a bot or a new JDK).
+The column "Protected by" names the check that decides whether the scenario is met, as decided for 6.0.0.
+"None yet (planned for 6.0.0)" marks a scenario without such a check; 6.0.0 adds that check.
 
+[options="header",cols="1,2,6,2"]
+|===
+| ID | Characteristic | Scenario | Protected by
 
+| [[qs-c1]]QS-C1
+| Functional suitability / Functional correctness
+| *Wrong property is caught.* When a test developer asserts an object that differs from the expected one in exactly one property while running a JUnit test on any supported JDK, the generated Hamcrest matcher or AssertJ assertion fails that test; this holds in both backends for every property kind of the sample set (primitive, wrapper, `String`, nested generated type, list, set, map, record component, Kotlin `Boolean` property), and the same assertion passes for a correct object.
+| Annotation processor integration tests; end-to-end modules on every JDK
 
+| [[qs-c2]]QS-C2
+| Functional suitability / Functional correctness
+| *A new property is not silently ignored.* When a developer adds a property to a model class without touching a test that opted into the completeness check (`checkingAllProperties()` or `hasAllPropertiesChecked()`), while that test runs in the next build, the generated assertion fails the test and names the unchecked property; no test with the completeness check stays green while a property is unchecked.
+| End-to-end modules
+
+| [[qs-c3]]QS-C3
+| Reliability / Faultlessness
+| *A faulty change is stopped.* When a contributor opens a pull request that lets a generated assertion pass for a wrong object while CI runs the required checks, the build of the affected processor, runtime or backend module turns red and the pull request cannot be merged; a mutation score of at least 90 % per module and at least 99 % line and branch coverage of production code keep such a change from slipping through.
+| Build; Mutation testing (PIT); JaCoCo coverage floor
+
+| [[qs-c4]]QS-C4
+| Functional suitability / Functional correctness
+| *A cyclic object graph ends the comparison.* When a test developer compares an object whose graph contains a cycle (such as `parent.children[0].parent`) while using the Hamcrest reference-object matcher, the runtime treats an already visited pair of objects as equal and finishes the comparison; the test ends with a pass or a regular mismatch, never with a `StackOverflowError`.
+| None yet (planned for 6.0.0): runtime unit test
+
+| [[qs-n1]]QS-N1
+| Compatibility / Co-existence
+| *Production code stays untouched.* When a project adds the generator and its configuration annotation in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its classes and runtime dependencies; it gains no runtime-scope dependency, and no `.class` file contains the configuration annotation (SOURCE retention).
+| None yet (planned for 6.0.0): integration test of the annotation's retention
+
+| [[qs-n2]]QS-N2
+| Compatibility / Co-existence
+| *A small footprint on Java 11.* When a test developer runs tests on Java 11 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify and the project's own runtime artifact; bytecode level 11 and this dependency list are verified on every build.
+| Maven Enforcer; Verify JDK 11
+
+| [[qs-n3]]QS-N3
+| Compatibility / Co-existence
+| *Generated code compiles without warnings.* When a test developer compiles a project's tests with `-Xlint:all -Werror` on any JDK from 11 to the latest, the generated sources compile; they produce no warning at all, including rawtypes, unchecked and deprecation warnings.
+| None yet (planned for 6.0.0): end-to-end modules compiled with `-Xlint:all -Werror`
+
+| [[qs-u1]]QS-U1
+| Interaction capability / User error protection
+| *A misconfiguration is reported where it happens.* When a test developer configures a name that cannot be resolved, or a type whose generated method names clash with inherited ones, while compiling with javac or KAPT, the annotation processor reports exactly one compiler error at the annotation element and names the offending value; there is no stack trace and no follow-up error in generated code.
+| Annotation processor integration tests
+
+| [[qs-u2]]QS-U2
+| Interaction capability / Self-descriptiveness
+| *A failure explains itself.* When a test developer's assertion with a generated Hamcrest matcher fails while the tests run in the IDE or on CI, the matcher's mismatch message lists every failing check on its own line with property path, expected value and actual value (for example `customer.address.city: expected "Berlin" but was "Paris"`); the developer finds the wrong property without a debugger, and the messages match the golden messages of the tests.
+| Annotation processor integration tests and runtime tests with golden messages
+
+| [[qs-u3]]QS-U3
+| Interaction capability / Learnability
+| *The first green assertion comes from the README.* When a developer new to the library copies the README snippet into a Maven or Gradle project on JDK 11 or later, the library generates an assertion that turns the developer's first test green; this takes at most 10 minutes, and the snippet always compiles because CI keeps it in sync with an example module.
+| Example modules; README snippet sync check
+
+| [[qs-u4]]QS-U4
+| Interaction capability / Operability
+| *Kotlin properties feel native.* When a Kotlin developer configures a class with properties such as `val enabled: Boolean`, `val isX: Boolean?` or other nullable properties while the processor runs under KAPT, the generated matchers offer `withEnabled` and `withIsX` with matching nullability; every such property gets its methods, and the Kotlin compiler reports no platform-type warning for them.
+| Kotlin end-to-end modules
+
+| [[qs-b1]]QS-B1
+| Compatibility / Interoperability
+| *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`) or KAPT on any supported JDK, the annotation processor generates the same assertion API; all four example modules and the end-to-end modules build green on every JDK in the CI matrix.
+| Build; Verify JDK 11/17/21/25/latest
+
+| [[qs-b2]]QS-B2
+| Flexibility / Adaptability
+| *A new JDK shows up early.* When a new JDK version reaches general availability while the project runs on autopilot, Renovate moves the CI matrix's `latest` JDK to it without the owner, and the generator is built and tested on it; a break becomes visible on that CI run within 7 days of the release, before users report it.
+| Verify JDK latest (Renovate-managed)
+
+| [[qs-m1]]QS-M1
+| Maintainability / Modifiability
+| *A green major update needs no owner.* When Renovate opens a major update of a dependency (such as Hamcrest, AssertJ, JUnit or a Maven plugin) while all required checks pass, the pull request is merged and released automatically; the owner spends no time on it.
+| Required checks; auto-merge; release-please
+
+| [[qs-m2]]QS-M2
+| Maintainability / Modifiability
+| *A new property kind stays local.* When a contributor adds support for a new property kind (such as `Optional`) on the main branch, the change touches only the core property model, each backend's rendering and their tests; no backend depends on another (apart from the documented Kotlin DSL exception), which every build checks.
+| Maven Enforcer; ArchUnit tests
+
+| [[qs-m3]]QS-M3
+| Maintainability / Modularity
+| *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the backend SPI; no line changes in the core or in the existing backends.
+| ArchUnit tests; link:../adr/0001-shared-property-model-and-backend-spi.md[ADR 0001]
+
+| [[qs-m4]]QS-M4
+| Maintainability / Analysability
+| *Code quality does not erode.* When a contributor's pull request introduces new issues, duplicated code or uncovered code while CI analyses it, the Sonar quality gate fails and blocks the merge; new code adds no issue.
+| Sonar
+
+| [[qs-x1]]QS-X1
+| Compatibility / Co-existence
+| *The generator works alongside other processors.* When a test developer runs the generator in the same compilation as Lombok and other annotation processors, the annotation processor sees the accessors Lombok generates and leaves the other processors' output unchanged; the generated matchers cover every Lombok-generated getter, and the build reports no processor error.
+| None yet (planned for 6.0.0): Lombok end-to-end module
+
+| [[qs-x2]]QS-X2
+| Flexibility / Replaceability
+| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the relocation POM covers the changed artifact).
+| None yet (planned for 6.0.0): end-to-end module with unchanged 5.x tests
+
+| [[qs-x3]]QS-X3
+| Security / Integrity, Authenticity
+| *Releases are verifiable.* When a user or their supply-chain tooling downloads a release from Maven Central, the artifacts' GPG signatures, the GitHub build-provenance attestation (`gh attestation verify`) and the CycloneDX SBOM all verify; and while a pull request adds a dependency with a known vulnerability, dependency review blocks its merge.
+| Release workflow; Dependency review
+
+| [[qs-x4]]QS-X4
+| Reliability / Fault tolerance
+| *Unusual input never crashes the compiler.* When a test developer configures types with generics, inner classes, no properties or cyclic references between types while compiling with javac or KAPT, the annotation processor generates matchers or skips the type with a warning; the compilation never ends with an uncaught exception from the processor.
+| Annotation processor integration tests
+
+| [[qs-x5]]QS-X5
+| Performance efficiency / Time behaviour
+| *Generation stays fast.* When a test developer configures 200 types while compiling on a GitHub-hosted CI runner, the annotation processor adds at most 2 seconds to the compilation.
+| None: accepted risk, see <<section-technical-risks,chapter 11>>
+|===
