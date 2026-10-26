@@ -3,8 +3,8 @@
 
 Rules (see docs/agents/domain.md, "Redundancy rules"):
   1. Every term in GLOSSARY.md (lines of the form `**Term**:`) has a row in the table of
-     docs/src/12_glossary.adoc (a `|Term` line followed by a `|definition` line).
-  2. Every ADR file docs/adr/NNNN-*.md is linked from docs/src/09_architecture_decisions.adoc
+     docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc (a `|Term` line followed by a `|definition` line).
+  2. Every ADR file docs/adr/NNNN-*.md is linked from docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc
      (matched by its filename).
   3. The glossary table contains no leftover template placeholder rows such as `<Term-1>`.
   4. Every required check that docs/agents/wayfinding.md names ("required checks of the
@@ -25,8 +25,8 @@ from pathlib import Path
 
 GLOSSARY_MD = "GLOSSARY.md"
 ADR_DIR = "docs/adr"
-GLOSSARY_ADOC = "docs/src/12_glossary.adoc"
-DECISIONS_ADOC = "docs/src/09_architecture_decisions.adoc"
+GLOSSARY_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc"
+DECISIONS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc"
 WAYFINDING_MD = "docs/agents/wayfinding.md"
 WORKFLOW_DIR = ".github/workflows"
 

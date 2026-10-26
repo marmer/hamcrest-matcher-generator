@@ -1,28 +1,62 @@
 name: Docs
 
+# Publishes the documentation built by the `docs` Maven module to GitHub Pages (ADR 0003).
+# Needs "Settings > Pages > Source: GitHub Actions" in the repository.
 on:
   push:
-    branches: [ development ]
+    tags: [ "[0-9]*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy Docs
+  build:
+    name: Build docs
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build docs
-        run: |
-          docker build -t hamcrest-matcher-generator-docs ./docs
-          mkdir -p docs/build
-          docker run --rm -v ${{ github.workspace }}/docs:/documents hamcrest-matcher-generator-docs
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/build
-          enable_jekyll: false
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-docs-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-docs-
+
+      # verify renders the docs and runs the link, anchor and image checks
+      - name: Build and check docs
+        run: ./mvnw -B -pl docs verify
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/target/generated-docs
+
+  deploy:
+    name: Deploy docs
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

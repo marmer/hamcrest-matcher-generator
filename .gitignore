@@ -50,7 +50,7 @@ hs_err_pid*
 /.settings/
 
 .*.md.html
-docs/build/
+docs/target/
 
 # Claude Code agent worktrees
 .claude/worktrees/

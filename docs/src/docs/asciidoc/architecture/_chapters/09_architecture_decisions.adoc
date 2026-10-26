@@ -9,7 +9,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 Version 6.0.0 generates assertions for both Hamcrest and AssertJ from a single configuration. To keep the two libraries cleanly apart, a library-independent core module builds a property model of each configured type, and each assertion library has its own backend module that turns this model into code. Backends depend only on the core and are discovered via Java's `ServiceLoader`, so users pick a library simply by adding its artifact to the annotation processor path. The dependency rules are enforced by Maven Enforcer and ArchUnit. The existing `@MatcherConfiguration` annotation keeps working unchanged as a deprecated alias, and the migration is carried out behind the existing automated tests.
 
-Details: link:../adr/0001-shared-property-model-and-backend-spi.md[ADR 0001]
+Details: link:{adr-url}/0001-shared-property-model-and-backend-spi.md[ADR 0001]
 
 === ADR 0002: Coordinates, packages and 5.x compatibility
 
@@ -17,7 +17,7 @@ Details: link:../adr/0001-shared-property-model-and-backend-spi.md[ADR 0001]
 
 The project keeps its name and the group ID `io.github.marmer.testutils`. Core and annotations get neutral `matcher-generator-*` artifacts, the Hamcrest artifact keeps its name, and AssertJ gets `assertj-assertion-generator`. New code lives in `io.github.marmer.matchergenerator.*`, and the new annotation is `@GenerateMatchers`. Only the deprecated `@MatcherConfiguration` stays in the old package. 5.x user tests should compile after a version bump alone. The Central namespace `io.github.marmer` is verified in the Central Portal, so these coordinates stay usable.
 
-Details: link:../adr/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
+Details: link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
 
 === ADR 0003: Docs as code with a Structurizr C4 model and embedded examples
 
@@ -25,7 +25,7 @@ Details: link:../adr/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
 
 Outdated snippets, broken links and missing images are common in project documentation. To rule them out, the whole documentation is built by the normal Maven build. A dedicated `docs` module renders the user guide and this architecture documentation with Asciidoctor. Code shown in the guide is included directly from example Maven modules, which are compiled and tested in the same build. The diagrams of the context, building block, runtime and deployment views are C4 views generated from a single Structurizr model, so the levels stay consistent and need little explanatory text. The build fails on Asciidoctor warnings, and tests check links, anchors, images and that every modelled view appears in the documentation. Because the current Structurizr libraries require Java 21, the documentation is only built on JDK 21 or newer.
 
-Details: link:../adr/0003-docs-as-code-with-structurizr-and-embedded-examples.md[ADR 0003]
+Details: link:{adr-url}/0003-docs-as-code-with-structurizr-and-embedded-examples.md[ADR 0003]
 
 === ADR 0004: Kotlin DSL as a Kotlin-emitting backend on top of the Hamcrest backend
 
@@ -33,7 +33,7 @@ Details: link:../adr/0003-docs-as-code-with-structurizr-and-embedded-examples.md
 
 Kotlin users get an optional, type-safe DSL such as `isOrder { customer { name("Ada") } }`, which builds on the generated Hamcrest matchers. Because it needs one wrapper per configured type, it is generated as well, by a separate opt-in artifact `hamcrest-matcher-generator-kotlin`. This artifact is another backend behind the same plug-in interface as Hamcrest and AssertJ; that interface therefore returns a Java or Kotlin source file. It is the only backend allowed to depend on another backend, the Hamcrest one, whose naming it reuses, and the build enforces that exception explicitly. The generator itself is written in Java and produces Kotlin with the KotlinPoet library, so the project's production code stays plain Java. It runs only under KAPT, the Kotlin compiler's way of running annotation processors; under plain javac it skips the DSL and prints one note.
 
-Details: link:../adr/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
+Details: link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
 
 === ADR 0005: Java 17 baseline for 6.0.0
 
@@ -41,4 +41,4 @@ Details: link:../adr/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
 
 Version 6.0.0 needs Java 17 or newer, for the annotation processor, the runtime artifacts and the generated code. Earlier planning assumed Java 11, but the libraries and tools this project updates automatically have moved on: JUnit 6 and AssertJ 4 need Java 17, Maven 4 needs it to run, and some tools already need Java 21. With Java 11, every such update would stop and wait for the maintainer, which contradicts the goal of a project that maintains itself. A major release is the right moment for this break. Users who stay on Java 11 keep using 5.x; everyone on Java 17 or newer upgrades by changing the version number.
 
-Details: link:../adr/0005-java-17-baseline.md[ADR 0005]
+Details: link:{adr-url}/0005-java-17-baseline.md[ADR 0005]
