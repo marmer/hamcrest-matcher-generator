@@ -63,6 +63,7 @@ jobs:
     name: Verify JDK ${{ matrix.role }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - role: "17"
@@ -71,8 +72,9 @@ jobs:
             java-version: "21"
           - role: "25"
             java-version: "25"
+          # Newest GA JDK. setup-java takes no "latest" alias; Renovate bumps this version (#134).
           - role: latest
-            java-version: latest
+            java-version: "27"
     steps:
       - uses: actions/checkout@v4
 
