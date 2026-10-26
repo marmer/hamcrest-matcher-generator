@@ -17,12 +17,11 @@ This project uses semantic versioning. See https://semver.org/
 
 ## [4.2.5](https://github.com/marmer/hamcrest-matcher-generator/compare/4.2.4...3afa566) (2021-03-17)
 
-* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element
-  within a list in "contains" to "Matcher" without any generic information
+* No processor changes; re-release of 4.2.4, whose release notes document the inheritance revert
 
 ## [4.2.4](https://github.com/marmer/hamcrest-matcher-generator/compare/4.2.3...4.2.4) (2020-11-18)
 
-* Inheritance sample added to the plain end-to-end module (`Matchers.contains` on mixed child types). Workaround: cast the first element
+* Inheritance changes reverted because it looks like an error in hamcrest. Workaround is to cast the first element
   within a list in "contains" to "Matcher" without any generic information
 * README uses the `org.hamcrest:hamcrest` 2.2 dependency and the library version property in its dependency snippets
 
