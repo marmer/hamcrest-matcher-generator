@@ -240,7 +240,7 @@ The drawback is, now you *have to* compile your project with your build tool for
 JDK
 ---
 
-JDK11 or higher is required to use the generated source code.
+JDK 17 or higher is required to use the generated source code (since 6.0.0; 5.x supports JDK 11).
 
 Generated sources may also work with earlier JDK Versinos. This configuration will not be tested, however, so there is no guarantee!
 
