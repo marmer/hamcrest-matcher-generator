@@ -92,12 +92,12 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n2]]QS-N2
 | Compatibility / Co-existence
-| *A small footprint on Java 11.* When a test developer runs tests on Java 11 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify and the project's own runtime artifact; bytecode level 11 and this dependency list are verified on every build.
-| Maven Enforcer; Verify JDK 11
+| *A small footprint on Java 17.* When a test developer runs tests on Java 17 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify and the project's own runtime artifact; bytecode level 17 and this dependency list are verified on every build.
+| Maven Enforcer; Verify JDK 17
 
 | [[qs-n3]]QS-N3
 | Compatibility / Co-existence
-| *Generated code compiles without warnings.* When a test developer compiles a project's tests with `-Xlint:all -Werror` on any JDK from 11 to the latest, the generated sources compile; they produce no warning at all, including rawtypes, unchecked and deprecation warnings.
+| *Generated code compiles without warnings.* When a test developer compiles a project's tests with `-Xlint:all -Werror` on any JDK from 17 to the latest, the generated sources compile; they produce no warning at all, including rawtypes, unchecked and deprecation warnings.
 | None yet (planned for 6.0.0): end-to-end modules compiled with `-Xlint:all -Werror`
 
 | [[qs-u1]]QS-U1
@@ -112,7 +112,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-u3]]QS-U3
 | Interaction capability / Learnability
-| *The first green assertion comes from the README.* When a developer new to the library copies the README snippet into a Maven or Gradle project on JDK 11 or later, the library generates an assertion that turns the developer's first test green; this takes at most 10 minutes, and the snippet always compiles because CI keeps it in sync with an example module.
+| *The first green assertion comes from the README.* When a developer new to the library copies the README snippet into a Maven or Gradle project on JDK 17 or later, the library generates an assertion that turns the developer's first test green; this takes at most 10 minutes, and the snippet always compiles because CI keeps it in sync with an example module.
 | Example modules; README snippet sync check
 
 | [[qs-u4]]QS-U4
@@ -123,7 +123,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-b1]]QS-B1
 | Compatibility / Interoperability
 | *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`) or KAPT on any supported JDK, the annotation processor generates the same assertion API; all four example modules and the end-to-end modules build green on every JDK in the CI matrix.
-| Build; Verify JDK 11/17/21/25/latest
+| Build; Verify JDK 17/21/25/latest
 
 | [[qs-b2]]QS-B2
 | Flexibility / Adaptability
@@ -157,7 +157,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x2]]QS-X2
 | Flexibility / Replaceability
-| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the relocation POM covers the changed artifact).
+| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the relocation POM covers the changed artifact).
 | None yet (planned for 6.0.0): end-to-end module with unchanged 5.x tests
 
 | [[qs-x3]]QS-X3
