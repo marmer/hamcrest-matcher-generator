@@ -5,9 +5,9 @@
 use REST instead, like scripts/agents/issue-status.py does.
 
 Usage:
-  scripts/agents/issue.py claim <n> [--login L]          # assign to L (default: the gh user)
+  scripts/agents/issue.py claim <n> [--login L] [--map <map>]  # assign to L (default: the gh user)
   scripts/agents/issue.py comment <n> --body-file F      # post F as a comment
-  scripts/agents/issue.py close <n> [--reason completed|not_planned]
+  scripts/agents/issue.py close <n> [--reason completed|not_planned] [--map <map>]
   scripts/agents/issue.py decide <map> <n> --gist "..."  # append a decision line to the map
   scripts/agents/issue.py amend <map> <n> --gist "..."   # replace the existing decision line for <n>
   scripts/agents/issue.py scope <map> <n> --gist "..."   # append an out-of-scope line to the map
@@ -173,6 +173,8 @@ def claim(args):
     login = args.login or gh("user")["login"]
     gh("-X", "POST", f"{REPO}/issues/{args.number}/assignees", "-f", f"assignees[]={login}")
     print(f"Assigned #{args.number} to {login}")
+    if args.map:
+        refresh_status(args.map)
 
 
 def comment(args):
@@ -184,6 +186,8 @@ def close(args):
     gh("-X", "PATCH", f"{REPO}/issues/{args.number}", "-f", "state=closed",
        "-f", f"state_reason={args.reason}")
     print(f"Closed #{args.number} ({args.reason})")
+    if args.map:
+        refresh_status(args.map)
 
 
 def decide(args):
@@ -259,6 +263,7 @@ def main():
     p = sub.add_parser("claim", help="assign an issue to a login")
     p.add_argument("number", type=int)
     p.add_argument("--login", help="assignee login (default: the authenticated gh user)")
+    p.add_argument("--map", type=int, help="map issue number; refresh its status section afterwards")
     p.set_defaults(func=claim)
 
     p = sub.add_parser("comment", help="comment on an issue")
@@ -269,6 +274,7 @@ def main():
     p = sub.add_parser("close", help="close an issue")
     p.add_argument("number", type=int)
     p.add_argument("--reason", choices=["completed", "not_planned"], default="completed")
+    p.add_argument("--map", type=int, help="map issue number; refresh its status section afterwards")
     p.set_defaults(func=close)
 
     p = sub.add_parser("decide", help="append a decision line to the map's Decisions-so-far section")
