@@ -9,50 +9,54 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-@Generated(value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor", date = "2020-01-01T00:00")
+@Generated(
+    value = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor",
+    date = "2020-01-01T00:00"
+)
 public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterface> {
-    private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
+  private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
 
-    public SimplePojoInterfaceMatcher() {
-        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
-    }
+  public SimplePojoInterfaceMatcher() {
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class);
+  }
 
-    public SimplePojoInterfaceMatcher withConflictProperty(final Matcher<?> matcher) {
-        beanPropertyMatcher.with("conflictProperty", matcher);
-        return this;
-    }
+  public SimplePojoInterfaceMatcher withConflictProperty(final Matcher<?> matcher) {
+    beanPropertyMatcher.with("conflictProperty", matcher);
+    return this;
+  }
 
-    public SimplePojoInterfaceMatcher resetConflictProperty() {
-        beanPropertyMatcher.reset("conflictProperty");
-        return this;
-    }
+  public SimplePojoInterfaceMatcher resetConflictProperty() {
+    beanPropertyMatcher.reset("conflictProperty");
+    return this;
+  }
 
-    public SimplePojoInterfaceMatcher withConflictProperty(final String value) {
-        beanPropertyMatcher.with("conflictProperty", Matchers.equalTo(value));
-        return this;
-    }
+  public SimplePojoInterfaceMatcher withConflictProperty(final String value) {
+    beanPropertyMatcher.with("conflictProperty", Matchers.equalTo(value));
+    return this;
+  }
 
-    public SimplePojoInterfaceMatcher withConflictProperty(final boolean value) {
-        beanPropertyMatcher.with("conflictProperty", Matchers.equalTo(value));
-        return this;
-    }
-    
-    @Override
-    public void describeTo(final Description description) {
-        beanPropertyMatcher.describeTo(description);
-    }
+  public SimplePojoInterfaceMatcher withConflictProperty(final boolean value) {
+    beanPropertyMatcher.with("conflictProperty", Matchers.equalTo(value));
+    return this;
+  }
 
-    @Override
-    protected boolean matchesSafely(final SimplePojoInterface item) {
-        return beanPropertyMatcher.matches(item);
-    }
+  @Override
+  public void describeTo(final Description description) {
+    beanPropertyMatcher.describeTo(description);
+  }
 
-    @Override
-    protected void describeMismatchSafely(final SimplePojoInterface item, final Description description) {
-        beanPropertyMatcher.describeMismatch(item, description);
-    }
-    
-    public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
-        return new SimplePojoInterfaceMatcher();
-    }
+  @Override
+  protected boolean matchesSafely(final SimplePojoInterface item) {
+    return beanPropertyMatcher.matches(item);
+  }
+
+  @Override
+  protected void describeMismatchSafely(final SimplePojoInterface item,
+      final Description description) {
+    beanPropertyMatcher.describeMismatch(item, description);
+  }
+
+  public static SimplePojoInterfaceMatcher isSimplePojoInterface() {
+    return new SimplePojoInterfaceMatcher();
+  }
 }

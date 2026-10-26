@@ -1,17 +1,20 @@
 package io.github.marmer.annotationprocessing;
 
-import com.google.common.truth.Truth;
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.CompilationSubject;
+import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
-import com.google.testing.compile.JavaSourcesSubjectFactory;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Objects;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MatcherGenerationProcessorIT {
 
@@ -19,7 +22,7 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
-    void matcherShouldHaveBeenGeneratedForPojoFromSourceFile() {
+    void matcherShouldHaveBeenGeneratedForPojoFromSourceFile() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -90,18 +93,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-have-been-generated-for-pojo-from-source-file", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-have-been-generated-for-pojo-from-source-file", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for Interfaces with property methods")
-    void matcherShouldBeGeneratedForInterfacesWithPropertyMethods() {
+    void matcherShouldBeGeneratedForInterfacesWithPropertyMethods() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -126,18 +129,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-interfaces-with-property-methods", "SimplePojoInterfaceMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-interfaces-with-property-methods", "some.other.pck.SimplePojoInterfaceMatcher");
     }
 
     @Test
     @DisplayName("Naming conflicts should be resolved")
-    void namingConflictsShouldBeResolved() {
+    void namingConflictsShouldBeResolved() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -163,18 +166,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("naming-conflicts-should-be-resolved", "SimplePojoInterfaceMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "naming-conflicts-should-be-resolved", "some.other.pck.SimplePojoInterfaceMatcher");
     }
 
     @Test
     @DisplayName("Print a warning for not existing configured types")
-    void printAWarningForNotExistingConfiguredTypes() {
+    void printAWarningForNotExistingConfiguredTypes() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -191,20 +194,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration))
-            .processedWith(new MatcherGenerationProcessor()) // Assertion
-            .compilesWithoutError()
-            .withWarningContaining("Neither a type nor a type exists for 'some.other.pck.NotExistingType'")
-            .in(configuration)
-            .onLine(5)
-            .atColumn(23);
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor())
+            .compile(Arrays.asList(configuration));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningContaining("Neither a type nor a type exists for 'some.other.pck.NotExistingType'").inFile(configuration).onLine(5).atColumn(23);
     }
 
     @Test
     @DisplayName("Additional Annotations are allowed for configuration classes")
-    void additionalAnnotationsAreAllowedForConfigurationClasses() {
+    void additionalAnnotationsAreAllowedForConfigurationClasses() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -230,18 +231,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("additional-annotations-are-allowed-for-configuration-classes", "SimplePojoInterfaceMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "additional-annotations-are-allowed-for-configuration-classes", "some.other.pck.SimplePojoInterfaceMatcher");
     }
 
     @Test
     @DisplayName("Generation should work for types generated by others")
-    void generationShouldWorkForTypesGeneratedByOthers() {
+    void generationShouldWorkForTypesGeneratedByOthers() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -270,18 +271,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generation-should-work-for-types-generated-by-others", "SimplePojoInterfaceMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generation-should-work-for-types-generated-by-others", "some.other.pck.SimplePojoInterfaceMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for arrays")
-    void matcherShouldBeGeneratedForArrays() {
+    void matcherShouldBeGeneratedForArrays() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -321,18 +322,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject, javaFileObjectWithComplexInnerTypes))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-arrays", "SimplePojoInterfaceMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject, javaFileObjectWithComplexInnerTypes));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-arrays", "some.other.pck.SimplePojoInterfaceMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for inner non static classes")
-    void matcherShouldBeGeneratedForInnerNonStaticClasses() {
+    void matcherShouldBeGeneratedForInnerNonStaticClasses() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -359,18 +360,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-inner-non-static-classes", "SomeClassMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-inner-non-static-classes", "some.other.pck.SomeClassMatcher");
     }
 
     @Test
     @DisplayName("Generated Matchers should work for inner interfaces")
-    void generatedMatchersShouldWorkForInnerInterfaces() {
+    void generatedMatchersShouldWorkForInnerInterfaces() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -396,18 +397,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generated-matchers-should-work-for-inner-interfaces", "SomePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generated-matchers-should-work-for-inner-interfaces", "some.other.pck.SomePojoMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for Enums with property methods")
-    void matcherShouldBeGeneratedForEnumsWithPropertyMethods() {
+    void matcherShouldBeGeneratedForEnumsWithPropertyMethods() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -435,18 +436,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-enums-with-property-methods", "SimplePojoEnumMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-enums-with-property-methods", "some.other.pck.SimplePojoEnumMatcher");
     }
 
     @Test
     @DisplayName("Matcher should contain inherited properties")
-    void matcherShouldContainInheritedProperties() {
+    void matcherShouldContainInheritedProperties() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -488,18 +489,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject, parentPojo))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-contain-inherited-properties", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject, parentPojo));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-contain-inherited-properties", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Matcher and matcher methods should not be generated for non public types and properties")
-    void matcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties() {
+    void matcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -539,27 +540,20 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-and-matcher-methods-should-not-be-generated-for-non-public-types-and-properties", "SimplePojoMatcher.java"))
-            .withNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PrivateClass")
-            .in(javaFileObject)
-            .onLine(14)
-            .atColumn(13)
-            .and()
-            .withNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass")
-            .in(javaFileObject)
-            .onLine(17)
-            .atColumn(5);
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-and-matcher-methods-should-not-be-generated-for-non-public-types-and-properties", "some.other.pck.SimplePojoMatcher");
+        CompilationSubject.assertThat(compilation).hadNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PrivateClass").inFile(javaFileObject).onLine(14).atColumn(13);
+        CompilationSubject.assertThat(compilation).hadNoteContaining("Matcher generation skipped for non public type: some.other.pck.SimplePojo.PackagePrivateClass").inFile(javaFileObject).onLine(17).atColumn(5);
     }
 
     @Test
     @DisplayName("Matcher should be generated for types of outer dependencies as well")
-    void matcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell() {
+    void matcherShouldBeGeneratedForTypesOfOuterDependenciesAsWell() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -575,18 +569,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-types-of-outer-dependencies-as-well", "ArgumentMatchersMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-types-of-outer-dependencies-as-well", "org.mockito.ArgumentMatchersMatcher");
     }
 
     @Test
     @DisplayName("Matchers should be generated for all classes directly located in a configured package")
-    void matchersShouldBeGeneratedForAllClassesDirectlyLocatedInAConfiguredPackage() {
+    void matchersShouldBeGeneratedForAllClassesDirectlyLocatedInAConfiguredPackage() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -618,18 +612,19 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject1, javaFileObject2))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "SimplePojo1Matcher.java"), golden("matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "SimplePojo2Matcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject1, javaFileObject2));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "some.other.pck.SimplePojo1Matcher");
+        assertGeneratedSource(compilation, "matchers-should-be-generated-for-all-classes-directly-located-in-a-configured-package", "some.other.pck.SimplePojo2Matcher");
     }
 
     @Test
     @DisplayName("Warns on not existing packages or types")
-    void warnsOnNotExistingPackagesOrTypes() {
+    void warnsOnNotExistingPackagesOrTypes() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -653,20 +648,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .withWarningContaining("Neither a type nor a type exists for 'not.existing.pck'")
-            .in(configuration)
-            .onLine(5)
-            .atColumn(23);
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningContaining("Neither a type nor a type exists for 'not.existing.pck'").inFile(configuration).onLine(5).atColumn(23);
     }
 
     @Test
     @DisplayName("Generation should work for MatcherConfiguration (singular) as well")
-    void generationShouldWorkForMatcherConfigurationSingularAsWell() {
+    void generationShouldWorkForMatcherConfigurationSingularAsWell() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -690,18 +683,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generation-should-work-for-matcherconfiguration-singular-as-well", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generation-should-work-for-matcherconfiguration-singular-as-well", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Generation should work for properties of inner enums")
-    void generationShouldWorkForPropertiesOfInnerEnums() {
+    void generationShouldWorkForPropertiesOfInnerEnums() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -732,18 +725,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generation-should-work-for-properties-of-inner-enums", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generation-should-work-for-properties-of-inner-enums", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Configured inner types should also generate all outer matchers")
-    void configuredInnerTypesShouldAlsoGenerateAllOuterMatchers() {
+    void configuredInnerTypesShouldAlsoGenerateAllOuterMatchers() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -771,18 +764,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("configured-inner-types-should-also-generate-all-outer-matchers", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "configured-inner-types-should-also-generate-all-outer-matchers", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Only a single matcher method should be generated for properties of type Matcher")
-    void onlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher() {
+    void onlyASingleMatcherMethodShouldBeGeneratedForPropertiesOfTypeMatcher() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -809,18 +802,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("only-a-single-matcher-method-should-be-generated-for-properties-of-type-matcher", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "only-a-single-matcher-method-should-be-generated-for-properties-of-type-matcher", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Generics and wildcard properties should be handled properly")
-    void genericsAndWildcardPropertiesShouldBeHandledProperly() {
+    void genericsAndWildcardPropertiesShouldBeHandledProperly() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -853,18 +846,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generics-and-wildcard-properties-should-be-handled-properly", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generics-and-wildcard-properties-should-be-handled-properly", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("Generation should work properly for primitives")
-    void generationShouldWorkProperlyForPrimitives() {
+    void generationShouldWorkProperlyForPrimitives() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -912,18 +905,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("generation-should-work-properly-for-primitives", "SimplePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generation-should-work-properly-for-primitives", "some.other.pck.SimplePojoMatcher");
     }
 
     @Test
     @DisplayName("No error should be thrown if the processor finds a class generated by itself")
-    void noErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself() {
+    void noErrorShouldBeThrownIfTheProcessorFindsAClassGeneratedByItself() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -954,20 +947,18 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .withNoteContaining("Generation skipped for: 'some.other.pck.SomeGeneratedType' because is is already generated by this processor")
-            .in(javaFileObject)
-            .onLine(6)
-            .atColumn(17);
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadNoteContaining("Generation skipped for: 'some.other.pck.SomeGeneratedType' because is is already generated by this processor").inFile(javaFileObject).onLine(6).atColumn(17);
     }
 
     @Test
     @DisplayName("Matchers should be generated in configured base package")
-    void matchersShouldBeGeneratedInConfiguredBasePackage() {
+    void matchersShouldBeGeneratedInConfiguredBasePackage() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -995,19 +986,19 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW)) // Assertion
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matchers-should-be-generated-in-configured-base-package", "SomePojoMatcher.java"));
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matchers-should-be-generated-in-configured-base-package", "my.base.pck.some.other.pck.SomePojoMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for record with single String component")
     @EnabledForJreRange(min = JRE.JAVA_16)
-    void matcherShouldBeGeneratedForRecordWithSingleStringComponent() {
+    void matcherShouldBeGeneratedForRecordWithSingleStringComponent() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -1030,20 +1021,20 @@ class MatcherGenerationProcessorIT {
             public record SomeRecord(String name) {}
             """);
 
-        // Execution + Assertion
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW))
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-record-with-single-string-component", "SomeRecordMatcher.java"));
+        // Execution
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-record-with-single-string-component", "some.other.pck.SomeRecordMatcher");
     }
 
     @Test
     @DisplayName("Matcher should be generated for record with multiple components")
     @EnabledForJreRange(min = JRE.JAVA_16)
-    void matcherShouldBeGeneratedForRecordWithMultipleComponents() {
+    void matcherShouldBeGeneratedForRecordWithMultipleComponents() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -1066,20 +1057,20 @@ class MatcherGenerationProcessorIT {
             public record SomeRecord(String name, int age) {}
             """);
 
-        // Execution + Assertion
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW))
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-should-be-generated-for-record-with-multiple-components", "SomeRecordMatcher.java"));
+        // Execution
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-should-be-generated-for-record-with-multiple-components", "some.other.pck.SomeRecordMatcher");
     }
 
     @Test
     @DisplayName("Matcher for record should include factory method, both withXxx overloads, reset methods and descriptors")
     @EnabledForJreRange(min = JRE.JAVA_16)
-    void matcherForRecordShouldIncludeFactoryMethodBothWithXxxOverloadsResetMethodsAndDescriptors() {
+    void matcherForRecordShouldIncludeFactoryMethodBothWithXxxOverloadsResetMethodsAndDescriptors() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -1102,18 +1093,31 @@ class MatcherGenerationProcessorIT {
             public record PersonRecord(String firstName, String lastName) {}
             """);
 
-        // Execution + Assertion
-        Truth.assert_()
-            .about(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(configuration, javaFileObject))
-            .processedWith(new MatcherGenerationProcessor(() -> NOW))
-            .compilesWithoutError()
-            .and()
-            .generatesSources(golden("matcher-for-record-should-include-factory-method-both-withxxx-overloads-reset-methods-and-descriptors", "PersonRecordMatcher.java"));
+        // Execution
+        Compilation compilation = Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(configuration, javaFileObject));
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "matcher-for-record-should-include-factory-method-both-withxxx-overloads-reset-methods-and-descriptors", "some.other.pck.PersonRecordMatcher");
     }
 
-    private static JavaFileObject golden(final String scenario, final String fileName) {
-        final URL resource = MatcherGenerationProcessorIT.class.getResource("MatcherGenerationProcessorIT/" + scenario + "/" + fileName);
-        return JavaFileObjects.forResource(Objects.requireNonNull(resource, () -> "Missing golden file: " + scenario + "/" + fileName));
+    private static void assertGeneratedSource(final Compilation compilation, final String scenario, final String qualifiedName) throws IOException {
+        final String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
+        final String expected = readGolden(scenario, simpleName + ".java");
+        final JavaFileObject generated = compilation.generatedSourceFile(qualifiedName)
+            .orElseThrow(() -> new AssertionError("No source generated for " + qualifiedName));
+        assertEquals(expected, generated.getCharContent(true).toString());
+    }
+
+    private static String readGolden(final String scenario, final String fileName) throws IOException {
+        final String resourceName = "MatcherGenerationProcessorIT/" + scenario + "/" + fileName;
+        try (InputStream in = MatcherGenerationProcessorIT.class.getResourceAsStream(resourceName)) {
+            if (in == null) {
+                throw new AssertionError("Missing golden file: " + resourceName);
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 }
