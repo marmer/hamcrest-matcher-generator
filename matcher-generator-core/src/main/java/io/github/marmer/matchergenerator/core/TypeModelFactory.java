@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -154,14 +155,22 @@ class TypeModelFactory {
     private List<PropertyModel> properties(final TypeElement type) {
         final List<ExecutableElement> getters = new ArrayList<>();
         final Map<String, Boolean> seenSimpleNames = new LinkedHashMap<>();
+        final Map<String, ExecutableElement> skipped = new LinkedHashMap<>();
+        final Map<String, String> reasons = new LinkedHashMap<>();
         transitiveInheritedElements(type).stream()
-            .filter(this::isProperty)
+            .filter(this::isPropertyCandidate)
             .map(ExecutableElement.class::cast)
             .forEach(element -> {
-                if (seenSimpleNames.putIfAbsent(element.getSimpleName().toString(), true) == null) {
+                final String name = element.getSimpleName().toString();
+                final Optional<String> reason = skipReason(element);
+                if (reason.isPresent()) {
+                    skipped.putIfAbsent(name, element);
+                    reasons.putIfAbsent(name, reason.get());
+                } else if (seenSimpleNames.putIfAbsent(name, true) == null) {
                     getters.add(element);
                 }
             });
+        logSkippedProperties(type, skipped, reasons, seenSimpleNames);
         final List<PropertyModel> getterProperties = getters.stream()
             .map(element -> new PropertyModel(
                 withoutPropertyPrefix(element.getSimpleName().toString()),
@@ -192,22 +201,70 @@ class TypeModelFactory {
         return (TypeElement) processingEnv.getTypeUtils().asElement(type);
     }
 
-    private boolean isProperty(final Element element) {
+    /**
+     * A method is a property candidate when its name carries a property prefix. Candidates that do not qualify are
+     * reported as skipped properties in verbose mode.
+     */
+    private boolean isPropertyCandidate(final Element element) {
         if (!(element instanceof ExecutableElement)) {
             return false;
         }
-        final ExecutableElement executable = (ExecutableElement) element;
-        return MatcherGenerationProcessorWorker.isPublic(executable)
-            && !MatcherGenerationProcessorWorker.isStatic(executable)
-            && hasReturnTypeWithMatchingPropertyPrefix(executable)
-            && hasNoParameters(executable);
+        final String name = element.getSimpleName().toString();
+        return name.startsWith("get") || name.startsWith("is");
     }
 
-    private boolean hasReturnTypeWithMatchingPropertyPrefix(final ExecutableElement element) {
+    /**
+     * Returns the reason why a property candidate is no property, or nothing if it is one.
+     */
+    private Optional<String> skipReason(final ExecutableElement element) {
         final String name = element.getSimpleName().toString();
         final TypeKind returnKind = element.getReturnType().getKind();
-        return (hasReturnType(element) && name.startsWith("get") && returnKind != TypeKind.BOOLEAN)
-            || (name.startsWith("is") && returnKind == TypeKind.BOOLEAN);
+        if (!MatcherGenerationProcessorWorker.isPublic(element)) {
+            return Optional.of("method is not public");
+        }
+        if (MatcherGenerationProcessorWorker.isStatic(element)) {
+            return Optional.of("method is static");
+        }
+        if (!hasNoParameters(element)) {
+            return Optional.of("method takes parameters");
+        }
+        if (!hasReturnType(element)) {
+            return Optional.of("method returns void");
+        }
+        if (withoutPropertyPrefix(name).isEmpty()) {
+            return Optional.of("no property name follows the '" + propertyPrefix(name) + "' prefix");
+        }
+        if (name.startsWith("get") && returnKind == TypeKind.BOOLEAN) {
+            return Optional.of("a boolean property must use the 'is' prefix");
+        }
+        if (name.startsWith("is") && returnKind != TypeKind.BOOLEAN) {
+            return Optional.of("the 'is' prefix requires a boolean return type");
+        }
+        return Optional.empty();
+    }
+
+    private void logSkippedProperties(
+        final TypeElement type,
+        final Map<String, ExecutableElement> skipped,
+        final Map<String, String> reasons,
+        final Map<String, Boolean> acceptedNames
+    ) {
+        skipped.forEach((name, element) -> {
+            // an accessor overridden by an accepted one is not skipped, the property exists
+            if (!acceptedNames.containsKey(name)) {
+                MatcherGenerationProcessorWorker.logNote(
+                    processingEnv,
+                    "Skipped property '" + name + "' of " + type.getQualifiedName() + ": " + reasons.get(name),
+                    element,
+                    null,
+                    null
+                );
+            }
+        });
+    }
+
+    private static String propertyPrefix(final String name) {
+        return name.startsWith("get") ? "get" : "is";
     }
 
     private String withoutPropertyPrefix(final String name) {

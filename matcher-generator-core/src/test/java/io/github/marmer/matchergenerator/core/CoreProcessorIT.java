@@ -57,6 +57,13 @@ class CoreProcessorIT {
             .compile(Arrays.asList(sources));
     }
 
+    private static Compilation compileVerbose(final JavaFileObject... sources) {
+        return Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .withOptions("-Amatchergenerator.verbose")
+            .compile(Arrays.asList(sources));
+    }
+
     private static TypeModel onlyModel() {
         final List<TypeModel> models = RecordingBackend.models();
         assertEquals(1, models.size(), () -> "Recorded models: " + models);
@@ -223,7 +230,7 @@ class CoreProcessorIT {
             "}"
         );
 
-        final Compilation compilation = compile(configuration("\"some.other.pck.Outer\""), outer);
+        final Compilation compilation = compileVerbose(configuration("\"some.other.pck.Outer\""), outer);
 
         CompilationSubject.assertThat(compilation).succeeded();
         final TypeModel model = onlyModel();
@@ -336,13 +343,274 @@ class CoreProcessorIT {
 
     @Test
     @DisplayName("Unresolvable configured names are warned about")
-    void unresolvableConfiguredNamesAreWarnedAbout() {
-        final Compilation compilation = compile(configuration("\"not.existing.Type\""));
+    void unresolvableConfiguredNamesAreAnError() {
+        final JavaFileObject configuration = configuration("\"not.existing.Type\"");
+        final Compilation compilation = compile(configuration);
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.Type'")
+            .inFile(configuration)
+            .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of(), RecordingBackend.models());
+    }
+
+    @Test
+    @DisplayName("Every unresolvable name yields exactly one error and nothing else is reported")
+    void everyUnresolvableNameYieldsExactlyOneError() {
+        final JavaFileObject configuration = configuration(
+            "{\"not.existing.Type\", \"not.existing.pck\", \"not.existing.pck\"}");
+
+        final Compilation compilation = compile(configuration);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(2, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.Type'")
+            .inFile(configuration);
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.pck'")
+            .inFile(configuration);
+        assertEquals(List.of(), compilation.warnings().stream().map(d -> d.getMessage(null)).toList());
+        assertEquals(List.of(), RecordingBackend.models());
+    }
+
+    @Test
+    @DisplayName("Malformed configured names are one error each, never a crash")
+    void malformedConfiguredNamesAreOneErrorEach() {
+        for (final String name : List.of("\"\"", "\"some.other.pck.\"", "\"1abc\"", "\"some..pck\"", "\"*\"",
+            "\"some.other.pck.SomePojo.Missing\"", "\" \"")) {
+            final Compilation compilation = compile(configuration(name), SOME_POJO);
+
+            CompilationSubject.assertThat(compilation).failed();
+            assertEquals(1, compilation.errors().size(), () -> name + " errors: " + compilation.errors());
+            assertEquals(List.of(), RecordingBackend.models());
+            RecordingBackend.reset();
+        }
+    }
+
+    @Test
+    @DisplayName("A configured type without properties is generated and warned about")
+    void aConfiguredTypeWithoutPropertiesIsWarnedAbout() {
+        final JavaFileObject empty = JavaFileObjects.forSourceLines(
+            "some.other.pck.EmptyPojo",
+            "package some.other.pck;",
+            "public class EmptyPojo {",
+            "    public void doSomething() { }",
+            "}"
+        );
+        final JavaFileObject emptyInterface = JavaFileObjects.forSourceLines(
+            "some.other.pck.EmptyInterface",
+            "package some.other.pck;",
+            "public interface EmptyInterface {",
+            "    void doSomething();",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("{\"some.other.pck.EmptyPojo\", \"some.other.pck.EmptyInterface\"}"), empty, emptyInterface);
 
         CompilationSubject.assertThat(compilation).succeeded();
         CompilationSubject.assertThat(compilation)
-            .hadWarningContaining("Neither a type nor a type exists for 'not.existing.Type'");
-        assertEquals(List.of(), RecordingBackend.models());
+            .hadWarningContaining("Type 'some.other.pck.EmptyPojo' has no properties");
+        CompilationSubject.assertThat(compilation)
+            .hadWarningContaining("Type 'some.other.pck.EmptyInterface' has no properties");
+        assertEquals(2, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+            List.of("some.other.pck.EmptyPojo", "some.other.pck.EmptyInterface"),
+            RecordingBackend.models().stream().map(TypeModel::qualifiedName).collect(Collectors.toList()));
+    }
+
+    @Test
+    @DisplayName("A Kotlin file facade without properties is not warned about, it holds only top level functions")
+    void aKotlinFileFacadeIsNotWarnedAbout() {
+        final JavaFileObject metadata = JavaFileObjects.forSourceLines(
+            "kotlin.Metadata",
+            "package kotlin;",
+            "public @interface Metadata {",
+            "    int k() default 1;",
+            "}"
+        );
+        final JavaFileObject facade = JavaFileObjects.forSourceLines(
+            "some.other.pck.HelloKt",
+            "package some.other.pck;",
+            "@kotlin.Metadata(k = 2)",
+            "public final class HelloKt {",
+            "    public static String hello() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.HelloKt\""), metadata, facade);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(1, RecordingBackend.models().size());
+    }
+
+    @Test
+    @DisplayName("A type with at least one property is not warned about")
+    void aTypeWithPropertiesIsNotWarnedAbout() {
+        final Compilation compilation = compile(configuration("\"some.other.pck.SomePojo\""), SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @Test
+    @DisplayName("Without the verbose option no notes are emitted at all")
+    void withoutTheVerboseOptionNoNotesAreEmitted() {
+        final Compilation compilation = compile(configurationWith(
+            "io.github.marmer.matchergenerator.annotations.GenerateMatchers",
+            "@GenerateMatchers(\"some.other.pck.SkippingPojo\")"), skippingPojo());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(List.of(), compilation.notes().stream().map(d -> d.getMessage(null)).toList());
+    }
+
+    @Test
+    @DisplayName("The verbose option emits one note per skipped property with its reason")
+    void theVerboseOptionEmitsOneNotePerSkippedProperty() {
+        final Compilation compilation = compileVerbose(configuration("\"some.other.pck.SkippingPojo\""), skippingPojo());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final List<String> skipNotes = compilation.notes().stream()
+            .map(d -> d.getMessage(null))
+            .filter(message -> message.startsWith("Skipped property"))
+            .collect(Collectors.toList());
+        assertEquals(
+            List.of(
+                "Skipped property 'getProtected' of some.other.pck.SkippingPojo: method is not public",
+                "Skipped property 'getPrivate' of some.other.pck.SkippingPojo: method is not public",
+                "Skipped property 'getStatic' of some.other.pck.SkippingPojo: method is static",
+                "Skipped property 'getWithParameter' of some.other.pck.SkippingPojo: method takes parameters",
+                "Skipped property 'getVoid' of some.other.pck.SkippingPojo: method returns void",
+                "Skipped property 'getBooleanWithGet' of some.other.pck.SkippingPojo: "
+                    + "a boolean property must use the 'is' prefix",
+                "Skipped property 'isNotBoolean' of some.other.pck.SkippingPojo: "
+                    + "the 'is' prefix requires a boolean return type",
+                "Skipped property 'get' of some.other.pck.SkippingPojo: no property name follows the 'get' prefix"
+            ),
+            skipNotes);
+        assertEquals(
+            List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+            describe(onlyModel().properties()));
+    }
+
+    private static JavaFileObject skippingPojo() {
+        return JavaFileObjects.forSourceLines(
+            "some.other.pck.SkippingPojo",
+            "package some.other.pck;",
+            "public class SkippingPojo {",
+            "    public String getName() { return \"\"; }",
+            "    protected String getProtected() { return \"\"; }",
+            "    private String getPrivate() { return \"\"; }",
+            "    public static String getStatic() { return \"\"; }",
+            "    public String getWithParameter(int param) { return \"\"; }",
+            "    public void getVoid() { }",
+            "    public boolean getBooleanWithGet() { return true; }",
+            "    public String isNotBoolean() { return \"\"; }",
+            "    public String get() { return \"\"; }",
+            "}"
+        );
+    }
+
+    @Test
+    @DisplayName("Public non static inner classes are nested models as well")
+    void publicInnerClassesAreNestedModels() {
+        final JavaFileObject outer = JavaFileObjects.forSourceLines(
+            "some.other.pck.Holder",
+            "package some.other.pck;",
+            "public class Holder {",
+            "    public String getHolderProperty() { return \"\"; }",
+            "    public class Inner {",
+            "        public String getInnerProperty() { return \"\"; }",
+            "    }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Holder\""), outer);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(1, model.nestedTypes().size());
+        assertEquals("some.other.pck.Holder.Inner", model.nestedTypes().get(0).qualifiedName());
+        assertEquals(
+            List.of("innerProperty:java.lang.String:getInnerProperty", CLASS_PROPERTY),
+            describe(model.nestedTypes().get(0).properties()));
+    }
+
+    @Test
+    @DisplayName("Recursive generic bounds are modelled without failing")
+    void recursiveGenericBoundsAreModelled() {
+        final JavaFileObject node = JavaFileObjects.forSourceLines(
+            "some.other.pck.Node",
+            "package some.other.pck;",
+            "public class Node<T extends Node<T>> {",
+            "    public T getSelf() { return null; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Node\""), node);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(List.of("T"), onlyModel().typeParameters());
+        assertEquals(List.of("self:T:getSelf", CLASS_PROPERTY), describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Cyclic references between configured types are modelled for both types")
+    void cyclicReferencesBetweenConfiguredTypesAreModelled() {
+        final JavaFileObject parent = JavaFileObjects.forSourceLines(
+            "some.other.pck.Parent",
+            "package some.other.pck;",
+            "public class Parent {",
+            "    public Child getChild() { return null; }",
+            "}"
+        );
+        final JavaFileObject child = JavaFileObjects.forSourceLines(
+            "some.other.pck.Child",
+            "package some.other.pck;",
+            "public class Child {",
+            "    public Parent getParent() { return null; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("{\"some.other.pck.Parent\", \"some.other.pck.Child\"}"), parent, child);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("some.other.pck.Parent", "some.other.pck.Child"),
+            RecordingBackend.models().stream().map(TypeModel::qualifiedName).collect(Collectors.toList()));
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @Test
+    @DisplayName("Cyclic inheritance is reported by the compiler without a processor crash")
+    void cyclicInheritanceDoesNotCrashTheProcessor() {
+        final JavaFileObject first = JavaFileObjects.forSourceLines(
+            "some.other.pck.First",
+            "package some.other.pck;",
+            "public class First extends Second {",
+            "}"
+        );
+        final JavaFileObject second = JavaFileObjects.forSourceLines(
+            "some.other.pck.Second",
+            "package some.other.pck;",
+            "public class Second extends First {",
+            "    public String getName() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.First\""), first, second);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(List.of(), compilation.errors().stream()
+            .map(d -> d.getMessage(null))
+            .filter(message -> !message.contains("cyclic inheritance"))
+            .toList());
     }
 
     private static JavaFileObject configurationWith(final String annotationImport, final String annotation) {

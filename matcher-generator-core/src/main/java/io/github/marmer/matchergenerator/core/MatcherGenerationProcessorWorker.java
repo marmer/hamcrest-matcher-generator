@@ -40,6 +40,21 @@ public class MatcherGenerationProcessorWorker {
         "io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration";
     private static final Set<String> CONFIGURATION_ANNOTATIONS = Set.of(GENERATE_MATCHERS, MATCHER_CONFIGURATION);
     /**
+     * Processor option. When given (as {@code -Amatchergenerator.verbose} or with the value {@code true}), every note
+     * is emitted, including one per skipped property with its reason.
+     */
+    static final String VERBOSE_OPTION = "matchergenerator.verbose";
+    /**
+     * The only property Object contributes. It is not something a type declares, so it does not count as a property
+     * of a type without properties.
+     */
+    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
+    private static final String KOTLIN_METADATA = "kotlin.Metadata";
+    /**
+     * Kind of the {@code kotlin.Metadata} annotation that marks a file facade.
+     */
+    private static final int KOTLIN_FILE_FACADE_KIND = 2;
+    /**
      * Generator name of the 5.x processor. Types it generated are skipped as well.
      */
     private static final String LEGACY_GENERATOR_NAME = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor";
@@ -73,6 +88,9 @@ public class MatcherGenerationProcessorWorker {
         return getAnnotationValueForField(mirror, "value");
     }
 
+    /**
+     * Emits a note, but only when the verbose option is set.
+     */
     static void logNote(
         final ProcessingEnvironment processingEnv,
         final String message,
@@ -80,8 +98,21 @@ public class MatcherGenerationProcessorWorker {
         final AnnotationMirror annotationMirror,
         final AnnotationValue annotationValue
     ) {
-        processingEnv.getMessager()
-            .printMessage(Diagnostic.Kind.NOTE, message, element, annotationMirror, annotationValue);
+        if (!isVerbose(processingEnv)) {
+            return;
+        }
+        if (annotationMirror == null) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message, element);
+        } else {
+            processingEnv.getMessager()
+                .printMessage(Diagnostic.Kind.NOTE, message, element, annotationMirror, annotationValue);
+        }
+    }
+
+    static boolean isVerbose(final ProcessingEnvironment processingEnv) {
+        final Map<String, String> options = processingEnv.getOptions();
+        return options.containsKey(VERBOSE_OPTION)
+            && (options.get(VERBOSE_OPTION) == null || Boolean.parseBoolean(options.get(VERBOSE_OPTION)));
     }
 
     static boolean isPublic(final Element element) {
@@ -147,12 +178,34 @@ public class MatcherGenerationProcessorWorker {
     ) {
         final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror)
             .create(typeElement);
+        if (hasNoProperties(model) && !isKotlinFileFacade(typeElement)) {
+            processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.WARNING,
+                "Type '" + typeElement.getQualifiedName() + "' has no properties to match",
+                typeElement
+            );
+        }
         final GenerationContext context = new GenerationContext(generatorName, timeProvider.get());
         backends.forEach(backend -> write(
             backend.generate(model, context),
             typeElement,
             configurationElement
         ));
+    }
+
+    private static boolean hasNoProperties(final TypeModel model) {
+        return model.properties().stream().allMatch(property -> property.accessor().equals(OBJECT_CLASS_ACCESSOR));
+    }
+
+    /**
+     * The class Kotlin generates for top level functions. It has no properties by design and is no user type.
+     */
+    private static boolean isKotlinFileFacade(final TypeElement type) {
+        return type.getAnnotationMirrors().stream()
+            .filter(mirror -> mirror.getAnnotationType().asElement().toString().equals(KOTLIN_METADATA))
+            .flatMap(mirror -> mirror.getElementValues().entrySet().stream())
+            .filter(entry -> entry.getKey().getSimpleName().contentEquals("k"))
+            .anyMatch(entry -> Integer.valueOf(KOTLIN_FILE_FACADE_KIND).equals(entry.getValue().getValue()));
     }
 
     private void write(
@@ -223,7 +276,7 @@ public class MatcherGenerationProcessorWorker {
         }
 
         if (typeElementsForName.isEmpty()) {
-            printSkipWarningBecauseOfNotExistingTypeConfigured(configurationType, currentQualifiedTypeOrPackageName);
+            printErrorBecauseOfNotExistingTypeConfigured(configurationType, currentQualifiedTypeOrPackageName);
         }
         return typeElementsForName;
     }
@@ -235,14 +288,14 @@ public class MatcherGenerationProcessorWorker {
         return typeElement;
     }
 
-    private void printSkipWarningBecauseOfNotExistingTypeConfigured(
+    private void printErrorBecauseOfNotExistingTypeConfigured(
         final Element configurationClass,
         final String qualifiedTypeOrPackageName
     ) {
         configurationClass.getAnnotationMirrors().stream()
             .filter(MatcherGenerationProcessorWorker::isConfiguration)
             .forEach(mirror -> processingEnv.getMessager().printMessage(
-                Diagnostic.Kind.MANDATORY_WARNING,
+                Diagnostic.Kind.ERROR,
                 "Neither a type nor a type exists for '" + qualifiedTypeOrPackageName + "'",
                 configurationClass,
                 mirror,

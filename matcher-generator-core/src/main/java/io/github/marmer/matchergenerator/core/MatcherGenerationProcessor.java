@@ -11,6 +11,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
@@ -18,6 +19,7 @@ import javax.lang.model.element.TypeElement;
     MatcherGenerationProcessorWorker.GENERATE_MATCHERS,
     MatcherGenerationProcessorWorker.MATCHER_CONFIGURATION
 })
+@SupportedOptions(MatcherGenerationProcessorWorker.VERBOSE_OPTION)
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private final Supplier<LocalDateTime> timeProvider;
