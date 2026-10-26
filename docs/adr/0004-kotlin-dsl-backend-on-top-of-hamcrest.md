@@ -12,3 +12,4 @@
 
 - Feasibility is proven on the unmerged branch `prototype/kotlin-dsl-kapt`: under Maven KAPT, a `.kt` file written to `kapt.kotlin.generated` is compiled in the same build and can call the Java matcher generated in the same run; `test-kapt` registers both generated directories itself. An explicit `<sourceDirs>` replaces the defaults and must list them.
 - The generated Kotlin's emitted text is tested by golden-file ITs (compile-testing cannot compile Kotlin); compiling and behaviour are proven by the Kotlin end-to-end modules.
+- The backend-to-backend dependency is recorded as technical debt, and the KAPT-only generation as a risk, in arc42 chapter 11 (`docs/src/11_technical_risks.adoc`).
