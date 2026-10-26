@@ -8,3 +8,4 @@ The rejected alternative was one processor with library switches in the configur
 
 - Kotlin getter fixes and record detection live once, in core, and benefit both backends.
 - The migration runs behind the existing tests: the compile-testing ITs are ported to Java first and pointed at the Hamcrest backend, the existing end-to-end modules stay green as its acceptance criterion, and the AssertJ backend gets the same two test layers.
+- The Kotlin DSL backend is the one exception to "backends never depend on each other" (it builds on the Hamcrest backend), and it widens the SPI's return type to a Java or Kotlin source file; see [ADR 0004](0004-kotlin-dsl-backend-on-top-of-hamcrest.md).

@@ -26,3 +26,11 @@ Details: link:../adr/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
 Outdated snippets, broken links and missing images are common in project documentation. To rule them out, the whole documentation is built by the normal Maven build. A dedicated `docs` module renders the user guide and this architecture documentation with Asciidoctor. Code shown in the guide is included directly from example Maven modules, which are compiled and tested in the same build. The diagrams of the context, building block, runtime and deployment views are C4 views generated from a single Structurizr model, so the levels stay consistent and need little explanatory text. The build fails on Asciidoctor warnings, and tests check links, anchors, images and that every modelled view appears in the documentation. Because the current Structurizr libraries require Java 21, the documentation is only built on JDK 21 or newer.
 
 Details: link:../adr/0003-docs-as-code-with-structurizr-and-embedded-examples.md[ADR 0003]
+
+=== ADR 0004: Kotlin DSL as a Kotlin-emitting backend on top of the Hamcrest backend
+
+*Status:* accepted (6.0.0 planning)
+
+Kotlin users get an optional, type-safe DSL such as `isOrder { customer { name("Ada") } }`, which builds on the generated Hamcrest matchers. Because it needs one wrapper per configured type, it is generated as well, by a separate opt-in artifact `hamcrest-matcher-generator-kotlin`. This artifact is another backend behind the same plug-in interface as Hamcrest and AssertJ; that interface therefore returns a Java or Kotlin source file. It is the only backend allowed to depend on another backend, the Hamcrest one, whose naming it reuses, and the build enforces that exception explicitly. The generator itself is written in Java and produces Kotlin with the KotlinPoet library, so the project's production code stays plain Java. It runs only under KAPT, the Kotlin compiler's way of running annotation processors; under plain javac it skips the DSL and prints one note.
+
+Details: link:../adr/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
