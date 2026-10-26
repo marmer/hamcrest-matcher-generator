@@ -1,0 +1,62 @@
+name: External links
+
+# Weekly check of the external links in the rendered docs. Non-blocking: a failure opens or updates an issue.
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  lychee:
+    name: Check external links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Render docs
+        run: ./mvnw -B -pl docs verify
+
+      # Internal links are covered by the docs module tests. LinkedIn answers automated requests with HTTP 999.
+      - name: Create report directory
+        run: mkdir -p lychee
+
+      - name: Check external links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --scheme https
+            --scheme http
+            --exclude 'linkedin\.com'
+            --accept '200..=299,429'
+            'docs/target/generated-docs/**/*.html'
+          fail: false
+          output: lychee/report.md
+
+      - name: Open or update the broken links issue
+        if: steps.lychee.outputs.exit_code != 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: Broken external links in the docs
+        run: |
+          existing=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file lychee/report.md
+          else
+            gh issue create --title "$TITLE" --body-file lychee/report.md
+          fi
