@@ -5,120 +5,66 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 == Building Block View
 
-
-
-
+NOTE: Package and artifact names below describe the current state of the build. They change with the move to the
+6.0.0 coordinates (see ADR 0002).
 
 === Whitebox Overall System
 
-
-
-
-
-_**<Overview Diagram>**_
-
 Motivation::
 
-_<text explanation>_
-
+The processor is split so that everything that is independent of an assertion library lives once, in the core, while
+every assertion library is a backend that plugs in from the outside. A user chooses libraries by choosing artifacts
+(see ADR 0001).
 
 Contained Building Blocks::
-_<Description of contained building block (black boxes)>_
+
+[options="header",cols="2,4"]
+|===
+| Building block | Responsibility
+
+| `hamcrest-matcher-generator-dependencies`
+| The configuration annotation `@MatcherConfiguration` and the runtime base class `BeanPropertyMatcher` that generated
+Hamcrest matchers call at test time.
+
+| `matcher-generator-core`
+| The processor entry point, the discovery of configured types, the library-free `TypeModel` and `PropertyModel`,
+diagnostics, and the `GeneratorBackend` interface. It has no assertion library on its classpath.
+
+| `hamcrest-matcher-generator-annotationprocessor`
+| The Hamcrest backend: it turns a `TypeModel` into the source of a `<Type>Matcher` class with JavaPoet.
+
+| `*-endtoend-*` modules
+| Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
+matchers in ordinary tests.
+
+| `docs`
+| Renders this documentation to HTML and checks its internal links. It is built only on JDK 21 or later and is not
+published to Maven Central.
+|===
 
 Important Interfaces::
-_<Description of important interfaces>_
 
-
-
-
-
-==== <Name black box 1>
-
-
-
-
-
-_<Purpose/Responsibility>_
-
-_<Interface(s)>_
-
-_<(Optional) Quality/Performance Characteristics>_
-
-_<(Optional) Directory/File Location>_
-
-_<(Optional) Fulfilled Requirements>_
-
-_<(optional) Open Issues/Problems/Risks>_
-
-
-
-
-==== <Name black box 2>
-
-_<black box template>_
-
-==== <Name black box n>
-
-_<black box template>_
-
-
-==== <Name interface 1>
-
-...
-
-==== <Name interface m>
-
-
+`GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
+`GenerationContext` (generator name and generation time) and returns one `GeneratedSource`, a Java or Kotlin file.
+Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
+configured type. Backends depend only on the core, never the other way round; the Enforcer plugin and ArchUnit tests
+guard this.
 
 === Level 2
 
+==== White Box `matcher-generator-core`
 
+`MatcherGenerationProcessor`::
+The annotation processor registered through `META-INF/services`. It loads the backends and hands every round to the
+worker. It declares the processor option `kapt.kotlin.generated`.
 
+`MatcherGenerationProcessorWorker`::
+Resolves the configured class and package names to types, skips types that are already marked as generated, asks every
+backend for its source and writes it.
 
+`TypeModelFactory`::
+Reads a type with the compiler's element API and creates the `TypeModel`: getters for beans, components and accessors
+for records, inherited properties and public member types.
 
-==== White Box _<building block 1>_
-
-
-
-
-
-_<white box template>_
-
-==== White Box _<building block 2>_
-
-
-_<white box template>_
-
-...
-
-==== White Box _<building block m>_
-
-
-_<white box template>_
-
-
-
-=== Level 3
-
-
-
-
-
-==== White Box <_building block x.1_>
-
-
-
-
-
-_<white box template>_
-
-
-==== White Box <_building block x.2_>
-
-_<white box template>_
-
-
-
-==== White Box <_building block y.1_>
-
-_<white box template>_
+`TypeModel`, `PropertyModel`, `Nullability`::
+The immutable model that backends work on (see the glossary term "Property model").

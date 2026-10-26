@@ -3,20 +3,25 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-runtime-view]]
 == Runtime View
 
+=== Generation of matchers
 
+The compiler runs the processor in every round in which it finds `@MatcherConfiguration`. For every configured type
+the following happens:
 
+. `MatcherGenerationProcessor` hands the round to `MatcherGenerationProcessorWorker`, which resolves the configured
+class and package names to types. Names that match nothing produce a compiler warning, and types that carry the
+processor's own `@Generated` marker are skipped with a note.
+. `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types.
+. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext`.
+There is no selection: the backends on the processor path are the user's choice.
+. Each backend returns one `GeneratedSource`. The worker writes Java sources through the compiler's `Filer`, so they
+are compiled in the same build.
+. Kotlin sources are written into the directory named by the processor option `kapt.kotlin.generated`, which only KAPT
+provides (see ADR 0004). Without that option the worker reports one compile error that names the backend and the
+type, because the Kotlin file would otherwise never be compiled.
 
+Notable aspects::
 
-
-=== <Runtime Scenario 1>
-
-
-* _<insert runtime diagram or textual description of the scenario>_
-* _<insert description of the notable aspects of the interactions between the
-building block instances depicted in this diagram.>_
-
-=== <Runtime Scenario 2>
-
-=== ...
-
-=== <Runtime Scenario n>
+* The model is built once per type and shared by all backends, so detection rules such as record components or
+getter naming exist only once.
+* A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests.
