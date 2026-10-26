@@ -1,7 +1,9 @@
 package io.github.marmer.docs;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -15,6 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jsoup.Jsoup;
@@ -71,6 +75,121 @@ class RenderedDocsTest {
             }
         }
         assertTrue(problems.isEmpty(), "broken images:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    void everyPageHasTheTopBarWithItsTabsInOrder() {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final List<String> tabs = parse(page).select("header.site-top nav.site-nav a").eachText();
+            if (!List.of("Guide", "Architecture", "Javadoc", "GitHub").equals(tabs)) {
+                problems.add(OUTPUT.relativize(page) + ": tabs are " + tabs);
+            }
+            if (parse(page).select("header.site-top .site-version").text().isEmpty()) {
+                problems.add(OUTPUT.relativize(page) + ": brand without version");
+            }
+        }
+        assertTrue(problems.isEmpty(), "top bar problems:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    void theActiveSectionIsMarkedByThePageKind() {
+        assertAll(
+            () -> assertTrue(parse(OUTPUT.resolve("index.html")).body().hasClass("page-landing"), "landing"),
+            () -> assertTrue(parse(OUTPUT.resolve("guide/getting-started.html")).body().hasClass("page-guide"), "guide"),
+            () -> assertTrue(parse(OUTPUT.resolve("architecture/index.html")).body().hasClass("page-arch"), "arc42"));
+    }
+
+    @Test
+    void architectureSidebarListsEveryChapterAndLinksToItsSection() {
+        final Document architecture = parse(OUTPUT.resolve("architecture/index.html"));
+        final List<String> chapterIds = architecture.select("#content > .sect1 > h2[id], #content .sect1 > h2[id]").eachAttr("id");
+        final List<String> sidebarTargets = architecture.select("nav.site-side-arch ol:not(.site-side-plain) a").eachAttr("href");
+        assertAll(
+            () -> assertEquals(12, chapterIds.size(), "arc42 has twelve chapters"),
+            () -> assertEquals(chapterIds.stream().map(id -> "#" + id).collect(Collectors.toList()), sidebarTargets));
+    }
+
+    @Test
+    void guideSidebarListsEveryGuidePageAndMarksTheCurrentOne() {
+        final long guidePages = pages.stream().filter(page -> page.getParent().endsWith("guide")).count();
+        final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
+        final Element current = guidePage.selectFirst("nav.site-side-guide a[aria-current=page]");
+        assertAll(
+            () -> assertNotNull(current, "current chapter is marked"),
+            () -> assertEquals("Getting started", current.text()),
+            () -> assertEquals(guidePages, guidePage.select("nav.site-side-guide ol:not(.site-side-plain) li").size(), "every guide page"));
+    }
+
+    @Test
+    void guidePagesEndWithAPager() {
+        final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
+        assertAll(
+            () -> assertEquals(1, guidePage.select("#content nav.site-pager").size()),
+            () -> assertEquals(2, guidePage.select("#content nav.site-pager a[rel]").size(), "previous and next"));
+    }
+
+    @Test
+    void landingPageHasTheHeroWithItsCallsToAction() {
+        final Document landing = parse(OUTPUT.resolve("index.html"));
+        assertAll(
+            () -> assertEquals("Annotation processor · Java 17+ · Kotlin · Records", landing.select(".hero .eyebrow").text()),
+            () -> assertEquals(List.of("Get started", "How it works"), landing.select(".hero .cta a").eachText()),
+            () -> assertEquals(1, landing.select(".pair").size(), "snippet placeholders"),
+            () -> assertEquals(3, landing.select(".features li").size(), "features"),
+            () -> assertEquals("Install", landing.select("h2").text(), "install section"));
+    }
+
+    @Test
+    void everyPageHasTheMaintainerFooter() {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final Element footer = parse(page).selectFirst("footer.site-foot");
+            if (footer == null) {
+                problems.add(OUTPUT.relativize(page) + ": no footer");
+                continue;
+            }
+            for (final String expected : List.of("Mariano Mertinat", "Docs for release", "Apache License 2.0")) {
+                if (!footer.text().contains(expected)) {
+                    problems.add(OUTPUT.relativize(page) + ": footer lacks '" + expected + "'");
+                }
+            }
+            for (final String link : List.of("LinkedIn", "GitHub", "Changelog")) {
+                if (footer.select("a").stream().noneMatch(a -> a.text().equals(link))) {
+                    problems.add(OUTPUT.relativize(page) + ": footer lacks the " + link + " link");
+                }
+            }
+            if (footer.select("img.site-avatar[src$=images/maintainer.jpg]").isEmpty()) {
+                problems.add(OUTPUT.relativize(page) + ": footer lacks the committed avatar");
+            }
+        }
+        assertTrue(problems.isEmpty(), "footer problems:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    void stylesheetAndFontsAreLocalAndExist() throws IOException {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final List<Element> stylesheets = parse(page).select("link[rel=stylesheet]");
+            if (stylesheets.size() != 1 || isExternal(stylesheets.get(0).attr("href"))) {
+                problems.add(OUTPUT.relativize(page) + ": expected exactly the one local site stylesheet, found " + stylesheets);
+            } else if (!Files.isRegularFile(resolve(page, stylesheets.get(0).attr("href")))) {
+                problems.add(OUTPUT.relativize(page) + ": stylesheet is missing");
+            }
+        }
+        final Path css = OUTPUT.resolve("assets/theme.css");
+        final String content = Files.readString(css);
+        final Matcher references = Pattern.compile("url\\(\"([^\"]+)\"\\)").matcher(content);
+        final List<String> fonts = new ArrayList<>();
+        while (references.find()) {
+            fonts.add(references.group(1));
+            if (isExternal(references.group(1)) || !Files.isRegularFile(resolve(css, references.group(1)))) {
+                problems.add("theme.css: '" + references.group(1) + "' is external or missing");
+            }
+        }
+        assertAll(
+            () -> assertTrue(problems.isEmpty(), "stylesheet problems:\n" + String.join("\n", problems)),
+            () -> assertTrue(fonts.size() >= 4, "Bricolage Grotesque, Public Sans (two) and JetBrains Mono are bundled"));
     }
 
     @Test
