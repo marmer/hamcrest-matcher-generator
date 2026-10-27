@@ -15,6 +15,12 @@ Motivation::
 Users take the artifacts from Maven Central, and readers take the documentation from GitHub Pages. Both are produced
 by automated builds, so no manual upload step exists.
 
+.Deployment of the build artifacts and the documentation
+[structurizr,target=deployment,format=svg,view=Deployment,alt="Deployment of the build artifacts and the documentation"]
+----
+include::../workspace.dsl[]
+----
+
 Quality and/or Performance Features::
 
 Every published jar is signed and comes with a sources jar and a Javadoc jar, which Maven Central requires. A

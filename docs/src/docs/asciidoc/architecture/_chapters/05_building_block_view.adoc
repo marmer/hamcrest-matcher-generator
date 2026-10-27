@@ -42,6 +42,12 @@ matchers in ordinary tests.
 published to Maven Central.
 |===
 
+.Containers
+[structurizr,target=containers,format=svg,view=Containers,alt="Containers"]
+----
+include::../workspace.dsl[]
+----
+
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
@@ -68,3 +74,17 @@ for records, inherited properties and public member types.
 
 `TypeModel`, `PropertyModel`, `Nullability`::
 The immutable model that backends work on (see the glossary term "Property model").
+
+.Components of matcher-generator-core
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core"]
+----
+include::../workspace.dsl[]
+----
+
+==== White Box `hamcrest-matcher-generator`
+
+.Components of hamcrest-matcher-generator
+[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator"]
+----
+include::../workspace.dsl[]
+----

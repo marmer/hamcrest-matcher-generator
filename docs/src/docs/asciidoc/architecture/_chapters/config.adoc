@@ -11,3 +11,6 @@
 
 // ADR files are not part of the rendered site; link to them on GitHub
 :adr-url: https://github.com/marmer/hamcrest-matcher-generator/blob/development/docs/adr
+
+// diagrams: an opaque background keeps them readable in the dark mode of the site
+:plantumlconfig: plantuml.cfg

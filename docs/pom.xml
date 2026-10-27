@@ -17,6 +17,13 @@
         <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
         <asciidoctorj.version>3.0.0</asciidoctorj.version>
         <jsoup.version>1.18.3</jsoup.version>
+        <!-- All Structurizr artifacts are updated together (ADR 0003): the rendering uses their jars as a CLI home. -->
+        <structurizr.version>6.2.3</structurizr.version>
+        <asciidoctorj.diagram.version>3.2.1</asciidoctorj.diagram.version>
+        <asciidoctorj.diagram.plantuml.version>1.2026.2</asciidoctorj.diagram.plantuml.version>
+        <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
+        <properties.maven.plugin.version>1.2.1</properties.maven.plugin.version>
+        <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
         <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
         <maven.install.skip>true</maven.install.skip>
@@ -24,6 +31,32 @@
     </properties>
 
     <dependencies>
+        <!-- Runtime scope: copied into the Structurizr home below and also used by the view test to read the workspace.
+            structurizr-client is needed by the exporter at run time; the transitive dependencies come along. -->
+        <dependency>
+            <groupId>com.structurizr</groupId>
+            <artifactId>structurizr-dsl</artifactId>
+            <version>${structurizr.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.structurizr</groupId>
+            <artifactId>structurizr-export</artifactId>
+            <version>${structurizr.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.structurizr</groupId>
+            <artifactId>structurizr-import</artifactId>
+            <version>${structurizr.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.structurizr</groupId>
+            <artifactId>structurizr-client</artifactId>
+            <version>${structurizr.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
@@ -44,6 +77,70 @@
 
     <build>
         <plugins>
+            <!-- The docs module is built on JDK 21 or later and never reaches a user's classpath, so the Java 21 bytecode
+                of Structurizr is fine here (ADR 0003). Everything else must still target Java 17. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-bytecode-17</id>
+                        <configuration>
+                            <rules>
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>17</maxJdkVersion>
+                                    <excludes>
+                                        <exclude>com.structurizr:*</exclude>
+                                    </excludes>
+                                </enforceBytecodeVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- asciidoctorj-diagram's structurizr block wants the home of a Structurizr CLI. A folder whose lib/ holds
+                the jars is enough, so no CLI download and no Docker is needed. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven.dependency.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>structurizr-home</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>${structurizr.home}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- asciidoctorj-diagram reads the home from this system property of the Maven JVM. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties.maven.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>structurizr-cli-home</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>set-system-properties</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>diagram.structurizrcli.home</name>
+                                    <value>${structurizr.home}</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
@@ -53,6 +150,16 @@
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj</artifactId>
                         <version>${asciidoctorj.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>${asciidoctorj.diagram.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+                        <version>${asciidoctorj.diagram.plantuml.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -79,7 +186,11 @@
                                     </includes>
                                 </resource>
                             </resources>
+                            <requires>
+                                <require>asciidoctor-diagram</require>
+                            </requires>
                             <attributes>
+                                <diagram-cachedir>${project.build.directory}/diagram-cache</diagram-cachedir>
                                 <source-highlighter>rouge</source-highlighter>
                                 <revnumber>${project.version}</revnumber>
                                 <revremark>Built with Maven</revremark>
@@ -100,6 +211,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <docs.output.directory>${docs.output.directory}</docs.output.directory>
+                        <docs.source.directory>${project.basedir}/src/docs/asciidoc</docs.source.directory>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

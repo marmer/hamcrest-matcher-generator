@@ -14,9 +14,13 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 
 
-**<Diagram or Table>**
+.System context
+[structurizr,target=context,format=svg,view=Context,alt="System context"]
+----
+include::../workspace.dsl[]
+----
 
-**<optionally: Explanation of external domain interfaces>**
+Test developers configure the types they need assertions for. Maintainers only appear through the release pipeline (see chapter 7).
 
 === Technical Context
 
@@ -24,8 +28,23 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 
 
-**<Diagram or Table>**
+[options="header",cols="2,3,3"]
+|===
+| Neighbour | Channel | Direction
 
-**<optionally: Explanation of technical interfaces>**
+| Java compiler (javac, KAPT)
+| Annotation processing API (`javax.annotation.processing`), with `Filer` for Java sources
+| The compiler invokes the processor; the processor writes sources.
 
-**<Mapping Input/Output to Channels>**
+| Kotlin (KAPT only)
+| Directory named by the processor option `kapt.kotlin.generated`
+| The processor writes Kotlin sources (see ADR 0004).
+
+| Hamcrest
+| The generated matchers and the runtime library extend `TypeSafeMatcher`.
+| Compile and test classpath of the user's project.
+
+| Maven Central
+| Maven coordinates
+| Users resolve the artifacts (see chapter 7).
+|===
