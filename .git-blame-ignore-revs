@@ -1,0 +1,2 @@
+# git blame ignores the commits listed here: one google-java-format (AOSP) and SPDX header reformat.
+# Enable it locally with: git config blame.ignoreRevsFile .git-blame-ignore-revs
