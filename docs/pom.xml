@@ -16,7 +16,7 @@
     <properties>
         <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
         <asciidoctorj.version>3.0.0</asciidoctorj.version>
-        <jsoup.version>1.18.3</jsoup.version>
+        <jsoup.version>1.23.2</jsoup.version>
         <!-- All Structurizr artifacts are updated together (ADR 0003): the rendering uses their jars as a CLI home. -->
         <structurizr.version>6.2.3</structurizr.version>
         <asciidoctorj.diagram.version>3.2.1</asciidoctorj.diagram.version>
