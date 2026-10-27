@@ -1,0 +1,5 @@
+
+Expected: Order with 2 property checks
+     but: byLine[OrderLine {sku "A-1", quantity <1>}]: expected "1st" but was "first"
+          byLine: missing key OrderLine {sku "C-3", quantity <5>} with "third"
+          byLine: unexpected key OrderLine {sku "B-2", quantity <2>} with "second"

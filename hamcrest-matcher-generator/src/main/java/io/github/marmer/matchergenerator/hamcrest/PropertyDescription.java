@@ -34,7 +34,7 @@ final class PropertyDescription extends StringDescription {
         return new PropertyDescription().appendValue(value).toString();
     }
 
-    private static boolean isGeneratedType(final @Nullable Object value) {
+    static boolean isGeneratedType(final @Nullable Object value) {
         return value != null && PropertyAccess.propertiesOfGeneratedType(value.getClass()) != null;
     }
 

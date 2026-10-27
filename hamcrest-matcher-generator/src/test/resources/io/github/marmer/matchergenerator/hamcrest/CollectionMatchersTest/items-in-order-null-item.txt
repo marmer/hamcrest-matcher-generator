@@ -1,0 +1,3 @@
+
+Expected: Order with 4 property checks
+     but: lineArray[1]: expected an OrderLine with sku "B-2", quantity <2> but was null

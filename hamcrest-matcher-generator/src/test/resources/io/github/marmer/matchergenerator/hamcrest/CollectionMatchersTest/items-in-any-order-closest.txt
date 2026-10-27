@@ -1,0 +1,3 @@
+
+Expected: Order with 4 property checks
+     but: lines: missing OrderLine {sku "B-2", quantity <3>}; closest OrderLine {sku "B-2", quantity <2>} differs in quantity: expected <3> but was <2>
