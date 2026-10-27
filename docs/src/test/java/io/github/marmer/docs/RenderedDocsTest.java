@@ -123,7 +123,7 @@ class RenderedDocsTest {
     @Test
     @DisplayName("The guide sidebar lists every guide page and marks the current one")
     void guideSidebarListsEveryGuidePageAndMarksTheCurrentOne() {
-        final long guidePages = pages.stream().filter(page -> Objects.requireNonNull(page.getParent()).endsWith("guide")).count();
+        final long guidePages = pages.stream().filter(page -> directoryOf(page).endsWith("guide")).count();
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
         final Element current = guidePage.selectFirst("nav.site-side-guide a[aria-current=page]");
         assertAll(
@@ -294,7 +294,14 @@ class RenderedDocsTest {
     }
 
     private static Path resolve(final Path page, final String relativePath) {
-        return Objects.requireNonNull(page.getParent()).resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8)).normalize();
+        return directoryOf(page).resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8)).normalize();
+    }
+
+    /**
+     * The directory of a page. Every page is written below the output directory, so it always has a parent.
+     */
+    private static Path directoryOf(final Path page) {
+        return Objects.requireNonNull(page.getParent());
     }
 
     private static boolean hasAnchor(final Document document, final String fragment) {
