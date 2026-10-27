@@ -87,6 +87,8 @@ class MatcherGenerator {
                         .addMethods(getPropertyHamcrestMatcherMethods())
                         .addMethods(getPropertyHamcrestMatcherResetMethods())
                         .addMethods(getPropertyEqualsMatcherMethods())
+                        .addMethods(getPropertyIgnoreMethods())
+                        .addMethod(getCheckingAllPropertiesMethod())
                         .addMethods(getMatcherMethods())
                         .addMethod(getApiInitializer())
                         .addTypes(getInnerMatchers());
@@ -162,6 +164,31 @@ class MatcherGenerator {
     /** Marks the type as nullable when JSpecify is available. Primitives cannot be annotated. */
     private TypeName nullable(final TypeName type) {
         return context.jspecifyAvailable() && !type.isPrimitive() ? type.annotated(NULLABLE) : type;
+    }
+
+    private List<MethodSpec> getPropertyIgnoreMethods() {
+        return PropertyModel.distinctByName(model.properties()).stream()
+                .map(
+                        property ->
+                                MethodSpec.methodBuilder("ignoring" + capitalized(property.name()))
+                                        .addModifiers(Modifier.PUBLIC)
+                                        .addStatement(
+                                                "$L.ignore($S)",
+                                                BUILDER_FIELD_NAME,
+                                                property.name())
+                                        .addStatement(RETURN_THIS)
+                                        .returns(getGeneratedTypeName())
+                                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private MethodSpec getCheckingAllPropertiesMethod() {
+        return MethodSpec.methodBuilder("checkingAllProperties")
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME)
+                .addStatement(RETURN_THIS)
+                .returns(getGeneratedTypeName())
+                .build();
     }
 
     private MethodSpec toEqualsMatcher(final PropertyModel property) {

@@ -75,6 +75,26 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?, ?>> impleme
     return this;
   }
 
+  public SimplePojoMatcher ignoringProperty() {
+    beanPropertyMatcher.ignore("property");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringNestedGenericProperty() {
+    beanPropertyMatcher.ignore("nestedGenericProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringWildcardProperty() {
+    beanPropertyMatcher.ignore("wildcardProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo<?, ?>> beanPropertyMatcher() {
     return beanPropertyMatcher;

@@ -36,6 +36,16 @@ public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> i
     return this;
   }
 
+  public ArgumentMatchersMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public ArgumentMatchersMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher() {
     return beanPropertyMatcher;

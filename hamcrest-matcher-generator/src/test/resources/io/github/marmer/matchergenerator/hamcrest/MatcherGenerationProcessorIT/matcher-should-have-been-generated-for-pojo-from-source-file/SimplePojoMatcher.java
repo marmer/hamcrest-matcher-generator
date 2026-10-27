@@ -85,6 +85,31 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
+  public SimplePojoMatcher ignoringSomeStringProperty() {
+    beanPropertyMatcher.ignore("someStringProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringSomePrimitiveBooleanProperty() {
+    beanPropertyMatcher.ignore("somePrimitiveBooleanProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringSomeNonePrimitiveBooleanProperty() {
+    beanPropertyMatcher.ignore("someNonePrimitiveBooleanProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SimplePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -151,6 +176,21 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       return this;
     }
 
+    public InnerStaticPojoMatcher ignoringInnerStaticPojoProperty() {
+      beanPropertyMatcher.ignore("innerStaticPojoProperty");
+      return this;
+    }
+
+    public InnerStaticPojoMatcher ignoringClass() {
+      beanPropertyMatcher.ignore("class");
+      return this;
+    }
+
+    public InnerStaticPojoMatcher checkingAllProperties() {
+      beanPropertyMatcher.checkingAllProperties();
+      return this;
+    }
+
     @Override
     public BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher() {
       return beanPropertyMatcher;
@@ -199,6 +239,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
 
       public InnerInnerStaticPojoMatcher withClass(final Class<?> value) {
         beanPropertyMatcher.with("class", Matchers.equalTo(value));
+        return this;
+      }
+
+      public InnerInnerStaticPojoMatcher ignoringClass() {
+        beanPropertyMatcher.ignore("class");
+        return this;
+      }
+
+      public InnerInnerStaticPojoMatcher checkingAllProperties() {
+        beanPropertyMatcher.checkingAllProperties();
         return this;
       }
 

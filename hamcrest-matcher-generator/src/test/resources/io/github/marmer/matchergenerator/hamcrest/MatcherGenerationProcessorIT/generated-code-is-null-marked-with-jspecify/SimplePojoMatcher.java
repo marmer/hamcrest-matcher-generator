@@ -184,6 +184,61 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     return this;
   }
 
+  public SimplePojoMatcher ignoringName() {
+    beanPropertyMatcher.ignore("name");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringNickname() {
+    beanPropertyMatcher.ignore("nickname");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringCount() {
+    beanPropertyMatcher.ignore("count");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringLimit() {
+    beanPropertyMatcher.ignore("limit");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringTags() {
+    beanPropertyMatcher.ignore("tags");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringParts() {
+    beanPropertyMatcher.ignore("parts");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringPayload() {
+    beanPropertyMatcher.ignore("payload");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringEntry() {
+    beanPropertyMatcher.ignore("entry");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringRequiredEntry() {
+    beanPropertyMatcher.ignore("requiredEntry");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SimplePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -246,6 +301,21 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
 
     public InnerMatcher withClass(final @Nullable Class<?> value) {
       beanPropertyMatcher.with("class", Matchers.equalTo(value));
+      return this;
+    }
+
+    public InnerMatcher ignoringInnerName() {
+      beanPropertyMatcher.ignore("innerName");
+      return this;
+    }
+
+    public InnerMatcher ignoringClass() {
+      beanPropertyMatcher.ignore("class");
+      return this;
+    }
+
+    public InnerMatcher checkingAllProperties() {
+      beanPropertyMatcher.checkingAllProperties();
       return this;
     }
 

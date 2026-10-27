@@ -36,6 +36,16 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
     return this;
   }
 
+  public SomeClassMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SomeClassMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SomeClass> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -83,6 +93,16 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
 
     public SomeNonStaticInnerClassMatcher withClass(final Class<?> value) {
       beanPropertyMatcher.with("class", Matchers.equalTo(value));
+      return this;
+    }
+
+    public SomeNonStaticInnerClassMatcher ignoringClass() {
+      beanPropertyMatcher.ignore("class");
+      return this;
+    }
+
+    public SomeNonStaticInnerClassMatcher checkingAllProperties() {
+      beanPropertyMatcher.checkingAllProperties();
       return this;
     }
 
