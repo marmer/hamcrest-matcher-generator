@@ -10,6 +10,9 @@ Rules (see docs/agents/domain.md, "Redundancy rules"):
   4. Every required check that docs/agents/wayfinding.md names ("required checks of the
      `development` ruleset pass (`Build`, ...)") is the name of a job in .github/workflows/,
      with `${{ matrix.role }}` expanded to each `role:` of the job's matrix.
+  5. Every backticked file name in CLAUDE.md ending in .java, .kt, .adoc, .yml or .xml exists somewhere in the
+     repository (target/ and .git/ excluded), and every backticked `io.github.marmer...` package exists as a
+     directory under some src/*/java.
 
 A missing GLOSSARY.md, docs/adr/ or required-checks list means there is nothing to check for that rule and it passes.
 
@@ -19,6 +22,7 @@ Usage:
 
 Exits 1 and prints one line per violation if any rule is broken, otherwise 0.
 """
+import os
 import re
 import sys
 from pathlib import Path
@@ -29,6 +33,7 @@ GLOSSARY_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc"
 DECISIONS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc"
 WAYFINDING_MD = "docs/agents/wayfinding.md"
 WORKFLOW_DIR = ".github/workflows"
+CLAUDE_MD = "CLAUDE.md"
 
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
@@ -36,6 +41,9 @@ PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
 REQUIRED_CHECKS = re.compile(r"required checks of the `development` ruleset pass \(([^)]*)\)")
 JOB_NAME = re.compile(r"^    name:\s*(.+?)\s*$")
 MATRIX_ROLE = re.compile(r"^\s*-?\s*role:\s*[\"']?([^\"'\s]+)[\"']?\s*$")
+BACKTICKED = re.compile(r"`([^`\n]+)`")
+FILE_NAME = re.compile(r"[\w.-]+\.(?:java|kt|adoc|yml|xml)")
+PACKAGE = re.compile(r"io\.github\.marmer(?:\.\w+)*")
 
 
 def read(path):
@@ -129,6 +137,32 @@ def check_required_checks(root, violations):
             violations.append(f"{WAYFINDING_MD}: required check '{check}' is not a job name in {WORKFLOW_DIR}/")
 
 
+def repository_files_and_packages(root):
+    """Return (file names, package names found as directories under src/*/java), skipping target/ and .git/."""
+    files, packages = set(), set()
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in ("target", ".git")]
+        files.update(filenames)
+        parts = Path(dirpath).relative_to(root).parts
+        for i in range(len(parts) - 2):
+            if parts[i] == "src" and parts[i + 2] == "java":
+                packages.add(".".join(parts[i + 3:]))
+    return files, packages
+
+
+def check_claude_md_references(root, violations):
+    text = read(root / CLAUDE_MD)
+    if not text:
+        return
+    files, packages = repository_files_and_packages(root)
+    for token in dict.fromkeys(BACKTICKED.findall(text)):
+        if FILE_NAME.fullmatch(token.rsplit("/", 1)[-1]):
+            if token.rsplit("/", 1)[-1] not in files:
+                violations.append(f"{CLAUDE_MD}: file '{token}' does not exist in the repository")
+        elif PACKAGE.fullmatch(token) and token not in packages:
+            violations.append(f"{CLAUDE_MD}: package '{token}' is not a directory under any src/*/java")
+
+
 def main():
     if len(sys.argv) > 2:
         sys.exit(__doc__)
@@ -137,6 +171,7 @@ def main():
     check_glossary(root, violations)
     check_adrs(root, violations)
     check_required_checks(root, violations)
+    check_claude_md_references(root, violations)
     for violation in violations:
         print(violation)
     if violations:

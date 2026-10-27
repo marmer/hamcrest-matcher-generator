@@ -36,10 +36,7 @@ The published modules are `matcher-generator-annotations` (`@GenerateMatchers` a
 
 ## Architecture: Generation Flow
 
-1. Compiler detects `@GenerateMatchers` (CLASS retention) or the deprecated `@MatcherConfiguration` (SOURCE retention) on a type (both in the `annotations` module)
-2. `MatcherGenerationProcessor.java` (core) — APT entry point, delegates immediately to the worker and loads every `GeneratorBackend` via `ServiceLoader`
-3. `MatcherGenerationProcessorWorker.java` (core) — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, builds an immutable `TypeModel` per type with `TypeModelFactory`, runs every backend on it and writes the returned `GeneratedSource` (Java via `createSourceFile`, Kotlin written into the directory of the `kapt.kotlin.generated` processor option)
-4. `HamcrestGeneratorBackend.java` / `MatcherGenerator.java` (Hamcrest backend, package `io.github.marmer.matchergenerator.hamcrest`) — builds a `<TypeName>Matcher` class via JavaPoet from the `TypeModel`; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
+The round-by-round flow (annotation, processor, worker, `TypeModel`, backends, written sources) is arc42 chapter 06, `docs/src/docs/asciidoc/architecture/_chapters/06_runtime_view.adoc`; read it there. The Hamcrest backend lives in package `io.github.marmer.matchergenerator.hamcrest`; its generated `<TypeName>Matcher` extends `TypeSafeMatcher<T>` and wraps a `BeanPropertyMatcher<T>`.
 
 **Generated matcher API** (per property `foo`):
 ```java
@@ -51,13 +48,9 @@ isSomePojo()
 
 ## KAPT Configuration (Kotlin end-to-end modules)
 
-Both `endtoend-mixed-kotlin-java` and `endtoend-plain-kotlin` run the annotation processor via KAPT:
+`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor via the `kotlin-maven-plugin` `test-kapt` execution, which writes matchers into `target/generated-sources/kapt/test/`. At `process-test-sources` a `maven-antrun-plugin` `move` relocates them to `target/generated-test-sources/test-annotations`, the compiler plugin's generated-test-sources directory, so javac compiles them; the `test-compile` Kotlin execution lists the kapt directories in `sourceDirs`. Neither pom uses `build-helper-maven-plugin`; read the poms before changing this flow.
 
-- `test-kapt` execution generates `.java` matcher files into `target/generated-sources/kapt/test/`
-- `build-helper-maven-plugin:add-test-source` registers that directory so **javac** compiles the generated matchers
-- `test-compile` kotlin execution includes that dir in `sourceDirs` for Kotlin resolution
-
-The flow must be: KAPT generates → `add-test-source` registers → javac compiles. Moving files with antrun after javac registration breaks this ordering.
+Open gap (issue #110): in the mixed module javac compiles only the KAPT matchers that Java tests reference, so a Kotlin-only test reference fails with `NoClassDefFoundError`.
 
 ## Testing Approach
 
@@ -75,7 +68,7 @@ End-to-end modules are the final validation layer: they apply `@GenerateMatchers
 - **Unresolvable names fail the build for `@GenerateMatchers`**: one error per name. The deprecated `@MatcherConfiguration` only warns, as in 5.x, so keep configured names in `@GenerateMatchers` resolvable. Set `-Amatchergenerator.verbose` to see one note per skipped property with its reason.
 - **`docs` module needs JDK 21+**: it is only built when the root profile `docs` (`<jdk>[21,)</jdk>`) is active, so a JDK 17 build skips it silently.
 - **JUnit Platform version mismatch**: Surefire 3.5.2 needs `junit-platform-launcher:1.12.1` explicitly on the classpath — already in root pom.
-- **KAPT generated sources not found**: use `build-helper-maven-plugin:add-test-source` to register `target/generated-sources/kapt/test` *before* the compile phase; do not use antrun to move files.
+- **KAPT generated sources not found**: the Kotlin end-to-end modules move `target/generated-sources/kapt/test` to `target/generated-test-sources/test-annotations` with antrun at `process-test-sources`, before javac runs (see KAPT Configuration); keep that ordering, and see issue #110 for the Kotlin-only reference gap.
 - **JDK 25 implicit annotation processing disabled**: `@AutoService` was removed from `MatcherGenerationProcessor.java`; a manual `META-INF/services/javax.annotation.processing.Processor` resource is used instead. The `endtoend-plain-java-minimal` module uses `<annotationProcessorPaths>` to declare the AP explicitly.
 - **Lombok on newer JDKs**: each JDK needs a Lombok release that supports it (JDK 25 ≥ 1.18.44, JDK 27 ≥ 1.18.48); an unsupported JDK fails in javac with `ExceptionInInitializerError: com.sun.tools.javac.tree.EndPosTable`.
 - **Agent edits to `.claude/settings*.json` are blocked** in auto mode (Self-Modification): give the owner the exact snippet to add instead of loading `update-config`.
