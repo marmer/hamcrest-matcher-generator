@@ -10,7 +10,8 @@ the following happens:
 
 . `MatcherGenerationProcessor` hands the round to `MatcherGenerationProcessorWorker`, which resolves the configured
 class and package names to types. Names that match nothing are a compiler error for `@GenerateMatchers` and a warning
-for the 5.x alias, which keeps 5.x configurations compiling. Types that carry the processor's own `@Generated` marker
+for the 5.x alias, which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types
+they name by class or package, and an `exclude` entry that matches no configured type is a warning. Types that carry the processor's own `@Generated` marker
 are skipped with a note.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A type without properties
 produces a compiler warning. Each skipped method is reported with its reason, but only when the processor option
