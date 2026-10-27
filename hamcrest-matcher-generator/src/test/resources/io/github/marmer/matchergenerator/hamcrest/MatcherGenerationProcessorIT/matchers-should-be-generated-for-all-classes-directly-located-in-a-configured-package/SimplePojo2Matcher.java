@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -13,11 +14,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {
+public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;
 
   public SimplePojo2Matcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo2>(SimplePojo2.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo2>(SimplePojo2.class, "class");
   }
 
   public SimplePojo2Matcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -33,6 +34,11 @@ public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> {
   public SimplePojo2Matcher withClass(final Class<?> value) {
     beanPropertyMatcher.with("class", Matchers.equalTo(value));
     return this;
+  }
+
+  @Override
+  public BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override

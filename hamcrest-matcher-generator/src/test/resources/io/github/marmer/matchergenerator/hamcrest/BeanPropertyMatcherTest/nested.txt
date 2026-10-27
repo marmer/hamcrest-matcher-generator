@@ -1,0 +1,4 @@
+
+Expected: Order with 3 property checks
+     but: email: expected a string starting with "bob@" but was "ada@example.org"
+          customer.address.city: expected "Berlin" but was "Paris"

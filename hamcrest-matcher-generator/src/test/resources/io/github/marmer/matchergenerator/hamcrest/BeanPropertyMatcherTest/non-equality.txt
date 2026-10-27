@@ -1,0 +1,5 @@
+
+Expected: Order with 3 property checks
+     but: email: expected a string starting with "bob@" but was "ada@example.org"
+          customer: expected null but was Customer {name "Ada", address Address {city "Paris"}}
+          id: expected not "o-1" but was "o-1"

@@ -1,6 +1,7 @@
 package org.mockito;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -13,11 +14,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {
+public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;
 
   public ArgumentMatchersMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class, "class");
   }
 
   public ArgumentMatchersMatcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -33,6 +34,11 @@ public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> {
   public ArgumentMatchersMatcher withClass(final Class<?> value) {
     beanPropertyMatcher.with("class", Matchers.equalTo(value));
     return this;
+  }
+
+  @Override
+  public BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override

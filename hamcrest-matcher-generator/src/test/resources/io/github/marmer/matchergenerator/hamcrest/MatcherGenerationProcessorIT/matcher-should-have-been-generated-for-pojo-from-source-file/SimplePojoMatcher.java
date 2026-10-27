@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Override;
@@ -15,11 +16,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
+public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, "someStringProperty", "somePrimitiveBooleanProperty", "someNonePrimitiveBooleanProperty", "class");
   }
 
   public SimplePojoMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
@@ -85,6 +86,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
   }
 
   @Override
+  public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
+    return beanPropertyMatcher;
+  }
+
+  @Override
   public void describeTo(final Description description) {
     beanPropertyMatcher.describeTo(description);
   }
@@ -107,11 +113,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
       value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
       date = "2020-01-01T00:00"
   )
-  public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> {
+  public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;
 
     public InnerStaticPojoMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class);
+      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class, "innerStaticPojoProperty", "class");
     }
 
     public InnerStaticPojoMatcher withInnerStaticPojoProperty(
@@ -146,6 +152,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
     }
 
     @Override
+    public BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher() {
+      return beanPropertyMatcher;
+    }
+
+    @Override
     public void describeTo(final Description description) {
       beanPropertyMatcher.describeTo(description);
     }
@@ -169,11 +180,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
         value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
         date = "2020-01-01T00:00"
     )
-    public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> {
+    public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> implements GeneratedBeanMatcher {
       private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
 
       public InnerInnerStaticPojoMatcher() {
-        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class);
+        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class, "class");
       }
 
       public InnerInnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -189,6 +200,12 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
       public InnerInnerStaticPojoMatcher withClass(final Class<?> value) {
         beanPropertyMatcher.with("class", Matchers.equalTo(value));
         return this;
+      }
+
+      @Override
+      public BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher(
+          ) {
+        return beanPropertyMatcher;
       }
 
       @Override

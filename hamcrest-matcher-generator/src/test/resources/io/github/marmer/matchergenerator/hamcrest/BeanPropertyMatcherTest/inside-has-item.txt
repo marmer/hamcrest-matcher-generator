@@ -1,0 +1,3 @@
+
+Expected: Order with 1 property check
+     but: lines: expected a collection containing OrderLine {sku "X-9", quantity <3>} but mismatches were: [OrderLine {sku: expected "X-9" but was "A-1", quantity: expected <3> but was <1>}, OrderLine {sku: expected "X-9" but was "B-2", quantity: expected <3> but was <2>}]

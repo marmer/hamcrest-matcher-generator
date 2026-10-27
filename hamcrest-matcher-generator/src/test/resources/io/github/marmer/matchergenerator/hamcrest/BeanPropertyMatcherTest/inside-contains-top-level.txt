@@ -1,0 +1,3 @@
+
+Expected: iterable containing [OrderLine {sku "A-1", quantity <1>}, OrderLine {sku "B-2", quantity <3>}]
+     but: item 1: OrderLine {quantity: expected <3> but was <2>}

@@ -1,0 +1,3 @@
+
+Expected: Order with 1 property check
+     but: linesBySku: expected map containing ["bySku"->OrderLine {sku "X-9", quantity <3>}] but map was [<bySku=OrderLine {sku "B-2", quantity <2>}>]
