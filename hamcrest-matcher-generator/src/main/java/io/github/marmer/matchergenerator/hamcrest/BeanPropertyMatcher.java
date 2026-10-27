@@ -5,6 +5,8 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,8 +33,21 @@ import org.jspecify.annotations.Nullable;
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
 
+    /**
+     * The items being checked by a matcher on this thread, by identity. A pair of matcher and item
+     * met again on its way down counts as equal, so cyclic graphs terminate.
+     */
+    private static final ThreadLocal<Map<BeanPropertyMatcher<?>, Set<Object>>> CHECKING =
+            ThreadLocal.withInitial(IdentityHashMap::new);
+
+    /** The matchers being described on this thread, which a cyclic matcher meets again. */
+    private static final ThreadLocal<Set<BeanPropertyMatcher<?>>> DESCRIBING =
+            ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>()));
+
     @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> propertyChecks = new LinkedHashMap<>();
+
+    private final Set<String> presetProperties = new LinkedHashSet<>();
 
     private final Set<String> ignoredProperties = new LinkedHashSet<>();
 
@@ -90,6 +105,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     public BeanPropertyMatcher<T> with(final String propertyName, final Matcher<?> matcher) {
+        dropPreset(propertyName);
         propertyChecks.computeIfAbsent(propertyName, key -> new ArrayList<>()).add(matcher);
         return this;
     }
@@ -99,10 +115,22 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     /**
+     * Presets the check of a property, e.g. from a reference object. A preset is replaced by the
+     * next {@link #with(String, Matcher)} for the property and dropped by {@link #reset(String)}
+     * and {@link #ignore(String)}.
+     */
+    public BeanPropertyMatcher<T> preset(final String propertyName, final Matcher<?> matcher) {
+        propertyChecks.put(propertyName, new ArrayList<>(List.of(matcher)));
+        presetProperties.add(propertyName);
+        return this;
+    }
+
+    /**
      * Consciously excludes a property from the completeness check. Ignoring does not check the
      * property.
      */
     public BeanPropertyMatcher<T> ignore(final String propertyName) {
+        dropPreset(propertyName);
         ignoredProperties.add(propertyName);
         return this;
     }
@@ -118,7 +146,14 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     public void reset(final String propertyName) {
         propertyChecks.remove(propertyName);
+        presetProperties.remove(propertyName);
         ignoredProperties.remove(propertyName);
+    }
+
+    private void dropPreset(final String propertyName) {
+        if (presetProperties.remove(propertyName)) {
+            propertyChecks.remove(propertyName);
+        }
     }
 
     @Override
@@ -159,6 +194,25 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      * completeness check are added to the unaddressed paths of the report, not to its failures.
      */
     void collectFailures(final Object item, final String prefix, final MismatchReport report) {
+        final Set<Object> items =
+                CHECKING.get()
+                        .computeIfAbsent(
+                                this, key -> Collections.newSetFromMap(new IdentityHashMap<>()));
+        if (!items.add(item)) {
+            return;
+        }
+        try {
+            collectFailuresOnce(item, prefix, report);
+        } finally {
+            items.remove(item);
+            if (items.isEmpty()) {
+                CHECKING.get().remove(this);
+            }
+        }
+    }
+
+    private void collectFailuresOnce(
+            final Object item, final String prefix, final MismatchReport report) {
         if (checkingAllProperties) {
             propertyNames.stream()
                     .filter(name -> !PropertyAccess.isDeclaredByObject(name))
@@ -200,12 +254,19 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     void collectChecks(final String prefix, final List<PathWalk.Check> checks) {
-        propertyChecks.forEach(
-                (name, matchers) -> {
-                    for (final Matcher<?> matcher : matchers) {
-                        PathWalk.collectValueChecks(prefix + name, matcher, checks);
-                    }
-                });
+        if (!DESCRIBING.get().add(this)) {
+            return;
+        }
+        try {
+            propertyChecks.forEach(
+                    (name, matchers) -> {
+                        for (final Matcher<?> matcher : matchers) {
+                            PathWalk.collectValueChecks(prefix + name, matcher, checks);
+                        }
+                    });
+        } finally {
+            DESCRIBING.get().remove(this);
+        }
     }
 
     private static final class PropertyExists extends BaseMatcher<Object> {

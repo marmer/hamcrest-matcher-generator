@@ -4,7 +4,9 @@
  */
 package io.github.marmer.matchergenerator.core.spi;
 
+import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -14,12 +16,26 @@ import java.util.Objects;
  * @param generationTime the time of generation
  * @param jspecifyAvailable whether {@code org.jspecify.annotations.NullMarked} resolves at compile
  *     time, which is the condition for emitting JSpecify annotations
+ * @param generatedTypes the models of all types generated in this run, whatever configuration asked
+ *     for them. A backend learns from them which types get generated code, e.g. to refer to it.
  */
 public record GenerationContext(
-        String generatorName, LocalDateTime generationTime, boolean jspecifyAvailable) {
+        String generatorName,
+        LocalDateTime generationTime,
+        boolean jspecifyAvailable,
+        List<TypeModel> generatedTypes) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
         Objects.requireNonNull(generationTime, "generationTime");
+        generatedTypes = List.copyOf(generatedTypes);
+    }
+
+    /** A context that knows no other generated types. */
+    public GenerationContext(
+            final String generatorName,
+            final LocalDateTime generationTime,
+            final boolean jspecifyAvailable) {
+        this(generatorName, generationTime, jspecifyAvailable, List.of());
     }
 }

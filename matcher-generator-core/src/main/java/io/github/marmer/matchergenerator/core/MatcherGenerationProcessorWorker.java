@@ -133,11 +133,13 @@ public class MatcherGenerationProcessorWorker {
                                     GENERATED_OUTPUT_ANNOTATIONS.contains(
                                             annotation.getQualifiedName().toString()));
         }
-        configurationElements.forEach(this::generateMatchers);
+        final List<PlannedType> planned = new ArrayList<>();
+        configurationElements.forEach(element -> planned.addAll(planMatchers(element)));
+        generate(planned);
         return true;
     }
 
-    private void generateMatchers(final Element configurationElement) {
+    private List<PlannedType> planMatchers(final Element configurationElement) {
         final List<AnnotationMirror> mirrors = getConfigurationMirrors(configurationElement);
         if (mirrors.size() != 1) {
             processingEnv
@@ -146,7 +148,7 @@ public class MatcherGenerationProcessorWorker {
                             Diagnostic.Kind.ERROR,
                             "Use either @GenerateMatchers or @MatcherConfiguration on a type, not both",
                             configurationElement);
-            return;
+            return List.of();
         }
         final AnnotationMirror configurationMirror = mirrors.get(0);
         final Map<String, AnnotationValue> exclusions =
@@ -157,22 +159,29 @@ public class MatcherGenerationProcessorWorker {
         warnAboutUnmatchedExclusions(
                 typesByGeneratedType, configurationElement, configurationMirror, exclusions);
         final Set<String> namedTypes = namedTypes(configurationMirror);
+        final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
                 .forEach(
                         (typeElement, configuredTypes) -> {
                             if (isSelfGenerated(typeElement)) {
                                 printSkipNoteBecauseOfSelfGenerationFor(typeElement);
                             } else {
-                                generateFor(
-                                        typeElement,
-                                        configuredTypes,
-                                        namedTypes,
-                                        configurationElement,
-                                        configurationMirror,
-                                        excluded);
+                                planned.add(
+                                        planFor(
+                                                typeElement,
+                                                configuredTypes,
+                                                namedTypes,
+                                                configurationElement,
+                                                configurationMirror,
+                                                excluded));
                             }
                         });
+        return planned;
     }
+
+    /** A type to generate for, modelled but not yet written. */
+    private record PlannedType(
+            TypeElement typeElement, TypeModel model, Element configurationElement) {}
 
     /**
      * The qualified names of the types the configuration names explicitly. Names that are no type,
@@ -186,7 +195,7 @@ public class MatcherGenerationProcessorWorker {
                 .collect(Collectors.toSet());
     }
 
-    private void generateFor(
+    private PlannedType planFor(
             final TypeElement typeElement,
             final Set<TypeElement> configuredTypes,
             final Set<String> namedTypes,
@@ -198,15 +207,29 @@ public class MatcherGenerationProcessorWorker {
                         .create(typeElement);
         configuredTypes.forEach(
                 configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
+        return new PlannedType(typeElement, model, configurationElement);
+    }
+
+    /**
+     * Writes the planned types. Every backend learns all of them first, so that generated code can
+     * refer to the code generated for another type, whichever configuration asked for it.
+     */
+    private void generate(final List<PlannedType> planned) {
         final GenerationContext context =
-                new GenerationContext(generatorName, timeProvider.get(), isJspecifyAvailable());
-        backends.forEach(
-                backend ->
-                        write(
-                                backend,
-                                backend.generate(model, context),
-                                typeElement,
-                                configurationElement));
+                new GenerationContext(
+                        generatorName,
+                        timeProvider.get(),
+                        isJspecifyAvailable(),
+                        planned.stream().map(PlannedType::model).collect(Collectors.toList()));
+        planned.forEach(
+                type ->
+                        backends.forEach(
+                                backend ->
+                                        write(
+                                                backend,
+                                                backend.generate(type.model(), context),
+                                                type.typeElement(),
+                                                type.configurationElement())));
     }
 
     /**

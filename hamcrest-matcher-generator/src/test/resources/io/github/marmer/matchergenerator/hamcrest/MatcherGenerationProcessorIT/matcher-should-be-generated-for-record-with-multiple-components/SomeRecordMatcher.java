@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Override;
@@ -86,6 +87,16 @@ public class SomeRecordMatcher extends TypeSafeMatcher<SomeRecord> implements Ge
   public SomeRecordMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SomeRecordMatcher isSomeRecordLike(final SomeRecord reference) {
+    return ReferenceMatching.matcherFor(reference, SomeRecordMatcher.class, SomeRecordMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SomeRecord reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("name", ReferenceMatching.value(reference.name()));
+    beanPropertyMatcher.preset("age", ReferenceMatching.value(reference.age()));
   }
 
   @Override

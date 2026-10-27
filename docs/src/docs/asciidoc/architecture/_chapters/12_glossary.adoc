@@ -32,7 +32,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.
 
 |Reference object
-|An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step.
+|An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step with `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and uses `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`. A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
 
 |Property path
 |The route from the asserted object to the value that was checked, written with dots between property names, `[index]` for list items and `[key]` for map entries. Mismatch messages use it to say exactly which value differs, for example `customer.address.city` or `lines[1].quantity`.

@@ -2,6 +2,7 @@ package my.base.pck.some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
 import org.hamcrest.Description;
@@ -22,6 +23,14 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
   public SomePojoMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SomePojoMatcher isSomePojoLike(final SomePojo reference) {
+    return ReferenceMatching.matcherFor(reference, SomePojoMatcher.class, SomePojoMatcher::new, matcher -> matcher.presetFrom());
+  }
+
+  private void presetFrom() {
+    beanPropertyMatcher.checkingAllProperties();
   }
 
   @Override
@@ -62,6 +71,15 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
     public InnerInterfaceMatcher checkingAllProperties() {
       beanPropertyMatcher.checkingAllProperties();
       return this;
+    }
+
+    public static InnerInterfaceMatcher isInnerInterfaceLike(
+        final SomePojo.InnerInterface reference) {
+      return ReferenceMatching.matcherFor(reference, InnerInterfaceMatcher.class, InnerInterfaceMatcher::new, matcher -> matcher.presetFrom());
+    }
+
+    private void presetFrom() {
+      beanPropertyMatcher.checkingAllProperties();
     }
 
     @Override

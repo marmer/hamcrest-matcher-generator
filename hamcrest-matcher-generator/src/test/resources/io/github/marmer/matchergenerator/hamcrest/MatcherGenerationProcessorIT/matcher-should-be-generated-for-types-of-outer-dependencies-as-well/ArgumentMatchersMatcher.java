@@ -2,6 +2,7 @@ package org.mockito;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -44,6 +45,14 @@ public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> i
   public ArgumentMatchersMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static ArgumentMatchersMatcher isArgumentMatchersLike(final ArgumentMatchers reference) {
+    return ReferenceMatching.matcherFor(reference, ArgumentMatchersMatcher.class, ArgumentMatchersMatcher::new, matcher -> matcher.presetFrom());
+  }
+
+  private void presetFrom() {
+    beanPropertyMatcher.checkingAllProperties();
   }
 
   @Override

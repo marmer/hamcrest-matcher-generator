@@ -1,0 +1,5 @@
+
+Expected: Node with 19 property checks, every property checked or ignored
+     but: byName["k"].name: expected "c" but was "d"
+          peers: missing Node {name "p", parent null, children no items, byName an empty map, peers no items, tags <[]>, siblings no items}; closest Node {name "q", parent null, children <[]>, byName <{}>, peers <[]>, tags <[]>, siblings []} differs in name: expected "p" but was "q"
+          siblings[0].name: expected "s" but was "z"

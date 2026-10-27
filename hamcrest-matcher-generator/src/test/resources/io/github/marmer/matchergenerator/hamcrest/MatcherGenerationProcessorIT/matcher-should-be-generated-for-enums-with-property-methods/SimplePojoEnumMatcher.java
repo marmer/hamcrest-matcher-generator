@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import java.lang.String;
@@ -85,6 +86,16 @@ public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> imple
   public SimplePojoEnumMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SimplePojoEnumMatcher isSimplePojoEnumLike(final SimplePojoEnum reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoEnumMatcher.class, SimplePojoEnumMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojoEnum reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("someStringProperty", ReferenceMatching.value(reference.getSomeStringProperty()));
+    beanPropertyMatcher.preset("declaringClass", ReferenceMatching.value(reference.getDeclaringClass()));
   }
 
   @Override

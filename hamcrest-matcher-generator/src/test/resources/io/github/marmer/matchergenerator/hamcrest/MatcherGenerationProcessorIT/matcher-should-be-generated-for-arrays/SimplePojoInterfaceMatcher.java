@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Override;
 import java.lang.String;
 import javax.annotation.processing.Generated;
@@ -128,6 +129,20 @@ public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterf
   public SimplePojoInterfaceMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SimplePojoInterfaceMatcher isSimplePojoInterfaceLike(
+      final SimplePojoInterface reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoInterfaceMatcher.class, SimplePojoInterfaceMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojoInterface reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("someStringArray", ReferenceMatching.value(reference.getSomeStringArray()));
+    beanPropertyMatcher.preset("someMultidimensionalStringArray", ReferenceMatching.value(reference.getSomeMultidimensionalStringArray()));
+    beanPropertyMatcher.preset("someInnerTypeArray", ReferenceMatching.value(reference.getSomeInnerTypeArray()));
+    beanPropertyMatcher.preset("somePrimitiveArray", ReferenceMatching.value(reference.getSomePrimitiveArray()));
+    beanPropertyMatcher.preset("someMultidimensionalPrimitiveArray", ReferenceMatching.value(reference.getSomeMultidimensionalPrimitiveArray()));
   }
 
   @Override

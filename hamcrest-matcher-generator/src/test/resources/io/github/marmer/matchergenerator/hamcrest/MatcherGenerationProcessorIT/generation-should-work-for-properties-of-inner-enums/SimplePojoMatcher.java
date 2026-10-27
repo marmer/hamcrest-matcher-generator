@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -47,6 +48,15 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojo reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("someProperty", ReferenceMatching.value(reference.getSomeProperty()));
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -85,6 +95,14 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     public InnerTypeMatcher checkingAllProperties() {
       beanPropertyMatcher.checkingAllProperties();
       return this;
+    }
+
+    public static InnerTypeMatcher isInnerTypeLike(final SimplePojo.InnerType reference) {
+      return ReferenceMatching.matcherFor(reference, InnerTypeMatcher.class, InnerTypeMatcher::new, matcher -> matcher.presetFrom());
+    }
+
+    private void presetFrom() {
+      beanPropertyMatcher.checkingAllProperties();
     }
 
     @Override
@@ -166,6 +184,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       public InnerEnumMatcher checkingAllProperties() {
         beanPropertyMatcher.checkingAllProperties();
         return this;
+      }
+
+      public static InnerEnumMatcher isInnerEnumLike(
+          final SimplePojo.InnerType.InnerEnum reference) {
+        return ReferenceMatching.matcherFor(reference, InnerEnumMatcher.class, InnerEnumMatcher::new, matcher -> matcher.presetFrom(reference));
+      }
+
+      private void presetFrom(final SimplePojo.InnerType.InnerEnum reference) {
+        beanPropertyMatcher.checkingAllProperties();
+        beanPropertyMatcher.preset("declaringClass", ReferenceMatching.value(reference.getDeclaringClass()));
       }
 
       @Override

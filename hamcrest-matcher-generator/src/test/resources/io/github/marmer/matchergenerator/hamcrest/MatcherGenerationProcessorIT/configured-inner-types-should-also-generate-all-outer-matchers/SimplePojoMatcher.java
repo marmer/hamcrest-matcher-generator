@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
 import org.hamcrest.Description;
@@ -21,6 +22,14 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   public SimplePojoMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom());
+  }
+
+  private void presetFrom() {
+    beanPropertyMatcher.checkingAllProperties();
   }
 
   @Override
@@ -63,6 +72,14 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       return this;
     }
 
+    public static InnerTypeMatcher isInnerTypeLike(final SimplePojo.InnerType reference) {
+      return ReferenceMatching.matcherFor(reference, InnerTypeMatcher.class, InnerTypeMatcher::new, matcher -> matcher.presetFrom());
+    }
+
+    private void presetFrom() {
+      beanPropertyMatcher.checkingAllProperties();
+    }
+
     @Override
     public BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher() {
       return beanPropertyMatcher;
@@ -102,6 +119,15 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       public InnerInnerTypeMatcher checkingAllProperties() {
         beanPropertyMatcher.checkingAllProperties();
         return this;
+      }
+
+      public static InnerInnerTypeMatcher isInnerInnerTypeLike(
+          final SimplePojo.InnerType.InnerInnerType reference) {
+        return ReferenceMatching.matcherFor(reference, InnerInnerTypeMatcher.class, InnerInnerTypeMatcher::new, matcher -> matcher.presetFrom());
+      }
+
+      private void presetFrom() {
+        beanPropertyMatcher.checkingAllProperties();
       }
 
       @Override

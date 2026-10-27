@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import java.lang.String;
@@ -85,6 +86,16 @@ public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> implement
   public PersonRecordMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static PersonRecordMatcher isPersonRecordLike(final PersonRecord reference) {
+    return ReferenceMatching.matcherFor(reference, PersonRecordMatcher.class, PersonRecordMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final PersonRecord reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("firstName", ReferenceMatching.value(reference.firstName()));
+    beanPropertyMatcher.preset("lastName", ReferenceMatching.value(reference.lastName()));
   }
 
   @Override

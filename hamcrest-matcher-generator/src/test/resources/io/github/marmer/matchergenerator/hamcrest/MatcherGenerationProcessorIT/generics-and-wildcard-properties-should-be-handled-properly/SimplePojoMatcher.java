@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Object;
 import java.lang.Override;
 import java.util.List;
@@ -93,6 +94,17 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?, ?>> impleme
   public SimplePojoMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo<?, ?> reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojo<?, ?> reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("property", ReferenceMatching.value(reference.getProperty()));
+    beanPropertyMatcher.preset("nestedGenericProperty", ReferenceMatching.value(reference.getNestedGenericProperty()));
+    beanPropertyMatcher.preset("wildcardProperty", ReferenceMatching.value(reference.getWildcardProperty()));
   }
 
   @Override

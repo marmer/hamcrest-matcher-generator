@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Override;
@@ -110,6 +111,17 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojo reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("someStringProperty", ReferenceMatching.value(reference.getSomeStringProperty()));
+    beanPropertyMatcher.preset("somePrimitiveBooleanProperty", ReferenceMatching.value(reference.isSomePrimitiveBooleanProperty()));
+    beanPropertyMatcher.preset("someNonePrimitiveBooleanProperty", ReferenceMatching.value(reference.getSomeNonePrimitiveBooleanProperty()));
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -191,6 +203,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       return this;
     }
 
+    public static InnerStaticPojoMatcher isInnerStaticPojoLike(
+        final SimplePojo.InnerStaticPojo reference) {
+      return ReferenceMatching.matcherFor(reference, InnerStaticPojoMatcher.class, InnerStaticPojoMatcher::new, matcher -> matcher.presetFrom(reference));
+    }
+
+    private void presetFrom(final SimplePojo.InnerStaticPojo reference) {
+      beanPropertyMatcher.checkingAllProperties();
+      beanPropertyMatcher.preset("innerStaticPojoProperty", ReferenceMatching.value(reference.getInnerStaticPojoProperty()));
+    }
+
     @Override
     public BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher() {
       return beanPropertyMatcher;
@@ -250,6 +272,15 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       public InnerInnerStaticPojoMatcher checkingAllProperties() {
         beanPropertyMatcher.checkingAllProperties();
         return this;
+      }
+
+      public static InnerInnerStaticPojoMatcher isInnerInnerStaticPojoLike(
+          final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo reference) {
+        return ReferenceMatching.matcherFor(reference, InnerInnerStaticPojoMatcher.class, InnerInnerStaticPojoMatcher::new, matcher -> matcher.presetFrom());
+      }
+
+      private void presetFrom() {
+        beanPropertyMatcher.checkingAllProperties();
       }
 
       @Override

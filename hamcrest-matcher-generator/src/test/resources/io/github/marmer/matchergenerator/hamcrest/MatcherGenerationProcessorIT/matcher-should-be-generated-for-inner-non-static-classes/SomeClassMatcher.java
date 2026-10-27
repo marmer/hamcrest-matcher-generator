@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -44,6 +45,14 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
   public SomeClassMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SomeClassMatcher isSomeClassLike(final SomeClass reference) {
+    return ReferenceMatching.matcherFor(reference, SomeClassMatcher.class, SomeClassMatcher::new, matcher -> matcher.presetFrom());
+  }
+
+  private void presetFrom() {
+    beanPropertyMatcher.checkingAllProperties();
   }
 
   @Override
@@ -104,6 +113,15 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
     public SomeNonStaticInnerClassMatcher checkingAllProperties() {
       beanPropertyMatcher.checkingAllProperties();
       return this;
+    }
+
+    public static SomeNonStaticInnerClassMatcher isSomeNonStaticInnerClassLike(
+        final SomeClass.SomeNonStaticInnerClass reference) {
+      return ReferenceMatching.matcherFor(reference, SomeNonStaticInnerClassMatcher.class, SomeNonStaticInnerClassMatcher::new, matcher -> matcher.presetFrom());
+    }
+
+    private void presetFrom() {
+      beanPropertyMatcher.checkingAllProperties();
     }
 
     @Override
