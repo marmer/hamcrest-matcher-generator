@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>matcher-generator-parent</artifactId>
+        <version>5.1.0</version>
+    </parent>
+
+    <artifactId>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</artifactId>
+    <version>5.1.0</version>
+    <packaging>pom</packaging>
+    <name>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</name>
+    <description>Runs the frozen 5.x compatibility suite as a consumer build (see CLAUDE.md). Never published.</description>
+
+    <properties>
+        <!-- -DskipTests=true on the outer build compiles the suite without running it; the outer build then did not
+            resolve the Surefire provider, which the isolated build may not fetch from the network. -->
+        <skipTests>false</skipTests>
+        <!-- 3.8.1, the version of the other modules, does not follow the relocation in annotationProcessorPaths. The
+            suite is built with a version that does, the way a current 5.x user's build would. -->
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    </properties>
+
+    <!-- The runner only orders itself after the modules whose artifacts the suite consumes. invoker:install puts these
+        and their parent into an isolated local repository, where the suite resolves the relocation POMs like a 5.x user
+        would. Inside the reactor the relocation modules have no jar, which is why the suite is not a reactor module. -->
+    <dependencies>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Resolves that compiler plugin into the outer local repository, the only remote of the isolated build. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>resolve-compiler-plugin-for-suite</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>help</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- The suite's RelocationPomTest reads the relocation POMs from sibling directories of the module. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>provide-relocation-poms-beside-suite</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/it</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>hamcrest-matcher-generator-dependencies/pom.xml</include>
+                                        <include>hamcrest-matcher-generator-annotationprocessor/pom.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>3.9.1</version>
+                <configuration>
+                    <projectsDirectory>${project.basedir}/../hamcrest-matcher-generator-endtoend-5x-compatibility</projectsDirectory>
+                    <pomIncludes>
+                        <pomInclude>pom.xml</pomInclude>
+                    </pomIncludes>
+                    <cloneProjectsTo>${project.build.directory}/it/hamcrest-matcher-generator-endtoend-5x-compatibility</cloneProjectsTo>
+                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                    <!-- The outer local repository serves as the only remote, so the suite resolves nothing from the network. -->
+                    <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+                    <goals>
+                        <goal>verify</goal>
+                    </goals>
+                    <properties>
+                        <skipTests>${skipTests}</skipTests>
+                        <maven-compiler-plugin.version>${maven-compiler-plugin.version}</maven-compiler-plugin.version>
+                    </properties>
+                    <streamLogsOnFailures>true</streamLogsOnFailures>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>run-5x-compatibility-suite</id>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
