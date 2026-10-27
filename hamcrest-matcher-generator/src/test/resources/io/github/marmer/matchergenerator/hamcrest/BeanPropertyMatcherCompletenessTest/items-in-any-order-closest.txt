@@ -1,0 +1,3 @@
+
+Expected: Booking with 2 property checks, every property checked or ignored
+     but: contacts: missing Contact {name "Zed", phone "0170-1"}; closest Contact {name "Ada", phone "0170-1", address Address {city "Paris"}} differs in name: expected "Zed" but was "Ada"

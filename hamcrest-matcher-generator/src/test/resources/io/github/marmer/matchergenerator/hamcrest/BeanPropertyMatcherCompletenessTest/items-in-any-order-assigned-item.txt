@@ -1,0 +1,3 @@
+
+Expected: Booking with 3 property checks, every property checked or ignored
+     but: neither checked nor ignored: contacts[1].phone, contacts[1].address
