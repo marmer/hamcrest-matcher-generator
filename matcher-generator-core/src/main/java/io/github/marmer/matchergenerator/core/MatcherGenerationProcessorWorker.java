@@ -43,6 +43,8 @@ public class MatcherGenerationProcessorWorker {
     static final String MATCHER_CONFIGURATION =
         "io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration";
     private static final Set<String> CONFIGURATION_ANNOTATIONS = Set.of(GENERATE_MATCHERS, MATCHER_CONFIGURATION);
+    private static final String VALUE_ATTRIBUTE = "value";
+    private static final String EXCLUDE_ATTRIBUTE = "exclude";
     /**
      * The only property Object contributes. It is not something a type declares, so it does not count as a property
      * of a type without properties.
@@ -237,16 +239,67 @@ public class MatcherGenerationProcessorWorker {
     ) {
         final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
         final Set<String> handledNames = new HashSet<>();
-        configuredValues(configurationMirror).stream()
+        attributeValues(configurationMirror, VALUE_ATTRIBUTE).stream()
             .filter(value -> handledNames.add((String) value.getValue()))
             .forEach(value -> getAllTypeElementsFor(
                 (String) value.getValue(), configurationElement, configurationMirror, value, result));
-        return result;
+        return withoutExcludedTypes(result, configurationElement, configurationMirror);
     }
 
     @SuppressWarnings("unchecked")
-    private List<AnnotationValue> configuredValues(final AnnotationMirror configurationMirror) {
-        return (List<AnnotationValue>) ElementSupport.valueAttribute(processingEnv, configurationMirror).getValue();
+    private List<AnnotationValue> attributeValues(final AnnotationMirror configurationMirror, final String name) {
+        return (List<AnnotationValue>) ElementSupport.annotationValue(processingEnv, configurationMirror, name)
+            .getValue();
+    }
+
+    /**
+     * Leaves out the configured types an {@code exclude} entry names, either by class name or by package. Every entry
+     * that matches no configured type is one warning at the entry. A generated type whose configured types are all
+     * excluded is not generated at all.
+     */
+    private Map<TypeElement, Set<TypeElement>> withoutExcludedTypes(
+        final Map<TypeElement, Set<TypeElement>> types,
+        final Element configurationElement,
+        final AnnotationMirror configurationMirror
+    ) {
+        final Set<String> handledNames = new HashSet<>();
+        final List<AnnotationValue> exclusions = attributeValues(configurationMirror, EXCLUDE_ATTRIBUTE).stream()
+            .filter(exclusion -> handledNames.add((String) exclusion.getValue()))
+            .collect(Collectors.toList());
+        final Set<TypeElement> configuredTypes = types.values().stream()
+            .flatMap(Set::stream)
+            .collect(Collectors.toSet());
+        for (final AnnotationValue exclusion : exclusions) {
+            final String name = (String) exclusion.getValue();
+            if (configuredTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
+                processingEnv.getMessager().printMessage(
+                    Diagnostic.Kind.WARNING,
+                    "Exclusion '" + name + "' matches no configured type",
+                    configurationElement,
+                    configurationMirror,
+                    exclusion
+                );
+            }
+        }
+        final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
+        types.forEach((type, configured) -> {
+            final Set<TypeElement> kept = configured.stream()
+                .filter(configuredType -> exclusions.stream()
+                    .noneMatch(exclusion -> isNamedBy(configuredType, (String) exclusion.getValue())))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (!kept.isEmpty()) {
+                result.put(type, kept);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * Whether a configuration entry names the type, either by its qualified name or by its package.
+     */
+    private boolean isNamedBy(final TypeElement type, final String entry) {
+        return entry.equals(type.getQualifiedName().toString())
+            || entry.equals(processingEnv.getElementUtils().getPackageOf(type).getQualifiedName().toString());
     }
 
     private void getAllTypeElementsFor(
