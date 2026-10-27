@@ -1,0 +1,4 @@
+
+Expected: Node with 12 property checks, every property checked or ignored
+     but: children[0].parent.name: expected "root" but was "imposter"
+          children[0].parent.children: expected 1 item but was 0 items

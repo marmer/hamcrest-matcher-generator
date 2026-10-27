@@ -4,8 +4,12 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 import org.hamcrest.Description;
@@ -35,6 +39,11 @@ final class BeanFixtures {
                 "byId",
                 "byLine",
                 "batches");
+    }
+
+    static TestMatcher<Node> isNode() {
+        return new TestMatcher<>(
+                Node.class, "name", "parent", "children", "byName", "peers", "tags", "siblings");
     }
 
     static TestMatcher<Customer> isCustomer() {
@@ -182,6 +191,81 @@ final class BeanFixtures {
         String name;
         String phone;
         @Nullable Address address;
+    }
+
+    /** A bean that can be part of a cyclic graph: its children point back to it. */
+    public static class Node {
+        private final String name;
+        private @Nullable Node parent;
+        private final List<Node> children = new ArrayList<>();
+        private final Map<String, Node> byName = new LinkedHashMap<>();
+        private final Set<Node> peers = new LinkedHashSet<>();
+        private final List<String> tags = new ArrayList<>();
+        private Node[] siblings = new Node[0];
+
+        public Node(final String name) {
+            this.name = name;
+        }
+
+        /** Adds the child and points the child back to this node. */
+        public Node withChild(final Node child) {
+            child.parent = this;
+            children.add(child);
+            return this;
+        }
+
+        public Node withNamed(final String key, final Node node) {
+            byName.put(key, node);
+            return this;
+        }
+
+        public Node withPeer(final Node peer) {
+            peers.add(peer);
+            return this;
+        }
+
+        public Node withSiblings(final Node... newSiblings) {
+            siblings = newSiblings;
+            return this;
+        }
+
+        public Node withTag(final String tag) {
+            tags.add(tag);
+            return this;
+        }
+
+        public Node withParent(final @Nullable Node newParent) {
+            parent = newParent;
+            return this;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public @Nullable Node getParent() {
+            return parent;
+        }
+
+        public List<Node> getChildren() {
+            return children;
+        }
+
+        public Map<String, Node> getByName() {
+            return byName;
+        }
+
+        public Set<Node> getPeers() {
+            return peers;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
+
+        public Node[] getSiblings() {
+            return siblings;
+        }
     }
 
     /** Small bean for the completeness tests of the collection matchers. */

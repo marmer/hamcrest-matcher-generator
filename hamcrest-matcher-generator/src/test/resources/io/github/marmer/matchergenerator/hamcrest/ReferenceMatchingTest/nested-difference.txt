@@ -1,0 +1,3 @@
+
+Expected: Node with 17 property checks, every property checked or ignored
+     but: children[0].children[0].name: expected "b" but was "c"
