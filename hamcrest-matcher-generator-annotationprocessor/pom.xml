@@ -12,27 +12,60 @@
     </parent>
 
     <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-    <packaging>pom</packaging>
     <name>hamcrest-matcher-generator-annotationprocessor</name>
-    <description>Relocation POM. Moved to hamcrest-matcher-generator since 6.0.0.</description>
+    <description>Bridge jar for the 5.x artifact hamcrest-matcher-generator-annotationprocessor: it holds no code and brings hamcrest-matcher-generator in
+        transitively. Moved to hamcrest-matcher-generator since 6.0.0.
+    </description>
 
-    <!-- Resolvers that follow the relocation ignore these dependencies. They keep the old coordinates usable inside a
-        reactor build, where a relocation is not followed (the 5.x compatibility module relies on it). -->
+    <!-- A jar instead of a relocation POM: maven-compiler-plugin before 3.12 does not follow a relocation in
+        annotationProcessorPaths (ADR 0002). -->
     <dependencies>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
-    <distributionManagement>
-        <relocation>
-            <groupId>io.github.marmer.testutils</groupId>
-            <artifactId>hamcrest-matcher-generator</artifactId>
-            <version>${project.version}</version>
-            <message>Since 6.0.0 hamcrest-matcher-generator-annotationprocessor is part of hamcrest-matcher-generator (the Hamcrest backend and its
-                runtime library); the configuration annotations come with it.</message>
-        </relocation>
-    </distributionManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- The Hamcrest backend on the classpath must not process the bridge's own sources. -->
+                    <proc>none</proc>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>io.github.marmer.matchergenerator.bridge.annotationprocessor</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <module.pom>${project.basedir}/pom.xml</module.pom>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
