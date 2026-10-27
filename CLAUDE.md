@@ -60,7 +60,7 @@ Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit 5 unit tests.
 
-End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. `endtoend-5x-compatibility` is the exception: it is an unchanged 5.x suite (old annotation, old artifact coordinates) and must keep compiling and passing without edits. A reactor build does not follow relocations, so the relocation POMs also declare the target as a dependency, and `RelocationPomTest` checks the relocation itself.
+End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. `endtoend-5x-compatibility` is the exception: it is an unchanged 5.x suite (old annotation, old artifact coordinates) and must keep compiling and passing without edits. Only its version references to `hamcrest-matcher-generator-annotationprocessor` and `hamcrest-matcher-generator-dependencies` follow the project version (`${project.version}`); nothing else in the module changes. A reactor build does not follow relocations, so the relocation POMs also declare the target as a dependency, and `RelocationPomTest` checks the relocation itself.
 
 ## Known Pitfalls
 

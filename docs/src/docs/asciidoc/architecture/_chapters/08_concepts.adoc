@@ -25,8 +25,9 @@ checks that every published module has its jar, sources jar, Javadoc jar and Cyc
 CycloneDX skipped no module. Nothing is uploaded.
 
 | Frozen 5.x suite (part of `Domain docs in sync`)
-| The `endtoend-5x-compatibility` module is byte-identical to the one the 5.x promise was made with: its git tree hash
-must equal the stored one. Only the owner may update that hash.
+| The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, except that its two 5.x artifact
+versions follow the project version (`${project.version}`), as a 5.x user's version bump does. Its git tree hash must
+equal the stored one. Only the owner may update that hash.
 
 | Ruleset against job names (part of `Domain docs in sync`)
 | Every status check that the `development` ruleset requires is the name of an existing CI job, so a removed job cannot
