@@ -36,7 +36,7 @@ class MatcherGeneratorTest {
 
         final List<String> methodNames = new MatcherGenerator(
             model,
-            new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0)))
+            new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0), false))
             .getPreparedTypeSpecBuilder()
             .build()
             .methodSpecs.stream()
