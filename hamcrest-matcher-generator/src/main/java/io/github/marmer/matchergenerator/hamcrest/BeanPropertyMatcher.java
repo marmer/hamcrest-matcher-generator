@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.hamcrest.BaseMatcher;
@@ -22,8 +23,14 @@ import org.hamcrest.TypeSafeMatcher;
  * @since 13.06.2017
  */
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
-    private static final String LINE_SEPARATOR = "\n          "; // aligns with Hamcrest's "     but: "
+    private static final String FAILURE_SEPARATOR = "\n          "; // aligns with Hamcrest's "     but: "
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
+
+    /**
+     * Depth of the calls a generated matcher makes into the foreign (non-generated) matchers it holds. Above zero, a
+     * generated matcher is part of a Hamcrest matcher such as {@code contains(..)} and renders on one line.
+     */
+    private static final ThreadLocal<int[]> FOREIGN_CALL_DEPTH = ThreadLocal.withInitial(() -> new int[1]);
 
     @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> propertyChecks = new LinkedHashMap<>();
@@ -40,27 +47,39 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      */
     public BeanPropertyMatcher(final Class<? super T> expectedClass, final String... propertyNames) {
         this(expectedClass);
-        if (propertyNames.length > 0) {
-            PropertyAccess.registerGeneratedType(expectedClass, List.of(propertyNames));
+        PropertyAccess.registerGeneratedType(expectedClass, List.of(propertyNames));
+    }
+
+    private static boolean isInsideForeignMatcher() {
+        return FOREIGN_CALL_DEPTH.get()[0] > 0;
+    }
+
+    private static <R> R callingForeign(final Supplier<R> call) {
+        final int[] depth = FOREIGN_CALL_DEPTH.get();
+        depth[0]++;
+        try {
+            return call.get();
+        } finally {
+            depth[0]--;
         }
     }
 
-    private static boolean isForeignMatcherOnStack() {
-        return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).walk(frames -> frames
-            .map(StackWalker.StackFrame::getDeclaringClass)
-            .anyMatch(BeanPropertyMatcher::isForeignMatcher));
-    }
-
-    private static boolean isForeignMatcher(final Class<?> type) {
-        return Matcher.class.isAssignableFrom(type)
-            && !BeanPropertyMatcher.class.isAssignableFrom(type)
-            && !GeneratedBeanMatcher.class.isAssignableFrom(type)
-            && type != TypeSafeMatcher.class
-            && type != BaseMatcher.class;
+    private static BeanPropertyMatcher<?> generatedOrNull(final Matcher<?> matcher) {
+        return matcher instanceof GeneratedBeanMatcher ? ((GeneratedBeanMatcher) matcher).beanPropertyMatcher() : null;
     }
 
     private static String describeValue(final Object value) {
         return PropertyDescription.describeValue(value);
+    }
+
+    private static String describeMatcher(final Matcher<?> matcher) {
+        return callingForeign(() -> PropertyDescription.describe(matcher));
+    }
+
+    private static String describeChecks(final List<Check> checks) {
+        return checks.stream()
+            .map(check -> check.path() + " " + describeMatcher(check.matcher()))
+            .collect(Collectors.joining(", "));
     }
 
     private static String withPath(final String path, final String text) {
@@ -71,14 +90,27 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         return "AEIOUaeiou".indexOf(name.charAt(0)) >= 0 ? "an " : "a ";
     }
 
+    /**
+     * Describes an expectation. A generated matcher used as a leaf (its property is not an instance of the matched
+     * type, often {@code null}) is described on one line, not as a block.
+     */
+    private static String describeExpected(final Matcher<?> matcher) {
+        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+        if (nested == null) {
+            return describeMatcher(matcher);
+        }
+        final List<Check> checks = new ArrayList<>();
+        nested.collectChecks("", checks);
+        final String type = articleFor(nested.typeName()) + nested.typeName();
+        return checks.isEmpty() ? type : type + " with " + describeChecks(checks);
+    }
+
     @Override
     public void describeTo(final Description description) {
         final List<Check> checks = new ArrayList<>();
         collectChecks("", checks);
-        if (isForeignMatcherOnStack()) {
-            description.appendText(typeName() + " {" + checks.stream()
-                .map(check -> check.path + " " + PropertyDescription.describe(check.matcher))
-                .collect(Collectors.joining(", ")) + "}");
+        if (isInsideForeignMatcher()) {
+            description.appendText(typeName() + " {" + describeChecks(checks) + "}");
         } else {
             description.appendText(typeName() + " with " + checks.size()
                 + (checks.size() == 1 ? " property check" : " property checks"));
@@ -106,9 +138,9 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @Override
     protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
         final List<String> failures = failuresOf(item);
-        mismatchDescription.appendText(isForeignMatcherOnStack()
+        mismatchDescription.appendText(isInsideForeignMatcher()
             ? typeName() + " {" + String.join(", ", failures) + "}"
-            : String.join(LINE_SEPARATOR, failures));
+            : String.join(FAILURE_SEPARATOR, failures));
     }
 
     private String typeName() {
@@ -118,14 +150,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private List<String> failuresOf(final Object item) {
         final List<String> failures = new ArrayList<>();
         if (!expectedClass.isInstance(item)) {
-            failures.add("expected an instance of " + expectedClass.getName() + " but was " + describeTypeOf(item));
+            failures.add("expected an instance of " + expectedClass.getName() + " but was a "
+                + item.getClass().getName() + " (" + describeValue(item) + ")");
         }
         collectFailures(item, "", failures);
         return failures;
-    }
-
-    private static String describeTypeOf(final Object item) {
-        return "a " + item.getClass().getName() + " (" + describeValue(item) + ")";
     }
 
     private void collectFailures(final Object item, final String prefix, final List<String> failures) {
@@ -139,21 +168,20 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     private void collectFailure(final String name, final Matcher<?> matcher, final Object value, final String path,
                                 final List<String> failures) {
+        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
         if (value == PropertyAccess.NO_SUCH_PROPERTY) {
             failures.add(withPath(path, "expected " + describeExpected(matcher) + " but " + typeName()
                 + " has no property \"" + name + "\""));
-            return;
-        }
-        if (matcher instanceof GeneratedBeanMatcher) {
-            final BeanPropertyMatcher<?> nested = ((GeneratedBeanMatcher) matcher).beanPropertyMatcher();
-            if (nested.expectedClass.isInstance(value)) {
-                nested.collectFailures(value, path + ".", failures);
-            } else {
-                failures.add(withPath(path, "expected " + describeExpected(matcher) + " but was " + describeValue(value)));
-            }
-        } else if (!matcher.matches(value)) {
+        } else if (nested != null && nested.expectedClass.isInstance(value)) {
+            nested.collectFailures(value, path + ".", failures);
+        } else if (nested != null) {
+            failures.add(withPath(path, "expected " + describeExpected(matcher) + " but was " + describeValue(value)));
+        } else if (!callingForeign(() -> matcher.matches(value))) {
             final PropertyDescription mismatch = new PropertyDescription();
-            matcher.describeMismatch(value, mismatch);
+            callingForeign(() -> {
+                matcher.describeMismatch(value, mismatch);
+                return null;
+            });
             failures.add(withPath(path, "expected " + describeExpected(matcher) + " but " + mismatch));
         }
     }
@@ -161,8 +189,9 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private void collectChecks(final String prefix, final List<Check> checks) {
         propertyChecks.forEach((name, matchers) -> {
             for (final Matcher<?> matcher : matchers) {
-                if (matcher instanceof GeneratedBeanMatcher) {
-                    ((GeneratedBeanMatcher) matcher).beanPropertyMatcher().collectChecks(prefix + name + ".", checks);
+                final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+                if (nested != null) {
+                    nested.collectChecks(prefix + name + ".", checks);
                 } else {
                     checks.add(new Check(prefix + name, matcher));
                 }
@@ -170,31 +199,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         });
     }
 
-    /**
-     * Describes an expectation. A generated matcher used as a leaf (its property is not an instance of the matched
-     * type, often {@code null}) is described on one line, not as a block.
-     */
-    private static String describeExpected(final Matcher<?> matcher) {
-        if (!(matcher instanceof GeneratedBeanMatcher)) {
-            return PropertyDescription.describe(matcher);
-        }
-        final BeanPropertyMatcher<?> nested = ((GeneratedBeanMatcher) matcher).beanPropertyMatcher();
-        final List<Check> checks = new ArrayList<>();
-        nested.collectChecks("", checks);
-        final String type = articleFor(nested.typeName()) + nested.typeName();
-        return checks.isEmpty() ? type : type + " with " + checks.stream()
-            .map(check -> check.path + " " + PropertyDescription.describe(check.matcher))
-            .collect(Collectors.joining(", "));
-    }
-
-    private static final class Check {
-        private final String path;
-        private final Matcher<?> matcher;
-
-        private Check(final String path, final Matcher<?> matcher) {
-            this.path = path;
-            this.matcher = matcher;
-        }
+    private record Check(String path, Matcher<?> matcher) {
     }
 
     private static final class PropertyExists extends BaseMatcher<Object> {

@@ -1,3 +1,3 @@
 
-Expected: iterable containing [OrderLine {sku "A-1", quantity <1>}, OrderLine {sku "B-2", quantity <3>}]
-     but: item 1: OrderLine {quantity: expected <3> but was <2>}
+Expected: iterable containing [OrderLine with 2 property checks, OrderLine with 2 property checks]
+     but: item 1: quantity: expected <3> but was <2>

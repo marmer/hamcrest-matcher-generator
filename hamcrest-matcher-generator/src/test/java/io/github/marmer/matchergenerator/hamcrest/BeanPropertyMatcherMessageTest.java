@@ -1,11 +1,14 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import lombok.Value;
+import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -135,11 +139,59 @@ class BeanPropertyMatcherMessageTest {
                 isOrderLine().with("sku", equalTo("X-9")).with("quantity", equalTo(3))))));
     }
 
+    private static TestMatcher<Order> failingOrderMatcher() {
+        return isOrder()
+            .with("id", equalTo("o-2"))
+            .with("email", startsWith("bob@"));
+    }
+
+    private static Order someOrder() {
+        return new Order("o-1", "ada@example.org", null, List.of(), Map.of());
+    }
+
     @Test
-    void generatedMatchersInsideHamcrestMatchersOutsideOfAGeneratedMatcherRenderOnOneLine() throws IOException {
+    void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideIs() throws IOException {
+        assertMessage("wrapped-in-is", messageOf(someOrder(), is(failingOrderMatcher())));
+    }
+
+    @Test
+    void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAllOf() throws IOException {
+        assertMessage("wrapped-in-all-of", messageOf(someOrder(), allOf(failingOrderMatcher(), notNullValue())));
+    }
+
+    @Test
+    void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAUserMatcher() throws IOException {
+        assertMessage("wrapped-in-user-matcher", messageOf(someOrder(), new DelegatingMatcher(failingOrderMatcher())));
+    }
+
+    /**
+     * A foreign matcher that holds the generated matcher is called by Hamcrest, not by a generated matcher, so the
+     * runtime cannot know it is inside a foreign matcher and keeps the block format.
+     */
+    @Test
+    void aGeneratedMatcherInsideAForeignMatcherAtTheTopLevelKeepsTheBlockFormat() throws IOException {
         assertMessage("inside-contains-top-level", messageOf(List.of(LINE_1, LINE_2), contains(
             isOrderLine().with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
             isOrderLine().with("sku", equalTo("B-2")).with("quantity", equalTo(3)))));
+    }
+
+    @Test
+    void propertiesEveryObjectHasAreNotPrinted() {
+        final Marked value = new Marked("x");
+
+        new BeanPropertyMatcher<>(Marked.class, "id", "class");
+
+        assertEquals("Marked {id \"x\"}", PropertyDescription.describeValue(value));
+    }
+
+    @Test
+    void severalMatchersOfOneTypeDoNotChangeHowItsValuesPrint() {
+        final Marked value = new Marked("x");
+
+        new BeanPropertyMatcher<>(Marked.class, "id");
+        new BeanPropertyMatcher<>(Marked.class, "id", "other");
+
+        assertEquals("Marked {id \"x\"}", PropertyDescription.describeValue(value));
     }
 
     @Test
@@ -206,6 +258,35 @@ class BeanPropertyMatcherMessageTest {
         protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
             beanPropertyMatcher.describeMismatch(item, mismatchDescription);
         }
+    }
+
+    private static final class DelegatingMatcher extends BaseMatcher<Object> {
+        private final Matcher<?> delegate;
+
+        private DelegatingMatcher(final Matcher<?> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean matches(final Object actual) {
+            return delegate.matches(actual);
+        }
+
+        @Override
+        public void describeTo(final Description description) {
+            delegate.describeTo(description);
+        }
+
+        @Override
+        public void describeMismatch(final Object actual, final Description description) {
+            delegate.describeMismatch(actual, description);
+        }
+    }
+
+    @Value
+    public static class Marked {
+        String id;
+        String other = "o";
     }
 
     @Value

@@ -35,6 +35,31 @@ Notable aspects::
 getter naming exist only once.
 * A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests.
 
+=== Describing a mismatch (Hamcrest)
+
+When an assertion with a generated Hamcrest matcher fails, the generated `<Type>Matcher` delegates `describeTo` and
+`describeMismatchSafely` to its `BeanPropertyMatcher`, which builds the message in this order:
+
+. It reads every checked property of the actual object and collects the failing checks as `path: expected ... but ...`
+lines. A check that holds a generated matcher (recognised through `GeneratedBeanMatcher`) and meets an object of the
+matched type recurses into it with the extended property path (`customer.address.city`). If the object is missing
+(`null`) or of another type, the whole nested expectation is one failure.
+. A check that holds any other matcher is a foreign check: the runtime asks that matcher whether it matches and for its
+description and mismatch. Around these calls a per-thread depth counter is raised.
+. A generated matcher that Hamcrest's own matchers (`contains`, `hasItem`, `hasEntry`) call while that counter is above
+zero renders on one line (`OrderLine {sku "X-9", quantity <3>}`); otherwise it renders as a block (`Order with 4 property
+checks`, one failing check per line).
+. Values are printed by a `Description` that shows values of generated types from their properties, never via
+`toString()`.
+
+Notable aspects::
+
+* The counter is raised only by generated matchers. A generated matcher that a foreign matcher holds directly, as in
+`assertThat(list, contains(isOrderLine()))`, keeps the block format, because nothing generated has called the foreign
+matcher.
+* The properties printed for a type are the ones the first generated matcher of that type reported; properties every
+object has (`class`) are left out.
+
 === Release
 
 .Release

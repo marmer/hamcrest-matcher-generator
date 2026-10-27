@@ -1,6 +1,9 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
 import lombok.Value;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -169,6 +172,131 @@ class BeanPropertyMatcherTest {
 
         // Assertion
         assertThat("matches", matches, is(false));
+    }
+
+    @Test
+    void testDescribeTo_WithoutChecks_ShouldNameTheTypeAndCountNoChecks() {
+        assertThat(describe(new BeanPropertyMatcher<>(ClassWithSingleProperty.class)),
+                is("ClassWithSingleProperty with 0 property checks"));
+    }
+
+    @Test
+    void testDescribeTo_WithChecks_ShouldCountTheChecks() {
+        assertThat(describe(new BeanPropertyMatcher<>(ClassTwoProperties.class)
+                        .with("firstProperty", equalTo("a"))
+                        .with("secondProperty")),
+                is("ClassTwoProperties with 2 property checks"));
+    }
+
+    @Test
+    void testDescribeMismatch_WrongTypeGiven_ShouldContainTypeInformationOfGivenWrongType() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class);
+
+        assertThat(mismatchOf(classUnderTest, new AnotherClassWithSingleProperty("x")),
+                startsWith("expected an instance of " + ClassWithSingleProperty.class.getName()
+                        + " but was a " + AnotherClassWithSingleProperty.class.getName()));
+    }
+
+    @Test
+    void testDescribeMismatch_NotMatchingProperty_ShouldNameThePathExpectedAndActualValue() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class)
+                        .with("someProperty", equalTo("expected"));
+
+        assertThat(mismatchOf(classUnderTest, new ClassWithSingleProperty("real")),
+                is("someProperty: expected \"expected\" but was \"real\""));
+    }
+
+    @Test
+    void testDescribeMismatch_NotExistingProperty_ShouldSayThatThePropertyDoesNotExist() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class)
+                        .with("notExisting", equalTo("anyValue"));
+
+        assertThat(mismatchOf(classUnderTest, new ClassWithSingleProperty("real")),
+                is("notExisting: expected \"anyValue\" but ClassWithSingleProperty has no property \"notExisting\""));
+    }
+
+    @Test
+    void testDescribeMismatch_NotExistingPropertyWithoutMatcher_ShouldSayThatThePropertyDoesNotExist() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class).with("notExisting");
+
+        assertThat(mismatchOf(classUnderTest, new ClassWithSingleProperty("real")),
+                is("notExisting: expected the property to exist but ClassWithSingleProperty has no property \"notExisting\""));
+    }
+
+    @Test
+    void testDescribeMismatch_WrongTypeAndNotMatchingProperty_ShouldContainBothFailures() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class)
+                        .with("someProperty", equalTo("expected"));
+
+        final String mismatch = mismatchOf(classUnderTest, new AnotherClassWithSingleProperty("real"));
+
+        assertThat(mismatch, allOf(
+                containsString("expected an instance of " + ClassWithSingleProperty.class.getName()),
+                containsString("someProperty: expected \"expected\" but was \"real\"")));
+    }
+
+    @Test
+    void testDescribeMismatch_OneMatchingAndSomeNotMatchingProperties_ShouldListOnlyTheFailuresInOrder() {
+        final BeanPropertyMatcher<ClassTwoProperties> classUnderTest = new BeanPropertyMatcher<>(ClassTwoProperties.class)
+                .with("notExisting", equalTo("anyValue"))
+                .with("firstProperty", equalTo("matching"))
+                .with("secondProperty", equalTo("expected2"));
+
+        assertThat(mismatchOf(classUnderTest, new ClassTwoProperties("matching", "real2")), is(
+                "notExisting: expected \"anyValue\" but ClassTwoProperties has no property \"notExisting\"\n"
+                        + "          secondProperty: expected \"expected2\" but was \"real2\""));
+    }
+
+    @Test
+    void testMatches_ResetProperty_ShouldNotCheckThePropertyAnymore() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class).with("someProperty", equalTo("expected"));
+        classUnderTest.reset("someProperty");
+
+        assertThat(classUnderTest.matches(new ClassWithSingleProperty("other")), is(true));
+    }
+
+    @Test
+    void testMatches_RecordComponentWithoutGetter_ShouldMatchTheComponentValue() {
+        final BeanPropertyMatcher<Point> classUnderTest =
+                new BeanPropertyMatcher<>(Point.class).with("x", equalTo(1)).with("y");
+
+        assertThat(classUnderTest.matches(new Point(1, 2)), is(true));
+        assertThat(classUnderTest.matches(new Point(5, 2)), is(false));
+    }
+
+    @Test
+    void testDescribeMismatch_RecordComponentNotMatching_ShouldNameTheComponent() {
+        final BeanPropertyMatcher<Point> classUnderTest =
+                new BeanPropertyMatcher<>(Point.class).with("x", equalTo(1));
+
+        assertThat(mismatchOf(classUnderTest, new Point(5, 2)), is("x: expected <1> but was <5>"));
+    }
+
+    @Test
+    void testDescribeMismatch_RecordWithoutTheComponent_ShouldSayThatThePropertyDoesNotExist() {
+        final BeanPropertyMatcher<Point> classUnderTest = new BeanPropertyMatcher<>(Point.class).with("z");
+
+        assertThat(mismatchOf(classUnderTest, new Point(1, 2)),
+                is("z: expected the property to exist but Point has no property \"z\""));
+    }
+
+    private static String describe(final org.hamcrest.SelfDescribing describable) {
+        return StringDescription.toString(describable);
+    }
+
+    private static String mismatchOf(final Matcher<?> matcher, final Object item) {
+        final Description description = new StringDescription();
+        matcher.describeMismatch(item, description);
+        return description.toString();
+    }
+
+    public record Point(int x, int y) {
     }
 
     @Value
