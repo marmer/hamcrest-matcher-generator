@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 class BeanPropertyMatcherTest {
@@ -311,6 +312,75 @@ class BeanPropertyMatcherTest {
     }
 
     public record Point(int x, int y) {
+    }
+
+    @Test
+    void testMatches_InitializedWithBooleanPropertyReadByIsGetter_ShouldMatchByItsValue() {
+        final BeanPropertyMatcher<ClassWithBooleanIsGetter> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithBooleanIsGetter.class);
+
+        final boolean matches = classUnderTest.with("active", is(true))
+                .matches(new ClassWithBooleanIsGetter(true));
+
+        assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void testMatches_InitializedWithRecordComponent_ShouldMatchByTheValueOfItsAccessor() {
+        final BeanPropertyMatcher<ComponentRecord> classUnderTest = new BeanPropertyMatcher<>(ComponentRecord.class);
+
+        final boolean matches = classUnderTest.with("name", is("someValue"))
+                .matches(new ComponentRecord("someValue"));
+
+        assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void testMatches_InitializedWithRecordComponentAndDifferentValue_ShouldNotMatch() {
+        final BeanPropertyMatcher<ComponentRecord> classUnderTest = new BeanPropertyMatcher<>(ComponentRecord.class);
+
+        final boolean matches = classUnderTest.with("name", is("someValue"))
+                .matches(new ComponentRecord("someDifferentValue"));
+
+        assertThat("matches", matches, is(false));
+    }
+
+    @Test
+    void testMatches_RecordComponentWhoseAccessorThrows_ShouldFailNamingTheProperty() {
+        final BeanPropertyMatcher<ThrowingRecord> classUnderTest = new BeanPropertyMatcher<>(ThrowingRecord.class);
+        final Matcher<ThrowingRecord> matcher = classUnderTest.with("broken", is("someValue"));
+
+        final AssertionError error = assertThrows(AssertionError.class,
+                () -> matcher.matches(new ThrowingRecord("someValue")));
+
+        assertThat("message", error.getMessage(), containsString("Could not read property 'broken'"));
+    }
+
+    @Test
+    void testMatches_AfterResetOfTheProperty_ShouldNoLongerCheckIt() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> classUnderTest =
+                new BeanPropertyMatcher<>(ClassWithSingleProperty.class);
+        classUnderTest.with("someProperty", is(equalTo("someValue")));
+
+        classUnderTest.reset("someProperty");
+
+        final boolean matches = classUnderTest.matches(new ClassWithSingleProperty("someDifferentValue"));
+        assertThat("matches", matches, is(true));
+    }
+
+    @Value
+    public static class ClassWithBooleanIsGetter {
+        private boolean active;
+    }
+
+    public record ComponentRecord(String name) {
+    }
+
+    public record ThrowingRecord(String broken) {
+        @Override
+        public String broken() {
+            throw new IllegalStateException("broken on purpose");
+        }
     }
 
     @Value

@@ -19,6 +19,11 @@ GitHub merges a pull request; the release dry run is not required yet, and the o
 | The reactor installs without tests, and `./mvnw clean verify` is green on every supported JDK, including the newest
 generally available one.
 
+| JaCoCo floor (part of `Build and Verify matrix`, checked in `verify`)
+| Each production bundle (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`) has at
+least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
+excluded, so a drop below the floor fails `verify` on every JDK in the matrix.
+
 | Release dry run
 | The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
 checks that every published module has its jar, sources jar, Javadoc jar and CycloneDX bill of materials, and that

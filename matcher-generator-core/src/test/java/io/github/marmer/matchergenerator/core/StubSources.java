@@ -20,7 +20,14 @@ final class StubSources {
             model.targetPackage(),
             simpleName,
             GeneratedSource.Language.JAVA,
-            "package " + model.targetPackage() + ";\npublic class " + simpleName + " {\n}\n"
+            packageClause(model.targetPackage()) + "public class " + simpleName + " {\n}\n"
         );
+    }
+
+    /**
+     * A package declaration, or nothing for the default package.
+     */
+    private static String packageClause(final String packageName) {
+        return packageName.isEmpty() ? "" : "package " + packageName + ";\n";
     }
 }
