@@ -1,0 +1,13 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <!--
+    Fake credentials for the CI release dry run (`deploy -DskipPublishing=true`). The central-publishing plugin wants
+    a `central` server entry even when it skips; skipPublishing=true uploads nothing, so these values never reach Central.
+  -->
+  <servers>
+    <server>
+      <id>central</id>
+      <username>dry-run</username>
+      <password>dry-run</password>
+    </server>
+  </servers>
+</settings>

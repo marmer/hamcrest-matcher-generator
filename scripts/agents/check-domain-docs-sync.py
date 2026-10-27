@@ -10,6 +10,10 @@ Rules (see docs/agents/domain.md, "Redundancy rules"):
   4. Every required check that docs/agents/wayfinding.md names ("required checks of the
      `development` ruleset pass (`Build`, ...)") is the name of a job in .github/workflows/,
      with `${{ matrix.role }}` expanded to each `role:` of the job's matrix.
+  5. Every backticked file name in CLAUDE.md ending in .java, .kt, .adoc, .yml or .xml exists in the repository
+     (files git tracks or would add; ignored ones such as target/ do not count; a name with a `/` matches as a path
+     suffix, a bare name as a file name; names starting with `~` or `/` are outside the repository and skipped), and
+     every backticked `io.github.marmer...` package exists as a directory under some src/*/java.
 
 A missing GLOSSARY.md, docs/adr/ or required-checks list means there is nothing to check for that rule and it passes.
 
@@ -20,8 +24,11 @@ Usage:
 Exits 1 and prints one line per violation if any rule is broken, otherwise 0.
 """
 import re
+import subprocess
 import sys
 from pathlib import Path
+
+from workflow_jobs import workflow_job_names
 
 GLOSSARY_MD = "GLOSSARY.md"
 ADR_DIR = "docs/adr"
@@ -29,13 +36,15 @@ GLOSSARY_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc"
 DECISIONS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc"
 WAYFINDING_MD = "docs/agents/wayfinding.md"
 WORKFLOW_DIR = ".github/workflows"
+CLAUDE_MD = "CLAUDE.md"
 
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
 PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
 REQUIRED_CHECKS = re.compile(r"required checks of the `development` ruleset pass \(([^)]*)\)")
-JOB_NAME = re.compile(r"^    name:\s*(.+?)\s*$")
-MATRIX_ROLE = re.compile(r"^\s*-?\s*role:\s*[\"']?([^\"'\s]+)[\"']?\s*$")
+BACKTICKED = re.compile(r"`([^`\n]+)`")
+FILE_NAME = re.compile(r"[\w.-]+\.(?:java|kt|adoc|yml|xml)")
+PACKAGE = re.compile(r"io\.github\.marmer(?:\.\w+)*")
 
 
 def read(path):
@@ -98,27 +107,6 @@ def check_adrs(root, violations):
             violations.append(f"{DECISIONS_ADOC}: ADR file {ADR_DIR}/{adr.name} is not linked")
 
 
-def workflow_job_names(root):
-    """Job display names of every workflow, with `${{ matrix.role }}` expanded per matrix role."""
-    names = set()
-    workflow_dir = root / WORKFLOW_DIR
-    if not workflow_dir.is_dir():
-        return names
-    for workflow in sorted(workflow_dir.glob("*.y*ml")):
-        jobs = []  # (name, roles) per job, in file order
-        for line in read(workflow).splitlines():
-            if m := JOB_NAME.match(line):
-                jobs.append((m.group(1).strip("\"'"), []))
-            elif jobs and (m := MATRIX_ROLE.match(line)):
-                jobs[-1][1].append(m.group(1))
-        for name, roles in jobs:
-            if "${{ matrix.role }}" in name:
-                names.update(name.replace("${{ matrix.role }}", role) for role in roles)
-            else:
-                names.add(name)
-    return names
-
-
 def check_required_checks(root, violations):
     m = REQUIRED_CHECKS.search(read(root / WAYFINDING_MD))
     if not m:
@@ -129,6 +117,42 @@ def check_required_checks(root, violations):
             violations.append(f"{WAYFINDING_MD}: required check '{check}' is not a job name in {WORKFLOW_DIR}/")
 
 
+def repository_files_and_packages(root):
+    """Return (file paths, package names found as directories under src/*/java) of the files git tracks or would add.
+
+    Ignored files (target/, .claude/worktrees/) never count.
+    """
+    listing = subprocess.run(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"],
+                             check=True, capture_output=True, text=True).stdout
+    files, packages = set(listing.splitlines()), set()
+    for file in files:
+        parts = file.split("/")[:-1]
+        for i in range(len(parts) - 2):
+            if parts[i] == "src" and parts[i + 2] == "java":
+                packages.update(".".join(parts[i + 3:j]) for j in range(i + 4, len(parts) + 1))
+    return files, packages
+
+
+def file_exists(name, files):
+    """A name with a `/` matches as a path suffix, a bare name as a file name anywhere."""
+    return any(file == name or file.endswith("/" + name) for file in files)
+
+
+def check_claude_md_references(root, violations):
+    text = read(root / CLAUDE_MD)
+    if not text:
+        return
+    files, packages = repository_files_and_packages(root)
+    for token in dict.fromkeys(BACKTICKED.findall(text)):
+        if token.startswith(("~", "/")):
+            continue  # outside the repository
+        if FILE_NAME.fullmatch(token.rsplit("/", 1)[-1]):
+            if not file_exists(token, files):
+                violations.append(f"{CLAUDE_MD}: file '{token}' does not exist in the repository")
+        elif PACKAGE.fullmatch(token) and token not in packages:
+            violations.append(f"{CLAUDE_MD}: package '{token}' is not a directory under any src/*/java")
+
+
 def main():
     if len(sys.argv) > 2:
         sys.exit(__doc__)
@@ -137,6 +161,7 @@ def main():
     check_glossary(root, violations)
     check_adrs(root, violations)
     check_required_checks(root, violations)
+    check_claude_md_references(root, violations)
     for violation in violations:
         print(violation)
     if violations:

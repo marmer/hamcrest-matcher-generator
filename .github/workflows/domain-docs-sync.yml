@@ -14,8 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check GLOSSARY.md and ADRs are mirrored in arc42 docs, required checks match CI job names
+      - name: Check domain docs, required checks and CLAUDE.md references
         run: python3 scripts/agents/check-domain-docs-sync.py
+
+      - name: Check the frozen 5.x compatibility suite is unchanged
+        run: scripts/ci/check-frozen-5x-suite.sh
+
+      - name: Test the CI check scripts
+        run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
+
+      - name: Check the development ruleset requires only existing CI job names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash  # -eo pipefail, so a failing API call is not hidden by the pipe
+        run: gh api repos/${{ github.repository }}/rules/branches/development | scripts/ci/check-ruleset-job-names.py
 
       - name: Check agent scripts with a shebang are executable in git
         run: |

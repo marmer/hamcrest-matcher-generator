@@ -1,25 +1,38 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-concepts]]
+
+
 == Cross-cutting Concepts
 
+=== Continuous integration gates
 
+Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
+blocked it. The `development` branch ruleset requires the build, the verify matrix and `Domain docs in sync` to pass before
+GitHub merges a pull request; the release dry run is not required yet, and the owner decides when to add it.
 
+[options="header",cols="2,5"]
+|===
+| Gate | What it guarantees
 
+| Build and Verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
+| The reactor installs without tests, and `./mvnw clean verify` is green on every supported JDK, including the newest
+generally available one.
 
+| Release dry run
+| The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
+checks that every published module has its jar, sources jar, Javadoc jar and CycloneDX bill of materials, and that
+CycloneDX skipped no module. Nothing is uploaded.
 
-=== _<Concept 1>_
+| Frozen 5.x suite (part of `Domain docs in sync`)
+| The `endtoend-5x-compatibility` module is byte-identical to the one the 5.x promise was made with: its git tree hash
+must equal the stored one. Only the owner may update that hash.
 
-_<explanation>_
+| Ruleset against job names (part of `Domain docs in sync`)
+| Every status check that the `development` ruleset requires is the name of an existing CI job, so a removed job cannot
+block all merges.
 
-
-
-=== _<Concept 2>_
-
-_<explanation>_
-
-...
-
-=== _<Concept n>_
-
-_<explanation>_
+| Docs sync (`Domain docs in sync`)
+| The agent-facing glossary and ADRs are mirrored in these chapters, the required checks named in the agent docs are
+CI job names, and the file names and packages that `CLAUDE.md` mentions exist.
+|===
