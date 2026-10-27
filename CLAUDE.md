@@ -90,6 +90,7 @@ End-to-end modules are the final validation layer: they apply `@GenerateMatchers
 - **google-java-format 1.37.0** fails inside Spotless with an `InvocationTargetException` on Javadoc-carrying files, and Spotless hides the cause. The root pom pins 1.36.0 until that is fixed.
 - **Shared `~/.m2` serves stale sibling artifacts**: `-pl` without `-am` resolves sibling modules from `~/.m2`, so a build can pass against an old sibling; build the full reactor (`install -DskipTests`) first.
 - **Maven Central HTTP 429** (rate limit, frequent with parallel subagents sharing `~/.m2`): Maven may store the 429 error text as a `.pom` or `.jar` in `~/.m2/repository`, failing later builds ("Non-parseable POM", `NoClassDefFoundError`). Delete that version directory and rebuild offline with `-o`; the SessionStart hook pre-fetches dependencies for that and logs to /tmp/session-start.log; if ~/.m2 is empty, read that log first.
+- **Squash merges and reformat commits**: after a squash merge, a follow-up commit adds the squash sha to `.git-blame-ignore-revs`; a reformat commit holds only `spotless:apply` output, with any config change in an earlier commit.
 
 ## Agent skills
 
