@@ -25,6 +25,9 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Backend
 |A generator that turns the property model into assertion code for one specific assertion library, such as Hamcrest or AssertJ.
 
+|Bridge jar
+|The code-free jar that a 5.x artifact (`hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`) is published as in 6.0.0. It depends on `hamcrest-matcher-generator`, so old coordinates still resolve to a jar and the Hamcrest backend arrives transitively. A relocation POM is not used because older compiler plugins do not follow it in a processor path.
+
 |Configuration
 |The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.
 

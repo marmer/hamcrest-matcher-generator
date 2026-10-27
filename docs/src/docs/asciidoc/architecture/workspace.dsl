@@ -21,7 +21,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 matcherGenerator = component "MatcherGenerator" "Builds the source of a <Type>Matcher class." "JavaPoet"
                 runtimeLibrary = component "BeanPropertyMatcher" "Runtime library that generated matchers call at test time." "Java"
             }
-            relocation = container "Relocation POMs" "hamcrest-matcher-generator-dependencies and -annotationprocessor point 5.x users to the new coordinates." "Maven POM"
+            bridge = container "Bridge jars" "hamcrest-matcher-generator-dependencies and -annotationprocessor are code-free jars that bring 5.x users to the new coordinates." "Java, Maven modules"
             endtoend = container "End-to-end modules" "Apply the processor to real beans and records and exercise the generated matchers." "Java, Kotlin, Maven modules"
             docs = container "docs" "Renders this documentation and checks it. Needs JDK 21 or later." "Asciidoctor, Structurizr, Maven module"
         }
@@ -49,7 +49,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         worker -> hamcrestBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
         hamcrestBackend -> core "Implements GeneratorBackend of"
         hamcrestBackend -> hamcrest "Uses"
-        relocation -> hamcrestBackend "Points to"
+        bridge -> hamcrestBackend "Depends on"
         endtoend -> hamcrestBackend "Apply the processor to beans and records"
         endtoend -> annotations "Configure types with"
 
@@ -78,7 +78,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 containerInstance annotations
                 containerInstance core
                 containerInstance hamcrestBackend
-                containerInstance relocation
+                containerInstance bridge
             }
             releaseWorkflow -> centralNode "Uploads one bundle to" "central-publishing-maven-plugin"
             docsWorkflow -> pagesNode "Deploys to" "deploy-pages"
