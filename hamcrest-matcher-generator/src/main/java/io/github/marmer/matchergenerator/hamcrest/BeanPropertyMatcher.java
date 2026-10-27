@@ -11,6 +11,8 @@ import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Matcher for beans.
@@ -19,6 +21,7 @@ import org.hamcrest.TypeSafeMatcher;
  * @author marmer
  * @since 13.06.2017
  */
+@NullMarked
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     @SuppressWarnings("squid:S2293")
@@ -61,7 +64,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         if (!hasGetter && hasAccessibleMethod(propertyName)) {
             return new FeatureMatcher<T, Object>((Matcher<? super Object>) valueMatcher, propertyName, propertyName) {
                 @Override
-                protected Object featureValueOf(T actual) {
+                protected @Nullable Object featureValueOf(T actual) {
                     try {
                         return actual.getClass().getMethod(propertyName).invoke(actual);
                     } catch (ReflectiveOperationException e) {

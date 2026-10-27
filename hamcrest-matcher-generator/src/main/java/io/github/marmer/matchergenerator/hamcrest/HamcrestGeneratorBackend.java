@@ -18,7 +18,9 @@ public class HamcrestGeneratorBackend implements GeneratorBackend {
             model.targetPackage(),
             generator.simpleMatcherName(),
             GeneratedSource.Language.JAVA,
-            JavaFile.builder(model.targetPackage(), generator.getPreparedTypeSpecBuilder().build()).build().toString()
+            JavaFile.builder(model.targetPackage(), generator.getPreparedTypeSpecBuilder()
+                .addAnnotations(generator.getNullMarkedAnnotations())
+                .build()).build().toString()
         );
     }
 }

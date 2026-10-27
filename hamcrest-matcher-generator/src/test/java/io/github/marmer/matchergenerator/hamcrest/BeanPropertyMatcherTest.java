@@ -548,4 +548,17 @@ class BeanPropertyMatcherTest {
         private String firstProperty;
         private String secondProperty;
     }
+
+    @Test
+    void theRuntimeLibraryIsNullMarked() {
+        assertThat(BeanPropertyMatcher.class.isAnnotationPresent(org.jspecify.annotations.NullMarked.class), is(true));
+    }
+
+    @Test
+    void aRecordComponentWithoutValueMatchesNull() {
+        record Nameless(String name) {
+        }
+
+        assertThat(new Nameless(null), new BeanPropertyMatcher<>(Nameless.class).with("name", nullValue()));
+    }
 }
