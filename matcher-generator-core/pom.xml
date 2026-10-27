@@ -26,7 +26,8 @@
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
-            <scope>test</scope>
+            <!-- Compile-time only: the processor marks its own code, and no consumer needs the annotations at run time. -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.truth</groupId>

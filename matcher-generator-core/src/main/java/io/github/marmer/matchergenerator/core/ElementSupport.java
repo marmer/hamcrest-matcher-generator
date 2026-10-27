@@ -8,6 +8,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Small helpers around elements, annotation mirrors and compiler diagnostics shared by the worker and the model
@@ -83,7 +84,11 @@ final class ElementSupport {
     /**
      * Emits a note at the element alone, but only when the verbose option is set.
      */
-    static void logNote(final ProcessingEnvironment processingEnv, final String message, final Element element) {
+    static void logNote(
+        final ProcessingEnvironment processingEnv,
+        final String message,
+        final @Nullable Element element
+    ) {
         logNote(processingEnv, message, element, null, null);
     }
 
@@ -94,9 +99,9 @@ final class ElementSupport {
     static void logNote(
         final ProcessingEnvironment processingEnv,
         final String message,
-        final Element element,
-        final AnnotationMirror annotationMirror,
-        final AnnotationValue annotationValue
+        final @Nullable Element element,
+        final @Nullable AnnotationMirror annotationMirror,
+        final @Nullable AnnotationValue annotationValue
     ) {
         if (!isVerbose(processingEnv)) {
             return;

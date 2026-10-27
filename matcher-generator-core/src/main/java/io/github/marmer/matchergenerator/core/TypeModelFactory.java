@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -51,7 +52,7 @@ class TypeModelFactory {
      * that Kotlin compiled. Java types keep the bean rules.
      */
     private static boolean isDeclaredInKotlin(final ExecutableElement element) {
-        return ElementSupport.isDeclaredInKotlin(element.getEnclosingElement());
+        return ElementSupport.isDeclaredInKotlin(Objects.requireNonNull(element.getEnclosingElement()));
     }
 
     private static boolean hasReturnType(final ExecutableElement element) {
