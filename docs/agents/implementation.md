@@ -48,7 +48,7 @@ Per-ticket reviews cannot see problems that span tickets: duplicated helpers acr
 
 ## Retro at the end of every session
 
-`retro` is user-invoked only (`disable-model-invocation`), so the agent cannot start it. Close the final report of every implementation session (and every wayfinder session) by asking the user to run `/retro`. When it runs, apply the candidates the user accepts (checks, coding standards, docs, ticket-writing guidance, model defaults) and commit them, so the process improves with each session. Escalations recorded on tickets are a primary input: repeated escalations of a ticket kind mean tickets of that kind should be cut smaller or default to a higher model.
+`retro` is user-invoked only (`disable-model-invocation`), so the agent cannot start it. Close the final report of every implementation session (and every wayfinder session) by asking the user to run `/retro`. When it runs, apply the candidates the user accepts (checks, coding standards, docs, ticket-writing guidance, model defaults) and commit them, so the process improves with each session. Escalations recorded on tickets are a primary input: repeated escalations of a ticket kind mean tickets of that kind should be cut smaller or default to a higher model. Implementer subagents make the retro fixes wherever that is sensible, each on the model its change needs under "Implementer model per ticket", under the same quality bar, escalation rules and "One ticket, one review, one PR" steps. The orchestrator only judges, reviews, pushes and opens the PR, including for fixes that come up while the retro PR is watched, such as a red CI job.
 
 ## Explaining pull requests visually
 
