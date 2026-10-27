@@ -22,7 +22,7 @@ generally available one.
 | JaCoCo floor (part of `Build and Verify matrix`, checked in `verify`)
 | Each production bundle (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`) has at
 least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
-excluded, so a drop below the floor fails `verify` on every JDK in the matrix.
+excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no code (deliberate deviation from #126).
 
 | Release dry run
 | The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
@@ -38,14 +38,14 @@ Build plugins and the `docs` module's tooling are not checked.
 
 | Static analysis (JDK 21+ profile `static-analysis`, part of `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`)
 | Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
-of the modules, including tests and end-to-end sources. Error Prone runs its default checks on every module at ERROR
+of the modules, including tests and end-to-end sources, except the frozen 5.x suite, which stays frozen and so carries no SPDX headers (deliberate deviation from #128). Error Prone runs its default checks on every module at ERROR
 with no baseline. NullAway runs at ERROR in JSpecify mode on the `io.github.marmer` packages only: main, test and
 end-to-end sources in that package tree. The end-to-end POJOs in `foo.bar` are not NullAway-checked. Generated code is
 not checked and carries no
 license header. The JDK 17 leg skips the profile.
 
 | Frozen 5.x suite (part of `Domain docs in sync`)
-| The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, except that its parent and own
+| The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard; its parent and own
 version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:
 `endtoend-5x-compatibility-runner` builds it as a consumer build with the invoker plugin against an isolated local
 repository that holds the reactor artifacts, so Maven resolves the bridge jars like it does for a 5.x user, with the project's own compiler plugin version. The suite runs every test it has; its `RelocationPomTest`, which asserted the former relocation POMs, was deleted with the owner's approval (#159), and each bridge module tests its own shape (`BridgeJarIT`). Its tree

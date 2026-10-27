@@ -1,3 +1,4 @@
 # git blame ignores the commits listed here: one google-java-format (AOSP) and SPDX header reformat.
+# The listed commit is a squash commit that also carries the Error Prone/NullAway build change.
 # Enable it locally with: git config blame.ignoreRevsFile .git-blame-ignore-revs
-68c3e4ddf8cbfe0601c0e8202c9c597afaa8047c
+90ecdec5ff7f922e6c4b8eb304eea4c59125483a
