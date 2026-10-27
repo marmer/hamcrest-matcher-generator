@@ -6,6 +6,8 @@ import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Override;
 import java.lang.String;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -24,7 +26,7 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
   private final BeanPropertyMatcher<Holder> beanPropertyMatcher;
 
   public HolderMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Holder>(Holder.class, "lines", "index", "named", "flipped", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<Holder>(Holder.class, "lines", "index", "named", "flipped", "rawList", "rawMap", "anyList", "class");
   }
 
   public HolderMatcher withLines(final Matcher<? super Lines> matcher) {
@@ -45,6 +47,21 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
   public HolderMatcher withFlipped(
       final Matcher<? super Flipped<? extends Line, ? extends String>> matcher) {
     beanPropertyMatcher.with("flipped", matcher);
+    return this;
+  }
+
+  public HolderMatcher withRawList(final Matcher<? super List> matcher) {
+    beanPropertyMatcher.with("rawList", matcher);
+    return this;
+  }
+
+  public HolderMatcher withRawMap(final Matcher<? super Map> matcher) {
+    beanPropertyMatcher.with("rawMap", matcher);
+    return this;
+  }
+
+  public HolderMatcher withAnyList(final Matcher<? super List<?>> matcher) {
+    beanPropertyMatcher.with("anyList", matcher);
     return this;
   }
 
@@ -73,6 +90,21 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
     return this;
   }
 
+  public HolderMatcher resetRawList() {
+    beanPropertyMatcher.reset("rawList");
+    return this;
+  }
+
+  public HolderMatcher resetRawMap() {
+    beanPropertyMatcher.reset("rawMap");
+    return this;
+  }
+
+  public HolderMatcher resetAnyList() {
+    beanPropertyMatcher.reset("anyList");
+    return this;
+  }
+
   public HolderMatcher resetClass() {
     beanPropertyMatcher.reset("class");
     return this;
@@ -95,6 +127,21 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
 
   public HolderMatcher withFlipped(final Flipped<? extends Line, ? extends String> value) {
     beanPropertyMatcher.with("flipped", Matchers.equalTo(value));
+    return this;
+  }
+
+  public HolderMatcher withRawList(final List value) {
+    beanPropertyMatcher.with("rawList", Matchers.equalTo(value));
+    return this;
+  }
+
+  public HolderMatcher withRawMap(final Map value) {
+    beanPropertyMatcher.with("rawMap", Matchers.equalTo(value));
+    return this;
+  }
+
+  public HolderMatcher withAnyList(final List<?> value) {
+    beanPropertyMatcher.with("anyList", Matchers.equalTo(value));
     return this;
   }
 
@@ -123,6 +170,21 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
     return this;
   }
 
+  public HolderMatcher ignoringRawList() {
+    beanPropertyMatcher.ignore("rawList");
+    return this;
+  }
+
+  public HolderMatcher ignoringRawMap() {
+    beanPropertyMatcher.ignore("rawMap");
+    return this;
+  }
+
+  public HolderMatcher ignoringAnyList() {
+    beanPropertyMatcher.ignore("anyList");
+    return this;
+  }
+
   public HolderMatcher ignoringClass() {
     beanPropertyMatcher.ignore("class");
     return this;
@@ -143,6 +205,9 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
     beanPropertyMatcher.preset("index", ReferenceMatching.map(reference.getIndex(), LineMatcher::isLineLike));
     beanPropertyMatcher.preset("named", ReferenceMatching.collection(reference.getNamed(), LineMatcher::isLineLike));
     beanPropertyMatcher.preset("flipped", ReferenceMatching.map(reference.getFlipped(), LineMatcher::isLineLike));
+    beanPropertyMatcher.preset("rawList", ReferenceMatching.value(reference.getRawList()));
+    beanPropertyMatcher.preset("rawMap", ReferenceMatching.value(reference.getRawMap()));
+    beanPropertyMatcher.preset("anyList", ReferenceMatching.value(reference.getAnyList()));
   }
 
   @Override

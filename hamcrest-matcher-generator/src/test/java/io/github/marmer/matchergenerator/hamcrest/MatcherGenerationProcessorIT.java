@@ -1108,6 +1108,11 @@ class MatcherGenerationProcessorIT {
                 public Index getIndex() { return null; }
                 public Named<Line> getNamed() { return null; }
                 public Flipped<Line, String> getFlipped() { return null; }
+                @SuppressWarnings("rawtypes")
+                public java.util.List getRawList() { return null; }
+                @SuppressWarnings("rawtypes")
+                public java.util.Map getRawMap() { return null; }
+                public java.util.List<?> getAnyList() { return null; }
             }
             """);
         JavaFileObject lines =
