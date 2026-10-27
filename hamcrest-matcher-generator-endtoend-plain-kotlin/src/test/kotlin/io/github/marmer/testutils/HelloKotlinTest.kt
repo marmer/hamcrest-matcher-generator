@@ -3,8 +3,11 @@ package io.github.marmer.testutils
 import io.github.marmer.testutils.model.MultiPojo1
 import io.github.marmer.testutils.model.KotlinProbe
 import io.github.marmer.testutils.model.KotlinProbeMatcher
+import io.github.marmer.testutils.model.NullabilityProbe
+import io.github.marmer.testutils.model.NullabilityProbeMatcher
 import io.github.marmer.testutils.model.MultiPojo1Matcher
 import org.hamcrest.MatcherAssert
+import org.hamcrest.Matchers
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
@@ -23,5 +26,26 @@ internal class HelloKotlinTest {
             KotlinProbeMatcher.isKotlinProbe().withEnabled(true).withIsX(true).withIsLabel("label")
         )
     }
-}
 
+    @Test
+    @DisplayName("Nullable properties accept null without nullness errors")
+    fun test_NullablePropertiesAcceptNull() {
+        MatcherAssert.assertThat(
+            NullabilityProbe("name", null, 1),
+            NullabilityProbeMatcher.isNullabilityProbe().withNickname(null).withName("name").withCount(1)
+        )
+        MatcherAssert.assertThat(
+            NullabilityProbe("name", null, 1),
+            NullabilityProbeMatcher.isNullabilityProbe().withNickname(Matchers.nullValue())
+        )
+    }
+
+    @Test
+    @DisplayName("Equality values accept null for non null properties as well")
+    fun test_EqualityValuesAcceptNull() {
+        MatcherAssert.assertThat(
+            NullabilityProbe("name", "nick", 1),
+            Matchers.not(NullabilityProbeMatcher.isNullabilityProbe().withName(null))
+        )
+    }
+}
