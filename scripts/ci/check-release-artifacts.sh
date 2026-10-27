@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks the result of the release dry run. CI runs the deploy lifecycle, the only place the CycloneDX skip shows up:
-#   ./mvnw -B -s .github/ci-dummy-settings.xml -P release deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
+#   ./mvnw -B -s .github/ci-dummy-settings.xml -P release -DskipEndtoend deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
 # Locally (verify only, so the skip check is vacuous):
 #   ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 # Every published jar module needs its jar, sources jar, javadoc jar and CycloneDX BOM, and the build log must not

@@ -122,8 +122,10 @@ jobs:
       # The release profile signs with the BC signer (MAVEN_GPG_KEY, MAVEN_GPG_PASSPHRASE) and attaches sources,
       # Javadoc and the CycloneDX SBOM. central-publishing-maven-plugin waits until Central reports `published`, so
       # this step only succeeds for a confirmed publish. The tests ran in the release-build job.
+      # -DskipEndtoend: the end-to-end modules are never published, and endtoend-5x-compatibility resolves the old
+      # 5.1.0 processor from Maven Central once deploy has installed the relocation POMs.
       - name: Deploy to Maven Central
-        run: ./mvnw -B -P release -DskipTests deploy
+        run: ./mvnw -B -P release -DskipEndtoend -DskipTests deploy
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}

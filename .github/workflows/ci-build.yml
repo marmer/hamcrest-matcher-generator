@@ -122,9 +122,11 @@ jobs:
 
       # The CycloneDX skip and the missing BOMs only show up in the deploy lifecycle with the central-publishing
       # extension, not in verify. skipPublishing=true uploads nothing; the dummy settings only supply the server entry.
+      # -DskipEndtoend leaves the never-published end-to-end modules out: deploy installs the 5.1.0 relocation POMs, so
+      # endtoend-5x-compatibility would otherwise resolve the old 5.1.0 processor jar from Maven Central.
       - name: Release deploy lifecycle without signing and publishing
         shell: bash  # -eo pipefail, so a failing Maven build is not hidden by tee
-        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
+        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release -DskipEndtoend deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
 
       - name: Check release artifacts
         run: scripts/ci/check-release-artifacts.sh release-dry-run.log
