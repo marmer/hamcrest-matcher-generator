@@ -33,7 +33,7 @@ mismatch messages, and the collection matchers: the factories in `CollectionMatc
 `entries`) return `ItemsInOrder`, `ItemsInAnyOrder` and `Entries`, which share the package-private base type
 `PathAwareMatcher`; `BeanPropertyMatcher` flattens them into indexed and keyed property paths. The walk along these
 paths and the rendering of its findings live in the package-private `PathWalk` and `MismatchReport`, which both
-`BeanPropertyMatcher` and the collection matchers use. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
+`BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
 `GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
 check of another one is flattened into property paths; it is public because generated code lives in the user's
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.
@@ -59,7 +59,7 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time and whether JSpecify resolves at compile time) and returns one `GeneratedSource`, a Java or Kotlin file.
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time and the models of all types generated in the run, so that generated code can refer to the code of another type) and returns one `GeneratedSource`, a Java or Kotlin file.
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round; the Enforcer plugin and ArchUnit tests
 guard this.

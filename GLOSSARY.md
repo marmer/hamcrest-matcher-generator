@@ -28,7 +28,7 @@ The single annotation-based declaration of which types assertions are generated 
 _Avoid_: backend settings
 
 **Reference object**:
-An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison.
+An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison, `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and by `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal.
 _Avoid_: template, prototype object
 
 **Property path**:
