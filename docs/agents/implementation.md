@@ -14,7 +14,7 @@ Every implementation ticket names the model its implementer subagent starts with
 - **Exception: `sonnet`**, when the ticket is hard to break down for Haiku, e.g. a cross-cutting design inside the annotation processor or subtle generics handling. Add a one-line reason below the model line.
 - **Rare exception: `opus`**, only when even Sonnet is unlikely to succeed. Always add the reason.
 - A missing model line means `haiku`.
-- **Every checkable requirement is an acceptance criterion.** Implementers build to the criteria, so a constraint that lives only in "What to build" (e.g. "compared character by character") gets dropped; repeat it as a criterion.
+- **Every checkable requirement is an acceptance criterion.** Implementers build to the criteria, so a constraint that lives only in "What to build" (e.g. "compared character by character") gets dropped; repeat it as a criterion. A criterion that freezes something ("unchanged", "byte-identical", "only X changes") names the files and tests it covers, and the ticket author checks that the frozen material holds no assumption the ticket itself changes.
 
 ## Orchestration with `/implement-spec`
 
