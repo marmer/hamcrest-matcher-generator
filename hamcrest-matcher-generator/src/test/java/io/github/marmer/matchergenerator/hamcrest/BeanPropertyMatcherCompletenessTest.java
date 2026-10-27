@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Address;
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Customer;
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Order;
+import java.util.List;
+import java.util.Map;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
@@ -142,9 +144,10 @@ class BeanPropertyMatcherCompletenessTest {
                                                                                 "city")
                                                                         .checkingAllProperties()))));
 
-        final Order order = new Order("1", "a@b", new Customer("Ada", PARIS), null, null);
+        final Order order = new Order("1", "a@b", new Customer("Ada", PARIS), List.of(), Map.of());
         assertFalse(matcher.matches(order));
-        assertEquals("neither checked nor ignored: customer.address.city", mismatchOf(matcher, order));
+        assertEquals(
+                "neither checked nor ignored: customer.address.city", mismatchOf(matcher, order));
     }
 
     /** A generated matcher as seen by the runtime: a Hamcrest matcher that delegates. */

@@ -141,9 +141,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             + " with "
                             + checks.size()
                             + (checks.size() == 1 ? " property check" : " property checks")
-                            + (checkingAllProperties
-                                    ? ", every property checked or ignored"
-                                    : ""));
+                            + (checkingAllProperties ? ", every property checked or ignored" : ""));
         }
     }
 

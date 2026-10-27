@@ -897,7 +897,8 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
-    @DisplayName("Completeness check methods should be generated: ignoring per property and checking all")
+    @DisplayName(
+            "Completeness check methods should be generated: ignoring per property and checking all")
     void completenessCheckMethodsShouldBeGenerated() throws IOException {
         // Preparation
         JavaFileObject configuration =
