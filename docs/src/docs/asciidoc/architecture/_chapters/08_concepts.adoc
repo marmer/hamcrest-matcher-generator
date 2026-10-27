@@ -38,8 +38,10 @@ Build plugins and the `docs` module's tooling are not checked.
 
 | Static analysis (JDK 21+ profile `static-analysis`, part of `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`)
 | Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
-of the modules, including tests and end-to-end sources. Error Prone and NullAway fail the compile at ERROR with no
-baseline; NullAway covers the `io.github.marmer` packages in JSpecify mode. Generated code is not checked and carries no
+of the modules, including tests and end-to-end sources. Error Prone runs its default checks on every module at ERROR
+with no baseline. NullAway runs at ERROR in JSpecify mode on the `io.github.marmer` packages only: main, test and
+end-to-end sources in that package tree. The end-to-end POJOs in `foo.bar` are not NullAway-checked. Generated code is
+not checked and carries no
 license header. The JDK 17 leg skips the profile.
 
 | Frozen 5.x suite (part of `Domain docs in sync`)

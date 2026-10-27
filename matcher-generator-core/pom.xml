@@ -26,7 +26,9 @@
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
-            <!-- Compile-time only: the processor marks its own code, and no consumer needs the annotations at run time. -->
+            <!-- Provided: compile-time only, not a runtime or published dependency. The processor marks its own code with
+                 these annotations. SPI implementers that use them declare jspecify themselves; the backend gets it from
+                 hamcrest-matcher-generator. -->
             <scope>provided</scope>
         </dependency>
         <dependency>
