@@ -19,10 +19,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,6 +47,7 @@ class CoreProcessorIT {
     Path kotlinOutput;
 
     @BeforeEach
+    @AfterEach
     void resetRecording() {
         RecordingBackend.reset();
     }
@@ -408,6 +412,178 @@ class CoreProcessorIT {
         assertEquals("some.other.pck", model.packageName());
         assertEquals("prefix.some.other.pck", model.targetPackage());
         assertTrue(compilation.generatedSourceFile("prefix.some.other.pck.SomePojoRecorded").isPresent());
+    }
+
+    private static JavaFileObject exclusionConfiguration(
+        final boolean deprecatedAlias,
+        final String configuredTypes,
+        final String excludedTypes
+    ) {
+        return JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            "package some.pck;",
+            deprecatedAlias
+                ? "import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;"
+                : "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+            (deprecatedAlias ? "@MatcherConfiguration(" : "@GenerateMatchers(")
+                + "value = " + configuredTypes + ", exclude = " + excludedTypes + ")",
+            "public final class SomeConfiguration {",
+            "}"
+        );
+    }
+
+    private static JavaFileObject bean(final String packageName, final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+            packageName + "." + simpleName,
+            "package " + packageName + ";",
+            "public class " + simpleName + " {",
+            "    public String getName() { return \"\"; }",
+            "}"
+        );
+    }
+
+    private static JavaFileObject outerWithPublicMemberTypes() {
+        return JavaFileObjects.forSourceLines(
+            "some.other.pck.Outer",
+            "package some.other.pck;",
+            "public class Outer {",
+            "    public String getName() { return \"\"; }",
+            "    public static class Inner {",
+            "        public String getName() { return \"\"; }",
+            "    }",
+            "    public static class Kept {",
+            "        public String getName() { return \"\"; }",
+            "    }",
+            "}"
+        );
+    }
+
+    private static List<String> recordedModelNames() {
+        return RecordingBackend.models().stream().map(TypeModel::qualifiedName).collect(Collectors.toList());
+    }
+
+    private static List<String> recordedNestedNames(final TypeModel model) {
+        return model.nestedTypes().stream().map(TypeModel::qualifiedName).collect(Collectors.toList());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded class is left out of a configured package, on both annotations")
+    void anExcludedClassIsLeftOutOfAConfiguredPackage(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck\"", "\"some.other.pck.Excluded\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Excluded"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded class name removes that configured class, on both annotations")
+    void anExcludedClassNameRemovesTheConfiguredClass(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(
+                deprecatedAlias,
+                "{\"some.other.pck.Kept\", \"some.other.pck.Excluded\"}",
+                "\"some.other.pck.Excluded\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Excluded"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded package leaves out every configured class of that package, on both annotations")
+    void anExcludedPackageLeavesOutEveryConfiguredClassOfThatPackage(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "{\"some.other.pck\", \"some.third.pck\"}",
+                "\"some.other.pck\""),
+            bean("some.other.pck", "First"),
+            bean("some.other.pck", "Second"),
+            bean("some.third.pck", "Third"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.third.pck.Third"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("Exclusions that remove every configured type generate nothing and warn about nothing")
+    void exclusionsRemovingEveryConfiguredTypeGenerateNothingAndWarnNothing(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "{\"some.other.pck.Kept\", \"some.other.pck.Second\"}",
+                "\"some.other.pck\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of(), recordedModelNames());
+        assertEquals(List.of(), compilation.generatedSourceFiles());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded public member type of a configured package is not generated as nested model")
+    void anExcludedMemberTypeOfAConfiguredPackageIsNotNested(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck\"", "\"some.other.pck.Outer.Inner\""),
+            outerWithPublicMemberTypes());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Outer.Kept"), recordedNestedNames(onlyModel()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded public member type of a configured class is not generated as nested model")
+    void anExcludedMemberTypeOfAConfiguredClassIsNotNested(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck.Outer\"", "\"some.other.pck.Outer.Inner\""),
+            outerWithPublicMemberTypes());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Outer.Kept"), recordedNestedNames(onlyModel()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An exclude entry that matches no configured type is one warning naming the entry")
+    void anUnmatchedExcludeEntryIsOneWarningNamingTheEntry(final boolean deprecatedAlias) {
+        final JavaFileObject configuration = exclusionConfiguration(
+            deprecatedAlias, "\"some.other.pck.Kept\"", "{\"some.other.pck.Missing\", \"some.other.pck.Missing\"}");
+
+        final Compilation compilation = compile(configuration, bean("some.other.pck", "Kept"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+            .hadWarningContaining("some.other.pck.Missing")
+            .inFile(configuration)
+            .onLine(3);
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(0, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @Test
+    @DisplayName("An exclude entry that matches a configured type is not warned about")
+    void aMatchedExcludeEntryIsNotWarnedAbout() {
+        final Compilation compilation = compile(
+            exclusionConfiguration(false, "\"some.other.pck.Kept\"", "\"some.other.pck.Kept\""),
+            bean("some.other.pck", "Kept"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of(), recordedModelNames());
     }
 
     @Test
