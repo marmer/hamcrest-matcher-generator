@@ -34,7 +34,7 @@ class MissingJobsTest(unittest.TestCase):
         self.assertEqual(["A", "B", "C"], check.required_contexts(rules))
 
     def test_matrix_job_names_of_the_repository_are_expanded(self):
-        names = check.load_job_names(HERE.parents[1])
+        names = check.workflow_job_names(HERE.parents[1])
         self.assertIn("Verify JDK 17", names)
         self.assertIn("Verify JDK latest", names)
         self.assertNotIn("Verify JDK ${{ matrix.role }}", names)
