@@ -47,7 +47,8 @@ jobs:
         if: success()
 
       - name: Test
-        run: ./mvnw -B org.jacoco:jacoco-maven-plugin:prepare-agent verify org.jacoco:jacoco-maven-plugin:report org.jacoco:jacoco-maven-plugin:report-aggregate
+        # The poms bind the JaCoCo agents and the reports Sonar reads (target/site/jacoco and jacoco-it) to the lifecycle.
+        run: ./mvnw -B verify
         if: success()
 
       # Temporarily non-blocking: SONAR_TOKEN is no longer authorized. The SonarCloud setup is decided in
