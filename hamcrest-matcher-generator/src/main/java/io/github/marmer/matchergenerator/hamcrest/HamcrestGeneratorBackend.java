@@ -18,7 +18,16 @@ public class HamcrestGeneratorBackend implements GeneratorBackend {
             model.targetPackage(),
             generator.simpleMatcherName(),
             GeneratedSource.Language.JAVA,
-            JavaFile.builder(model.targetPackage(), generator.getPreparedTypeSpecBuilder().build()).build().toString()
+            withoutSpaceAfterQualifier(
+                JavaFile.builder(model.targetPackage(), generator.getTopLevelTypeSpec()).build().toString())
         );
+    }
+
+    /**
+     * JavaPoet writes a type use annotation on a nested type as {@code Map. @Nullable Entry}. Both spellings are the
+     * same Java, the one without the space is how the annotation is usually written.
+     */
+    private static String withoutSpaceAfterQualifier(final String source) {
+        return source.replaceAll("(\\w)\\. (@Nullable )", "$1.$2");
     }
 }

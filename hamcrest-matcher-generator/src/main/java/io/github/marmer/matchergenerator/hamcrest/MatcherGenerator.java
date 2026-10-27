@@ -8,6 +8,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
+import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
@@ -32,6 +33,10 @@ import org.hamcrest.TypeSafeMatcher;
 class MatcherGenerator {
     private static final String RETURN_THIS = "return this";
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
+    private static final AnnotationSpec NULL_MARKED =
+        AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
+    private static final AnnotationSpec NULLABLE =
+        AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "Nullable")).build();
 
     private final TypeModel model;
     private final GenerationContext context;
@@ -49,6 +54,18 @@ class MatcherGenerator {
 
     String simpleMatcherName() {
         return simpleMatcherName;
+    }
+
+    /**
+     * The matcher type of the configured type itself. Unlike the nested ones it is the null marked scope, unless
+     * JSpecify is not on the class path.
+     */
+    TypeSpec getTopLevelTypeSpec() {
+        final TypeSpec.Builder builder = getPreparedTypeSpecBuilder();
+        if (context.jspecifyAvailable()) {
+            builder.addAnnotation(NULL_MARKED);
+        }
+        return builder.build();
     }
 
     TypeSpec.Builder getPreparedTypeSpecBuilder() {
@@ -125,8 +142,21 @@ class MatcherGenerator {
             ClassName.get(Matcher.class),
             isConflictingProperty(property.name())
                 ? WildcardTypeName.subtypeOf(TypeName.OBJECT)
-                : WildcardTypeName.supertypeOf(typeVarsToWildcards(property.type(), true))
+                : WildcardTypeName.supertypeOf(nullableIf(
+                    property.nullability() == Nullability.NULLABLE,
+                    typeVarsToWildcards(property.type(), true)))
         );
+    }
+
+    private TypeName nullableIf(final boolean nullable, final TypeName type) {
+        return nullable ? nullable(type) : type;
+    }
+
+    /**
+     * Marks the type as nullable when JSpecify is available. Primitives cannot be annotated.
+     */
+    private TypeName nullable(final TypeName type) {
+        return context.jspecifyAvailable() && !type.isPrimitive() ? type.annotated(NULLABLE) : type;
     }
 
     private MethodSpec toEqualsMatcher(final PropertyModel property) {
@@ -141,9 +171,9 @@ class MatcherGenerator {
 
     private TypeName toEqualsMatcherParameterType(final PropertyModel property) {
         if (property.type().getKind() == TypeKind.TYPEVAR) {
-            return TypeName.get(Object.class);
+            return nullable(TypeName.get(Object.class));
         }
-        return typeVarsToWildcards(property.type(), false);
+        return nullable(typeVarsToWildcards(property.type(), false));
     }
 
     private TypeName typeVarsToWildcards(final TypeMirror type, final boolean boxPrimitives) {

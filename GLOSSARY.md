@@ -8,6 +8,9 @@ An annotation processor that generates type-specific test assertions (Hamcrest m
 The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
 _Avoid_: bean model, metadata
 
+**Nullability**:
+Whether a property may be `null`, one of `NULLABLE`, `NON_NULL` and `UNSPECIFIED`. The core derives it from the accessor: primitives are non null, JSpecify `@Nullable`/`@NonNull` and the JetBrains `@Nullable`/`@NotNull` annotations that kotlinc emits decide explicitly, and otherwise the closest `@NullMarked`/`@NullUnmarked` scope does. A type variable stays `UNSPECIFIED`. Generated Hamcrest code is `@NullMarked` with `@Nullable` on equality values and on nullable property types, but only when JSpecify resolves at compile time. Kotlin reports a mismatch with those annotations as an error; `-Xjspecify-annotations=warn` lowers it to a warning.
+
 **Property**:
 A readable value of a bean (getter) or record (component accessor) that generated assertions can check.
 _Avoid_: field, attribute

@@ -7,11 +7,14 @@ import java.util.Map;
 import org.hamcrest.Description;
 import org.hamcrest.SelfDescribing;
 import org.hamcrest.StringDescription;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A {@link StringDescription} printing values of generated types from their properties, never via
  * {@code toString()}: {@code OrderLine {sku "B-2", quantity <2>}}.
  */
+@NullMarked
 final class PropertyDescription extends StringDescription {
     private static final int MAX_DEPTH = 5;
 
@@ -23,15 +26,15 @@ final class PropertyDescription extends StringDescription {
         return description.toString();
     }
 
-    static String describeValue(final Object value) {
+    static String describeValue(final @Nullable Object value) {
         return new PropertyDescription().appendValue(value).toString();
     }
 
-    private static boolean isGeneratedType(final Object value) {
+    private static boolean isGeneratedType(final @Nullable Object value) {
         return value != null && PropertyAccess.propertiesOfGeneratedType(value.getClass()) != null;
     }
 
-    private static boolean containsGeneratedType(final Object value) {
+    private static boolean containsGeneratedType(final @Nullable Object value) {
         if (value instanceof Collection<?>) {
             return ((Collection<?>) value).stream().anyMatch(PropertyDescription::containsGeneratedType);
         }
@@ -46,7 +49,7 @@ final class PropertyDescription extends StringDescription {
     }
 
     @Override
-    public Description appendValue(final Object value) {
+    public Description appendValue(final @Nullable Object value) {
         if (value == null || depth >= MAX_DEPTH) {
             return super.appendValue(value);
         }
@@ -73,7 +76,7 @@ final class PropertyDescription extends StringDescription {
     private void appendAll(final String start, final Iterator<?> values, final String end) {
         append(start);
         while (values.hasNext()) {
-            final Object value = values.next();
+            final @Nullable Object value = values.next();
             if (value instanceof Map.Entry<?, ?>) {
                 appendEntryParts((Map.Entry<?, ?>) value);
             } else {
@@ -98,7 +101,7 @@ final class PropertyDescription extends StringDescription {
         appendPlainOrGenerated(entry.getValue());
     }
 
-    private void appendPlainOrGenerated(final Object value) {
+    private void appendPlainOrGenerated(final @Nullable Object value) {
         if (containsGeneratedType(value)) {
             appendValue(value);
         } else {
@@ -111,7 +114,7 @@ final class PropertyDescription extends StringDescription {
         append(" {");
         var first = true;
         for (final String property : properties) {
-            final Object propertyValue = PropertyAccess.read(value, property);
+            final @Nullable Object propertyValue = PropertyAccess.read(value, property);
             if (propertyValue == PropertyAccess.NO_SUCH_PROPERTY) {
                 continue;
             }
