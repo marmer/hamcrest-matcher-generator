@@ -24,6 +24,13 @@ generally available one.
 checks that every published module has its jar, sources jar, Javadoc jar and CycloneDX bill of materials, and that
 CycloneDX skipped no module. Nothing is uploaded.
 
+| License gate (part of the Build and verify matrix)
+| Every project dependency that a published jar needs uses a permissive license (Apache-2.0, MIT, BSD-2-Clause or
+BSD-3-Clause); test-scope dependencies may also use EPL-1.0 or EPL-2.0. The `license-maven-plugin` fails the build on an
+unknown or missing license, so a new dependency with an unseen license name must be added to the merge list on purpose.
+Every published jar carries `META-INF/LICENSE`, `META-INF/NOTICE` and `THIRD-PARTY.txt`, which a per-module test checks.
+Build plugins and the `docs` module's tooling are not checked.
+
 | Frozen 5.x suite (part of `Domain docs in sync`)
 | The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, except that its parent and own
 version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:

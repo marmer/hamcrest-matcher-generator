@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Override;
 import java.lang.String;
@@ -14,11 +15,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> {
+public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<PersonRecord> beanPropertyMatcher;
 
   public PersonRecordMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<PersonRecord>(PersonRecord.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<PersonRecord>(PersonRecord.class, "firstName", "lastName", "class");
   }
 
   public PersonRecordMatcher withFirstName(final Matcher<? super String> matcher) {
@@ -64,6 +65,11 @@ public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> {
   public PersonRecordMatcher withClass(final Class<?> value) {
     beanPropertyMatcher.with("class", Matchers.equalTo(value));
     return this;
+  }
+
+  @Override
+  public BeanPropertyMatcher<PersonRecord> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override

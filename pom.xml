@@ -27,8 +27,8 @@
 
     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -130,11 +130,6 @@
                 <version>4.8.108</version>
             </dependency>
             <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>javax.annotation-api</artifactId>
-                <version>1.3.2</version>
-            </dependency>
-            <dependency>
                 <groupId>io.github.glytching</groupId>
                 <artifactId>junit-extensions</artifactId>
                 <version>2.3.0</version>
@@ -215,8 +210,31 @@
     </dependencyManagement>
 
     <build>
+        <!-- Every published jar carries the license, the NOTICE and the third-party list (META-INF/LICENSE, META-INF/NOTICE, THIRD-PARTY.txt). -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>${project.build.directory}/generated-resources/licenses</directory>
+            </resource>
+            <!-- Assumes the module is a direct child of the repository root, where LICENSE and NOTICE live. -->
+            <resource>
+                <directory>${project.basedir}/..</directory>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                </includes>
+                <targetPath>META-INF</targetPath>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>2.7.1</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -384,6 +402,52 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <!-- Project dependencies only: build plugins are not checked. Allow-lists are explicit; EPL is allowed for test scope only. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <failOnBlacklist>true</failOnBlacklist>
+                    <failOnMissing>true</failOnMissing>
+                    <licenseMerges>
+                        <licenseMerge>Apache-2.0|Apache License, Version 2.0|Apache License 2.0|The Apache Software License, Version 2.0|The Apache License, Version 2.0|Apache 2.0</licenseMerge>
+                        <licenseMerge>MIT|MIT License|The MIT License|The MIT License (MIT)</licenseMerge>
+                        <licenseMerge>BSD-2-Clause|BSD 2-Clause License|The BSD 2-Clause License</licenseMerge>
+                        <licenseMerge>BSD-3-Clause|BSD 3-Clause License|The BSD 3-Clause License|BSD License 3|New BSD License</licenseMerge>
+                    </licenseMerges>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>runtime-licenses</id>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                        <configuration>
+                            <excludedScopes>test,system</excludedScopes>
+                            <includedLicenses>Apache-2.0|MIT|BSD-2-Clause|BSD-3-Clause</includedLicenses>
+                            <outputDirectory>${project.build.directory}/generated-resources/licenses</outputDirectory>
+                            <thirdPartyFilename>THIRD-PARTY.txt</thirdPartyFilename>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-licenses</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                        <configuration>
+                            <includedScopes>test</includedScopes>
+                            <includedLicenses>Apache-2.0|MIT|BSD-2-Clause|BSD-3-Clause|EPL-1.0|EPL-2.0</includedLicenses>
+                            <outputDirectory>${project.build.directory}/license-check</outputDirectory>
+                            <thirdPartyFilename>THIRD-PARTY-test.txt</thirdPartyFilename>
+                            <licenseMerges combine.children="append">
+                                <licenseMerge>EPL-1.0|Eclipse Public License - v 1.0|Eclipse Public License 1.0</licenseMerge>
+                                <licenseMerge>EPL-2.0|Eclipse Public License - v 2.0|Eclipse Public License 2.0|Eclipse Public License v2.0</licenseMerge>
+                            </licenseMerges>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>

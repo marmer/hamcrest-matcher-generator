@@ -1,0 +1,3 @@
+
+Expected: Order with 2 property checks
+     but: customer: expected a Customer with name "Ada", address.city "Paris" but was null
