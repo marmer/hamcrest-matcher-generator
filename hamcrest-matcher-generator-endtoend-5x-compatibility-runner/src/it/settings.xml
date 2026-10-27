@@ -1,0 +1,10 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <!-- Settings of the consumer build that runs the frozen 5.x suite: the outer build's local repository is the only remote. -->
+  <mirrors>
+    <mirror>
+      <id>outer-local-repository</id>
+      <mirrorOf>*</mirrorOf>
+      <url>file://@localRepository@</url>
+    </mirror>
+  </mirrors>
+</settings>
