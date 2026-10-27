@@ -4,25 +4,29 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isAddress;
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isBooking;
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isContact;
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isCustomer;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Address;
-import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Customer;
-import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest.Order;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Address;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Booking;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Contact;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Customer;
 import java.util.List;
-import java.util.Map;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
 
 /** The completeness check of the runtime matcher: opt-in per matcher, off by default. */
 class BeanPropertyMatcherCompletenessTest {
     private static final Address PARIS = new Address("Paris");
+    private static final Contact ADA = new Contact("Ada", "0170-1", PARIS);
 
     private static String mismatchOf(final Matcher<?> matcher, final Object actual) {
         final Description description = new StringDescription();
@@ -127,70 +131,45 @@ class BeanPropertyMatcherCompletenessTest {
 
     @Test
     void theCheckIsNotInheritedByNestedMatchers() {
-        final BeanPropertyMatcher<Customer> matcher =
-                new BeanPropertyMatcher<>(Customer.class, "name", "address")
+        final Matcher<Customer> matcher =
+                isCustomer()
                         .with("name", equalTo("Ada"))
-                        .with("address", nested(new BeanPropertyMatcher<>(Address.class, "city")))
+                        .with("address", isAddress())
                         .checkingAllProperties();
 
         assertTrue(matcher.matches(new Customer("Ada", PARIS)));
     }
 
     @Test
-    void aNestedMatcherWithTheOptInReportsItsPathOnTheLastLine() {
-        final BeanPropertyMatcher<Order> matcher =
-                new BeanPropertyMatcher<>(Order.class, "id", "customer")
-                        .with("id", equalTo("1"))
+    void theSpecExampleListsTheUnaddressedPathsOfANestedMatcher() {
+        final Matcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
                         .with(
                                 "customer",
-                                nested(
-                                        new BeanPropertyMatcher<>(Customer.class, "name", "address")
-                                                .with("name", equalTo("Ada"))
-                                                .with(
-                                                        "address",
-                                                        nested(
-                                                                new BeanPropertyMatcher<>(
-                                                                                Address.class,
-                                                                                "city")
-                                                                        .checkingAllProperties()))));
+                                isContact().with("name", equalTo("Ada")).checkingAllProperties())
+                        .ignoring("contacts")
+                        .checkingAllProperties();
 
-        final Order order = new Order("1", "a@b", new Customer("Ada", PARIS), List.of(), Map.of());
-        assertFalse(matcher.matches(order));
+        final Booking booking = new Booking("b-1", ADA, List.of());
         assertEquals(
-                "neither checked nor ignored: customer.address.city", mismatchOf(matcher, order));
+                "neither checked nor ignored: customer.phone, customer.address",
+                mismatchOf(matcher, booking));
     }
 
-    /** A generated matcher as seen by the runtime: a Hamcrest matcher that delegates. */
-    private static Matcher<Object> nested(final BeanPropertyMatcher<?> inner) {
-        return new DelegatingGeneratedMatcher(inner);
-    }
+    @Test
+    void unaddressedPropertiesOfTheMatcherComeBeforeThoseOfNestedMatchers() {
+        final Matcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
+                        .with(
+                                "customer",
+                                isContact().with("name", equalTo("Ada")).checkingAllProperties())
+                        .checkingAllProperties();
 
-    private static final class DelegatingGeneratedMatcher extends TypeSafeMatcher<Object>
-            implements GeneratedBeanMatcher {
-        private final BeanPropertyMatcher<?> delegate;
-
-        private DelegatingGeneratedMatcher(final BeanPropertyMatcher<?> delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public BeanPropertyMatcher<?> beanPropertyMatcher() {
-            return delegate;
-        }
-
-        @Override
-        protected boolean matchesSafely(final Object item) {
-            return delegate.matches(item);
-        }
-
-        @Override
-        public void describeTo(final Description description) {
-            delegate.describeTo(description);
-        }
-
-        @Override
-        protected void describeMismatchSafely(final Object item, final Description description) {
-            delegate.describeMismatch(item, description);
-        }
+        final Booking booking = new Booking("b-1", ADA, List.of());
+        assertEquals(
+                "neither checked nor ignored: contacts, customer.phone, customer.address",
+                mismatchOf(matcher, booking));
     }
 }

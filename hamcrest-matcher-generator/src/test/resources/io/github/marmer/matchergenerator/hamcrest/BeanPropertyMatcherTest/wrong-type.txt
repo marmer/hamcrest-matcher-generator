@@ -1,3 +1,3 @@
 
 Expected: Address with 1 property check
-     but: expected an instance of io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest$Address but was a io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcherMessageTest$Customer (Customer {name "Ada", address Address {city "Berlin"}})
+     but: expected an instance of io.github.marmer.matchergenerator.hamcrest.BeanFixtures$Address but was a io.github.marmer.matchergenerator.hamcrest.BeanFixtures$Customer (Customer {name "Ada", address Address {city "Berlin"}})

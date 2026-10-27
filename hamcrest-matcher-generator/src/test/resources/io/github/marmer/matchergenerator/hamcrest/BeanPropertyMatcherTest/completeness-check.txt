@@ -1,0 +1,4 @@
+
+Expected: Booking with 2 property checks, every property checked or ignored
+     but: id: expected "b-2" but was "b-1"
+          neither checked nor ignored: customer.phone, customer.address
