@@ -44,6 +44,10 @@ final class ElementSupport {
         return annotationValue(processingEnv, mirror, "value");
     }
 
+    /**
+     * Emits a note, but only when the verbose option is set. Without an annotation mirror the note is placed at the
+     * element alone.
+     */
     static void logNote(
         final ProcessingEnvironment processingEnv,
         final String message,
@@ -51,7 +55,21 @@ final class ElementSupport {
         final AnnotationMirror annotationMirror,
         final AnnotationValue annotationValue
     ) {
-        processingEnv.getMessager()
-            .printMessage(Diagnostic.Kind.NOTE, message, element, annotationMirror, annotationValue);
+        if (!isVerbose(processingEnv)) {
+            return;
+        }
+        if (annotationMirror == null) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message, element);
+        } else {
+            processingEnv.getMessager()
+                .printMessage(Diagnostic.Kind.NOTE, message, element, annotationMirror, annotationValue);
+        }
+    }
+
+    static boolean isVerbose(final ProcessingEnvironment processingEnv) {
+        final Map<String, String> options = processingEnv.getOptions();
+        return options.containsKey(MatcherGenerationProcessorWorker.VERBOSE_OPTION)
+            && (options.get(MatcherGenerationProcessorWorker.VERBOSE_OPTION) == null
+                || Boolean.parseBoolean(options.get(MatcherGenerationProcessorWorker.VERBOSE_OPTION)));
     }
 }

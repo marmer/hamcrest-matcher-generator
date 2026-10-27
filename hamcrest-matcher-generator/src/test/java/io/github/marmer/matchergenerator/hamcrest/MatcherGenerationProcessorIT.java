@@ -518,7 +518,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = compile(configuration, javaFileObject);
+        Compilation compilation = compileVerbose(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -906,7 +906,7 @@ class MatcherGenerationProcessorIT {
             """);
 
         // Execution
-        Compilation compilation = compile(configuration, javaFileObject);
+        Compilation compilation = compileVerbose(configuration, javaFileObject);
 
         // Assertion
         CompilationSubject.assertThat(compilation).succeeded();
@@ -1049,6 +1049,13 @@ class MatcherGenerationProcessorIT {
     private static Compilation compile(final JavaFileObject... sources) {
         return Compiler.javac()
             .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(sources));
+    }
+
+    private static Compilation compileVerbose(final JavaFileObject... sources) {
+        return Compiler.javac()
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .withOptions("-Amatchergenerator.verbose")
             .compile(Arrays.asList(sources));
     }
 

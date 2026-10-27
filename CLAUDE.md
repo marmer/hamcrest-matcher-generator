@@ -72,6 +72,7 @@ End-to-end modules are the final validation layer: they apply `@GenerateMatchers
 ## Known Pitfalls
 
 - **compile-testing on Java 17** requires `--add-opens=jdk.compiler/com.sun.tools.javac.*=ALL-UNNAMED` in Failsafe `<argLine>` — configured once in the root pom's `pluginManagement` for `maven-failsafe-plugin` (next to the `module.jar` property), so no module repeats it.
+- **Unresolvable names fail the build for `@GenerateMatchers`**: one error per name. The deprecated `@MatcherConfiguration` only warns, as in 5.x, so keep configured names in `@GenerateMatchers` resolvable. Set `-Amatchergenerator.verbose` to see one note per skipped property with its reason.
 - **`docs` module needs JDK 21+**: it is only built when the root profile `docs` (`<jdk>[21,)</jdk>`) is active, so a JDK 17 build skips it silently.
 - **JUnit Platform version mismatch**: Surefire 3.5.2 needs `junit-platform-launcher:1.12.1` explicitly on the classpath — already in root pom.
 - **KAPT generated sources not found**: use `build-helper-maven-plugin:add-test-source` to register `target/generated-sources/kapt/test` *before* the compile phase; do not use antrun to move files.
