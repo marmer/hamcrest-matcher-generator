@@ -16,7 +16,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 | The processor, the runtime artifacts and the generated code run on Java 17 and later, so records are always supported (see ADR 0005).
 
 | 5.x source compatibility
-| Tests written against 5.x keep compiling after a version bump alone, provided the project already builds on JDK 17 or later (users on Java 11 stay on 5.x): same matcher class names, packages and `isX()`/`withFoo`/`resetFoo` methods. The artifact switch is covered by a relocation POM; anything else goes into the migration guide (see ADR 0002).
+| Tests written against 5.x keep compiling after a version bump alone, provided the project already builds on JDK 17 or later (users on Java 11 stay on 5.x): same matcher class names, packages and `isX()`/`withFoo`/`resetFoo` methods. The artifact switch is covered by bridge jars under the old coordinates; anything else goes into the migration guide (see ADR 0002).
 
 | Apache-2.0 license
 | Every published artifact stays under the Apache License 2.0, with a short `NOTICE` file and an SPDX header in every source file. Generated code belongs to the user and carries no license header, so the generator's templates must never contain text copied from third-party code. Dependencies that end up on a user's classpath may only use permissive licenses (Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause); the build checks this.

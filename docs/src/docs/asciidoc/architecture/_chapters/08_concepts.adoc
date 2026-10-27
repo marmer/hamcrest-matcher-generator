@@ -35,7 +35,7 @@ Build plugins and the `docs` module's tooling are not checked.
 | The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, except that its parent and own
 version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:
 `endtoend-5x-compatibility-runner` builds it as a consumer build with the invoker plugin against an isolated local
-repository that holds the reactor artifacts, so Maven follows the relocation POMs like it does for a 5.x user. Its tree
+repository that holds the reactor artifacts, so Maven resolves the bridge jars like it does for a 5.x user, with the project's own compiler plugin version. The suite's `RelocationPomTest`, which asserts the former relocation POMs, is excluded in that build; each bridge module tests its own shape (`BridgeJarIT`). Its tree
 hash must equal the stored one. Only the owner may update that hash.
 
 | Ruleset against job names (part of `Domain docs in sync`)

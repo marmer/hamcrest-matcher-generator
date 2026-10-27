@@ -41,12 +41,13 @@ class BridgeJarIT {
     }
 
     @Test
-    @DisplayName("The jar has an Automatic-Module-Name equal to the package root, the license and the NOTICE")
+    @DisplayName("The jar has an Automatic-Module-Name equal to the package root, its package, the license and the NOTICE")
     void theJarHasAModuleNameTheLicenseAndTheNotice() throws IOException {
         try (JarFile jar = new JarFile(Path.of(System.getProperty("module.jar")).toFile())) {
             assertEquals(
                 PACKAGE_ROOT,
                 jar.getManifest().getMainAttributes().getValue("Automatic-Module-Name"));
+            assertNotNull(jar.getEntry(PACKAGE_ROOT.replace('.', '/') + "/Bridge.class"), "Bridge class");
             assertNotNull(jar.getEntry("META-INF/LICENSE"), "META-INF/LICENSE");
             assertNotNull(jar.getEntry("META-INF/NOTICE"), "META-INF/NOTICE");
             assertNotNull(jar.getEntry("THIRD-PARTY.txt"), "THIRD-PARTY.txt");

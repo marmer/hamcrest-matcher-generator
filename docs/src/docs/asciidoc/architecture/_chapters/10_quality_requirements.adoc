@@ -157,7 +157,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x2]]QS-X2
 | Flexibility / Replaceability
-| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the relocation POM covers the changed artifact).
+| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the bridge jars under the old coordinates cover the changed artifact, also for compiler plugins older than 3.12, which do not follow a relocation in the processor path).
 | None yet (planned for 6.0.0): end-to-end module with unchanged 5.x tests
 
 | [[qs-x3]]QS-X3

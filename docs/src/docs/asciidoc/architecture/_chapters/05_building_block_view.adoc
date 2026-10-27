@@ -35,7 +35,7 @@ check of another one is flattened into property paths; it is public because gene
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
-| Relocation POMs without code that point 5.x users to `hamcrest-matcher-generator` (see ADR 0002).
+| Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see ADR 0002).
 
 | `*-endtoend-*` modules
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
