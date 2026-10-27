@@ -110,4 +110,4 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root (created lazi
 
 ### Implementation process
 
-Implementation tickets name their implementer model (default Haiku, escalated by the orchestrator on poor quality) and run one after another, never in parallel. PR bodies explain changes visually in `show-me` style where that helps, and every session's final report asks the user to run `/retro` (user-invoked only). See `docs/agents/implementation.md`.
+Implementation tickets name their implementer model (default Haiku, escalated by the orchestrator on poor quality) and are commissioned one after another (other work may run in parallel). PR bodies explain changes visually in `show-me` style where that helps, and every session's final report asks the user to run `/retro` (user-invoked only). See `docs/agents/implementation.md`.
