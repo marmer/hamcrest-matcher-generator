@@ -1070,6 +1070,7 @@ class MatcherGenerationProcessorIT {
             package some.other.pck;
 
             import java.util.List;
+            import java.util.Map;
             import org.jspecify.annotations.Nullable;
 
             public class SimplePojo<T>{
@@ -1101,6 +1102,14 @@ class MatcherGenerationProcessorIT {
                     return null;
                 }
 
+                public Map.@Nullable Entry<String, String> getEntry(){
+                    return null;
+                }
+
+                public Map.Entry<String, String> getRequiredEntry(){
+                    return null;
+                }
+
                 public static class Inner{
                     public String getInnerName(){
                         return null;
@@ -1113,6 +1122,37 @@ class MatcherGenerationProcessorIT {
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertGeneratedSource(compilation, "generated-code-is-null-marked-with-jspecify", "some.other.pck.SimplePojoMatcher");
+    }
+
+    @Test
+    @DisplayName("A nullable record component gets the nullable annotations")
+    void aNullableRecordComponentGetsTheNullableAnnotations() throws IOException {
+        JavaFileObject configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.PersonRecord")
+            public final class SomeConfiguration{
+            }
+            """);
+        JavaFileObject record = JavaFileObjects.forSourceLines(
+            "some.other.pck.PersonRecord",
+            """
+            package some.other.pck;
+
+            import org.jspecify.annotations.Nullable;
+
+            public record PersonRecord(String name, @Nullable String nickname, int age){
+            }
+            """);
+
+        Compilation compilation = compileWithJSpecify(configuration, record);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "nullable-record-component-gets-nullable-annotations", "some.other.pck.PersonRecordMatcher");
     }
 
     @Test

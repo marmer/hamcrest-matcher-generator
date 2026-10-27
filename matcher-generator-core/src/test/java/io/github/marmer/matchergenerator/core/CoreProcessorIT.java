@@ -234,6 +234,30 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("A type variable is null agnostic inside a NullMarked scope")
+    void aTypeVariableIsNullAgnosticInsideANullMarkedScope() {
+        final JavaFileObject box = JavaFileObjects.forSourceLines(
+            "some.other.pck.Box",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;",
+            "import org.jspecify.annotations.Nullable;",
+            "@NullMarked",
+            "public class Box<T extends @Nullable Object> {",
+            "    public T getContent() { return null; }",
+            "    public @Nullable T getMaybeContent() { return null; }",
+            "    public String getLabel() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Box\""), box);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("content:UNSPECIFIED", "maybeContent:NULLABLE", "label:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
     @DisplayName("A NullMarked package makes its properties non null")
     void aNullMarkedPackageMakesItsPropertiesNonNull() {
         final JavaFileObject packageInfo = JavaFileObjects.forSourceLines(

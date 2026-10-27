@@ -7,6 +7,7 @@ import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.processing.Generated;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -63,6 +64,18 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
     return this;
   }
 
+  public SimplePojoMatcher withEntry(
+      final Matcher<? super Map.@Nullable Entry<? extends String, ? extends String>> matcher) {
+    beanPropertyMatcher.with("entry", matcher);
+    return this;
+  }
+
+  public SimplePojoMatcher withRequiredEntry(
+      final Matcher<? super Map.Entry<? extends String, ? extends String>> matcher) {
+    beanPropertyMatcher.with("requiredEntry", matcher);
+    return this;
+  }
+
   public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {
     beanPropertyMatcher.with("class", matcher);
     return this;
@@ -103,6 +116,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
     return this;
   }
 
+  public SimplePojoMatcher resetEntry() {
+    beanPropertyMatcher.reset("entry");
+    return this;
+  }
+
+  public SimplePojoMatcher resetRequiredEntry() {
+    beanPropertyMatcher.reset("requiredEntry");
+    return this;
+  }
+
   public SimplePojoMatcher resetClass() {
     beanPropertyMatcher.reset("class");
     return this;
@@ -140,6 +163,18 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
 
   public SimplePojoMatcher withPayload(final @Nullable Object value) {
     beanPropertyMatcher.with("payload", Matchers.equalTo(value));
+    return this;
+  }
+
+  public SimplePojoMatcher withEntry(
+      final Map.@Nullable Entry<? extends String, ? extends String> value) {
+    beanPropertyMatcher.with("entry", Matchers.equalTo(value));
+    return this;
+  }
+
+  public SimplePojoMatcher withRequiredEntry(
+      final Map.@Nullable Entry<? extends String, ? extends String> value) {
+    beanPropertyMatcher.with("requiredEntry", Matchers.equalTo(value));
     return this;
   }
 

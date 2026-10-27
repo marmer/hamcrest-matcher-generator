@@ -40,4 +40,13 @@ internal class HelloKotlinTest {
             Matchers.not(NullabilityProbeMatcher.isNullabilityProbe().withName(null))
         )
     }
+
+    @Test
+    @DisplayName("Generated matchers are typed non null")
+    fun test_GeneratedMatchersAreTypedNonNull() {
+        val matcher: NullabilityProbeMatcher = NullabilityProbeMatcher.isNullabilityProbe()
+        val configured: NullabilityProbeMatcher = matcher.withName("name").withNickname("nick").withCount(1)
+
+        MatcherAssert.assertThat(NullabilityProbe("name", "nick", 1), configured)
+    }
 }

@@ -10,6 +10,11 @@ import javax.lang.model.type.TypeKind;
 /**
  * Reads the nullability of a property from what the annotation-processing model shows: JSpecify annotations and the
  * nullability annotations Kotlin emits into the bytecode and into KAPT stubs.
+ *
+ * <p>Kotlin nullness comes from the JetBrains annotations that kotlinc emits, not from {@code kotlin.Metadata}: the
+ * annotations are plain annotation mirrors, while reading the metadata needs the Kotlin metadata library, which the
+ * core keeps off its dependencies. A type variable is null-agnostic even inside a {@code @NullMarked} scope, so it
+ * only counts as nullable or non null when annotated.
  */
 final class NullabilityResolver {
     private static final Set<String> NULLABLE_ANNOTATIONS = Set.of(
@@ -37,6 +42,9 @@ final class NullabilityResolver {
         }
         if (hasAnyAnnotation(accessor, NON_NULL_ANNOTATIONS)) {
             return Nullability.NON_NULL;
+        }
+        if (accessor.getReturnType().getKind() == TypeKind.TYPEVAR) {
+            return Nullability.UNSPECIFIED;
         }
         return nullMarkedScope(accessor);
     }

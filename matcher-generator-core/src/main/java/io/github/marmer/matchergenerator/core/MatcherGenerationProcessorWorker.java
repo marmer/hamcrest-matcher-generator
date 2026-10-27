@@ -129,7 +129,7 @@ public class MatcherGenerationProcessorWorker {
         final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror)
             .create(typeElement);
         configuredTypes.forEach(configuredType -> warnIfWithoutProperties(model, configuredType));
-        final GenerationContext context = new GenerationContext(generatorName, timeProvider.get(), isJSpecifyAvailable());
+        final GenerationContext context = new GenerationContext(generatorName, timeProvider.get(), isJspecifyAvailable());
         backends.forEach(backend -> write(
             backend,
             backend.generate(model, context),
@@ -318,7 +318,7 @@ public class MatcherGenerationProcessorWorker {
             ));
     }
 
-    private boolean isJSpecifyAvailable() {
+    private boolean isJspecifyAvailable() {
         return processingEnv.getElementUtils().getTypeElement("org.jspecify.annotations.NullMarked") != null;
     }
 

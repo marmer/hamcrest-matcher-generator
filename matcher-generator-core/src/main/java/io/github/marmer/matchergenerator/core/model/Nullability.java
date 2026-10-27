@@ -1,7 +1,8 @@
 package io.github.marmer.matchergenerator.core.model;
 
 /**
- * Whether a property may be {@code null}.
+ * Whether a property may be {@code null}. The core derives it from JSpecify annotations and from the JetBrains
+ * nullability annotations that kotlinc emits, see {@code NullabilityResolver}.
  */
 public enum Nullability {
     /**

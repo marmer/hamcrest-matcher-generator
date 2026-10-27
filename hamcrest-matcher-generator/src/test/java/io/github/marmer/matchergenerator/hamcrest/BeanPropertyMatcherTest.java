@@ -5,6 +5,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -122,6 +123,19 @@ class BeanPropertyMatcherTest {
 
         // Assertion
         assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void theRuntimeLibraryIsNullMarked() {
+        assertThat(BeanPropertyMatcher.class.isAnnotationPresent(NullMarked.class), is(true));
+    }
+
+    @Test
+    void aRecordComponentWithoutValueMatchesNull() {
+        record Nameless(String name) {
+        }
+
+        assertThat(new Nameless(null), new BeanPropertyMatcher<>(Nameless.class).with("name", nullValue()));
     }
 
     @Test
@@ -547,18 +561,5 @@ class BeanPropertyMatcherTest {
     public static class ClassTwoProperties {
         private String firstProperty;
         private String secondProperty;
-    }
-
-    @Test
-    void theRuntimeLibraryIsNullMarked() {
-        assertThat(BeanPropertyMatcher.class.isAnnotationPresent(org.jspecify.annotations.NullMarked.class), is(true));
-    }
-
-    @Test
-    void aRecordComponentWithoutValueMatchesNull() {
-        record Nameless(String name) {
-        }
-
-        assertThat(new Nameless(null), new BeanPropertyMatcher<>(Nameless.class).with("name", nullValue()));
     }
 }
