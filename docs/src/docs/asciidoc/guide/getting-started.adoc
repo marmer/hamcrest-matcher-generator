@@ -1,0 +1,6 @@
+= Getting started
+:description: Add the dependencies, configure the types and write a first test with generated matchers.
+:page-order: 1
+
+[.placeholder]
+Placeholder: the guide chapters follow with the user guide tickets.

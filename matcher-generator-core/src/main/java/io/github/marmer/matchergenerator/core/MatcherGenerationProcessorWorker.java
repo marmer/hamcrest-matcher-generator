@@ -263,13 +263,19 @@ public class MatcherGenerationProcessorWorker {
         return typeElement;
     }
 
+    /**
+     * An unresolvable name is an error for {@code @GenerateMatchers}. The deprecated alias only warns, as it did in
+     * 5.x, so existing 5.x configurations keep compiling.
+     */
     private void printErrorBecauseOfNotExistingTypeConfigured(
         final Element configurationClass,
         final String qualifiedTypeOrPackageName
     ) {
         getConfigurationMirrors(configurationClass)
             .forEach(mirror -> processingEnv.getMessager().printMessage(
-                Diagnostic.Kind.ERROR,
+                mirror.getAnnotationType().asElement().toString().equals(GENERATE_MATCHERS)
+                    ? Diagnostic.Kind.ERROR
+                    : Diagnostic.Kind.WARNING,
                 "Neither a type nor a type exists for '" + qualifiedTypeOrPackageName + "'",
                 configurationClass,
                 mirror,

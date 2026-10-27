@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -25,6 +26,8 @@ import javax.lang.model.type.TypeMirror;
  * Creates the {@link TypeModel} of a configured type.
  */
 class TypeModelFactory {
+    private static final String KOTLIN_METADATA = "kotlin.Metadata";
+
     private final ProcessingEnvironment processingEnv;
     private final AnnotationMirror configurationMirror;
 
@@ -35,6 +38,15 @@ class TypeModelFactory {
 
     private static String decapitalized(final String value) {
         return value.isEmpty() ? value : value.substring(0, 1).toLowerCase(Locale.ROOT) + value.substring(1);
+    }
+
+    /**
+     * Kotlin getters that Java bean rules skip, such as {@code getEnabled(): boolean}, are only recognised in types
+     * that Kotlin compiled. Java types keep the bean rules.
+     */
+    private static boolean isDeclaredInKotlin(final ExecutableElement element) {
+        return element.getEnclosingElement().getAnnotationMirrors().stream()
+            .anyMatch(mirror -> mirror.getAnnotationType().toString().equals(KOTLIN_METADATA));
     }
 
     private static boolean hasReturnType(final ExecutableElement element) {
@@ -157,7 +169,7 @@ class TypeModelFactory {
         logSkippedProperties(type, skipped, reasons, seenSimpleNames);
         final List<PropertyModel> getterProperties = getters.stream()
             .map(element -> new PropertyModel(
-                withoutPropertyPrefix(element.getSimpleName().toString()),
+                propertyName(element),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
                 Nullability.UNSPECIFIED))
@@ -198,7 +210,8 @@ class TypeModelFactory {
     }
 
     /**
-     * Returns the reason why a property candidate is no property, or nothing if it is one.
+     * Returns the reason why a property candidate is no property, or nothing if it is one. A boolean {@code get}
+     * getter and a non boolean {@code is} getter only qualify in types Kotlin compiled.
      */
     private Optional<String> skipReason(final ExecutableElement element) {
         final String name = element.getSimpleName().toString();
@@ -215,13 +228,17 @@ class TypeModelFactory {
         if (!hasReturnType(element)) {
             return Optional.of("method returns void");
         }
+        if (!SourceVersion.isIdentifier(element.getSimpleName())) {
+            return Optional.of("method name is not a Java identifier");
+        }
         if (withoutPropertyPrefix(name).isEmpty()) {
             return Optional.of("no property name follows the '" + propertyPrefix(name) + "' prefix");
         }
-        if (name.startsWith("get") && returnKind == TypeKind.BOOLEAN) {
+        final boolean kotlin = isDeclaredInKotlin(element);
+        if (name.startsWith("get") && returnKind == TypeKind.BOOLEAN && !kotlin) {
             return Optional.of("a boolean property must use the 'is' prefix");
         }
-        if (name.startsWith("is") && returnKind != TypeKind.BOOLEAN) {
+        if (name.startsWith("is") && returnKind != TypeKind.BOOLEAN && !kotlin) {
             return Optional.of("the 'is' prefix requires a boolean return type");
         }
         return Optional.empty();
@@ -249,6 +266,18 @@ class TypeModelFactory {
 
     private static String propertyPrefix(final String name) {
         return name.startsWith("get") ? "get" : "is";
+    }
+
+    /**
+     * A Kotlin {@code is} getter that does not return a primitive boolean keeps its full name, so {@code val isX:
+     * Boolean?} becomes {@code isX}, the name Kotlin gives the property.
+     */
+    private String propertyName(final ExecutableElement element) {
+        final String name = element.getSimpleName().toString();
+        if (name.startsWith("is") && element.getReturnType().getKind() != TypeKind.BOOLEAN) {
+            return decapitalized(name);
+        }
+        return withoutPropertyPrefix(name);
     }
 
     private String withoutPropertyPrefix(final String name) {

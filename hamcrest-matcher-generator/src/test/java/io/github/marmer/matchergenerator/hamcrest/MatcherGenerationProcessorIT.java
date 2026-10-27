@@ -169,7 +169,7 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Print a warning for not existing configured types")
-    void printAnErrorForNotExistingConfiguredTypes() throws IOException {
+    void printAWarningForNotExistingConfiguredTypes() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -191,8 +191,8 @@ class MatcherGenerationProcessorIT {
             .compile(Arrays.asList(configuration));
 
         // Assertion
-        CompilationSubject.assertThat(compilation).failed();
-        CompilationSubject.assertThat(compilation).hadErrorContaining("Neither a type nor a type exists for 'some.other.pck.NotExistingType'").inFile(configuration).onLine(5).atColumn(23);
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningContaining("Neither a type nor a type exists for 'some.other.pck.NotExistingType'").inFile(configuration).onLine(5).atColumn(23);
     }
 
     @Test
@@ -597,7 +597,7 @@ class MatcherGenerationProcessorIT {
 
     @Test
     @DisplayName("Warns on not existing packages or types")
-    void errorsOnNotExistingPackagesOrTypes() throws IOException {
+    void warnsOnNotExistingPackagesOrTypes() throws IOException {
         // Preparation
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
             "some.pck.SomeConfiguration",
@@ -624,8 +624,8 @@ class MatcherGenerationProcessorIT {
         Compilation compilation = compile(configuration, javaFileObject);
 
         // Assertion
-        CompilationSubject.assertThat(compilation).failed();
-        CompilationSubject.assertThat(compilation).hadErrorContaining("Neither a type nor a type exists for 'not.existing.pck'").inFile(configuration).onLine(5).atColumn(23);
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningContaining("Neither a type nor a type exists for 'not.existing.pck'").inFile(configuration).onLine(5).atColumn(23);
     }
 
     @Test
