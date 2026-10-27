@@ -20,6 +20,14 @@ jobs:
       - name: Check the frozen 5.x compatibility suite is unchanged
         run: scripts/ci/check-frozen-5x-suite.sh
 
+      - name: Test the CI check scripts
+        run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
+
+      - name: Check the development ruleset requires only existing CI job names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api repos/${{ github.repository }}/rules/branches/development | scripts/ci/check-ruleset-job-names.py
+
       - name: Check agent scripts with a shebang are executable in git
         run: |
           status=0
