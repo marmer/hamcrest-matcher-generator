@@ -50,12 +50,16 @@ class CoreProcessorIT {
     }
 
     private static JavaFileObject generateMatchersConfiguration(final String configuredTypes) {
+        return generateMatchersConfiguration("SomeConfiguration", configuredTypes);
+    }
+
+    private static JavaFileObject generateMatchersConfiguration(final String simpleName, final String configuredTypes) {
         return JavaFileObjects.forSourceLines(
-            "some.pck.SomeConfiguration",
+            "some.pck." + simpleName,
             "package some.pck;",
             "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
             "@GenerateMatchers(" + configuredTypes + ")",
-            "public final class SomeConfiguration {",
+            "public final class " + simpleName + " {",
             "}"
         );
     }
@@ -77,8 +81,18 @@ class CoreProcessorIT {
             + "@MatcherConfiguration.GenerationConfiguration.PackageConfiguration(\"" + prefix + "\"))");
     }
 
+    /**
+     * A javac with the given processor options, and the Kotlin output directory that every test needs.
+     */
+    private Compiler javacWith(final String... options) {
+        final List<String> all = new ArrayList<>();
+        all.add("-Akapt.kotlin.generated=" + kotlinOutput);
+        all.addAll(Arrays.asList(options));
+        return Compiler.javac().withOptions(all);
+    }
+
     private Compilation compile(final JavaFileObject... sources) {
-        return compile(Compiler.javac().withOptions("-Akapt.kotlin.generated=" + kotlinOutput), sources);
+        return compile(javacWith(), sources);
     }
 
     private static Compilation compile(final Compiler compiler, final JavaFileObject... sources) {
@@ -88,9 +102,7 @@ class CoreProcessorIT {
     }
 
     private Compilation compileVerbose(final JavaFileObject... sources) {
-        return compile(
-            Compiler.javac().withOptions("-Akapt.kotlin.generated=" + kotlinOutput, "-Amatchergenerator.verbose"),
-            sources);
+        return compile(javacWith("-Amatchergenerator.verbose"), sources);
     }
 
     private static TypeModel onlyModel() {
@@ -223,11 +235,9 @@ class CoreProcessorIT {
         writeClassFile(compiledMangled, classes, "some.other.pck.Mangled", "getXyzQ", "getX-zQ");
         writeClassFile(compiledMangled, classes, "kotlin.Metadata", null, null);
 
-        final Compilation compilation = Compiler.javac()
-            .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
-            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-            .withClasspath(classPathWith(classes))
-            .compile(configuration("\"some.other.pck.Mangled\""));
+        final Compilation compilation = compile(
+            javacWith().withClasspath(classPathWith(classes)),
+            configuration("\"some.other.pck.Mangled\""));
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(
@@ -762,7 +772,7 @@ class CoreProcessorIT {
     @Test
     @DisplayName("The verbose option emits one note per skipped property with its reason")
     void theVerboseOptionEmitsOneNotePerSkippedProperty() {
-        final Compilation compilation = compileVerbose(configuration("\"some.other.pck.SkippingPojo\""), skippingPojo());
+        final Compilation compilation = compileVerbose(skippingConfiguration(), skippingPojo());
 
         CompilationSubject.assertThat(compilation).succeeded();
         final List<String> skipNotes = skipNotes(compilation);
@@ -851,20 +861,15 @@ class CoreProcessorIT {
     @Test
     @DisplayName("The verbose option is switched off by false and on by true")
     void theVerboseOptionHonoursItsExplicitValue() {
-        final Compilation off = compile(
-            Compiler.javac().withOptions("-Amatchergenerator.verbose=false", "-Akapt.kotlin.generated=" + kotlinOutput),
-            configuration("\"some.other.pck.SkippingPojo\""),
-            skippingPojo());
-        final Compilation on = compile(
-            Compiler.javac().withOptions("-Amatchergenerator.verbose=true", "-Akapt.kotlin.generated=" + kotlinOutput),
-            configuration("\"some.other.pck.SkippingPojo\""),
-            skippingPojo());
+        final Compilation off = compile(javacWith("-Amatchergenerator.verbose=false"),
+            skippingConfiguration(), skippingPojo());
+        final Compilation on = compile(javacWith("-Amatchergenerator.verbose=true"),
+            skippingConfiguration(), skippingPojo());
 
         CompilationSubject.assertThat(off).succeeded();
         CompilationSubject.assertThat(on).succeeded();
         assertEquals(List.of(), skipNotes(off));
-        assertEquals(skipNotes(compileVerbose(configuration("\"some.other.pck.SkippingPojo\""), skippingPojo())),
-            skipNotes(on));
+        assertEquals(skipNotes(compileVerbose(skippingConfiguration(), skippingPojo())), skipNotes(on));
     }
 
     @Test
@@ -897,8 +902,7 @@ class CoreProcessorIT {
         );
 
         final LocalDateTime before = LocalDateTime.now();
-        final Compilation compilation = Compiler.javac()
-            .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
+        final Compilation compilation = javacWith()
             .withProcessors(new MatcherGenerationProcessor())
             .compile(Arrays.asList(configuration("\"some.other.pck.SomePojo\""), bean));
         final LocalDateTime after = LocalDateTime.now();
@@ -919,22 +923,8 @@ class CoreProcessorIT {
             "}"
         );
         // Two configurations naming the same type make the backend write the same file twice.
-        final JavaFileObject first = JavaFileObjects.forSourceLines(
-            "some.pck.FirstConfiguration",
-            "package some.pck;",
-            "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
-            "@GenerateMatchers(\"some.other.pck.SomePojo\")",
-            "public final class FirstConfiguration {",
-            "}"
-        );
-        final JavaFileObject second = JavaFileObjects.forSourceLines(
-            "some.pck.SecondConfiguration",
-            "package some.pck;",
-            "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
-            "@GenerateMatchers(\"some.other.pck.SomePojo\")",
-            "public final class SecondConfiguration {",
-            "}"
-        );
+        final JavaFileObject first = generateMatchersConfiguration("FirstConfiguration", "\"some.other.pck.SomePojo\"");
+        final JavaFileObject second = generateMatchersConfiguration("SecondConfiguration", "\"some.other.pck.SomePojo\"");
 
         final RuntimeException thrown = assertThrows(
             RuntimeException.class,
@@ -958,6 +948,10 @@ class CoreProcessorIT {
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(1, RecordingBackend.models().size());
+    }
+
+    private static JavaFileObject skippingConfiguration() {
+        return configuration("\"some.other.pck.SkippingPojo\"");
     }
 
     private static JavaFileObject skippingPojo() {
