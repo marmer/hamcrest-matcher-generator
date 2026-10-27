@@ -1,0 +1,3 @@
+
+Expected: Address with 2 property checks
+     but: zip: expected the property to exist but Address has no property "zip"

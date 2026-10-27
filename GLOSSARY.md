@@ -28,6 +28,14 @@ _Avoid_: template, prototype object
 The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
 _Avoid_: property chain, field path
 
+**Generated bean matcher**:
+A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.
+_Avoid_: bean matcher, nested matcher
+
+**One-line rendering**:
+The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
+_Avoid_: compact mode, inline mode
+
 **Completeness check**:
 The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted.
 _Avoid_: strict mode, exhaustiveness

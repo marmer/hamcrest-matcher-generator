@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -13,11 +14,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
+public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;
 
   public SomeClassMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class, "class");
   }
 
   public SomeClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -33,6 +34,11 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
   public SomeClassMatcher withClass(final Class<?> value) {
     beanPropertyMatcher.with("class", Matchers.equalTo(value));
     return this;
+  }
+
+  @Override
+  public BeanPropertyMatcher<SomeClass> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override
@@ -58,11 +64,11 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
       value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
       date = "2020-01-01T00:00"
   )
-  public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> {
+  public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;
 
     public SomeNonStaticInnerClassMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class);
+      beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class, "class");
     }
 
     public SomeNonStaticInnerClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -78,6 +84,11 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> {
     public SomeNonStaticInnerClassMatcher withClass(final Class<?> value) {
       beanPropertyMatcher.with("class", Matchers.equalTo(value));
       return this;
+    }
+
+    @Override
+    public BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher() {
+      return beanPropertyMatcher;
     }
 
     @Override
