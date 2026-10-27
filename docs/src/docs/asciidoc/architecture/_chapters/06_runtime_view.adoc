@@ -20,8 +20,22 @@ are compiled in the same build.
 provides (see ADR 0004). Without that option the worker reports one compile error that names the backend and the
 type, because the Kotlin file would otherwise never be compiled.
 
+.Generation of matchers in one round
+[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round"]
+----
+include::../workspace.dsl[]
+----
+
 Notable aspects::
 
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
 * A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests.
+
+=== Release
+
+.Release
+[structurizr,target=release,format=svg,view=Release,alt="Release"]
+----
+include::../workspace.dsl[]
+----
