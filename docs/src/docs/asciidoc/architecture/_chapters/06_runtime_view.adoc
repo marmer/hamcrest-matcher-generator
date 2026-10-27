@@ -26,6 +26,8 @@ are compiled in the same build.
 provides (see ADR 0004). Without that option the worker reports one compile error that names the backend and the
 type, because the Kotlin file would otherwise never be compiled.
 
+A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
+
 .Generation of matchers in one round
 [structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round"]
 ----

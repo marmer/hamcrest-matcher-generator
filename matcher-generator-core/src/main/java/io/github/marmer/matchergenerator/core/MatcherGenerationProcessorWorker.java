@@ -102,8 +102,10 @@ public class MatcherGenerationProcessorWorker {
             .forEach(annotation -> configurationElements.addAll(roundEnv.getElementsAnnotatedWith(annotation)));
         if (configurationElements.isEmpty()) {
             // The matchers written in an earlier round come back without configuration, carrying the annotations the
-            // generator writes on its output. Claiming them keeps javac's processing lint quiet about annotations nobody
-            // claims.
+            // generator writes on its output (javax.annotation.processing.Generated and org.jspecify.annotations.NullMarked).
+            // Claiming them keeps javac's -Xlint:all -Werror builds clean: javac would otherwise warn that nobody claims
+            // them. The side effect is that javac does not call a later processor in this round when that processor
+            // supports exactly those annotation types and nothing else.
             return annotations.stream()
                 .anyMatch(annotation -> GENERATED_OUTPUT_ANNOTATIONS.contains(annotation.getQualifiedName().toString()));
         }
