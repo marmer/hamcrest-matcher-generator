@@ -7,23 +7,23 @@
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>matcher-generator-parent</artifactId>
-        <version>5.1.0</version>
+        <version>@project.version@</version>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-endtoend-5x-compatibility</artifactId>
-    <version>5.1.0</version>
+    <version>@project.version@</version>
 
     <dependencies>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-            <version>5.1.0</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-            <version>5.1.0</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -56,7 +56,7 @@
                         <path>
                             <groupId>io.github.marmer.testutils</groupId>
                             <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-                            <version>5.1.0</version>
+                            <version>${project.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
