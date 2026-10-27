@@ -46,9 +46,17 @@ Independent frontier tickets still run in parallel, each with its own branch, re
 
 Per-ticket reviews cannot see problems that span tickets: duplicated helpers across tickets, docs drifting from code, two tickets choosing different conventions. When the session stops taking tickets, run `code-review` with both axes on `origin/main` since its tip before the session's first merged PR, so the Spec axis covers all of the session's tickets. Fix its findings in one implementer subagent, through one PR with the same review and auto-merge steps.
 
+## Owner to-do list in the final report
+
+The final report of every implementation or wayfinder session ends with a section headed "Your to-dos" (in the language the owner wrote in). It lists every action only the owner can take: GitHub settings, branch renames, decisions, secrets, merges of red PRs, approvals. Each item is a numbered entry with what to do, why it is needed (what stays blocked until it is done) and where (settings page, PR or issue link). Order by what unblocks the most first.
+
+If nothing is left for the owner, the report says so in one line ("No to-dos for you.").
+
+Before writing the report, the orchestrator re-checks the list against the live state (default branch, open PRs, rulesets, secrets) instead of copying the previous report. An item stays on the list in every later report until its check shows it done.
+
 ## Retro at the end of every session
 
-`retro` is user-invoked only (`disable-model-invocation`), so the agent cannot start it. Close the final report of every implementation session (and every wayfinder session) by asking the user to run `/retro`. When it runs, apply the candidates the user accepts (checks, coding standards, docs, ticket-writing guidance, model defaults) and commit them, so the process improves with each session. Escalations recorded on tickets are a primary input: repeated escalations of a ticket kind mean tickets of that kind should be cut smaller or default to a higher model. Implementer subagents make the retro fixes wherever that is sensible, each on the model its change needs under "Implementer model per ticket", under the same quality bar, escalation rules and "One ticket, one review, one PR" steps. The orchestrator only judges, reviews, pushes and opens the PR, including for fixes that come up while the retro PR is watched, such as a red CI job.
+`retro` is user-invoked only (`disable-model-invocation`), so the agent cannot start it. Close the final report of every implementation session (and every wayfinder session), after the "Your to-dos" section, by asking the user to run `/retro`. When it runs, apply the candidates the user accepts (checks, coding standards, docs, ticket-writing guidance, model defaults) and commit them, so the process improves with each session. Escalations recorded on tickets are a primary input: repeated escalations of a ticket kind mean tickets of that kind should be cut smaller or default to a higher model. Implementer subagents make the retro fixes wherever that is sensible, each on the model its change needs under "Implementer model per ticket", under the same quality bar, escalation rules and "One ticket, one review, one PR" steps. The orchestrator only judges, reviews, pushes and opens the PR, including for fixes that come up while the retro PR is watched, such as a red CI job.
 
 ## Explaining pull requests visually
 
