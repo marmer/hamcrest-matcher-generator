@@ -5,11 +5,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ```bash
-# Full build (dev profile)
+# Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set)
 ./mvnw clean install
 
 # Build + run integration tests
 ./mvnw clean verify
+
+# Without the end-to-end modules
+./mvnw -DskipEndtoend clean verify
+
+# Docs module (docs profile, JDK 21+ only; a JDK 17 build skips it)
+./mvnw -pl docs verify
+
+# Same build as CI's Build job (no tests; run it after changing a pom or .github/workflows/)
+./mvnw -B clean install -DskipTests
+
+# Release dry run (verify only, no GPG, no deploy), then check the bundle contents
+./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
+scripts/ci/check-release-artifacts.sh
 
 # Other JDKs in cloud sessions (the SessionStart hook installs Temurin 17 and the newest GA)
 JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify
