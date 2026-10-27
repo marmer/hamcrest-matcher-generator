@@ -1,0 +1,4 @@
+
+Expected: Order with 6 property checks
+     but: lines: expected 3 items but was 1 item
+          lines[0].sku: expected "X-9" but was "A-1"

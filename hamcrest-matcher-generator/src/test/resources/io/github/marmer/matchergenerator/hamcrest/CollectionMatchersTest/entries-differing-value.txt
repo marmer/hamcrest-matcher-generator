@@ -1,0 +1,3 @@
+
+Expected: Order with 4 property checks
+     but: bySku["B-2"].quantity: expected <3> but was <2>

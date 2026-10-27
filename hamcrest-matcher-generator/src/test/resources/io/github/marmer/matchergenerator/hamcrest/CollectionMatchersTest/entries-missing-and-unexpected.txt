@@ -1,0 +1,4 @@
+
+Expected: Order with 4 property checks
+     but: bySku: missing key "D-4" with OrderLine {sku "D-4", quantity <4>}
+          bySku: unexpected key "C-3" with OrderLine {sku "C-3", quantity <5>}

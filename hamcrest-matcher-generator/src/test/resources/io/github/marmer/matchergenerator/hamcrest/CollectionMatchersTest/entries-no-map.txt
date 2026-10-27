@@ -1,0 +1,3 @@
+
+Expected: Order with 2 property checks
+     but: lines: expected a map with exactly the keys "A-1" but was [OrderLine {sku "A-1", quantity <1>}]

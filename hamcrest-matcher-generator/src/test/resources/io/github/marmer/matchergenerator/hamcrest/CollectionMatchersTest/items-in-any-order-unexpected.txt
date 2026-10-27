@@ -1,0 +1,3 @@
+
+Expected: Order with 2 property checks
+     but: lines: unexpected OrderLine {sku "C-3", quantity <5>}
