@@ -20,11 +20,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.Value;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -37,7 +39,8 @@ class BeanPropertyMatcherMessageTest {
     private static final OrderLine LINE_2 = new OrderLine("B-2", 2);
 
     private static String messageOf(final Object actual, final Matcher<?> matcher) {
-        return assertThrows(AssertionError.class, () -> assertThat(actual, (Matcher<Object>) matcher)).getMessage();
+        return Objects.requireNonNull(
+            assertThrows(AssertionError.class, () -> assertThat(actual, (Matcher<Object>) matcher)).getMessage());
     }
 
     private static void assertMessage(final String scenario, final String actualMessage) throws IOException {
@@ -316,7 +319,7 @@ class BeanPropertyMatcherMessageTest {
     public static class Order {
         String id;
         String email;
-        Customer customer;
+        @Nullable Customer customer;
         List<OrderLine> lines;
         Map<String, OrderLine> linesBySku;
     }
@@ -324,7 +327,7 @@ class BeanPropertyMatcherMessageTest {
     @Value
     public static class Customer {
         String name;
-        Address address;
+        @Nullable Address address;
     }
 
     @Value

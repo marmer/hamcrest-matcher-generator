@@ -29,6 +29,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
+import org.jspecify.annotations.Nullable;
 
 class MatcherGenerator {
     private static final String RETURN_THIS = "return this";
@@ -112,7 +113,7 @@ class MatcherGenerator {
             .collect(Collectors.toList());
     }
 
-    private MethodSpec toHamcrestMatcher(final PropertyModel property) {
+    private @Nullable MethodSpec toHamcrestMatcher(final PropertyModel property) {
         if (isMatcher(property.type())) {
             return null;
         }
@@ -125,7 +126,7 @@ class MatcherGenerator {
             .build();
     }
 
-    private MethodSpec toHamcrestMatcherReset(final PropertyModel property) {
+    private @Nullable MethodSpec toHamcrestMatcherReset(final PropertyModel property) {
         if (isMatcher(property.type())) {
             return null;
         }

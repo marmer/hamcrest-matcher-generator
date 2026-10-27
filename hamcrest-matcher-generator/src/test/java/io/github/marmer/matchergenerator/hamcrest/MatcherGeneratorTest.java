@@ -1,5 +1,6 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
+import com.google.testing.compile.CompilationSubject;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.model.Nullability;
@@ -8,6 +9,7 @@ import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.processing.AbstractProcessor;
@@ -15,6 +17,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,8 +54,8 @@ class MatcherGeneratorTest {
      * A real type mirror, since the generator inspects the kind and the element of the types it is given.
      */
     private static TypeMirror stringType() {
-        final AtomicReference<TypeMirror> string = new AtomicReference<>();
-        Compiler.javac()
+        final AtomicReference<@Nullable TypeMirror> string = new AtomicReference<>();
+        CompilationSubject.assertThat(Compiler.javac()
             .withProcessors(new AbstractProcessor() {
                 @Override
                 public Set<String> getSupportedAnnotationTypes() {
@@ -70,7 +73,8 @@ class MatcherGeneratorTest {
                     return false;
                 }
             })
-            .compile(JavaFileObjects.forSourceLines("some.Empty", "package some;", "class Empty {}"));
-        return string.get();
+            .compile(JavaFileObjects.forSourceLines("some.Empty", "package some;", "class Empty {}")))
+            .succeeded();
+        return Objects.requireNonNull(string.get());
     }
 }

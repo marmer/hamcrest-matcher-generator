@@ -5,6 +5,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,7 +113,7 @@ class BeanPropertyMatcherTest {
 
     @Test
     void aRecordComponentWithoutValueMatchesNull() {
-        record Nameless(String name) {
+        record Nameless(@Nullable String name) {
         }
 
         assertThat(new Nameless(null), new BeanPropertyMatcher<>(Nameless.class).with("name", nullValue()));
