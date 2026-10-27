@@ -8,7 +8,7 @@ Rules (see docs/agents/domain.md, "Redundancy rules"):
      (matched by its filename).
   3. The glossary table contains no leftover template placeholder rows such as `<Term-1>`.
   4. Every required check that docs/agents/wayfinding.md names ("required checks of the
-     `development` ruleset pass (`Build`, ...)") is the name of a job in .github/workflows/,
+     `main` ruleset pass (`Build`, ...)") is the name of a job in .github/workflows/,
      with `${{ matrix.role }}` expanded to each `role:` of the job's matrix.
   5. Every backticked file name in CLAUDE.md ending in .java, .kt, .adoc, .yml or .xml exists in the repository
      (files git tracks or would add; ignored ones such as target/ do not count; a name with a `/` matches as a path
@@ -41,7 +41,7 @@ CLAUDE_MD = "CLAUDE.md"
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
 PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
-REQUIRED_CHECKS = re.compile(r"required checks of the `development` ruleset pass \(([^)]*)\)")
+REQUIRED_CHECKS = re.compile(r"required checks of the `main` ruleset pass \(([^)]*)\)")
 BACKTICKED = re.compile(r"`([^`\n]+)`")
 FILE_NAME = re.compile(r"[\w.-]+\.(?:java|kt|adoc|yml|xml)")
 PACKAGE = re.compile(r"io\.github\.marmer(?:\.\w+)*")

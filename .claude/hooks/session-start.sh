@@ -71,9 +71,9 @@ install_jdk 17 "$HOME/.jdks/17"
 
 # Non-fatal: warn when this branch carries changes that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
 # Compares content, not commits: after a squash merge the base is merged in, leaving old commits with an empty diff.
-git fetch -q origin development 2>/dev/null || true
-changed=$(git diff --name-only origin/development HEAD 2>/dev/null | wc -l)
+git fetch -q origin 2>/dev/null || true
+changed=$(git diff --name-only origin/HEAD HEAD 2>/dev/null | wc -l)
 if [ "${changed:-0}" -gt 0 ]; then
-  echo "session-start: warning: $changed file(s) on this branch differ from origin/development; see the Merging section of docs/agents/wayfinding.md" >&2
+  echo "session-start: warning: $changed file(s) on this branch differ from the remote default branch (origin/HEAD); see the Merging section of docs/agents/wayfinding.md" >&2
 fi
 exit 0

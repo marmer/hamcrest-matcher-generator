@@ -19,8 +19,8 @@
     </scm>
 
     <ciManagement>
-        <system>travis-ci</system>
-        <url>https://travis-ci.org/marmer/hamcrest-matcher-generator</url>
+        <system>GitHub Actions</system>
+        <url>https://github.com/marmer/hamcrest-matcher-generator/actions</url>
     </ciManagement>
 
     <inceptionYear>2017</inceptionYear>

@@ -8,7 +8,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 === Continuous integration gates
 
 Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
-blocked it. The `development` branch ruleset requires the build, the verify matrix and `Domain docs in sync` to pass before
+blocked it. The `main` branch ruleset requires the build, the verify matrix and `Domain docs in sync` to pass before
 GitHub merges a pull request; the release dry run is not required yet, and the owner decides when to add it.
 
 [options="header",cols="2,5"]
@@ -52,7 +52,7 @@ repository that holds the reactor artifacts, so Maven resolves the bridge jars l
 hash must equal the stored one. Only the owner may update that hash.
 
 | Ruleset against job names (part of `Domain docs in sync`)
-| Every status check that the `development` ruleset requires is the name of an existing CI job, so a removed job cannot
+| Every status check that the `main` ruleset requires is the name of an existing CI job, so a removed job cannot
 block all merges.
 
 | Docs sync (`Domain docs in sync`)

@@ -4,7 +4,7 @@
 A required context without a job blocks every merge (a removed `Verify JDK 11` once did for hours).
 
 Usage (the JSON is the response of the branch rules API, the job names come from .github/workflows/):
-  gh api repos/<owner>/<repo>/rules/branches/development | scripts/ci/check-ruleset-job-names.py
+  gh api repos/<owner>/<repo>/rules/branches/<default branch> | scripts/ci/check-ruleset-job-names.py
   scripts/ci/check-ruleset-job-names.py <rules.json> [<root-dir>]
 """
 import json
