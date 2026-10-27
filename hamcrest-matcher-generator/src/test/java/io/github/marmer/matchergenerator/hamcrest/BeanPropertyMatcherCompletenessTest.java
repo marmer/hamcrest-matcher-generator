@@ -231,9 +231,13 @@ class BeanPropertyMatcherCompletenessTest {
                         .with("email", equalTo("ada@example.org"))
                         .ignoring("customer")
                         .ignoring("lines")
-                        .with(
-                                "linesBySku",
-                                entries("B-2", isOrderLine().with("quantity", equalTo(2))))
+                        .ignoring("lineArray")
+                        .ignoring("tags")
+                        .ignoring("byColor")
+                        .ignoring("byId")
+                        .ignoring("byLine")
+                        .ignoring("batches")
+                        .with("bySku", entries("B-2", isOrderLine().with("quantity", equalTo(2))))
                         .checkingAllProperties();
 
         assertTrue(

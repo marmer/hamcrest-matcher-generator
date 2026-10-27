@@ -6,6 +6,9 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -21,7 +24,19 @@ final class BeanFixtures {
     private BeanFixtures() {}
 
     static TestMatcher<Order> isOrder() {
-        return new TestMatcher<>(Order.class, "id", "email", "customer", "lines", "linesBySku");
+        return new TestMatcher<>(
+                Order.class,
+                "id",
+                "email",
+                "customer",
+                "lines",
+                "bySku",
+                "lineArray",
+                "tags",
+                "byColor",
+                "byId",
+                "byLine",
+                "batches");
     }
 
     static TestMatcher<Customer> isCustomer() {
@@ -99,13 +114,47 @@ final class BeanFixtures {
         String other = "o";
     }
 
+    public enum Color {
+        RED,
+        GREEN,
+        BLUE
+    }
+
     @Value
+    @Builder
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Order {
-        String id;
-        String email;
-        @Nullable Customer customer;
-        List<OrderLine> lines;
-        Map<String, OrderLine> linesBySku;
+        @Builder.Default String id = "o-1";
+        @Builder.Default String email = "ada@example.org";
+        @Builder.Default @Nullable Customer customer = null;
+        @Builder.Default List<OrderLine> lines = List.of();
+        @Builder.Default Map<String, OrderLine> bySku = Map.of();
+        @Builder.Default OrderLine[] lineArray = new OrderLine[0];
+        @Builder.Default @Nullable List<String> tags = List.of();
+        @Builder.Default Map<Color, OrderLine> byColor = Map.of();
+        @Builder.Default Map<Integer, OrderLine> byId = Map.of();
+        @Builder.Default Map<OrderLine, String> byLine = Map.of();
+        @Builder.Default List<List<OrderLine>> batches = List.of();
+
+        public Order(
+                final String id,
+                final String email,
+                final @Nullable Customer customer,
+                final List<OrderLine> lines,
+                final Map<String, OrderLine> bySku) {
+            this(
+                    id,
+                    email,
+                    customer,
+                    lines,
+                    bySku,
+                    new OrderLine[0],
+                    List.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    List.of());
+        }
     }
 
     @Value

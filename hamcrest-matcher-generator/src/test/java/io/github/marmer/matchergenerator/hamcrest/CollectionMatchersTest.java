@@ -4,9 +4,12 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrder;
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrderLine;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.entries;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInAnyOrder;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInOrder;
+import static io.github.marmer.matchergenerator.hamcrest.GoldenMessages.messageOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
@@ -14,20 +17,16 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Color;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Order;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.OrderLine;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.TestMatcher;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import lombok.Builder;
-import lombok.Value;
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 /** Mismatch messages are compared with golden files under {@code CollectionMatchersTest/}. */
@@ -36,26 +35,7 @@ class CollectionMatchersTest {
     private static final OrderLine LINE_2 = new OrderLine("B-2", 2);
     private static final OrderLine LINE_3 = new OrderLine("C-3", 5);
 
-    private static String messageOf(final Object actual, final Matcher<?> matcher) {
-        return Objects.requireNonNull(
-                assertThrows(
-                                AssertionError.class,
-                                () -> assertThat(actual, (Matcher<Object>) matcher))
-                        .getMessage());
-    }
-
-    private static void assertMessage(final String scenario, final String actualMessage)
-            throws IOException {
-        try (InputStream in =
-                CollectionMatchersTest.class.getResourceAsStream(
-                        "CollectionMatchersTest/" + scenario + ".txt")) {
-            final String expected =
-                    in == null
-                            ? "<missing golden file>"
-                            : new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(expected, actualMessage + "\n");
-        }
-    }
+    private final GoldenMessages golden = new GoldenMessages("CollectionMatchersTest");
 
     private static Order orderWithLines(final OrderLine... lines) {
         return Order.builder().lines(List.of(lines)).lineArray(lines).build();
@@ -71,7 +51,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderReportsTheSizeAndTheIndexedPathOfEveryFailingItem() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2, LINE_3),
@@ -80,7 +60,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderChecksTheItemsBothListsHaveEvenWhenTheSizeDiffers() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-fewer-items",
                 messageOf(
                         orderWithLines(LINE_1),
@@ -93,7 +73,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderDescribesASingleItemInTheSingular() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-one-item",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2),
@@ -102,7 +82,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderDescribesOtherMatchersOfItemsByTheMatcher() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-foreign-matcher",
                 messageOf(
                         Order.builder().tags(List.of("a", "b")).build(),
@@ -111,7 +91,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderReportsAnItemOfAnotherTypeAsAWholeExpectation() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-null-item",
                 messageOf(
                         Order.builder().lineArray(new OrderLine[] {LINE_1, null}).build(),
@@ -120,7 +100,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderTreatsArraysLikeLists() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-array",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2, LINE_3),
@@ -136,7 +116,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderReportsAValueItCannotCheck() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-no-list",
                 messageOf(
                         Order.builder().tags(null).build(),
@@ -145,7 +125,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderOnItsOwnReportsTheFailuresWithoutAPrefix() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-top-level",
                 messageOf(
                         List.of(LINE_1, LINE_2, LINE_3),
@@ -154,14 +134,14 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInOrderWithoutItemsIsDescribedAsNoItems() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-empty",
                 messageOf(orderWithLines(LINE_1), isOrder().with("lines", itemsInOrder())));
     }
 
     @Test
     void itemsInOrderReportsACollectionThatIsNoList() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-order-no-list-value",
                 messageOf(
                         Order.builder().bySku(Map.of("A-1", LINE_1)).build(),
@@ -179,7 +159,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderNamesTheMissingItemAndTheClosestCandidate() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-closest",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2),
@@ -188,7 +168,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderNamesTheDifferencesOfTheClosestCandidate() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-closest-several-differences",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2),
@@ -197,7 +177,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderPicksTheCandidateWithTheFewestDifferences() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-fewest-differences",
                 messageOf(
                         orderWithLines(
@@ -210,7 +190,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderFindsNoClosestCandidateAmongItemsOfAnotherType() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-other-type",
                 messageOf(
                         Order.builder().tags(List.of("a")).build(),
@@ -219,7 +199,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderNamesUnexpectedItems() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-unexpected",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2, LINE_3),
@@ -229,7 +209,7 @@ class CollectionMatchersTest {
     @Test
     void itemsInAnyOrderNamesMissingAndUnexpectedItemsWithoutAClosestCandidateForOtherMatchers()
             throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-foreign-matcher",
                 messageOf(
                         Order.builder().tags(List.of("a", "b")).build(),
@@ -238,7 +218,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderNeedsAnItemOfItsOwnForEveryMatcher() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-own-item",
                 messageOf(
                         orderWithLines(LINE_1),
@@ -252,7 +232,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderTreatsArraysLikeCollections() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-array",
                 messageOf(
                         orderWithLines(LINE_1, LINE_2),
@@ -264,7 +244,7 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderReportsAValueItCannotCheck() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-no-collection",
                 messageOf(
                         Order.builder().tags(null).build(),
@@ -273,14 +253,14 @@ class CollectionMatchersTest {
 
     @Test
     void itemsInAnyOrderWithoutItemsIsDescribedAsNoItems() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-empty",
                 messageOf(orderWithLines(LINE_1), isOrder().with("lines", itemsInAnyOrder())));
     }
 
     @Test
     void itemsInAnyOrderReportsAValueThatIsNoCollection() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "items-in-any-order-no-collection-value",
                 messageOf(
                         Order.builder().bySku(Map.of("A-1", LINE_1)).build(),
@@ -307,7 +287,7 @@ class CollectionMatchersTest {
 
     @Test
     void entriesNamesTheKeyAndPathOfDifferingValues() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "entries-differing-value",
                 messageOf(
                         orderWithBySku(Map.of("A-1", LINE_1, "B-2", LINE_2)),
@@ -322,7 +302,7 @@ class CollectionMatchersTest {
         final Map<String, OrderLine> bySku = new LinkedHashMap<>();
         bySku.put("A-1", LINE_1);
         bySku.put("C-3", LINE_3);
-        assertMessage(
+        golden.assertMessage(
                 "entries-missing-and-unexpected",
                 messageOf(
                         orderWithBySku(bySku),
@@ -340,7 +320,7 @@ class CollectionMatchersTest {
         final Map<Integer, OrderLine> byId = new LinkedHashMap<>();
         byId.put(42, LINE_1);
         byId.put(43, LINE_3);
-        assertMessage(
+        golden.assertMessage(
                 "entries-key-types",
                 messageOf(
                         Order.builder().byColor(byColor).byId(byId).build(),
@@ -361,7 +341,7 @@ class CollectionMatchersTest {
         final Map<OrderLine, String> byLine = new LinkedHashMap<>();
         byLine.put(LINE_1, "first");
         byLine.put(LINE_2, "second");
-        assertMessage(
+        golden.assertMessage(
                 "entries-generated-keys",
                 messageOf(
                         Order.builder().byLine(byLine).build(),
@@ -377,7 +357,7 @@ class CollectionMatchersTest {
 
     @Test
     void entriesReportAValueItCannotCheck() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "entries-no-map",
                 messageOf(
                         orderWithLines(LINE_1),
@@ -386,7 +366,7 @@ class CollectionMatchersTest {
 
     @Test
     void entriesWithoutKeysAreDescribedAsAnEmptyMap() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "entries-empty",
                 messageOf(
                         orderWithBySku(Map.of("A-1", LINE_1)),
@@ -395,7 +375,7 @@ class CollectionMatchersTest {
 
     @Test
     void entriesOnItsOwnReportTheFailuresWithoutAPrefix() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "entries-top-level",
                 messageOf(
                         Map.of("A-1", LINE_1, "B-2", LINE_2),
@@ -450,7 +430,7 @@ class CollectionMatchersTest {
 
     @Test
     void collectionMatchersInsideForeignMatchersRenderOnOneLine() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "inside-foreign-matcher",
                 messageOf(
                         Order.builder().batches(List.of(List.of(LINE_1, LINE_2, LINE_3))).build(),
@@ -468,7 +448,7 @@ class CollectionMatchersTest {
     @Test
     void aCollectionMatcherInsideAForeignMatcherAtTheTopLevelKeepsTheBlockFormat()
             throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "inside-foreign-matcher-top-level",
                 messageOf(
                         List.of(List.of(LINE_1, LINE_2, LINE_3)),
@@ -477,87 +457,11 @@ class CollectionMatchersTest {
 
     @Test
     void matchersWithoutItemsOrKeysDescribeThemselvesAsEmpty() throws IOException {
-        assertMessage("empty-items-in-order", messageOf(List.of(LINE_1), itemsInOrder()));
-        assertMessage("empty-items-in-any-order", messageOf(List.of(LINE_1), itemsInAnyOrder()));
-        assertMessage(
+        golden.assertMessage("empty-items-in-order", messageOf(List.of(LINE_1), itemsInOrder()));
+        golden.assertMessage(
+                "empty-items-in-any-order", messageOf(List.of(LINE_1), itemsInAnyOrder()));
+        golden.assertMessage(
                 "empty-entries",
                 messageOf(Map.of("A-1", LINE_1), entries(Map.<String, Matcher<Object>>of())));
-    }
-
-    private static TestMatcher<Order> isOrder() {
-        return new TestMatcher<>(
-                Order.class,
-                "lines",
-                "lineArray",
-                "bySku",
-                "tags",
-                "byColor",
-                "byId",
-                "byLine",
-                "batches");
-    }
-
-    private static TestMatcher<OrderLine> isOrderLine() {
-        return new TestMatcher<>(OrderLine.class, "sku", "quantity");
-    }
-
-    /** Hand written stand-in for a generated matcher. */
-    private static final class TestMatcher<T> extends TypeSafeMatcher<T>
-            implements GeneratedBeanMatcher {
-        private final BeanPropertyMatcher<T> beanPropertyMatcher;
-
-        private TestMatcher(final Class<T> type, final String... properties) {
-            beanPropertyMatcher = new BeanPropertyMatcher<>(type, properties);
-        }
-
-        TestMatcher<T> with(final String property, final Matcher<?> matcher) {
-            beanPropertyMatcher.with(property, matcher);
-            return this;
-        }
-
-        @Override
-        public BeanPropertyMatcher<T> beanPropertyMatcher() {
-            return beanPropertyMatcher;
-        }
-
-        @Override
-        public void describeTo(final Description description) {
-            beanPropertyMatcher.describeTo(description);
-        }
-
-        @Override
-        protected boolean matchesSafely(final T item) {
-            return beanPropertyMatcher.matches(item);
-        }
-
-        @Override
-        protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
-            beanPropertyMatcher.describeMismatch(item, mismatchDescription);
-        }
-    }
-
-    enum Color {
-        RED,
-        GREEN,
-        BLUE
-    }
-
-    @Value
-    @Builder
-    public static class Order {
-        @Builder.Default List<OrderLine> lines = List.of();
-        @Builder.Default OrderLine[] lineArray = new OrderLine[0];
-        @Builder.Default Map<String, OrderLine> bySku = Map.of();
-        @Builder.Default @Nullable List<String> tags = List.of();
-        @Builder.Default Map<Color, OrderLine> byColor = Map.of();
-        @Builder.Default Map<Integer, OrderLine> byId = Map.of();
-        @Builder.Default Map<OrderLine, String> byLine = Map.of();
-        @Builder.Default List<List<OrderLine>> batches = List.of();
-    }
-
-    @Value
-    public static class OrderLine {
-        String sku;
-        int quantity;
     }
 }
