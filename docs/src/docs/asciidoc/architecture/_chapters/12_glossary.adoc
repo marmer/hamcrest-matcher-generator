@@ -20,7 +20,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Whether a property may be `null`: `NULLABLE`, `NON_NULL` or `UNSPECIFIED`. The core derives it from the accessor: primitives are non null, JSpecify and JetBrains (Kotlin) annotations decide explicitly, and otherwise the closest `@NullMarked` or `@NullUnmarked` scope does. A type variable stays `UNSPECIFIED`. Generated Hamcrest code is `@NullMarked` with `@Nullable` on equality values and nullable property types, only when JSpecify resolves at compile time. Kotlin reports mismatches as errors; `-Xjspecify-annotations=warn` lowers them to warnings.
 
 |Property
-|A readable value of a bean (via its getter) or a record (via its component accessor) that generated assertions can check.
+|A readable value of a bean (via its getter) or a record (via its component accessor) that generated assertions can check. Every generated matcher also has `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x, but the completeness check does not count `class`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
 
 |Backend
 |A generator that turns the property model into assertion code for one specific assertion library, such as Hamcrest or AssertJ.
