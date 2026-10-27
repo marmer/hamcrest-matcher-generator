@@ -14,8 +14,9 @@ and package names to types. Names that match nothing are a compiler error for `@
 by class or package, and the public member types they name are not modelled as nested types. An `exclude` entry that
 matches neither a configured type nor one of their public member types is a warning. Types that carry the processor's
 own `@Generated` marker are skipped with a note.
-. `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A type without properties
-produces a compiler warning. Each skipped method is reported with its reason, but only when the processor option
+. `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
+properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
+a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path).
 There is no selection: the backends on the processor path are the user's choice.
