@@ -17,6 +17,8 @@ class InheritanceAndGenericLearningTest {
     @Test
     @DisplayName("A generics with inheritance learning test")
     @SneakyThrows
+    // The raw "cast trick" casts demonstrate a documented generics limitation: the assertions only compile through them.
+    @SuppressWarnings("unchecked")
     void test_AGenericsWithInheritanceLearningTest() {
         final Bottom element = new Bottom() {
         };

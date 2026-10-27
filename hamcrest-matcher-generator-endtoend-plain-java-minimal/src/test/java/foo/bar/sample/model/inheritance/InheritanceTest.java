@@ -16,6 +16,8 @@ class InheritanceTest {
 
     @Test
     @DisplayName("Matchers.contains should work for mixed inherited types")
+    // The raw (Matcher) cast is the "Known Issue" workaround: it forces the Matcher overload of contains.
+    @SuppressWarnings("unchecked")
     void match_EverythingShouldWorkFineEvenWithInheritance() {
 
         final UUID firstId = UUID.randomUUID();
