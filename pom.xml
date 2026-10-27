@@ -68,6 +68,8 @@
         <kotlin.version>2.1.20</kotlin.version>
         <mockito.version>3.11.1</mockito.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <errorprone.version>2.51.0</errorprone.version>
+        <nullaway.version>0.14.3</nullaway.version>
     </properties>
 
     <repositories>
@@ -609,6 +611,47 @@
             <modules>
                 <module>docs</module>
             </modules>
+        </profile>
+        <profile>
+            <!-- Error Prone and NullAway need JDK 21+ (javac plugins, compile phase); Spotless with google-java-format
+                 needs JDK 21+ and adds the SPDX headers (verify phase). The JDK 17 leg skips the whole profile, and the
+                 5.x consumer run (runner) sets skipStaticAnalysis because the frozen suite is not ours to check. -->
+            <id>static-analysis</id>
+            <activation>
+                <jdk>[21,)</jdk>
+                <property>
+                    <name>!skipStaticAnalysis</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>com.google.errorprone</groupId>
+                                    <artifactId>error_prone_core</artifactId>
+                                    <version>${errorprone.version}</version>
+                                </path>
+                                <path>
+                                    <groupId>com.uber.nullaway</groupId>
+                                    <artifactId>nullaway</artifactId>
+                                    <version>${nullaway.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                            <compilerArgs combine.children="append">
+                                <arg>-XDcompilePolicy=simple</arg>
+                                <arg>-XDshould-stop.ifError=FLOW</arg>
+                                <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
+                                <!-- One argument: javac passes the words after the plugin name to Error Prone as its options. -->
+                                <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=io.github.marmer -XepOpt:NullAway:JSpecifyMode=true</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>release</id>

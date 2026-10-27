@@ -58,6 +58,8 @@
                     </goals>
                     <properties>
                         <skipTests>${skipTests}</skipTests>
+                        <!-- The frozen suite inherits the parent, but its build is not checked by the static-analysis profile. -->
+                        <skipStaticAnalysis>true</skipStaticAnalysis>
                     </properties>
                     <streamLogsOnFailures>true</streamLogsOnFailures>
                 </configuration>
