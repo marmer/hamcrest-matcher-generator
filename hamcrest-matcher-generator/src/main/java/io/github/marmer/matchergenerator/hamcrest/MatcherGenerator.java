@@ -44,7 +44,7 @@ class MatcherGenerator {
     }
 
     private static String capitalized(final String value) {
-        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
+        return value.isEmpty() ? value : value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
     String simpleMatcherName() {
