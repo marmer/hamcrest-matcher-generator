@@ -72,6 +72,11 @@
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <errorprone.version>2.51.0</errorprone.version>
         <nullaway.version>0.14.3</nullaway.version>
+        <spotless.version>3.10.4</spotless.version>
+        <!-- PINNED at 1.36.0. 1.37.0 fails inside Spotless's in-process formatter run (InvocationTargetException on
+             Javadoc-carrying files, cause hidden by Spotless). Recheck on every Renovate bump of google-java-format or
+             Spotless: try the new version with spotless:apply and remove this pin only when that run is clean. -->
+        <google-java-format.version>1.36.0</google-java-format.version>
     </properties>
 
     <repositories>
@@ -646,6 +651,47 @@
                                 <!-- One argument: javac passes the words after the plugin name to Error Prone as its options. -->
                                 <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=io.github.marmer -XepOpt:NullAway:JSpecifyMode=true</arg>
                             </compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.diffplug.spotless</groupId>
+                        <artifactId>spotless-maven-plugin</artifactId>
+                        <version>${spotless.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <java>
+                                <includes>
+                                    <include>src/*/java/**/*.java</include>
+                                </includes>
+                                <googleJavaFormat>
+                                    <version>${google-java-format.version}</version>
+                                    <!-- AOSP is google-java-format with the 4-space indentation this code base uses. -->
+                                    <style>AOSP</style>
+                                </googleJavaFormat>
+                                <licenseHeader>
+                                    <content>/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */</content>
+                                </licenseHeader>
+                            </java>
+                            <kotlin>
+                                <includes>
+                                    <include>src/*/kotlin/**/*.kt</include>
+                                </includes>
+                                <licenseHeader>
+                                    <content>/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */</content>
+                                </licenseHeader>
+                            </kotlin>
                         </configuration>
                     </plugin>
                 </plugins>
