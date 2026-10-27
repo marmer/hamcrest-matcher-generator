@@ -12,7 +12,7 @@ _Avoid_: bean model, metadata
 Whether a property may be `null`, one of `NULLABLE`, `NON_NULL` and `UNSPECIFIED`. The core derives it from the accessor: primitives are non null, JSpecify `@Nullable`/`@NonNull` and the JetBrains `@Nullable`/`@NotNull` annotations that kotlinc emits decide explicitly, and otherwise the closest `@NullMarked`/`@NullUnmarked` scope does. A type variable stays `UNSPECIFIED`. Generated Hamcrest code is `@NullMarked` with `@Nullable` on equality values and on nullable property types, but only when JSpecify resolves at compile time. Kotlin reports a mismatch with those annotations as an error; `-Xjspecify-annotations=warn` lowers it to a warning.
 
 **Property**:
-A readable value of a bean (getter) or record (component accessor) that generated assertions can check.
+A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Every generated matcher also lists `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x, but the completeness check does not count `class`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
 _Avoid_: field, attribute
 
 **Backend**:
