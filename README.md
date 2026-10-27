@@ -134,6 +134,10 @@ The generation works with Kotlin Projekts as well. If you write your testcode in
 else. If you write them in Kotlin, you have to configure kotlin test-kapt. It works
 like [kapt](https://kotlinlang.org/docs/kapt.html).
 
+Generated matchers are annotated with JSpecify (`@NullMarked`, `@Nullable` on equality values and nullable properties) when
+JSpecify is on the classpath, so Kotlin sees real nullable and non-null types and `withFoo(null)` compiles. Kotlin treats
+JSpecify mismatches as errors by default; if that gets in your way, `-Xjspecify-annotations=warn` lowers them to warnings.
+
 You can find an example [here](hamcrest-matcher-generator-endtoend-mixed-kotlin-java/pom.xml)
 
 Additionally, you have to add the output directories for the test-compile execution of the kotlin-maven-plugin:

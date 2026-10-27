@@ -117,7 +117,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-u4]]QS-U4
 | Interaction capability / Operability
-| *Kotlin properties feel native.* When a Kotlin developer configures a class with properties such as `val enabled: Boolean`, `val isX: Boolean?` or other nullable properties while the processor runs under KAPT, the generated matchers offer `withEnabled` and `withIsX` with matching nullability; every such property gets its methods, and the Kotlin compiler reports no platform-type warning for them.
+| *Kotlin properties feel native.* When a Kotlin developer configures a class with properties such as `val enabled: Boolean`, `val isX: Boolean?` or other nullable properties while the processor runs under KAPT, the generated matchers offer `withEnabled` and `withIsX` with matching nullability; every such property gets its methods, and the Kotlin compiler reports no platform-type warning for them. Because JSpecify mismatches are errors in Kotlin by default, `-Xjspecify-annotations=warn` is the documented escape hatch.
 | Kotlin end-to-end modules
 
 | [[qs-b1]]QS-B1

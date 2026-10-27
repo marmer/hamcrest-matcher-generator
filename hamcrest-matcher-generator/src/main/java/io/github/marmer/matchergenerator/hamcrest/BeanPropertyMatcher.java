@@ -11,6 +11,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Matcher for beans.
@@ -22,6 +24,7 @@ import org.hamcrest.TypeSafeMatcher;
  * @author marmer
  * @since 13.06.2017
  */
+@NullMarked
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private static final String FAILURE_SEPARATOR = "\n          "; // aligns with Hamcrest's "     but: "
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
@@ -64,11 +67,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         }
     }
 
-    private static BeanPropertyMatcher<?> generatedOrNull(final Matcher<?> matcher) {
+    private static @Nullable BeanPropertyMatcher<?> generatedOrNull(final Matcher<?> matcher) {
         return matcher instanceof GeneratedBeanMatcher ? ((GeneratedBeanMatcher) matcher).beanPropertyMatcher() : null;
     }
 
-    private static String describeValue(final Object value) {
+    private static String describeValue(final @Nullable Object value) {
         return PropertyDescription.describeValue(value);
     }
 
@@ -166,7 +169,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         });
     }
 
-    private void collectFailure(final String name, final Matcher<?> matcher, final Object value, final String path,
+    private void collectFailure(final String name, final Matcher<?> matcher, final @Nullable Object value, final String path,
                                 final List<String> failures) {
         final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
         if (value == PropertyAccess.NO_SUCH_PROPERTY) {
@@ -204,7 +207,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     private static final class PropertyExists extends BaseMatcher<Object> {
         @Override
-        public boolean matches(final Object actual) {
+        public boolean matches(final @Nullable Object actual) {
             return true;
         }
 
