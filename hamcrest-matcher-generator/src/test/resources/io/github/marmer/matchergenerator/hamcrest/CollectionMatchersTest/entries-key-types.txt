@@ -1,0 +1,7 @@
+
+Expected: Order with 8 property checks
+     but: byColor[RED].quantity: expected <2> but was <1>
+          byColor: missing key BLUE with OrderLine {sku "B-2", quantity <2>}
+          byColor: unexpected key GREEN with OrderLine {sku "B-2", quantity <2>}
+          byId: missing key 44 with OrderLine {sku "D-4", quantity <4>}
+          byId: unexpected key 43 with OrderLine {sku "C-3", quantity <5>}

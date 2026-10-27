@@ -31,8 +31,7 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
-    private static final String FAILURE_SEPARATOR =
-            "\n          "; // aligns with Hamcrest's "     but: "
+    static final String FAILURE_SEPARATOR = "\n          "; // aligns with Hamcrest's "     but: "
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
 
     /**
@@ -80,11 +79,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         }
     }
 
-    private static boolean isInsideForeignMatcher() {
+    static boolean isInsideForeignMatcher() {
         return FOREIGN_CALL_DEPTH.get()[0] > 0;
     }
 
-    private static <R> R callingForeign(final Supplier<R> call) {
+    static <R> R callingForeign(final Supplier<R> call) {
         final int[] depth = FOREIGN_CALL_DEPTH.get();
         depth[0]++;
         try {
@@ -100,11 +99,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                 : null;
     }
 
-    private static String describeValue(final @Nullable Object value) {
-        return PropertyDescription.describeValue(value);
-    }
-
-    private static String describeMatcher(final Matcher<?> matcher) {
+    static String describeMatcher(final Matcher<?> matcher) {
         return callingForeign(() -> PropertyDescription.describe(matcher));
     }
 
@@ -114,8 +109,20 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                 .collect(Collectors.joining(", "));
     }
 
-    private static String withPath(final String path, final String text) {
+    static String withPath(final String path, final String text) {
         return path.isEmpty() ? text : path + ": " + text;
+    }
+
+    /**
+     * Adds the closing line that lists the unaddressed property paths, if there are any.
+     *
+     * @param failures the failures to add the line to
+     * @param unaddressed the paths of the properties neither checked nor ignored
+     */
+    static void addUnaddressedLine(final List<String> failures, final List<String> unaddressed) {
+        if (!unaddressed.isEmpty()) {
+            failures.add("neither checked nor ignored: " + String.join(", ", unaddressed));
+        }
     }
 
     private static String articleFor(final String name) {
@@ -212,18 +219,20 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             + " but was a "
                             + item.getClass().getName()
                             + " ("
-                            + describeValue(item)
+                            + PropertyDescription.describeValue(item)
                             + ")");
         }
         final List<String> unaddressed = new ArrayList<>();
         collectFailures(item, "", failures, unaddressed);
-        if (!unaddressed.isEmpty()) {
-            failures.add("neither checked nor ignored: " + String.join(", ", unaddressed));
-        }
+        addUnaddressedLine(failures, unaddressed);
         return failures;
     }
 
-    private void collectFailures(
+    /**
+     * Adds the failures of an item. Properties neither checked nor ignored by a matcher with the
+     * completeness check are added to {@code unaddressed}, with their path, not to the failures.
+     */
+    void collectFailures(
             final Object item,
             final String prefix,
             final List<String> failures,
@@ -254,7 +263,6 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
             final String path,
             final List<String> failures,
             final List<String> unaddressed) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
         if (value == PropertyAccess.NO_SUCH_PROPERTY) {
             failures.add(
                     withPath(
@@ -266,7 +274,24 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                                     + " has no property \""
                                     + name
                                     + "\""));
-        } else if (nested != null && nested.expectedClass.isInstance(value)) {
+        } else {
+            collectValueFailures(matcher, value, path, failures, unaddressed);
+        }
+    }
+
+    /**
+     * Adds the failures of one value checked by one matcher. The matcher is a generated matcher
+     * (flattened into dot paths), a collection matcher (flattened into indexed paths) or any other
+     * matcher.
+     */
+    static void collectValueFailures(
+            final Matcher<?> matcher,
+            final @Nullable Object value,
+            final String path,
+            final List<String> failures,
+            final List<String> unaddressed) {
+        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+        if (nested != null && nested.expectedClass.isInstance(value)) {
             nested.collectFailures(value, path + ".", failures, unaddressed);
         } else if (nested != null) {
             failures.add(
@@ -275,8 +300,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             "expected "
                                     + describeExpected(matcher)
                                     + " but was "
-                                    + describeValue(value)));
-        } else if (!callingForeign(() -> matcher.matches(value))) {
+                                    + PropertyDescription.describeValue(value)));
+        } else if (matcher instanceof PathAwareMatcher) {
+            ((PathAwareMatcher) matcher).collectFailuresOf(value, path, failures, unaddressed);
+        } else if (!matchesQuietly(matcher, value)) {
             final PropertyDescription mismatch = new PropertyDescription();
             callingForeign(
                     () -> {
@@ -288,21 +315,49 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         }
     }
 
+    static boolean matchesQuietly(final Matcher<?> matcher, final @Nullable Object value) {
+        return callingForeign(() -> matcher.matches(value));
+    }
+
+    /**
+     * @return the failures of a generated matcher for the item, or {@code null} if the matcher is
+     *     no generated matcher or the item is of another type
+     */
+    static @Nullable List<String> differencesOf(
+            final Matcher<?> matcher, final @Nullable Object item) {
+        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+        if (nested == null || !nested.expectedClass.isInstance(item)) {
+            return null;
+        }
+        final List<String> differences = new ArrayList<>();
+        final List<String> unaddressed = new ArrayList<>();
+        nested.collectFailures(item, "", differences, unaddressed);
+        addUnaddressedLine(differences, unaddressed);
+        return differences;
+    }
+
     private void collectChecks(final String prefix, final List<Check> checks) {
         propertyChecks.forEach(
                 (name, matchers) -> {
                     for (final Matcher<?> matcher : matchers) {
-                        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-                        if (nested != null) {
-                            nested.collectChecks(prefix + name + ".", checks);
-                        } else {
-                            checks.add(new Check(prefix + name, matcher));
-                        }
+                        collectValueChecks(prefix + name, matcher, checks);
                     }
                 });
     }
 
-    private record Check(String path, Matcher<?> matcher) {}
+    static void collectValueChecks(
+            final String path, final Matcher<?> matcher, final List<Check> checks) {
+        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+        if (nested != null) {
+            nested.collectChecks(path + ".", checks);
+        } else if (matcher instanceof PathAwareMatcher) {
+            ((PathAwareMatcher) matcher).collectChecks(path, checks);
+        } else {
+            checks.add(new Check(path, matcher));
+        }
+    }
+
+    record Check(String path, Matcher<?> matcher) {}
 
     private static final class PropertyExists extends BaseMatcher<Object> {
         @Override

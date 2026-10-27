@@ -1,0 +1,4 @@
+
+Expected: Order with 2 property checks
+     but: tags: missing a string starting with "c"
+          tags: unexpected "b"

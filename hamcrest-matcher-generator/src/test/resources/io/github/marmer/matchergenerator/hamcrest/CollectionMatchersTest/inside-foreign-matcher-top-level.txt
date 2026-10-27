@@ -1,0 +1,4 @@
+
+Expected: iterable containing [2 items in order]
+     but: item 0: expected 2 items but was 3 items
+          [1].quantity: expected <3> but was <2>

@@ -1,0 +1,4 @@
+
+Expected: Order with 4 property checks
+     but: lines: expected 2 items but was 3 items
+          lines[1].quantity: expected <3> but was <2>

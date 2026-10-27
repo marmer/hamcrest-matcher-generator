@@ -1,0 +1,4 @@
+
+Expected: Order with 1 property check
+     but: tags: missing OrderLine {sku "A-1", quantity <1>}
+          tags: unexpected "a"

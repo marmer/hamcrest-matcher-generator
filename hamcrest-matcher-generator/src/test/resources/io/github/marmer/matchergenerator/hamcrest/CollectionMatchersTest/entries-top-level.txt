@@ -1,0 +1,4 @@
+
+Expected: a map with exactly the keys "A-1", "C-3"
+     but: missing key "C-3" with OrderLine {sku "C-3", quantity <3>}
+          unexpected key "B-2" with OrderLine {sku "B-2", quantity <2>}

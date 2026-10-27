@@ -1,0 +1,4 @@
+
+Expected: Order with 8 property checks
+     but: lineArray: expected 4 items but was 3 items
+          lineArray[1].quantity: expected <3> but was <2>

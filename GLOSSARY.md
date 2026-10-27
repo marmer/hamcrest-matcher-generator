@@ -39,6 +39,9 @@ _Avoid_: property chain, field path
 A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.
 _Avoid_: bean matcher, nested matcher
 
+**Collection matcher**:
+A runtime matcher for a collection or map property, created by `itemsInOrder(...)`, `itemsInAnyOrder(...)` or `entries(...)` in `CollectionMatchers`. Mismatches name the size, the path of every failing item or entry, and missing, closest and unexpected items or keys. Arrays count as lists.
+
 **One-line rendering**:
 The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
 _Avoid_: compact mode, inline mode
