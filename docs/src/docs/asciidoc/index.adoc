@@ -1,0 +1,40 @@
+= hamcrest-matcher-generator
+:description: Generates Hamcrest matchers and AssertJ assertions for your model classes at compile time.
+:notitle:
+
+[.hero]
+--
+[.eyebrow]
+Annotation processor · Java 17+ · Kotlin · Records
+
+[.hero-title]
+Matchers and assertions for your model, generated at compile time.
+
+[.hero-lead]
+Name your model classes once. The processor writes a Hamcrest matcher and an AssertJ assertion for each of them, and your production code stays untouched.
+
+[.cta]
+link:guide/getting-started.html[Get started,role=primary]
+link:architecture/index.html[How it works,role=secondary]
+--
+
+[.pair]
+--
+.Hamcrest
+[.placeholder]
+Snippet placeholder: the Hamcrest example follows with the user guide.
+
+.AssertJ
+[.placeholder]
+Snippet placeholder: the AssertJ example follows with the user guide.
+--
+
+[.features]
+* *Compile-safe.* Placeholder for the first feature.
+* *Readable failures.* Placeholder for the second feature.
+* *Completeness check.* Placeholder for the third feature.
+
+== Install
+
+[.placeholder]
+Install placeholder: the dependency snippet follows with the user guide.
