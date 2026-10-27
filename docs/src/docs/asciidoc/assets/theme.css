@@ -1,0 +1,170 @@
+/* Site stylesheet (design: issue #68, variant D). It replaces the Asciidoctor default stylesheet completely, so
+   admonitions, callouts, tables and the table of contents are styled here. The markup around the page content
+   (top bar, sidebar, pager, footer) comes from docs/src/docs/extensions/site_layout.rb.
+   Layout: sticky top bar, chapter sidebar left, "on this page" TOC right (wide screens only). Fonts are bundled
+   (SIL OFL 1.1, licences next to the files), so the site never contacts a font service. */
+
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); }
+@font-face { font-family: "Public Sans"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("fonts/public-sans-latin-wght-normal.woff2") format("woff2"); }
+@font-face { font-family: "Public Sans"; font-style: italic; font-weight: 100 900; font-display: swap;
+  src: url("fonts/public-sans-latin-wght-italic.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: swap;
+  src: url("fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2"); }
+
+:root {
+  --bg: #f7f8fb; --surface: #ffffff; --ink: #18213a; --muted: #5a6480; --line: #dfe3ec;
+  --accent: #2f55d4; --accent-ink: #ffffff; --code-bg: #1b2236; --code-ink: #e8ebf3; --inline-bg: #e9edf6;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --top: 56px; --side: 250px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11151f; --surface: #171c29; --ink: #e4e8f2; --muted: #98a2bb; --line: #283044;
+    --accent: #8aa6ff; --accent-ink: #0d1120; --code-bg: #0b0f19; --code-ink: #e4e8f2; --inline-bg: #222a3c;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--top) + 16px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--body); -webkit-text-size-adjust: 100%; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+img { max-width: 100%; height: auto; }
+
+/* top bar: brand and version, then the tabs; the active section is underlined */
+.site-top { position: sticky; top: 0; z-index: 20; min-height: var(--top); display: flex; flex-wrap: wrap; align-items: stretch;
+  justify-content: space-between; column-gap: 24px;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.site-top-row { display: flex; align-items: center; gap: 10px; min-height: var(--top); }
+.site-brand { font: 700 1.05rem var(--display); color: var(--ink); text-decoration: none; white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+.site-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 1.1rem; }
+.site-version { font: 600 .75rem var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.site-nav { display: flex; align-items: stretch; gap: 0 22px; font-size: .95rem; }
+.site-nav a { display: flex; align-items: center; color: var(--muted); text-decoration: none; white-space: nowrap; box-shadow: inset 0 -2px 0 transparent; }
+.site-nav a:hover { color: var(--ink); box-shadow: inset 0 -2px 0 var(--line); }
+.page-guide .site-nav-guide, .page-arch .site-nav-arch { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* sidebar */
+.site-side { position: fixed; top: var(--top); bottom: 0; left: 0; width: var(--side); overflow-y: auto; padding: 24px 16px 80px max(20px, env(safe-area-inset-left, 0px)); border-right: 1px solid var(--line); font-size: .92rem; }
+.site-side-heading { font: 600 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.site-side ol { margin: 0 0 24px; padding: 0; list-style: none; counter-reset: chapter; display: grid; gap: 2px; }
+.site-side ol li { counter-increment: chapter; margin: 0; }
+.site-side ol:not(.site-side-plain) li > a::before { content: counter(chapter); display: inline-block; min-width: 2ch; margin-right: 8px; font: .75rem var(--mono); color: var(--muted); }
+.site-side a { display: block; padding: 4px 8px; border-radius: 5px; color: var(--ink); text-decoration: none; }
+.site-side a:hover { background: var(--inline-bg); }
+.site-side a[aria-current="page"] { background: var(--inline-bg); font-weight: 600; }
+
+/* content column */
+#header, #content { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.page-guide #header, .page-guide #content, .page-arch #header, .page-arch #content { margin-left: calc(var(--side) + max(24px, (100vw - var(--side) - 760px - 240px) / 2)); }
+#header { padding-block: 40px 0; }
+#header h1 { font: 700 clamp(2rem, 4vw, 2.6rem)/1.1 var(--display); letter-spacing: -.01em; margin: 0 0 8px; text-wrap: balance; }
+#header .details { display: none; }
+#content { padding-block: 8px 64px; }
+h2, h3, h4 { font-family: var(--display); line-height: 1.2; text-wrap: balance; }
+h2 { font-size: 1.6rem; margin: 2.2em 0 .5em; }
+h3 { font-size: 1.2rem; margin: 1.8em 0 .4em; }
+h4 { font-size: 1.05rem; margin: 1.5em 0 .4em; }
+.sect1:first-child h2 { margin-top: 1em; }
+p { margin: 0 0 1em; max-width: 68ch; }
+.anchor { display: none; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+.placeholder p { color: var(--muted); font-style: italic; }
+
+/* on this page */
+#toc { display: none; }
+@media (min-width: 1280px) {
+  .page-guide #toc, .page-arch #toc { display: block; position: fixed; top: calc(var(--top) + 40px); right: max(24px, env(safe-area-inset-right, 0px)); width: 200px; max-height: calc(100vh - var(--top) - 80px); overflow-y: auto; font-size: .85rem; }
+  #toctitle { font: 600 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  #toc ul { list-style: none; margin: 0; padding: 0 0 0 10px; border-left: 1px solid var(--line); display: grid; gap: 4px; }
+  #toc ul ul { border-left: 0; padding-left: 12px; margin-top: 4px; }
+  #toc li { margin: 0; }
+  #toc a { color: var(--muted); text-decoration: none; }
+  #toc a:hover { color: var(--ink); }
+}
+
+/* code: dark panels in both themes */
+code { font: .88em var(--mono); background: var(--inline-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.listingblock, .literalblock { margin: 0 0 1.25em; min-width: 0; }
+.listingblock .title, .tableblock caption, .olist .title, .ulist .title, .pair .title { font: 600 .75rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.listingblock pre, .literalblock pre { margin: 0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font: 13.5px/1.6 var(--mono); background: var(--code-bg) !important; color: var(--code-ink); }
+.listingblock pre code, .literalblock pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.listingblock pre span { background: none !important; }
+.listingblock pre, code { font-variant-ligatures: none; }
+.conum { color: var(--accent); font: 600 .8rem var(--mono); font-style: normal; }
+.colist table { border-collapse: collapse; margin: -4px 0 1.25em; }
+.colist td { padding: 2px 8px 2px 0; vertical-align: top; }
+
+/* lists, tables, admonitions, images */
+ul, ol { padding-left: 1.3em; }
+li { margin: .2em 0; }
+li p { margin: 0; }
+table.tableblock { width: 100%; border-collapse: collapse; margin: 0 0 1.5em; font-size: .93rem; display: block; overflow-x: auto; }
+table.tableblock th, table.tableblock td { border-bottom: 1px solid var(--line); padding: 8px 12px 8px 0; text-align: left; vertical-align: top; }
+table.tableblock th { font-weight: 600; }
+table.tableblock p { margin: 0; }
+.admonitionblock { margin: 0 0 1.25em; }
+.admonitionblock > table { border-collapse: collapse; width: 100%; border-left: 3px solid var(--accent); background: var(--surface); }
+.admonitionblock td { padding: 10px 14px; vertical-align: top; }
+.admonitionblock td.icon { font: 600 .75rem var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.admonitionblock td.content p:last-child { margin-bottom: 0; }
+.imageblock { margin: 0 0 1.25em; overflow-x: auto; }
+.imageblock .title, .exampleblock > .title, .sidebarblock > .content > .title { font: 600 .85rem var(--body); color: var(--muted); margin-top: 6px; }
+.quoteblock, .sidebarblock, .exampleblock > .content { margin: 0 0 1.25em; padding: 4px 16px; border-left: 3px solid var(--line); background: var(--surface); }
+
+/* arc42 help blocks: the chapters ship an inline style with a light background, so this needs the id for specificity */
+#content .arc42help { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-left: 3px solid var(--accent); }
+#content .arc42help::before { color: var(--accent); }
+
+/* landing page */
+.page-landing #content { max-width: 1080px; }
+.page-landing #toc { display: none; }
+.hero { padding-block: 56px 32px; display: grid; gap: 4px; }
+.hero .eyebrow p { font: 600 .78rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+.hero-title p { font: 700 clamp(2.2rem, 6vw, 3.6rem)/1.04 var(--display); letter-spacing: -.02em; max-width: 18ch; margin: 0 0 12px; text-wrap: balance; }
+.hero-lead p { font-size: 1.15rem; color: var(--muted); max-width: 56ch; }
+.cta p { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.cta a { display: inline-block; padding: 10px 18px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+.cta a.primary { background: var(--accent); color: var(--accent-ink); }
+.cta a.secondary { border: 1px solid var(--line); color: var(--ink); background: var(--surface); }
+.pair > .content { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.features ul { list-style: none; padding: 0; margin: 40px 0 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px 32px; }
+.features li { margin: 0; padding-top: 14px; border-top: 2px solid var(--ink); }
+.features li strong { display: block; font: 700 1.15rem var(--display); margin-bottom: 4px; }
+.page-landing h2 { margin-top: 1.6em; }
+
+/* previous/next pager at the end of guide pages */
+.site-pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); }
+.site-pager a { font-weight: 600; text-decoration: none; }
+
+/* footer: maintainer card and release information */
+.site-foot { border-top: 1px solid var(--line); background: var(--surface); margin-top: 32px; }
+.page-guide .site-foot, .page-arch .site-foot { margin-left: var(--side); }
+.site-foot-inner { max-width: 1080px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px 40px; }
+.site-maintainer { display: flex; gap: 14px; align-items: center; }
+.site-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.site-foot p { margin: 0; }
+.site-foot-kicker { font: 600 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.site-foot-name { font: 700 1.15rem var(--display); }
+.site-foot-links { display: flex; gap: 14px; }
+.site-foot-meta { color: var(--muted); font-size: .9rem; align-self: end; }
+
+/* narrow screens: the tabs move to a second row, the sidebar becomes a scrolling chapter strip under the top bar */
+@media (max-width: 959px) {
+  :root { --top: 52px; }
+  .site-top { flex-direction: column; }
+  .site-top-row { justify-content: space-between; }
+  .site-nav { min-height: 40px; justify-content: space-between; gap: 0 12px; margin-top: -6px; }
+  .site-side { position: sticky; top: calc(var(--top) + 34px); z-index: 15; width: auto; bottom: auto; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding: 8px max(16px, env(safe-area-inset-left, 0px)); border-right: 0; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .site-side-heading, .site-side .site-side-plain { display: none; }
+  .site-side ol { display: flex; gap: 4px; margin: 0; }
+  .page-guide #header, .page-guide #content, .page-arch #header, .page-arch #content { margin-left: auto; }
+  .page-guide .site-foot, .page-arch .site-foot { margin-left: 0; }
+  html { scroll-padding-top: calc(var(--top) + 90px); }
+}

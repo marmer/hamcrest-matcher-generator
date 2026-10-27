@@ -24,6 +24,7 @@
         <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
         <properties.maven.plugin.version>1.2.1</properties.maven.plugin.version>
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
+        <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
         <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
         <maven.install.skip>true</maven.install.skip>
@@ -183,16 +184,31 @@
                                     <directory>src/docs/asciidoc</directory>
                                     <includes>
                                         <include>**/images/**</include>
+                                        <include>assets/**</include>
                                     </includes>
                                 </resource>
                             </resources>
+                            <!-- The site layout (top bar, generated sidebar, pager, footer) is an Asciidoctor extension,
+                                see the header of the script. -->
                             <requires>
                                 <require>asciidoctor-diagram</require>
+                                <require>${project.basedir}/src/docs/extensions/site_layout.rb</require>
                             </requires>
                             <attributes>
                                 <diagram-cachedir>${project.build.directory}/diagram-cache</diagram-cachedir>
                                 <source-highlighter>rouge</source-highlighter>
+                                <!-- Inline token styles, because the dark code panels do not use the theme's colours. -->
+                                <rouge-css>style</rouge-css>
+                                <rouge-style>monokai.sublime</rouge-style>
+                                <!-- The site stylesheet (assets/theme.css, linked by the layout extension) replaces the default. -->
+                                <stylesheet>false</stylesheet>
+                                <nofooter>true</nofooter>
+                                <toc>right</toc>
+                                <toc-title>On this page</toc-title>
+                                <site-source-dir>${project.basedir}/src/docs/asciidoc</site-source-dir>
+                                <project-version>${project.version}</project-version>
                                 <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
                                 <revremark>Built with Maven</revremark>
                             </attributes>
                             <logHandler>
