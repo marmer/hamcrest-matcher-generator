@@ -25,8 +25,7 @@ class ReferenceObjectTest {
 
     private static ShelfRecord shelf(final String code) {
         final BookRecord book = new BookRecord(code, "Title " + code);
-        return new ShelfRecord(
-                "main", List.of(book), Set.of(book), Map.of(code, book), new BookRecord[] {book});
+        return new ShelfRecord("main", List.of(book), Set.of(book), Map.of(code, book));
     }
 
     @Test
@@ -95,8 +94,8 @@ class ReferenceObjectTest {
     }
 
     @Test
-    @DisplayName("Lists, other collections, maps and arrays are compared by their items")
-    void listsOtherCollectionsMapsAndArraysAreComparedByTheirItems() {
+    @DisplayName("Lists, other collections and maps are compared by their items")
+    void listsOtherCollectionsAndMapsAreComparedByTheirItems() {
         assertThat(shelf("1"), isShelfRecordLike(shelf("1")));
 
         final AssertionError error =
@@ -107,14 +106,12 @@ class ReferenceObjectTest {
         assertEquals(
                 """
 
-            Expected: ShelfRecord with 8 property checks, every property checked or ignored
+            Expected: ShelfRecord with 6 property checks, every property checked or ignored
                  but: books[0].code: expected "1" but was "2"
                       books[0].title: expected "Title 1" but was "Title 2"
                       favourites: missing BookRecord {code "1", title "Title 1"}; closest BookRecord {code "2", title "Title 2"} differs in code: expected "1" but was "2", title: expected "Title 1" but was "Title 2"
                       byCode: missing key "1" with BookRecord {code "1", title "Title 1"}
                       byCode: unexpected key "2" with BookRecord {code "2", title "Title 2"}
-                      featured[0].code: expected "1" but was "2"
-                      featured[0].title: expected "Title 1" but was "Title 2"
             """,
                 error.getMessage() + "\n");
     }
@@ -141,8 +138,34 @@ class ReferenceObjectTest {
         assertEquals(
                 """
 
-            Expected: CategoryNode with 4 property checks, every property checked or ignored
+            Expected: CategoryNode with 6 property checks, every property checked or ignored
                  but: children[0].name: expected "books" but was "toys"
+            """,
+                error.getMessage() + "\n");
+    }
+
+    @Test
+    @DisplayName("An array is compared like a list")
+    void anArrayIsComparedLikeAList() {
+        assertThat(
+                new CategoryNode("a").withRelated(new CategoryNode("b")),
+                isCategoryNodeLike(new CategoryNode("a").withRelated(new CategoryNode("b"))));
+
+        final AssertionError error =
+                assertThrows(
+                        AssertionError.class,
+                        () ->
+                                assertThat(
+                                        new CategoryNode("a").withRelated(new CategoryNode("c")),
+                                        isCategoryNodeLike(
+                                                new CategoryNode("a")
+                                                        .withRelated(new CategoryNode("b")))));
+
+        assertEquals(
+                """
+
+            Expected: CategoryNode with 7 property checks, every property checked or ignored
+                 but: related[0].name: expected "b" but was "c"
             """,
                 error.getMessage() + "\n");
     }

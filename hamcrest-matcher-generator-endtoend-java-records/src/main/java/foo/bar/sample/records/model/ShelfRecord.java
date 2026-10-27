@@ -12,5 +12,4 @@ public record ShelfRecord(
         String label,
         List<BookRecord> books,
         Set<BookRecord> favourites,
-        Map<String, BookRecord> byCode,
-        BookRecord[] featured) {}
+        Map<String, BookRecord> byCode) {}

@@ -12,6 +12,7 @@ public class CategoryNode {
     private final String name;
     private CategoryNode parent;
     private final List<CategoryNode> children = new ArrayList<>();
+    private CategoryNode[] related = new CategoryNode[0];
 
     public CategoryNode(final String name) {
         this.name = name;
@@ -21,6 +22,11 @@ public class CategoryNode {
     public CategoryNode withChild(final CategoryNode child) {
         child.parent = this;
         children.add(child);
+        return this;
+    }
+
+    public CategoryNode withRelated(final CategoryNode... others) {
+        related = others;
         return this;
     }
 
@@ -34,5 +40,9 @@ public class CategoryNode {
 
     public List<CategoryNode> getChildren() {
         return children;
+    }
+
+    public CategoryNode[] getRelated() {
+        return related;
     }
 }
