@@ -64,7 +64,7 @@ class TypeModelFactory {
         return new TypeModel(
             type.getQualifiedName().toString(),
             type.getSimpleName().toString(),
-            packageOf(type).toString(),
+            packageNameOf(type),
             targetPackage,
             type.getTypeParameters().stream()
                 .map(TypeParameterElement::getSimpleName)
@@ -105,7 +105,7 @@ class TypeModelFactory {
     private String getTargetPackage(final TypeElement type) {
         final String configuredPackage = getConfiguredPackage();
         if (configuredPackage.isBlank()) {
-            return packageOf(type).toString();
+            return packageNameOf(type);
         }
         return configuredPackage.replaceAll("\\.+$", "") + "." + packageOf(type);
     }
@@ -122,6 +122,13 @@ class TypeModelFactory {
 
     private PackageElement packageOf(final TypeElement type) {
         return processingEnv.getElementUtils().getPackageOf(type);
+    }
+
+    /**
+     * The qualified name, which is empty for types in the default package (its {@code toString()} is not a name).
+     */
+    private String packageNameOf(final TypeElement type) {
+        return packageOf(type).getQualifiedName().toString();
     }
 
     private List<PropertyModel> recordComponentProperties(final TypeElement type) {
