@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,16 +24,16 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.Value;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
-/**
- * Mismatch messages are compared with golden files under {@code BeanPropertyMatcherTest/}.
- */
+/** Mismatch messages are compared with golden files under {@code BeanPropertyMatcherTest/}. */
 class BeanPropertyMatcherMessageTest {
     private static final Address BERLIN = new Address("Berlin");
     private static final Address PARIS = new Address("Paris");
@@ -37,113 +41,192 @@ class BeanPropertyMatcherMessageTest {
     private static final OrderLine LINE_2 = new OrderLine("B-2", 2);
 
     private static String messageOf(final Object actual, final Matcher<?> matcher) {
-        return assertThrows(AssertionError.class, () -> assertThat(actual, (Matcher<Object>) matcher)).getMessage();
+        return Objects.requireNonNull(
+                assertThrows(
+                                AssertionError.class,
+                                () -> assertThat(actual, (Matcher<Object>) matcher))
+                        .getMessage());
     }
 
-    private static void assertMessage(final String scenario, final String actualMessage) throws IOException {
-        try (InputStream in = BeanPropertyMatcherMessageTest.class
-            .getResourceAsStream("BeanPropertyMatcherTest/" + scenario + ".txt")) {
-            final String expected = in == null ? "<missing golden file>"
-                : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+    private static void assertMessage(final String scenario, final String actualMessage)
+            throws IOException {
+        try (InputStream in =
+                BeanPropertyMatcherMessageTest.class.getResourceAsStream(
+                        "BeanPropertyMatcherTest/" + scenario + ".txt")) {
+            final String expected =
+                    in == null
+                            ? "<missing golden file>"
+                            : new String(in.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(expected, actualMessage + "\n");
         }
     }
 
     @Test
     void flatMismatchListsOnlyTheFailingChecks() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", new Customer("Ada", BERLIN), List.of(), Map.of());
+        final Order order =
+                new Order(
+                        "o-1", "ada@example.org", new Customer("Ada", BERLIN), List.of(), Map.of());
 
-        assertMessage("flat", messageOf(order, isOrder()
-            .with("id", equalTo("o-1"))
-            .with("email", startsWith("bob@"))
-            .with("id", equalTo("o-2"))));
+        assertMessage(
+                "flat",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with("id", equalTo("o-1"))
+                                .with("email", startsWith("bob@"))
+                                .with("id", equalTo("o-2"))));
     }
 
     @Test
     void nestedGeneratedMatchersAreFlattenedIntoDotPaths() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+        final Order order =
+                new Order(
+                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
-        assertMessage("nested", messageOf(order, isOrder()
-            .with("email", startsWith("bob@"))
-            .with("customer", isCustomer()
-                .with("name", equalTo("Ada"))
-                .with("address", isAddress().with("city", equalTo("Berlin"))))));
+        assertMessage(
+                "nested",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with("email", startsWith("bob@"))
+                                .with(
+                                        "customer",
+                                        isCustomer()
+                                                .with("name", equalTo("Ada"))
+                                                .with(
+                                                        "address",
+                                                        isAddress()
+                                                                .with(
+                                                                        "city",
+                                                                        equalTo("Berlin"))))));
     }
 
     @Test
     void nullInsteadOfANestedObjectIsOneFailureWithTheWholeExpectation() throws IOException {
         final Order order = new Order("o-1", "ada@example.org", null, List.of(), Map.of());
 
-        assertMessage("null-nested", messageOf(order, isOrder()
-            .with("customer", isCustomer()
-                .with("name", equalTo("Ada"))
-                .with("address", isAddress().with("city", equalTo("Paris"))))));
+        assertMessage(
+                "null-nested",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with(
+                                        "customer",
+                                        isCustomer()
+                                                .with("name", equalTo("Ada"))
+                                                .with(
+                                                        "address",
+                                                        isAddress()
+                                                                .with("city", equalTo("Paris"))))));
     }
 
     @Test
     void nonEqualityMatchersAreDescribedByTheMatcher() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+        final Order order =
+                new Order(
+                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
-        assertMessage("non-equality", messageOf(order, isOrder()
-            .with("email", startsWith("bob@"))
-            .with("customer", nullValue())
-            .with("id", not(equalTo("o-1")))));
+        assertMessage(
+                "non-equality",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with("email", startsWith("bob@"))
+                                .with("customer", nullValue())
+                                .with("id", not(equalTo("o-1")))));
     }
 
     @Test
     void aPropertyTheTypeDoesNotHaveIsReported() throws IOException {
-        assertMessage("missing-property", messageOf(new Address("Berlin"), isAddress()
-            .with("zip")
-            .with("city", equalTo("Berlin"))));
+        assertMessage(
+                "missing-property",
+                messageOf(
+                        new Address("Berlin"),
+                        isAddress().with("zip").with("city", equalTo("Berlin"))));
     }
 
     @Test
     void anObjectOfAnotherTypeIsReported() throws IOException {
-        assertMessage("wrong-type", messageOf(new Customer("Ada", BERLIN), isAddress()
-            .with("name", equalTo("Ada"))));
+        assertMessage(
+                "wrong-type",
+                messageOf(new Customer("Ada", BERLIN), isAddress().with("name", equalTo("Ada"))));
     }
 
     @Test
     void valuesOfGeneratedTypesPrintFromTheirPropertiesNotViaToString() throws IOException {
-        isOrderLine(); // a generated type is known to print from its properties once its matcher exists
+        isOrderLine(); // a generated type is known to print from its properties once its matcher
+        // exists
         final Order order = new Order("o-1", "ada@example.org", null, List.of(LINE_1), Map.of());
 
-        assertMessage("generated-values", messageOf(order, isOrder()
-            .with("lines", equalTo(List.of(LINE_2)))
-            .with("customer", equalTo(new Customer("Ada", BERLIN)))));
+        assertMessage(
+                "generated-values",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with("lines", equalTo(List.of(LINE_2)))
+                                .with("customer", equalTo(new Customer("Ada", BERLIN)))));
     }
 
     @Test
     void generatedMatchersInsideContainsRenderOnOneLine() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+        final Order order =
+                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
-        assertMessage("inside-contains", messageOf(order, isOrder()
-            .with("lines", contains(
-                isOrderLine().with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
-                isOrderLine().with("sku", equalTo("B-2")).with("quantity", equalTo(3))))));
+        assertMessage(
+                "inside-contains",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with(
+                                        "lines",
+                                        contains(
+                                                isOrderLine()
+                                                        .with("sku", equalTo("A-1"))
+                                                        .with("quantity", equalTo(1)),
+                                                isOrderLine()
+                                                        .with("sku", equalTo("B-2"))
+                                                        .with("quantity", equalTo(3))))));
     }
 
     @Test
     void generatedMatchersInsideHasItemRenderOnOneLine() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+        final Order order =
+                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
-        assertMessage("inside-has-item", messageOf(order, isOrder()
-            .with("lines", hasItem(isOrderLine().with("sku", equalTo("X-9")).with("quantity", equalTo(3))))));
+        assertMessage(
+                "inside-has-item",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with(
+                                        "lines",
+                                        hasItem(
+                                                isOrderLine()
+                                                        .with("sku", equalTo("X-9"))
+                                                        .with("quantity", equalTo(3))))));
     }
 
     @Test
     void generatedMatchersInsideHasEntryRenderOnOneLine() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
+        final Order order =
+                new Order("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
 
-        assertMessage("inside-has-entry", messageOf(order, isOrder()
-            .with("linesBySku", hasEntry(equalTo("bySku"),
-                isOrderLine().with("sku", equalTo("X-9")).with("quantity", equalTo(3))))));
+        assertMessage(
+                "inside-has-entry",
+                messageOf(
+                        order,
+                        isOrder()
+                                .with(
+                                        "linesBySku",
+                                        hasEntry(
+                                                equalTo("bySku"),
+                                                isOrderLine()
+                                                        .with("sku", equalTo("X-9"))
+                                                        .with("quantity", equalTo(3))))));
     }
 
     private static TestMatcher<Order> failingOrderMatcher() {
-        return isOrder()
-            .with("id", equalTo("o-2"))
-            .with("email", startsWith("bob@"));
+        return isOrder().with("id", equalTo("o-2")).with("email", startsWith("bob@"));
     }
 
     private static Order someOrder() {
@@ -157,23 +240,37 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAllOf() throws IOException {
-        assertMessage("wrapped-in-all-of", messageOf(someOrder(), allOf(failingOrderMatcher(), notNullValue())));
+        assertMessage(
+                "wrapped-in-all-of",
+                messageOf(someOrder(), allOf(failingOrderMatcher(), notNullValue())));
     }
 
     @Test
     void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAUserMatcher() throws IOException {
-        assertMessage("wrapped-in-user-matcher", messageOf(someOrder(), new DelegatingMatcher(failingOrderMatcher())));
+        assertMessage(
+                "wrapped-in-user-matcher",
+                messageOf(someOrder(), new DelegatingMatcher(failingOrderMatcher())));
     }
 
     /**
-     * A foreign matcher that holds the generated matcher is called by Hamcrest, not by a generated matcher, so the
-     * runtime cannot know it is inside a foreign matcher and keeps the block format.
+     * A foreign matcher that holds the generated matcher is called by Hamcrest, not by a generated
+     * matcher, so the runtime cannot know it is inside a foreign matcher and keeps the block
+     * format.
      */
     @Test
-    void aGeneratedMatcherInsideAForeignMatcherAtTheTopLevelKeepsTheBlockFormat() throws IOException {
-        assertMessage("inside-contains-top-level", messageOf(List.of(LINE_1, LINE_2), contains(
-            isOrderLine().with("sku", equalTo("A-1")).with("quantity", equalTo(1)),
-            isOrderLine().with("sku", equalTo("B-2")).with("quantity", equalTo(3)))));
+    void aGeneratedMatcherInsideAForeignMatcherAtTheTopLevelKeepsTheBlockFormat()
+            throws IOException {
+        assertMessage(
+                "inside-contains-top-level",
+                messageOf(
+                        List.of(LINE_1, LINE_2),
+                        contains(
+                                isOrderLine()
+                                        .with("sku", equalTo("A-1"))
+                                        .with("quantity", equalTo(1)),
+                                isOrderLine()
+                                        .with("sku", equalTo("B-2"))
+                                        .with("quantity", equalTo(3)))));
     }
 
     @Test
@@ -197,8 +294,8 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void checksOfAResetPropertyAreNotReported() {
-        final BeanPropertyMatcher<Address> matcher = new BeanPropertyMatcher<>(Address.class)
-            .with("city", equalTo("Paris"));
+        final BeanPropertyMatcher<Address> matcher =
+                new BeanPropertyMatcher<>(Address.class).with("city", equalTo("Paris"));
         matcher.reset("city");
 
         assertThat(BERLIN, matcher);
@@ -206,24 +303,32 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void aNestedGeneratedMatcherWithoutChecksIsDescribedByItsTypeAlone() {
-        final String message = messageOf(new Customer("Ada", null), isCustomer().with("address", isAddress()));
+        final String message =
+                messageOf(new Customer("Ada", null), isCustomer().with("address", isAddress()));
 
         assertThat(message, containsString("address: expected an Address but was null"));
     }
 
     @Test
     void aNestedGeneratedMatcherWithChecksIsDescribedWithThem() {
-        final String message = messageOf(new Customer("Ada", null),
-            isCustomer().with("address", isAddress().with("city", equalTo("Berlin"))));
+        final String message =
+                messageOf(
+                        new Customer("Ada", null),
+                        isCustomer().with("address", isAddress().with("city", equalTo("Berlin"))));
 
-        assertThat(message, containsString("address: expected an Address with city \"Berlin\" but was null"));
+        assertThat(
+                message,
+                containsString("address: expected an Address with city \"Berlin\" but was null"));
     }
 
     @Test
     void aPropertyWithAnEmptyNameIsReportedWithoutPath() {
         final String message = messageOf(BERLIN, isAddress().with(""));
 
-        assertThat(message, containsString("but: expected the property to exist but Address has no property \"\""));
+        assertThat(
+                message,
+                containsString(
+                        "but: expected the property to exist but Address has no property \"\""));
     }
 
     private static TestMatcher<Order> isOrder() {
@@ -242,10 +347,9 @@ class BeanPropertyMatcherMessageTest {
         return new TestMatcher<>(OrderLine.class, "sku", "quantity");
     }
 
-    /**
-     * Hand written stand-in for a generated matcher.
-     */
-    private static final class TestMatcher<T> extends TypeSafeMatcher<T> implements GeneratedBeanMatcher {
+    /** Hand written stand-in for a generated matcher. */
+    private static final class TestMatcher<T> extends TypeSafeMatcher<T>
+            implements GeneratedBeanMatcher {
         private final BeanPropertyMatcher<T> beanPropertyMatcher;
 
         private TestMatcher(final Class<T> type, final String... properties) {
@@ -316,7 +420,7 @@ class BeanPropertyMatcherMessageTest {
     public static class Order {
         String id;
         String email;
-        Customer customer;
+        @Nullable Customer customer;
         List<OrderLine> lines;
         Map<String, OrderLine> linesBySku;
     }
@@ -324,7 +428,7 @@ class BeanPropertyMatcherMessageTest {
     @Value
     public static class Customer {
         String name;
-        Address address;
+        @Nullable Address address;
     }
 
     @Value

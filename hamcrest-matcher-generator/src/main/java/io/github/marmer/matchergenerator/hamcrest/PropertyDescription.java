@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.Collection;
@@ -36,10 +40,12 @@ final class PropertyDescription extends StringDescription {
 
     private static boolean containsGeneratedType(final @Nullable Object value) {
         if (value instanceof Collection<?>) {
-            return ((Collection<?>) value).stream().anyMatch(PropertyDescription::containsGeneratedType);
+            return ((Collection<?>) value)
+                    .stream().anyMatch(PropertyDescription::containsGeneratedType);
         }
         if (value instanceof Map<?, ?>) {
-            return ((Map<?, ?>) value).entrySet().stream().anyMatch(PropertyDescription::containsGeneratedType);
+            return ((Map<?, ?>) value)
+                    .entrySet().stream().anyMatch(PropertyDescription::containsGeneratedType);
         }
         if (value instanceof Map.Entry<?, ?>) {
             final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) value;
@@ -55,7 +61,8 @@ final class PropertyDescription extends StringDescription {
         }
         depth++;
         try {
-            final List<String> properties = PropertyAccess.propertiesOfGeneratedType(value.getClass());
+            final List<String> properties =
+                    PropertyAccess.propertiesOfGeneratedType(value.getClass());
             if (properties != null) {
                 appendProperties(value, properties);
             } else if (value instanceof Collection<?> && containsGeneratedType(value)) {

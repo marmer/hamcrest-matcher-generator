@@ -1,13 +1,17 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package foo.bar.sample.records.model;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import static foo.bar.sample.records.model.PersonRecordMatcher.isPersonRecord;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class PersonRecordTest {
 
@@ -16,12 +20,13 @@ class PersonRecordTest {
     void generatedMatcherMatchesRecordByComponentValues() {
         PersonRecord person = new PersonRecord("Alice", 30);
 
-        assertThat(person, isPersonRecord()
-            .withFirstName("Alice")
-            .withFirstName(is(equalTo("Alice")))
-            .withAge(30)
-            .withAge(is(30))
-        );
+        assertThat(
+                person,
+                isPersonRecord()
+                        .withFirstName("Alice")
+                        .withFirstName(is(equalTo("Alice")))
+                        .withAge(30)
+                        .withAge(is(30)));
     }
 
     @Test

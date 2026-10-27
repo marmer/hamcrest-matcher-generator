@@ -1,23 +1,27 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.testutils.lombok.model;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /**
- * Covers every getter shape Lombok generates: plain, boxed boolean, primitive boolean and primitive boolean fields
- * that already start with "is".
+ * Covers every getter shape Lombok generates: plain, boxed boolean, primitive boolean and primitive
+ * boolean fields that already start with "is".
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LombokPojo {
-    private String name;
+    @Nullable private String name;
     private int count;
     private boolean active;
-    private Boolean flagged;
+    @Nullable private Boolean flagged;
     private boolean isEnabled;
-    private List<String> tags;
+    private List<String> tags = List.of();
 }

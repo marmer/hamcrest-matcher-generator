@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.core;
 
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
@@ -36,31 +40,29 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        worker = new MatcherGenerationProcessorWorker(
-            timeProvider::get,
-            processingEnv,
-            getClass().getName(),
-            loadBackends()
-        );
+        worker =
+                new MatcherGenerationProcessorWorker(
+                        timeProvider::get, processingEnv, getClass().getName(), loadBackends());
     }
 
     private List<GeneratorBackend> loadBackends() {
         final List<GeneratorBackend> backends = new ArrayList<>();
-        ServiceLoader.load(GeneratorBackend.class, getClass().getClassLoader()).forEach(backends::add);
+        ServiceLoader.load(GeneratorBackend.class, getClass().getClassLoader())
+                .forEach(backends::add);
         return backends;
     }
 
     @Override
-    public boolean process(final Set<? extends TypeElement> set, final RoundEnvironment roundEnvironment) {
+    public boolean process(
+            final Set<? extends TypeElement> set, final RoundEnvironment roundEnvironment) {
         return worker.process(set, roundEnvironment);
     }
 
     @Override
     public Set<String> getSupportedOptions() {
         return Set.of(
-            MatcherGenerationProcessorWorker.KAPT_KOTLIN_GENERATED,
-            ElementSupport.VERBOSE_OPTION
-        );
+                MatcherGenerationProcessorWorker.KAPT_KOTLIN_GENERATED,
+                ElementSupport.VERBOSE_OPTION);
     }
 
     @Override

@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package foo.bar.sample.prodonly.model;
 
 import static foo.bar.sample.prodonly.model.SomeProdOnlyModelMatcher.isSomeProdOnlyModel;
@@ -10,15 +14,17 @@ import org.junit.jupiter.api.Test;
 class SomeProdOnlyModelMatcherTest {
 
     @Test
-    @DisplayName("Prod Matcher can be generated if matcher configuration is located nearby production sources")
+    @DisplayName(
+            "Prod Matcher can be generated if matcher configuration is located nearby production sources")
     @SneakyThrows
     void test_ProdMatcherCanBeGeneratedIfMatcherConfigurationIsLocatedNearbyProductionSources() {
-        assertThat(new SomeProdOnlyModel() {
-            @Override
-            public String getSomeProdOnlyProp() {
-                return "prodValue";
-            }
-        }, isSomeProdOnlyModel().withSomeProdOnlyProp("prodValue"));
+        assertThat(
+                new SomeProdOnlyModel() {
+                    @Override
+                    public String getSomeProdOnlyProp() {
+                        return "prodValue";
+                    }
+                },
+                isSomeProdOnlyModel().withSomeProdOnlyProp("prodValue"));
     }
-
 }

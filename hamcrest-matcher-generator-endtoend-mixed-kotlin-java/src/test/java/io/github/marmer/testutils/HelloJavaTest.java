@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.testutils;
 
 import io.github.marmer.testutils.model.MultiPojo1;
@@ -15,16 +19,20 @@ class HelloJavaTest {
     @Test
     @DisplayName("Usage of generated matchers")
     void test_UsageOfGeneratedMatchers() {
-        MatcherAssert.assertThat(new MultiPojo1("blub"), MultiPojo1Matcher.isMultiPojo1().withSomeProp("blub"));
-        MatcherAssert.assertThat(new SomePojo("blub"), SomePojoMatcher.isSomePojo().withSomeProp("blub"));
+        MatcherAssert.assertThat(
+                new MultiPojo1("blub"), MultiPojo1Matcher.isMultiPojo1().withSomeProp("blub"));
+        MatcherAssert.assertThat(
+                new SomePojo("blub"), SomePojoMatcher.isSomePojo().withSomeProp("blub"));
     }
 
     @Test
     @DisplayName("Nullable Kotlin properties accept null through generated matchers")
     void test_NullableKotlinPropertiesAcceptNull() {
         MatcherAssert.assertThat(
-            new NullabilityProbe("name", null, 1),
-            NullabilityProbeMatcher.isNullabilityProbe().withName("name").withNickname((String) null).withCount(1));
+                new NullabilityProbe("name", null, 1),
+                NullabilityProbeMatcher.isNullabilityProbe()
+                        .withName("name")
+                        .withNickname((String) null)
+                        .withCount(1));
     }
-
 }

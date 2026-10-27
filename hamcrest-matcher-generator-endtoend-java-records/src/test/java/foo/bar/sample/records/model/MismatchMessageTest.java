@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package foo.bar.sample.records.model;
 
 import static foo.bar.sample.records.model.AddressRecordMatcher.isAddressRecord;
@@ -16,20 +20,33 @@ class MismatchMessageTest {
     @Test
     @DisplayName("A nested mismatch lists the failing checks only, with dot paths")
     void aNestedMismatchListsTheFailingChecksOnlyWithDotPaths() {
-        final OrderRecord order = new OrderRecord("ada@example.org",
-            new CustomerRecord("Ada", new AddressRecord("Paris")));
+        final OrderRecord order =
+                new OrderRecord(
+                        "ada@example.org", new CustomerRecord("Ada", new AddressRecord("Paris")));
 
-        final AssertionError error = assertThrows(AssertionError.class, () -> assertThat(order, isOrderRecord()
-            .withEmail(startsWith("bob@"))
-            .withCustomer(isCustomerRecord()
-                .withName("Ada")
-                .withAddress(isAddressRecord().withCity("Berlin")))));
+        final AssertionError error =
+                assertThrows(
+                        AssertionError.class,
+                        () ->
+                                assertThat(
+                                        order,
+                                        isOrderRecord()
+                                                .withEmail(startsWith("bob@"))
+                                                .withCustomer(
+                                                        isCustomerRecord()
+                                                                .withName("Ada")
+                                                                .withAddress(
+                                                                        isAddressRecord()
+                                                                                .withCity(
+                                                                                        "Berlin")))));
 
-        assertEquals("""
+        assertEquals(
+                """
 
             Expected: OrderRecord with 3 property checks
                  but: email: expected a string starting with "bob@" but was "ada@example.org"
                       customer.address.city: expected "Berlin" but was "Paris"
-            """, error.getMessage() + "\n");
+            """,
+                error.getMessage() + "\n");
     }
 }

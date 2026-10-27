@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.docs;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -17,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,33 +35,40 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Checks the HTML the {@code asciidoctor-maven-plugin} rendered before the tests run: internal links, anchors and
- * images must resolve. External links are checked by the weekly lychee workflow, not here.
+ * Checks the HTML the {@code asciidoctor-maven-plugin} rendered before the tests run: internal
+ * links, anchors and images must resolve. External links are checked by the weekly lychee workflow,
+ * not here.
  */
 class RenderedDocsTest {
 
-    private static final Path OUTPUT = Paths.get(System.getProperty("docs.output.directory", "target/generated-docs"));
+    private static final Path OUTPUT =
+            Paths.get(System.getProperty("docs.output.directory", "target/generated-docs"));
     private static List<Path> pages;
 
     @BeforeAll
     static void findRenderedPages() throws IOException {
         try (Stream<Path> files = Files.walk(OUTPUT)) {
-            pages = files.filter(file -> file.toString().endsWith(".html")).sorted().collect(Collectors.toList());
+            pages =
+                    files.filter(file -> file.toString().endsWith(".html"))
+                            .sorted()
+                            .collect(Collectors.toList());
         }
     }
 
     @Test
     @DisplayName("The architecture document is rendered")
     void architectureDocumentIsRendered() {
-        assertTrue(Files.isRegularFile(OUTPUT.resolve("architecture/index.html")),
-            "architecture/index.html is missing in " + OUTPUT);
+        assertTrue(
+                Files.isRegularFile(OUTPUT.resolve("architecture/index.html")),
+                "architecture/index.html is missing in " + OUTPUT);
     }
 
     @Test
     @DisplayName("Included chapters are not rendered as pages of their own")
     void chaptersAreNotRenderedAsPagesOfTheirOwn() {
-        assertFalse(pages.stream().anyMatch(page -> page.toString().contains("_chapters")),
-            "included chapters must not be rendered standalone: " + pages);
+        assertFalse(
+                pages.stream().anyMatch(page -> page.toString().contains("_chapters")),
+                "included chapters must not be rendered standalone: " + pages);
     }
 
     @Test
@@ -65,7 +77,9 @@ class RenderedDocsTest {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
             for (final Element link : parse(page).select("a[href]")) {
-                checkLink(page, link.attr("href")).ifPresent(problem -> problems.add(OUTPUT.relativize(page) + ": " + problem));
+                checkLink(page, link.attr("href"))
+                        .ifPresent(
+                                problem -> problems.add(OUTPUT.relativize(page) + ": " + problem));
             }
         }
         assertTrue(problems.isEmpty(), "broken internal links:\n" + String.join("\n", problems));
@@ -77,7 +91,9 @@ class RenderedDocsTest {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
             for (final Element image : parse(page).select("img")) {
-                checkImage(page, image.attr("src")).ifPresent(problem -> problems.add(OUTPUT.relativize(page) + ": " + problem));
+                checkImage(page, image.attr("src"))
+                        .ifPresent(
+                                problem -> problems.add(OUTPUT.relativize(page) + ": " + problem));
             }
         }
         assertTrue(problems.isEmpty(), "broken images:\n" + String.join("\n", problems));
@@ -88,7 +104,8 @@ class RenderedDocsTest {
     void everyPageHasTheTopBarWithItsTabsInOrder() {
         final List<String> problems = new ArrayList<>();
         for (final Path page : pages) {
-            final List<String> tabs = parse(page).select("header.site-top nav.site-nav a").eachText();
+            final List<String> tabs =
+                    parse(page).select("header.site-top nav.site-nav a").eachText();
             if (!List.of("Guide", "Architecture", "Javadoc", "GitHub").equals(tabs)) {
                 problems.add(OUTPUT.relativize(page) + ": tabs are " + tabs);
             }
@@ -103,32 +120,63 @@ class RenderedDocsTest {
     @DisplayName("The active section is marked by the page kind")
     void theActiveSectionIsMarkedByThePageKind() {
         assertAll(
-            () -> assertTrue(parse(OUTPUT.resolve("index.html")).body().hasClass("page-landing"), "landing"),
-            () -> assertTrue(parse(OUTPUT.resolve("guide/getting-started.html")).body().hasClass("page-guide"), "guide"),
-            () -> assertTrue(parse(OUTPUT.resolve("architecture/index.html")).body().hasClass("page-arch"), "arc42"));
+                () ->
+                        assertTrue(
+                                parse(OUTPUT.resolve("index.html")).body().hasClass("page-landing"),
+                                "landing"),
+                () ->
+                        assertTrue(
+                                parse(OUTPUT.resolve("guide/getting-started.html"))
+                                        .body()
+                                        .hasClass("page-guide"),
+                                "guide"),
+                () ->
+                        assertTrue(
+                                parse(OUTPUT.resolve("architecture/index.html"))
+                                        .body()
+                                        .hasClass("page-arch"),
+                                "arc42"));
     }
 
     @Test
     @DisplayName("The architecture sidebar lists every chapter and links to its section")
     void architectureSidebarListsEveryChapterAndLinksToItsSection() {
         final Document architecture = parse(OUTPUT.resolve("architecture/index.html"));
-        final List<String> chapterIds = architecture.select("#content > .sect1 > h2[id], #content .sect1 > h2[id]").eachAttr("id");
-        final List<String> sidebarTargets = architecture.select("nav.site-side-arch ol:not(.site-side-plain) a").eachAttr("href");
+        final List<String> chapterIds =
+                architecture
+                        .select("#content > .sect1 > h2[id], #content .sect1 > h2[id]")
+                        .eachAttr("id");
+        final List<String> sidebarTargets =
+                architecture
+                        .select("nav.site-side-arch ol:not(.site-side-plain) a")
+                        .eachAttr("href");
         assertAll(
-            () -> assertEquals(12, chapterIds.size(), "arc42 has twelve chapters"),
-            () -> assertEquals(chapterIds.stream().map(id -> "#" + id).collect(Collectors.toList()), sidebarTargets));
+                () -> assertEquals(12, chapterIds.size(), "arc42 has twelve chapters"),
+                () ->
+                        assertEquals(
+                                chapterIds.stream()
+                                        .map(id -> "#" + id)
+                                        .collect(Collectors.toList()),
+                                sidebarTargets));
     }
 
     @Test
     @DisplayName("The guide sidebar lists every guide page and marks the current one")
     void guideSidebarListsEveryGuidePageAndMarksTheCurrentOne() {
-        final long guidePages = pages.stream().filter(page -> page.getParent().endsWith("guide")).count();
+        final long guidePages =
+                pages.stream().filter(page -> directoryOf(page).endsWith("guide")).count();
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
         final Element current = guidePage.selectFirst("nav.site-side-guide a[aria-current=page]");
         assertAll(
-            () -> assertNotNull(current, "current chapter is marked"),
-            () -> assertEquals("Getting started", current.text()),
-            () -> assertEquals(guidePages, guidePage.select("nav.site-side-guide ol:not(.site-side-plain) li").size(), "every guide page"));
+                () -> assertNotNull(current, "current chapter is marked"),
+                () -> assertEquals("Getting started", Objects.requireNonNull(current).text()),
+                () ->
+                        assertEquals(
+                                guidePages,
+                                guidePage
+                                        .select("nav.site-side-guide ol:not(.site-side-plain) li")
+                                        .size(),
+                                "every guide page"));
     }
 
     @Test
@@ -136,8 +184,12 @@ class RenderedDocsTest {
     void guidePagesEndWithAPager() {
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
         assertAll(
-            () -> assertEquals(1, guidePage.select("#content nav.site-pager").size()),
-            () -> assertEquals(2, guidePage.select("#content nav.site-pager a[rel]").size(), "previous and next"));
+                () -> assertEquals(1, guidePage.select("#content nav.site-pager").size()),
+                () ->
+                        assertEquals(
+                                2,
+                                guidePage.select("#content nav.site-pager a[rel]").size(),
+                                "previous and next"));
     }
 
     @Test
@@ -145,11 +197,17 @@ class RenderedDocsTest {
     void landingPageHasTheHeroWithItsCallsToAction() {
         final Document landing = parse(OUTPUT.resolve("index.html"));
         assertAll(
-            () -> assertEquals("Annotation processor · Java 17+ · Kotlin · Records", landing.select(".hero .eyebrow").text()),
-            () -> assertEquals(List.of("Get started", "How it works"), landing.select(".hero .cta a").eachText()),
-            () -> assertEquals(1, landing.select(".pair").size(), "snippet placeholders"),
-            () -> assertEquals(3, landing.select(".features li").size(), "features"),
-            () -> assertEquals("Install", landing.select("h2").text(), "install section"));
+                () ->
+                        assertEquals(
+                                "Annotation processor · Java 17+ · Kotlin · Records",
+                                landing.select(".hero .eyebrow").text()),
+                () ->
+                        assertEquals(
+                                List.of("Get started", "How it works"),
+                                landing.select(".hero .cta a").eachText()),
+                () -> assertEquals(1, landing.select(".pair").size(), "snippet placeholders"),
+                () -> assertEquals(3, landing.select(".features li").size(), "features"),
+                () -> assertEquals("Install", landing.select("h2").text(), "install section"));
     }
 
     @Test
@@ -162,7 +220,8 @@ class RenderedDocsTest {
                 problems.add(OUTPUT.relativize(page) + ": no footer");
                 continue;
             }
-            for (final String expected : List.of("Mariano Mertinat", "Docs for release", "Apache License 2.0")) {
+            for (final String expected :
+                    List.of("Mariano Mertinat", "Docs for release", "Apache License 2.0")) {
                 if (!footer.text().contains(expected)) {
                     problems.add(OUTPUT.relativize(page) + ": footer lacks '" + expected + "'");
                 }
@@ -186,7 +245,10 @@ class RenderedDocsTest {
         for (final Path page : pages) {
             final List<Element> stylesheets = parse(page).select("link[rel=stylesheet]");
             if (stylesheets.size() != 1 || isExternal(stylesheets.get(0).attr("href"))) {
-                problems.add(OUTPUT.relativize(page) + ": expected exactly the one local site stylesheet, found " + stylesheets);
+                problems.add(
+                        OUTPUT.relativize(page)
+                                + ": expected exactly the one local site stylesheet, found "
+                                + stylesheets);
             } else if (!Files.isRegularFile(resolve(page, stylesheets.get(0).attr("href")))) {
                 problems.add(OUTPUT.relativize(page) + ": stylesheet is missing");
             }
@@ -197,13 +259,20 @@ class RenderedDocsTest {
         final List<String> fonts = new ArrayList<>();
         while (references.find()) {
             fonts.add(references.group(1));
-            if (isExternal(references.group(1)) || !Files.isRegularFile(resolve(css, references.group(1)))) {
+            if (isExternal(references.group(1))
+                    || !Files.isRegularFile(resolve(css, references.group(1)))) {
                 problems.add("theme.css: '" + references.group(1) + "' is external or missing");
             }
         }
         assertAll(
-            () -> assertTrue(problems.isEmpty(), "stylesheet problems:\n" + String.join("\n", problems)),
-            () -> assertTrue(fonts.size() >= 4, "Bricolage Grotesque, Public Sans (two) and JetBrains Mono are bundled"));
+                () ->
+                        assertTrue(
+                                problems.isEmpty(),
+                                "stylesheet problems:\n" + String.join("\n", problems)),
+                () ->
+                        assertTrue(
+                                fonts.size() >= 4,
+                                "Bricolage Grotesque, Public Sans (two) and JetBrains Mono are bundled"));
     }
 
     @Test
@@ -219,7 +288,9 @@ class RenderedDocsTest {
                 problems.add(OUTPUT.relativize(page) + ": " + matcher.group());
             }
         }
-        assertTrue(problems.isEmpty(), "unresolved attribute references:\n" + String.join("\n", problems));
+        assertTrue(
+                problems.isEmpty(),
+                "unresolved attribute references:\n" + String.join("\n", problems));
     }
 
     @Test
@@ -227,11 +298,22 @@ class RenderedDocsTest {
     void linkCheckDetectsBrokenLinks() throws IOException {
         final Path page = OUTPUT.resolve("architecture/index.html");
         assertAll(
-            () -> assertTrue(checkLink(page, "does-not-exist.html").isPresent(), "missing file"),
-            () -> assertTrue(checkLink(page, "#does-not-exist-anchor").isPresent(), "missing anchor"),
-            () -> assertTrue(checkLink(page, "index.html#does-not-exist-anchor").isPresent(), "missing anchor in file"),
-            () -> assertFalse(checkLink(page, "https://example.org/").isPresent(), "external links are not checked"),
-            () -> assertFalse(checkLink(page, "").isPresent(), "empty href"));
+                () ->
+                        assertTrue(
+                                checkLink(page, "does-not-exist.html").isPresent(), "missing file"),
+                () ->
+                        assertTrue(
+                                checkLink(page, "#does-not-exist-anchor").isPresent(),
+                                "missing anchor"),
+                () ->
+                        assertTrue(
+                                checkLink(page, "index.html#does-not-exist-anchor").isPresent(),
+                                "missing anchor in file"),
+                () ->
+                        assertFalse(
+                                checkLink(page, "https://example.org/").isPresent(),
+                                "external links are not checked"),
+                () -> assertFalse(checkLink(page, "").isPresent(), "empty href"));
         assertTrue(checkImage(page, "images/does-not-exist.png").isPresent(), "missing image");
         assertTrue(checkImage(page, "").isPresent(), "empty image source");
     }
@@ -247,8 +329,10 @@ class RenderedDocsTest {
         if (!Files.exists(target)) {
             return Optional.of("'" + href + "' points to a missing file");
         }
-        if (fragment != null && !fragment.isEmpty() && target.toString().endsWith(".html")
-            && !hasAnchor(parse(target), fragment)) {
+        if (fragment != null
+                && !fragment.isEmpty()
+                && target.toString().endsWith(".html")
+                && !hasAnchor(parse(target), fragment)) {
             return Optional.of("'" + href + "' points to a missing anchor");
         }
         return Optional.empty();
@@ -260,8 +344,8 @@ class RenderedDocsTest {
         }
         if (src.startsWith("data:")) {
             return src.indexOf(',') < 0 || src.indexOf(',') == src.length() - 1
-                ? Optional.of("empty data URI image")
-                : Optional.empty();
+                    ? Optional.of("empty data URI image")
+                    : Optional.empty();
         }
         if (isExternal(src)) {
             return Optional.empty();
@@ -293,11 +377,22 @@ class RenderedDocsTest {
     }
 
     private static Path resolve(final Path page, final String relativePath) {
-        return page.getParent().resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8)).normalize();
+        return directoryOf(page)
+                .resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8))
+                .normalize();
+    }
+
+    /**
+     * The directory of a page. Every page is written below the output directory, so it always has a
+     * parent.
+     */
+    private static Path directoryOf(final Path page) {
+        return Objects.requireNonNull(page.getParent());
     }
 
     private static boolean hasAnchor(final Document document, final String fragment) {
-        return document.getElementById(fragment) != null || !document.getElementsByAttributeValue("name", fragment).isEmpty();
+        return document.getElementById(fragment) != null
+                || !document.getElementsByAttributeValue("name", fragment).isEmpty();
     }
 
     private static Document parse(final Path page) {

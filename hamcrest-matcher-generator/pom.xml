@@ -96,8 +96,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <!-- Explicit processor paths: the core on the classpath must not process its own backend. -->
-                    <annotationProcessorPaths>
+                    <!-- Explicit processor paths: the core on the classpath must not process its own backend.
+                         Appended to the static-analysis profile's Error Prone and NullAway paths on JDK 21+. -->
+                    <annotationProcessorPaths combine.children="append">
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
