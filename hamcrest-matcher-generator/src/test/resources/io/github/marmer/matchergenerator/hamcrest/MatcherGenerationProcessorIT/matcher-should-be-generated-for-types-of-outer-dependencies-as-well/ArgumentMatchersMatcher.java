@@ -48,10 +48,10 @@ public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> i
   }
 
   public static ArgumentMatchersMatcher isArgumentMatchersLike(final ArgumentMatchers reference) {
-    return ReferenceMatching.matcherFor(reference, ArgumentMatchersMatcher.class, ArgumentMatchersMatcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, ArgumentMatchersMatcher.class, ArgumentMatchersMatcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final ArgumentMatchers reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 

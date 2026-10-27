@@ -25,10 +25,10 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   }
 
   public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
-    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final SimplePojo reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 
@@ -73,10 +73,10 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     }
 
     public static InnerTypeMatcher isInnerTypeLike(final SimplePojo.InnerType reference) {
-      return ReferenceMatching.matcherFor(reference, InnerTypeMatcher.class, InnerTypeMatcher::new, matcher -> matcher.presetFrom(reference));
+      return ReferenceMatching.matcherFor(reference, InnerTypeMatcher.class, InnerTypeMatcher::new, matcher -> matcher.presetFrom());
     }
 
-    private void presetFrom(final SimplePojo.InnerType reference) {
+    private void presetFrom() {
       beanPropertyMatcher.checkingAllProperties();
     }
 
@@ -123,10 +123,10 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
 
       public static InnerInnerTypeMatcher isInnerInnerTypeLike(
           final SimplePojo.InnerType.InnerInnerType reference) {
-        return ReferenceMatching.matcherFor(reference, InnerInnerTypeMatcher.class, InnerInnerTypeMatcher::new, matcher -> matcher.presetFrom(reference));
+        return ReferenceMatching.matcherFor(reference, InnerInnerTypeMatcher.class, InnerInnerTypeMatcher::new, matcher -> matcher.presetFrom());
       }
 
-      private void presetFrom(final SimplePojo.InnerType.InnerInnerType reference) {
+      private void presetFrom() {
         beanPropertyMatcher.checkingAllProperties();
       }
 

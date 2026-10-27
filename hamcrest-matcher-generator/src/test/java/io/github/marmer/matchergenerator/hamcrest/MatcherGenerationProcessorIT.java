@@ -1069,6 +1069,10 @@ class MatcherGenerationProcessorIT {
                 compilation,
                 "reference-object-matcher-presets-deep-checks",
                 "some.other.pck.OrderMatcher");
+        assertGeneratedSource(
+                compilation,
+                "reference-object-matcher-presets-deep-checks",
+                "some.other.pck.MarkerMatcher");
     }
 
     @Test

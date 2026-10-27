@@ -48,10 +48,10 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
   }
 
   public static SomeClassMatcher isSomeClassLike(final SomeClass reference) {
-    return ReferenceMatching.matcherFor(reference, SomeClassMatcher.class, SomeClassMatcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, SomeClassMatcher.class, SomeClassMatcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final SomeClass reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 
@@ -117,10 +117,10 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
 
     public static SomeNonStaticInnerClassMatcher isSomeNonStaticInnerClassLike(
         final SomeClass.SomeNonStaticInnerClass reference) {
-      return ReferenceMatching.matcherFor(reference, SomeNonStaticInnerClassMatcher.class, SomeNonStaticInnerClassMatcher::new, matcher -> matcher.presetFrom(reference));
+      return ReferenceMatching.matcherFor(reference, SomeNonStaticInnerClassMatcher.class, SomeNonStaticInnerClassMatcher::new, matcher -> matcher.presetFrom());
     }
 
-    private void presetFrom(final SomeClass.SomeNonStaticInnerClass reference) {
+    private void presetFrom() {
       beanPropertyMatcher.checkingAllProperties();
     }
 

@@ -48,10 +48,10 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   }
 
   public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
-    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final SimplePojo reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 

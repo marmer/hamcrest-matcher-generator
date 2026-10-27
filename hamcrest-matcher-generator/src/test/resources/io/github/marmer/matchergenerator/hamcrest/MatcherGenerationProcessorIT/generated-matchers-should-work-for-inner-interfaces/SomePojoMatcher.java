@@ -48,10 +48,10 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
   }
 
   public static SomePojoMatcher isSomePojoLike(final SomePojo reference) {
-    return ReferenceMatching.matcherFor(reference, SomePojoMatcher.class, SomePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, SomePojoMatcher.class, SomePojoMatcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final SomePojo reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 
@@ -97,10 +97,10 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
 
     public static InnerInterfaceMatcher isInnerInterfaceLike(
         final SomePojo.InnerInterface reference) {
-      return ReferenceMatching.matcherFor(reference, InnerInterfaceMatcher.class, InnerInterfaceMatcher::new, matcher -> matcher.presetFrom(reference));
+      return ReferenceMatching.matcherFor(reference, InnerInterfaceMatcher.class, InnerInterfaceMatcher::new, matcher -> matcher.presetFrom());
     }
 
-    private void presetFrom(final SomePojo.InnerInterface reference) {
+    private void presetFrom() {
       beanPropertyMatcher.checkingAllProperties();
     }
 

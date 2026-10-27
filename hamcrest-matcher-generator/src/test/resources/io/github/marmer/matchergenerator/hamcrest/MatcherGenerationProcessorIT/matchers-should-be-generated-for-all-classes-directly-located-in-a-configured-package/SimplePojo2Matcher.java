@@ -48,10 +48,10 @@ public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> implements 
   }
 
   public static SimplePojo2Matcher isSimplePojo2Like(final SimplePojo2 reference) {
-    return ReferenceMatching.matcherFor(reference, SimplePojo2Matcher.class, SimplePojo2Matcher::new, matcher -> matcher.presetFrom(reference));
+    return ReferenceMatching.matcherFor(reference, SimplePojo2Matcher.class, SimplePojo2Matcher::new, matcher -> matcher.presetFrom());
   }
 
-  private void presetFrom(final SimplePojo2 reference) {
+  private void presetFrom() {
     beanPropertyMatcher.checkingAllProperties();
   }
 

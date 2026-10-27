@@ -276,10 +276,10 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
 
       public static InnerInnerStaticPojoMatcher isInnerInnerStaticPojoLike(
           final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo reference) {
-        return ReferenceMatching.matcherFor(reference, InnerInnerStaticPojoMatcher.class, InnerInnerStaticPojoMatcher::new, matcher -> matcher.presetFrom(reference));
+        return ReferenceMatching.matcherFor(reference, InnerInnerStaticPojoMatcher.class, InnerInnerStaticPojoMatcher::new, matcher -> matcher.presetFrom());
       }
 
-      private void presetFrom(final SimplePojo.InnerStaticPojo.InnerInnerStaticPojo reference) {
+      private void presetFrom() {
         beanPropertyMatcher.checkingAllProperties();
       }
 

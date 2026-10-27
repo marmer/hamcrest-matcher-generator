@@ -283,7 +283,7 @@ class MatcherGenerator {
                         REFERENCE,
                         getGeneratedTypeName(),
                         getGeneratedTypeName(),
-                        REFERENCE)
+                        presetProperties().isEmpty() ? "" : REFERENCE)
                 .returns(getGeneratedTypeName())
                 .build();
     }
@@ -293,10 +293,11 @@ class MatcherGenerator {
         final MethodSpec.Builder method =
                 MethodSpec.methodBuilder("presetFrom")
                         .addModifiers(Modifier.PRIVATE)
-                        .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
                         .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME);
-        PropertyModel.distinctByName(model.properties()).stream()
-                .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
+        if (!presetProperties().isEmpty()) {
+            method.addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL);
+        }
+        presetProperties()
                 .forEach(
                         property ->
                                 method.addStatement(
@@ -305,6 +306,13 @@ class MatcherGenerator {
                                         property.name(),
                                         presetOf(property)));
         return method.build();
+    }
+
+    /** The properties preset from a reference object: all but {@code class}. */
+    private List<PropertyModel> presetProperties() {
+        return PropertyModel.distinctByName(model.properties()).stream()
+                .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
+                .collect(Collectors.toList());
     }
 
     private CodeBlock presetOf(final PropertyModel property) {
