@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -443,7 +444,7 @@ class CoreProcessorIT {
         final Compilation compiledMangled = Compiler.javac().compile(mangled, KOTLIN_METADATA);
         CompilationSubject.assertThat(compiledMangled).succeeded();
         writeClassFile(compiledMangled, classes, "some.other.pck.Mangled", "getXyzQ", "getX-zQ");
-        writeClassFile(compiledMangled, classes, "kotlin.Metadata", null, null);
+        writeClassFile(compiledMangled, classes, "kotlin.Metadata");
 
         final Compilation compilation = compile(
             javacWith().withClasspath(classPathWith(classes)),
@@ -472,15 +473,25 @@ class CoreProcessorIT {
      * such as {@code getX-abc} for mangled accessors, which javac refuses to compile from source. The rename keeps the
      * length, so the constant pool stays valid.
      */
+    private static void writeClassFile(final Compilation compilation, final Path classes, final String name)
+        throws IOException {
+        writeClassContent(compilation, classes, name, UnaryOperator.identity());
+    }
+
     private static void writeClassFile(final Compilation compilation, final Path classes, final String name,
                                        final String from, final String to) throws IOException {
+        writeClassContent(compilation, classes, name, content -> content.replace(from, to));
+    }
+
+    private static void writeClassContent(final Compilation compilation, final Path classes, final String name,
+                                          final UnaryOperator<String> rename) throws IOException {
         final String path = name.replace('.', '/') + ".class";
         final byte[] bytes = compilation.generatedFile(StandardLocation.CLASS_OUTPUT, path)
             .orElseThrow()
             .openInputStream()
             .readAllBytes();
         final String content = new String(bytes, StandardCharsets.ISO_8859_1);
-        final String renamed = from == null ? content : content.replace(from, to);
+        final String renamed = rename.apply(content);
         final Path target = classes.resolve(path);
         Files.createDirectories(target.getParent());
         Files.write(target, renamed.getBytes(StandardCharsets.ISO_8859_1));
