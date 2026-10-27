@@ -38,6 +38,9 @@ public class MatcherGenerationProcessorWorker {
      */
     static final String KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated";
     static final String GENERATE_MATCHERS = "io.github.marmer.matchergenerator.annotations.GenerateMatchers";
+    static final String GENERATED = "javax.annotation.processing.Generated";
+    static final String NULL_MARKED = "org.jspecify.annotations.NullMarked";
+    private static final Set<String> GENERATED_OUTPUT_ANNOTATIONS = Set.of(GENERATED, NULL_MARKED);
     /**
      * The deprecated 5.x alias. Referenced by name only, so the core does not depend on a deprecated type.
      */
@@ -97,7 +100,11 @@ public class MatcherGenerationProcessorWorker {
             .filter(annotation -> CONFIGURATION_ANNOTATIONS.contains(annotation.getQualifiedName().toString()))
             .forEach(annotation -> configurationElements.addAll(roundEnv.getElementsAnnotatedWith(annotation)));
         if (configurationElements.isEmpty()) {
-            return false;
+            // The matchers written in an earlier round come back without configuration, carrying the annotations the
+            // generator writes on its output. Claiming them keeps javac's processing lint quiet about annotations nobody
+            // claims.
+            return annotations.stream()
+                .anyMatch(annotation -> GENERATED_OUTPUT_ANNOTATIONS.contains(annotation.getQualifiedName().toString()));
         }
         configurationElements.forEach(this::generateMatchers);
         return true;
