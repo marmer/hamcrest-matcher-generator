@@ -97,3 +97,34 @@ jobs:
 
       - name: Verify
         run: ./mvnw -B clean verify
+
+  release-dry-run:
+    name: Release dry run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-release-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-release-
+
+      # The CycloneDX skip and the missing BOMs only show up in the deploy lifecycle with the central-publishing
+      # extension, not in verify. skipPublishing=true uploads nothing; the dummy settings only supply the server entry.
+      - name: Release deploy lifecycle without signing and publishing
+        shell: bash  # -eo pipefail, so a failing Maven build is not hidden by tee
+        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
+
+      - name: Check release artifacts
+        run: scripts/ci/check-release-artifacts.sh release-dry-run.log
