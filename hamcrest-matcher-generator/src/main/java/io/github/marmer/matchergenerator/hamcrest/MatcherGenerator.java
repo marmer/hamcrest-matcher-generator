@@ -6,6 +6,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -16,13 +17,18 @@ import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -37,6 +43,11 @@ import org.jspecify.annotations.Nullable;
 
 class MatcherGenerator {
     private static final String RETURN_THIS = "return this";
+    private static final String REFERENCE = "reference";
+    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
+    private static final String COLLECTION = "java.util.Collection";
+    private static final String LIST = "java.util.List";
+    private static final String MAP = "java.util.Map";
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
     private static final AnnotationSpec NULL_MARKED =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
@@ -89,6 +100,8 @@ class MatcherGenerator {
                         .addMethods(getPropertyEqualsMatcherMethods())
                         .addMethods(getPropertyIgnoreMethods())
                         .addMethod(getCheckingAllPropertiesMethod())
+                        .addMethod(getReferenceInitializer())
+                        .addMethod(getPresetMethod())
                         .addMethods(getMatcherMethods())
                         .addMethod(getApiInitializer())
                         .addTypes(getInnerMatchers());
@@ -259,6 +272,156 @@ class MatcherGenerator {
                 .returns(getGeneratedTypeName())
                 .build();
     }
+
+    private MethodSpec getReferenceInitializer() {
+        return MethodSpec.methodBuilder("is" + model.simpleName() + "Like")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
+                .addStatement(
+                        "return $T.matcherFor($L, $T.class, $T::new, matcher -> matcher.presetFrom($L))",
+                        ReferenceMatching.class,
+                        REFERENCE,
+                        getGeneratedTypeName(),
+                        getGeneratedTypeName(),
+                        REFERENCE)
+                .returns(getGeneratedTypeName())
+                .build();
+    }
+
+    /** Turns on the completeness check and presets every property from the reference object. */
+    private MethodSpec getPresetMethod() {
+        final MethodSpec.Builder method =
+                MethodSpec.methodBuilder("presetFrom")
+                        .addModifiers(Modifier.PRIVATE)
+                        .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
+                        .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME);
+        PropertyModel.distinctByName(model.properties()).stream()
+                .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
+                .forEach(
+                        property ->
+                                method.addStatement(
+                                        "$L.preset($S, $L)",
+                                        BUILDER_FIELD_NAME,
+                                        property.name(),
+                                        presetOf(property)));
+        return method.build();
+    }
+
+    private CodeBlock presetOf(final PropertyModel property) {
+        final CodeBlock value = CodeBlock.of("$L.$L()", REFERENCE, property.accessor());
+        final TypeMirror type = property.type();
+        final MatcherType direct = matcherTypeOf(type);
+        if (direct != null) {
+            return referencePreset("nested", value, direct);
+        }
+        if (type.getKind() == TypeKind.ARRAY) {
+            final MatcherType item = matcherTypeOf(((ArrayType) type).getComponentType());
+            return item == null ? valuePreset(value) : referencePreset("array", value, item);
+        }
+        if (type.getKind() == TypeKind.DECLARED) {
+            final DeclaredType declared = (DeclaredType) type;
+            final List<? extends TypeMirror> arguments = declared.getTypeArguments();
+            if (arguments.size() == 1 && inherits(asTypeElement(type), COLLECTION)) {
+                final MatcherType item = matcherTypeOf(arguments.get(0));
+                if (item != null) {
+                    return referencePreset(
+                            inherits(asTypeElement(type), LIST) ? "list" : "collection",
+                            value,
+                            item);
+                }
+            }
+            if (arguments.size() == 2 && inherits(asTypeElement(type), MAP)) {
+                final MatcherType item = matcherTypeOf(arguments.get(1));
+                if (item != null) {
+                    return referencePreset("map", value, item);
+                }
+            }
+        }
+        return valuePreset(value);
+    }
+
+    private CodeBlock valuePreset(final CodeBlock value) {
+        return CodeBlock.of("$T.value($L)", ReferenceMatching.class, value);
+    }
+
+    private CodeBlock referencePreset(
+            final String helper, final CodeBlock value, final MatcherType matcherType) {
+        return CodeBlock.of(
+                "$T.$L($L, $T::$L)",
+                ReferenceMatching.class,
+                helper,
+                value,
+                matcherType.className(),
+                matcherType.likeMethod());
+    }
+
+    /**
+     * @return the matcher a value of the type is compared with deeply, or {@code null} if it is
+     *     compared by {@code equals}. That is the case for types without a matcher generated in
+     *     this run, for enums and for types without properties, which tell nothing apart.
+     */
+    private @Nullable MatcherType matcherTypeOf(final TypeMirror type) {
+        if (type instanceof WildcardType) {
+            final TypeMirror bound = ((WildcardType) type).getExtendsBound();
+            return bound == null ? null : matcherTypeOf(bound);
+        }
+        if (type.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        return referenceTypes().get(asTypeElement(type).getQualifiedName().toString());
+    }
+
+    private Map<String, MatcherType> referenceTypes() {
+        final Map<String, MatcherType> types = new HashMap<>();
+        context.generatedTypes()
+                .forEach(
+                        generated ->
+                                collectReferenceTypes(
+                                        generated,
+                                        ClassName.get(
+                                                generated.targetPackage(),
+                                                generated.simpleName() + "Matcher"),
+                                        types));
+        return types;
+    }
+
+    private void collectReferenceTypes(
+            final TypeModel generated,
+            final ClassName className,
+            final Map<String, MatcherType> types) {
+        if (isComparedDeeply(generated)) {
+            types.put(
+                    generated.qualifiedName(),
+                    new MatcherType(className, "is" + generated.simpleName() + "Like"));
+        }
+        generated
+                .nestedTypes()
+                .forEach(
+                        nested ->
+                                collectReferenceTypes(
+                                        nested,
+                                        className.nestedClass(nested.simpleName() + "Matcher"),
+                                        types));
+    }
+
+    private boolean isComparedDeeply(final TypeModel generated) {
+        return asTypeElement(generated.type()).getKind() != ElementKind.ENUM
+                && generated.properties().stream()
+                        .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
+    }
+
+    /** Whether the type is, or has among its supertypes, the type of the given name. */
+    private boolean inherits(final TypeElement type, final String qualifiedName) {
+        if (type.getQualifiedName().contentEquals(qualifiedName)) {
+            return true;
+        }
+        return Stream.concat(Stream.of(type.getSuperclass()), type.getInterfaces().stream())
+                .filter(supertype -> supertype.getKind() == TypeKind.DECLARED)
+                .anyMatch(supertype -> inherits(asTypeElement(supertype), qualifiedName));
+    }
+
+    /** The matcher generated for a type and the name of its method for reference objects. */
+    private record MatcherType(ClassName className, String likeMethod) {}
 
     private ClassName getGeneratedTypeName() {
         return ClassName.get("", simpleMatcherName);

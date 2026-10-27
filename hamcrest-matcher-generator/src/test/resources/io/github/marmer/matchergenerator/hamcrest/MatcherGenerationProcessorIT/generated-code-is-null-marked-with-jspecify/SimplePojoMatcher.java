@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Object;
@@ -239,6 +240,23 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     return this;
   }
 
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo<?> reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojo<?> reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("name", ReferenceMatching.value(reference.getName()));
+    beanPropertyMatcher.preset("nickname", ReferenceMatching.value(reference.getNickname()));
+    beanPropertyMatcher.preset("count", ReferenceMatching.value(reference.getCount()));
+    beanPropertyMatcher.preset("limit", ReferenceMatching.value(reference.getLimit()));
+    beanPropertyMatcher.preset("tags", ReferenceMatching.value(reference.getTags()));
+    beanPropertyMatcher.preset("parts", ReferenceMatching.value(reference.getParts()));
+    beanPropertyMatcher.preset("payload", ReferenceMatching.value(reference.getPayload()));
+    beanPropertyMatcher.preset("entry", ReferenceMatching.value(reference.getEntry()));
+    beanPropertyMatcher.preset("requiredEntry", ReferenceMatching.value(reference.getRequiredEntry()));
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -317,6 +335,15 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     public InnerMatcher checkingAllProperties() {
       beanPropertyMatcher.checkingAllProperties();
       return this;
+    }
+
+    public static InnerMatcher isInnerLike(final SimplePojo.Inner reference) {
+      return ReferenceMatching.matcherFor(reference, InnerMatcher.class, InnerMatcher::new, matcher -> matcher.presetFrom(reference));
+    }
+
+    private void presetFrom(final SimplePojo.Inner reference) {
+      beanPropertyMatcher.checkingAllProperties();
+      beanPropertyMatcher.preset("innerName", ReferenceMatching.value(reference.getInnerName()));
     }
 
     @Override

@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
+import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Boolean;
 import java.lang.Byte;
 import java.lang.Character;
@@ -212,6 +213,22 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   public SimplePojoMatcher checkingAllProperties() {
     beanPropertyMatcher.checkingAllProperties();
     return this;
+  }
+
+  public static SimplePojoMatcher isSimplePojoLike(final SimplePojo reference) {
+    return ReferenceMatching.matcherFor(reference, SimplePojoMatcher.class, SimplePojoMatcher::new, matcher -> matcher.presetFrom(reference));
+  }
+
+  private void presetFrom(final SimplePojo reference) {
+    beanPropertyMatcher.checkingAllProperties();
+    beanPropertyMatcher.preset("intProperty", ReferenceMatching.value(reference.getIntProperty()));
+    beanPropertyMatcher.preset("shortProperty", ReferenceMatching.value(reference.getShortProperty()));
+    beanPropertyMatcher.preset("longProperty", ReferenceMatching.value(reference.getLongProperty()));
+    beanPropertyMatcher.preset("doubleProperty", ReferenceMatching.value(reference.getDoubleProperty()));
+    beanPropertyMatcher.preset("floatProperty", ReferenceMatching.value(reference.getFloatProperty()));
+    beanPropertyMatcher.preset("charProperty", ReferenceMatching.value(reference.getCharProperty()));
+    beanPropertyMatcher.preset("byteProperty", ReferenceMatching.value(reference.getByteProperty()));
+    beanPropertyMatcher.preset("booleanProperty", ReferenceMatching.value(reference.isBooleanProperty()));
   }
 
   @Override

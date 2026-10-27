@@ -975,6 +975,169 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
+    @DisplayName("Reference object matcher should preset deep checks for types with a matcher")
+    void referenceObjectMatcherShouldPresetDeepChecksForTypesWithAMatcher() throws IOException {
+        // Preparation
+        JavaFileObject configuration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SomeConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers({
+                "some.other.pck.Order",
+                "some.other.pck.Line",
+                "some.other.pck.Color",
+                "some.other.pck.Marker"
+            })
+            public final class SomeConfiguration{
+
+            }
+            """);
+        JavaFileObject order =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Order",
+                        """
+            package some.other.pck;
+
+            import java.util.Collection;
+            import java.util.List;
+            import java.util.Map;
+            import java.util.Set;
+
+            public class Order {
+                public String getId() { return null; }
+                public int getQuantity() { return 0; }
+                public Line getFirstLine() { return null; }
+                public List<Line> getLines() { return null; }
+                public Set<Line> getLineSet() { return null; }
+                public Collection<? extends Line> getWildcardLines() { return null; }
+                public Map<String, Line> getLinesBySku() { return null; }
+                public Map<Line, String> getSkuByLine() { return null; }
+                public Line[] getLineArray() { return null; }
+                public List<String> getTags() { return null; }
+                public Color getColor() { return null; }
+                public Marker getMarker() { return null; }
+                public Detail getDetail() { return null; }
+
+                public static class Detail {
+                    public Order getOrder() { return null; }
+                }
+            }
+            """);
+        JavaFileObject line =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Line",
+                        """
+            package some.other.pck;
+
+            public class Line {
+                public String getSku() { return null; }
+                public Order getOrder() { return null; }
+            }
+            """);
+        JavaFileObject color =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Color",
+                        """
+            package some.other.pck;
+
+            public enum Color {
+                RED, GREEN;
+
+                public String getLabel() { return name(); }
+            }
+            """);
+        JavaFileObject marker =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Marker",
+                        """
+            package some.other.pck;
+
+            public class Marker {
+            }
+            """);
+
+        // Execution
+        Compilation compilation = compile(configuration, order, line, color, marker);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "reference-object-matcher-presets-deep-checks",
+                "some.other.pck.OrderMatcher");
+    }
+
+    @Test
+    @DisplayName("Reference object matcher should refer to matchers of other configurations")
+    void referenceObjectMatcherShouldReferToMatchersOfOtherConfigurations() throws IOException {
+        // Preparation
+        JavaFileObject firstConfiguration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.FirstConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.Order")
+            public final class FirstConfiguration{
+
+            }
+            """);
+        JavaFileObject secondConfiguration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SecondConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers.GenerationConfiguration;
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers.GenerationConfiguration.PackageConfiguration;
+
+            @GenerateMatchers(
+                value = "some.other.pck.Customer",
+                generation = @GenerationConfiguration(packageConfig = @PackageConfiguration("prefixed")))
+            public final class SecondConfiguration{
+
+            }
+            """);
+        JavaFileObject order =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Order",
+                        """
+            package some.other.pck;
+
+            public class Order {
+                public Customer getCustomer() { return null; }
+            }
+            """);
+        JavaFileObject customer =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Customer",
+                        """
+            package some.other.pck;
+
+            public class Customer {
+                public String getName() { return null; }
+            }
+            """);
+
+        // Execution
+        Compilation compilation = compile(firstConfiguration, secondConfiguration, order, customer);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "reference-object-matcher-refers-to-other-configurations",
+                "some.other.pck.OrderMatcher");
+    }
+
+    @Test
     @DisplayName("Generics and wildcard properties should be handled properly")
     void genericsAndWildcardPropertiesShouldBeHandledProperly() throws IOException {
         // Preparation
