@@ -56,8 +56,8 @@ final class PropertyAccess {
             return invoke(descriptor.getReadMethod(), item, propertyName);
         }
         try {
-            final Method accessor = item.getClass().getMethod(propertyName);
-            return accessor.getParameterCount() == 0 ? invoke(accessor, item, propertyName) : NO_SUCH_PROPERTY;
+            // getMethod without parameter types only finds methods without parameters
+            return invoke(item.getClass().getMethod(propertyName), item, propertyName);
         } catch (final NoSuchMethodException e) {
             return NO_SUCH_PROPERTY;
         }
