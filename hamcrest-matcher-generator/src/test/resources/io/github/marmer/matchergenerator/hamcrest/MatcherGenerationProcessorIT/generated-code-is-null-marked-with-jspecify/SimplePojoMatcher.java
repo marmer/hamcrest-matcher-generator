@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Object;
@@ -21,11 +22,11 @@ import org.jspecify.annotations.Nullable;
     date = "2020-01-01T00:00"
 )
 @NullMarked
-public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
+public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class, "name", "nickname", "count", "limit", "tags", "parts", "payload", "entry", "requiredEntry", "class");
   }
 
   public SimplePojoMatcher withName(final Matcher<? super String> matcher) {
@@ -184,6 +185,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
   }
 
   @Override
+  public BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher() {
+    return beanPropertyMatcher;
+  }
+
+  @Override
   public void describeTo(final Description description) {
     beanPropertyMatcher.describeTo(description);
   }
@@ -206,11 +212,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
       value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
       date = "2020-01-01T00:00"
   )
-  public static class InnerMatcher extends TypeSafeMatcher<SimplePojo.Inner> {
+  public static class InnerMatcher extends TypeSafeMatcher<SimplePojo.Inner> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SimplePojo.Inner> beanPropertyMatcher;
 
     public InnerMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class);
+      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class, "innerName", "class");
     }
 
     public InnerMatcher withInnerName(final Matcher<? super String> matcher) {
@@ -241,6 +247,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> {
     public InnerMatcher withClass(final @Nullable Class<?> value) {
       beanPropertyMatcher.with("class", Matchers.equalTo(value));
       return this;
+    }
+
+    @Override
+    public BeanPropertyMatcher<SimplePojo.Inner> beanPropertyMatcher() {
+      return beanPropertyMatcher;
     }
 
     @Override

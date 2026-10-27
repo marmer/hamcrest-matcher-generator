@@ -1,0 +1,4 @@
+
+Expected: Order with 2 property checks
+     but: lines: expected [OrderLine {sku "B-2", quantity <2>}] but was [OrderLine {sku "A-1", quantity <1>}]
+          customer: expected Customer {name "Ada", address Address {city "Berlin"}} but was null

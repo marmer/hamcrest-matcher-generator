@@ -1,0 +1,4 @@
+
+Expected: (Order with 2 property checks and not null)
+     but: Order with 2 property checks id: expected "o-2" but was "o-1"
+          email: expected a string starting with "bob@" but was "ada@example.org"

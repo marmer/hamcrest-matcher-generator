@@ -28,7 +28,11 @@ diagnostics, and the `GeneratorBackend` interface. It has no assertion library o
 
 | `hamcrest-matcher-generator`
 | The Hamcrest backend: it turns a `TypeModel` into the source of a `<Type>Matcher` class with JavaPoet. It also
-contains the runtime base class `BeanPropertyMatcher` that the generated matchers call at test time.
+contains the runtime class `BeanPropertyMatcher` that the generated matchers call at test time and that builds the
+mismatch messages. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
+`GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
+check of another one is flattened into property paths; it is public because generated code lives in the user's
+packages) and passes its property names to the `BeanPropertyMatcher` constructor.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
 | Relocation POMs without code that point 5.x users to `hamcrest-matcher-generator` (see ADR 0002).

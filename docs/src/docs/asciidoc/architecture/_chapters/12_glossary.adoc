@@ -34,6 +34,12 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Property path
 |The route from the asserted object to the value that was checked, written with dots between property names, `[index]` for list items and `[key]` for map entries. Mismatch messages use it to say exactly which value differs, for example `customer.address.city` or `lines[1].quantity`.
 
+|Generated bean matcher
+|A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.
+
+|One-line rendering
+|The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
+
 |Completeness check
 |The check that every property of a type is either asserted or deliberately ignored. It makes sure that a property added later cannot go unchecked without anyone noticing.
 
