@@ -308,7 +308,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.14.0</version>
                     <executions>
                         <!-- Replacing default-compile as it is treated specially by maven -->
                         <execution>
@@ -442,7 +442,7 @@
                 <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
                 <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
                 <module>hamcrest-matcher-generator-endtoend-java-records</module>
-                <module>hamcrest-matcher-generator-endtoend-5x-compatibility</module>
+                <module>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</module>
             </modules>
             <activation>
                 <property>
@@ -510,7 +510,7 @@
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-kotlin</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-java-records</excludeArtifact>
-                                <excludeArtifact>hamcrest-matcher-generator-endtoend-5x-compatibility</excludeArtifact>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
