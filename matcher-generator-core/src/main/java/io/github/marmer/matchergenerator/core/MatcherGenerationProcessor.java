@@ -11,7 +11,6 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 
@@ -19,7 +18,6 @@ import javax.lang.model.element.TypeElement;
     MatcherGenerationProcessorWorker.GENERATE_MATCHERS,
     MatcherGenerationProcessorWorker.MATCHER_CONFIGURATION
 })
-@SupportedOptions(MatcherGenerationProcessorWorker.VERBOSE_OPTION)
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
     private final Supplier<LocalDateTime> timeProvider;
@@ -53,6 +51,14 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> set, final RoundEnvironment roundEnvironment) {
         return worker.process(set, roundEnvironment);
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Set.of(
+            MatcherGenerationProcessorWorker.KAPT_KOTLIN_GENERATED,
+            MatcherGenerationProcessorWorker.VERBOSE_OPTION
+        );
     }
 
     @Override
