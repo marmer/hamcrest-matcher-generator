@@ -13,7 +13,7 @@ The orchestrator hands this file, by path, to every implementer subagent, togeth
    - If domain terms or architecture change, keep `GLOSSARY.md`, `docs/adr/` and the arc42 docs in sync; `python3 scripts/agents/check-domain-docs-sync.py` must pass.
 5. **Commit** on `ticket-<n>` with Conventional Commit messages. End each commit message with the co-author trailer from your own context and the `Claude-Session:` line the orchestrator gives you.
    Never put a model name anywhere in the repo or commit text except that trailer.
-6. **Before reporting**: `git fetch origin main && git merge --no-edit origin/main` (never rebase), resolve conflicts, re-run the verify builds if anything merged in. No push, no PR, no issue writes: the orchestrator does those.
+6. **Before reporting**: `git fetch origin main && git merge --no-edit origin/main` (never rebase), resolve conflicts, re-run the verify builds if anything merged in; the JaCoCo floor then covers the merged code too. No push, no PR, no issue writes: the orchestrator does those.
 7. **Report** only through your final answer, and only once every build you started has finished: no build left running. Include branch name, worktree path, head sha, what you built per acceptance criterion, the verify commands you ran and their result (back every claim about history or code with the command that shows it, so the orchestrator can re-run it), and anything left open. Leave session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator.
 
 ## Sandbox gotchas

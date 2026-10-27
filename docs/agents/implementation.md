@@ -40,7 +40,7 @@ These steps replace steps 3 to 8 of `/implement-spec`: there is no integration b
 4. **PR**: once the review's findings are fixed, the implementer merges the current `origin/main` tip into its branch (never rebase), re-runs the verify builds and reports. The orchestrator pushes the branch and opens a PR into `main` with the `pr` skill: `Closes #<n>`, `Part of #<spec>`. Then it enables auto-merge with the squash method (`enable_pr_auto_merge`), as the owner rule in `docs/agents/wayfinding.md` describes.
 5. **Watch**: subscribe to the PR's activity. Red CI, review threads or a merge conflict are work now: fix them on the branch and push, until GitHub merges it. Then run `issue-status.py <spec>` and start the tickets this merge unblocked from the new `main` tip.
 
-Independent frontier tickets still run in parallel, each with its own branch, review and PR. When a sibling PR merges first and conflicts, merge `origin/main` into the waiting branch and push; never force-push.
+Independent frontier tickets still run in parallel, each with its own branch, review and PR. Tickets that change the same core files (the Hamcrest generator, golden files, root-pom plugins) run one after another instead, and a whole-repo reformat ticket runs alone and last. When a sibling PR merges first and conflicts, merge `origin/main` into the waiting branch and push; never force-push.
 
 ## Session-end review
 
