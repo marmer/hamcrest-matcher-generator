@@ -56,6 +56,16 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+                <executions>
+                    <!-- The tests configure no matchers, so javac runs no processor on them. Otherwise javac would report
+                        the JUnit annotations as claimed by no processor. -->
+                    <execution>
+                        <id>java-test-compile</id>
+                        <configuration>
+                            <proc>none</proc>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
