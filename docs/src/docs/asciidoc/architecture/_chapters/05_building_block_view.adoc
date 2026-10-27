@@ -30,8 +30,10 @@ diagnostics, and the `GeneratorBackend` interface. It has no assertion library o
 | The Hamcrest backend: it turns a `TypeModel` into the source of a `<Type>Matcher` class with JavaPoet. It also
 contains the runtime class `BeanPropertyMatcher` that the generated matchers call at test time and that builds the
 mismatch messages, and the collection matchers: the factories in `CollectionMatchers` (`itemsInOrder`, `itemsInAnyOrder`,
-`entries`) return `ItemsInOrder`, `ItemsInAnyOrder` and `Entries`, which `BeanPropertyMatcher` flattens into indexed and
-keyed property paths. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
+`entries`) return `ItemsInOrder`, `ItemsInAnyOrder` and `Entries`, which share the package-private base type
+`PathAwareMatcher`; `BeanPropertyMatcher` flattens them into indexed and keyed property paths. The walk along these
+paths and the rendering of its findings live in the package-private `PathWalk` and `MismatchReport`, which both
+`BeanPropertyMatcher` and the collection matchers use. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
 `GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
 check of another one is flattened into property paths; it is public because generated code lives in the user's
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.

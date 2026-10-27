@@ -10,6 +10,7 @@ import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isContact;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isCustomer;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrder;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrderLine;
+import static io.github.marmer.matchergenerator.hamcrest.GoldenMessages.messageOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
@@ -23,7 +24,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Address;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Booking;
@@ -34,11 +34,8 @@ import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Order;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.OrderLine;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.TestMatcher;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -51,34 +48,15 @@ class BeanPropertyMatcherMessageTest {
     private static final OrderLine LINE_1 = new OrderLine("A-1", 1);
     private static final OrderLine LINE_2 = new OrderLine("B-2", 2);
 
-    private static String messageOf(final Object actual, final Matcher<?> matcher) {
-        return Objects.requireNonNull(
-                assertThrows(
-                                AssertionError.class,
-                                () -> assertThat(actual, (Matcher<Object>) matcher))
-                        .getMessage());
-    }
-
-    private static void assertMessage(final String scenario, final String actualMessage)
-            throws IOException {
-        try (InputStream in =
-                BeanPropertyMatcherMessageTest.class.getResourceAsStream(
-                        "BeanPropertyMatcherTest/" + scenario + ".txt")) {
-            final String expected =
-                    in == null
-                            ? "<missing golden file>"
-                            : new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(expected, actualMessage + "\n");
-        }
-    }
+    private final GoldenMessages golden = new GoldenMessages("BeanPropertyMatcherTest");
 
     @Test
     void flatMismatchListsOnlyTheFailingChecks() throws IOException {
         final Order order =
-                new Order(
+                Order.of(
                         "o-1", "ada@example.org", new Customer("Ada", BERLIN), List.of(), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "flat",
                 messageOf(
                         order,
@@ -91,10 +69,9 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void nestedGeneratedMatchersAreFlattenedIntoDotPaths() throws IOException {
         final Order order =
-                new Order(
-                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+                Order.of("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "nested",
                 messageOf(
                         order,
@@ -114,9 +91,9 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void nullInsteadOfANestedObjectIsOneFailureWithTheWholeExpectation() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(), Map.of());
+        final Order order = Order.of("o-1", "ada@example.org", null, List.of(), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "null-nested",
                 messageOf(
                         order,
@@ -134,10 +111,9 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void nonEqualityMatchersAreDescribedByTheMatcher() throws IOException {
         final Order order =
-                new Order(
-                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+                Order.of("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "non-equality",
                 messageOf(
                         order,
@@ -149,7 +125,7 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void aPropertyTheTypeDoesNotHaveIsReported() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "missing-property",
                 messageOf(
                         new Address("Berlin"),
@@ -158,7 +134,7 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void anObjectOfAnotherTypeIsReported() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "wrong-type",
                 messageOf(new Customer("Ada", BERLIN), isAddress().with("name", equalTo("Ada"))));
     }
@@ -167,9 +143,9 @@ class BeanPropertyMatcherMessageTest {
     void valuesOfGeneratedTypesPrintFromTheirPropertiesNotViaToString() throws IOException {
         isOrderLine(); // a generated type is known to print from its properties once its matcher
         // exists
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(LINE_1), Map.of());
+        final Order order = Order.of("o-1", "ada@example.org", null, List.of(LINE_1), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "generated-values",
                 messageOf(
                         order,
@@ -181,9 +157,9 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideContainsRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+                Order.of("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "inside-contains",
                 messageOf(
                         order,
@@ -202,9 +178,9 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideHasItemRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+                Order.of("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "inside-has-item",
                 messageOf(
                         order,
@@ -220,15 +196,15 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideHasEntryRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
+                Order.of("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
 
-        assertMessage(
+        golden.assertMessage(
                 "inside-has-entry",
                 messageOf(
                         order,
                         isOrder()
                                 .with(
-                                        "linesBySku",
+                                        "bySku",
                                         hasEntry(
                                                 equalTo("bySku"),
                                                 isOrderLine()
@@ -241,24 +217,24 @@ class BeanPropertyMatcherMessageTest {
     }
 
     private static Order someOrder() {
-        return new Order("o-1", "ada@example.org", null, List.of(), Map.of());
+        return Order.of("o-1", "ada@example.org", null, List.of(), Map.of());
     }
 
     @Test
     void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideIs() throws IOException {
-        assertMessage("wrapped-in-is", messageOf(someOrder(), is(failingOrderMatcher())));
+        golden.assertMessage("wrapped-in-is", messageOf(someOrder(), is(failingOrderMatcher())));
     }
 
     @Test
     void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAllOf() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "wrapped-in-all-of",
                 messageOf(someOrder(), allOf(failingOrderMatcher(), notNullValue())));
     }
 
     @Test
     void aTopLevelGeneratedMatcherKeepsTheBlockFormatInsideAUserMatcher() throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "wrapped-in-user-matcher",
                 messageOf(someOrder(), new DelegatingMatcher(failingOrderMatcher())));
     }
@@ -271,7 +247,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void aGeneratedMatcherInsideAForeignMatcherAtTheTopLevelKeepsTheBlockFormat()
             throws IOException {
-        assertMessage(
+        golden.assertMessage(
                 "inside-contains-top-level",
                 messageOf(
                         List.of(LINE_1, LINE_2),
@@ -346,7 +322,7 @@ class BeanPropertyMatcherMessageTest {
     void theCompletenessLineIsTheLastLineOfTheMismatch() throws IOException {
         final Booking booking = new Booking("b-1", new Contact("Ada", "0170-1", BERLIN), List.of());
 
-        assertMessage(
+        golden.assertMessage(
                 "completeness-check",
                 messageOf(
                         booking,
@@ -366,7 +342,7 @@ class BeanPropertyMatcherMessageTest {
         final Contact ada = new Contact("Ada", "0170-1", BERLIN);
         final Booking booking = new Booking("b-1", ada, List.of(ada));
 
-        assertMessage(
+        golden.assertMessage(
                 "completeness-inside-has-item",
                 messageOf(
                         booking,

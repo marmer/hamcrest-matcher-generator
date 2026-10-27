@@ -8,11 +8,12 @@ import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isAddress;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isBooking;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isContact;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isCustomer;
-import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrder;
 import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isOrderLine;
+import static io.github.marmer.matchergenerator.hamcrest.BeanFixtures.isRegistry;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.entries;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInAnyOrder;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInOrder;
+import static io.github.marmer.matchergenerator.hamcrest.GoldenMessages.messageOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,8 +23,9 @@ import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Address;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Booking;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Contact;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Customer;
-import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Order;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.OrderLine;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Registry;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.hamcrest.Description;
@@ -35,6 +37,9 @@ import org.junit.jupiter.api.Test;
 class BeanPropertyMatcherCompletenessTest {
     private static final Address PARIS = new Address("Paris");
     private static final Contact ADA = new Contact("Ada", "0170-1", PARIS);
+    private static final Contact BOB = new Contact("Bob", "0170-2", PARIS);
+
+    private final GoldenMessages golden = new GoldenMessages("BeanPropertyMatcherCompletenessTest");
 
     private static String mismatchOf(final Matcher<?> matcher, final Object actual) {
         final Description description = new StringDescription();
@@ -149,7 +154,7 @@ class BeanPropertyMatcherCompletenessTest {
     }
 
     @Test
-    void theSpecExampleListsTheUnaddressedPathsOfANestedMatcher() {
+    void theSpecExampleListsTheUnaddressedPathsOfANestedMatcher() throws IOException {
         final Matcher<Booking> matcher =
                 isBooking()
                         .with("id", equalTo("b-1"))
@@ -159,14 +164,12 @@ class BeanPropertyMatcherCompletenessTest {
                         .ignoring("contacts")
                         .checkingAllProperties();
 
-        final Booking booking = new Booking("b-1", ADA, List.of());
-        assertEquals(
-                "neither checked nor ignored: customer.phone, customer.address",
-                mismatchOf(matcher, booking));
+        golden.assertMessage(
+                "nested-spec-example", messageOf(new Booking("b-1", ADA, List.of()), matcher));
     }
 
     @Test
-    void unaddressedPropertiesOfTheMatcherComeBeforeThoseOfNestedMatchers() {
+    void unaddressedPropertiesOfTheMatcherComeBeforeThoseOfNestedMatchers() throws IOException {
         final Matcher<Booking> matcher =
                 isBooking()
                         .with("id", equalTo("b-1"))
@@ -175,10 +178,8 @@ class BeanPropertyMatcherCompletenessTest {
                                 isContact().with("name", equalTo("Ada")).checkingAllProperties())
                         .checkingAllProperties();
 
-        final Booking booking = new Booking("b-1", ADA, List.of());
-        assertEquals(
-                "neither checked nor ignored: contacts, customer.phone, customer.address",
-                mismatchOf(matcher, booking));
+        golden.assertMessage(
+                "own-before-nested", messageOf(new Booking("b-1", ADA, List.of()), matcher));
     }
 
     @Test
@@ -225,29 +226,19 @@ class BeanPropertyMatcherCompletenessTest {
 
     @Test
     void aPropertyCheckedByEntriesCountsAsChecked() {
-        final Matcher<Order> matcher =
-                isOrder()
-                        .with("id", equalTo("o-1"))
-                        .with("email", equalTo("ada@example.org"))
-                        .ignoring("customer")
-                        .ignoring("lines")
-                        .with(
-                                "linesBySku",
-                                entries("B-2", isOrderLine().with("quantity", equalTo(2))))
+        final Matcher<Registry> matcher =
+                isRegistry()
+                        .ignoring("contacts")
+                        .with("bySku", entries("B-2", isOrderLine().with("quantity", equalTo(2))))
                         .checkingAllProperties();
 
         assertTrue(
                 matcher.matches(
-                        new Order(
-                                "o-1",
-                                "ada@example.org",
-                                null,
-                                List.of(),
-                                Map.of("B-2", new OrderLine("B-2", 2)))));
+                        new Registry(Map.of("B-2", new OrderLine("B-2", 2)), new Contact[0])));
     }
 
     @Test
-    void aNestedMatcherInsideItemsInOrderReportsItsIndexedPaths() {
+    void aNestedMatcherInsideItemsInOrderReportsItsIndexedPaths() throws IOException {
         final Matcher<Booking> matcher =
                 isBooking()
                         .with("id", equalTo("b-1"))
@@ -261,9 +252,171 @@ class BeanPropertyMatcherCompletenessTest {
                                                 .checkingAllProperties()))
                         .checkingAllProperties();
 
-        final Booking booking = new Booking("b-1", ADA, List.of(ADA, ADA));
+        golden.assertMessage(
+                "items-in-order-indexed-paths",
+                messageOf(new Booking("b-1", ADA, List.of(ADA, ADA)), matcher));
+    }
+
+    @Test
+    void itemsInAnyOrderAssignsByValuesAndReportsTheUnaddressedPropertiesOfTheAssignedItem()
+            throws IOException {
+        final Matcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
+                        .ignoring("customer")
+                        .with(
+                                "contacts",
+                                itemsInAnyOrder(
+                                        isContact()
+                                                .with("name", equalTo("Bob"))
+                                                .checkingAllProperties(),
+                                        isContact()
+                                                .with("name", equalTo("Ada"))
+                                                .ignoring("phone")
+                                                .ignoring("address")
+                                                .checkingAllProperties()))
+                        .checkingAllProperties();
+
+        golden.assertMessage(
+                "items-in-any-order-assigned-item",
+                messageOf(new Booking("b-1", ADA, List.of(ADA, BOB)), matcher));
+    }
+
+    @Test
+    void anIncompleteItemMatcherIsNoMissingItemOfItsOwnInItemsInAnyOrder() throws IOException {
+        final Matcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
+                        .ignoring("customer")
+                        .with(
+                                "contacts",
+                                itemsInAnyOrder(
+                                        isContact()
+                                                .with("name", equalTo("Ada"))
+                                                .checkingAllProperties()))
+                        .checkingAllProperties();
+
+        golden.assertMessage(
+                "items-in-any-order-incomplete-item",
+                messageOf(new Booking("b-1", ADA, List.of(ADA)), matcher));
+    }
+
+    @Test
+    void theClosestCandidateOfItemsInAnyOrderIsChosenByValuesAlone() throws IOException {
+        // Both candidates are unused. Candidate 1 differs in two values, but has no address to
+        // leave a property unaddressed; candidate 2 differs in one value and the address matcher
+        // leaves its city unaddressed. Counting that line would make them tie and pick the first.
+        final Matcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
+                        .ignoring("customer")
+                        .with(
+                                "contacts",
+                                itemsInAnyOrder(
+                                        isContact()
+                                                .with("name", equalTo("Zed"))
+                                                .ignoring("phone")
+                                                .with(
+                                                        "address",
+                                                        isAddress().checkingAllProperties())))
+                        .checkingAllProperties();
+
+        golden.assertMessage(
+                "items-in-any-order-closest",
+                messageOf(
+                        new Booking(
+                                "b-1",
+                                ADA,
+                                List.of(
+                                        new Contact("Ada", "1", null),
+                                        new Contact("Ada", "2", PARIS))),
+                        matcher));
+    }
+
+    @Test
+    void aNestedMatcherInsideEntriesReportsItsKeyedPaths() throws IOException {
+        final Matcher<Registry> matcher =
+                isRegistry()
+                        .ignoring("contacts")
+                        .with(
+                                "bySku",
+                                entries(
+                                        "A-1",
+                                        isOrderLine().with("sku", equalTo("A-1")),
+                                        "B-2",
+                                        isOrderLine()
+                                                .with("sku", equalTo("B-2"))
+                                                .checkingAllProperties()))
+                        .checkingAllProperties();
+
+        golden.assertMessage(
+                "entries-keyed-paths",
+                messageOf(
+                        new Registry(
+                                Map.of(
+                                        "A-1",
+                                        new OrderLine("A-1", 1),
+                                        "B-2",
+                                        new OrderLine("B-2", 2)),
+                                new Contact[0]),
+                        matcher));
+    }
+
+    @Test
+    void itemsInAnyOrderTreatsArraysLikeCollectionsForTheCompletenessCheck() throws IOException {
+        final Matcher<Registry> matcher =
+                isRegistry()
+                        .ignoring("bySku")
+                        .with(
+                                "contacts",
+                                itemsInAnyOrder(
+                                        isContact()
+                                                .with("name", equalTo("Bob"))
+                                                .checkingAllProperties(),
+                                        isContact()
+                                                .with("name", equalTo("Ada"))
+                                                .ignoring("phone")
+                                                .ignoring("address")
+                                                .checkingAllProperties()))
+                        .checkingAllProperties();
+
+        golden.assertMessage(
+                "items-in-any-order-array",
+                messageOf(new Registry(Map.of(), new Contact[] {ADA, BOB}), matcher));
+    }
+
+    @Test
+    void theDescriptionOfCollectionMatchersCountsTheirChecksAndEndsWithTheSuffix() {
+        final BeanPropertyMatcher<Booking> matcher =
+                isBooking()
+                        .with("id", equalTo("b-1"))
+                        .with(
+                                "contacts",
+                                itemsInOrder(
+                                        isContact().with("name", equalTo("Ada")),
+                                        isContact().with("name", equalTo("Bob"))))
+                        .checkingAllProperties()
+                        .beanPropertyMatcher();
+
         assertEquals(
-                "neither checked nor ignored: contacts[1].phone, contacts[1].address",
-                mismatchOf(matcher, booking));
+                "Booking with 3 property checks, every property checked or ignored",
+                descriptionOf(matcher));
+    }
+
+    @Test
+    void theDescriptionOfAnItemsInAnyOrderCountsOneCheckPerItemMatcher() {
+        final BeanPropertyMatcher<Booking> matcher =
+                isBooking()
+                        .with(
+                                "contacts",
+                                itemsInAnyOrder(
+                                        isContact().with("name", equalTo("Ada")).with("phone"),
+                                        isContact().with("name", equalTo("Bob"))))
+                        .checkingAllProperties()
+                        .beanPropertyMatcher();
+
+        assertEquals(
+                "Booking with 2 property checks, every property checked or ignored",
+                descriptionOf(matcher));
     }
 }

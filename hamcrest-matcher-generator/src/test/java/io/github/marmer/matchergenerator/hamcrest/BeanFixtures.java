@@ -6,6 +6,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
 import lombok.Value;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -21,7 +22,19 @@ final class BeanFixtures {
     private BeanFixtures() {}
 
     static TestMatcher<Order> isOrder() {
-        return new TestMatcher<>(Order.class, "id", "email", "customer", "lines", "linesBySku");
+        return new TestMatcher<>(
+                Order.class,
+                "id",
+                "email",
+                "customer",
+                "lines",
+                "bySku",
+                "lineArray",
+                "tags",
+                "byColor",
+                "byId",
+                "byLine",
+                "batches");
     }
 
     static TestMatcher<Customer> isCustomer() {
@@ -38,6 +51,10 @@ final class BeanFixtures {
 
     static TestMatcher<Booking> isBooking() {
         return new TestMatcher<>(Booking.class, "id", "customer", "contacts");
+    }
+
+    static TestMatcher<Registry> isRegistry() {
+        return new TestMatcher<>(Registry.class, "bySku", "contacts");
     }
 
     static TestMatcher<Contact> isContact() {
@@ -99,13 +116,41 @@ final class BeanFixtures {
         String other = "o";
     }
 
+    public enum Color {
+        RED,
+        GREEN,
+        BLUE
+    }
+
     @Value
+    @Builder
     public static class Order {
-        String id;
-        String email;
-        @Nullable Customer customer;
-        List<OrderLine> lines;
-        Map<String, OrderLine> linesBySku;
+        @Builder.Default String id = "o-1";
+        @Builder.Default String email = "ada@example.org";
+        @Builder.Default @Nullable Customer customer = null;
+        @Builder.Default List<OrderLine> lines = List.of();
+        @Builder.Default Map<String, OrderLine> bySku = Map.of();
+        @Builder.Default OrderLine[] lineArray = new OrderLine[0];
+        @Builder.Default @Nullable List<String> tags = List.of();
+        @Builder.Default Map<Color, OrderLine> byColor = Map.of();
+        @Builder.Default Map<Integer, OrderLine> byId = Map.of();
+        @Builder.Default Map<OrderLine, String> byLine = Map.of();
+        @Builder.Default List<List<OrderLine>> batches = List.of();
+
+        static Order of(
+                final String id,
+                final String email,
+                final @Nullable Customer customer,
+                final List<OrderLine> lines,
+                final Map<String, OrderLine> bySku) {
+            return builder()
+                    .id(id)
+                    .email(email)
+                    .customer(customer)
+                    .lines(lines)
+                    .bySku(bySku)
+                    .build();
+        }
     }
 
     @Value
@@ -137,5 +182,12 @@ final class BeanFixtures {
         String name;
         String phone;
         @Nullable Address address;
+    }
+
+    /** Small bean for the completeness tests of the collection matchers. */
+    @Value
+    public static class Registry {
+        Map<String, OrderLine> bySku;
+        Contact[] contacts;
     }
 }
