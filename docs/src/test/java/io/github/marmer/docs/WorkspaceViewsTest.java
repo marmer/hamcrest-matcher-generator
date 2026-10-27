@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +70,8 @@ class WorkspaceViewsTest {
             }
             // The site has a dark mode; the diagram must not depend on the page background to be readable.
             final Document document = Jsoup.parse(Files.readString(svg, StandardCharsets.UTF_8));
-            final String style = document.select("svg").first().attr("style").toLowerCase();
+            final Element svgRoot = document.selectFirst("svg");
+            final String style = svgRoot == null ? "" : svgRoot.attr("style").toLowerCase();
             if (!style.contains("background:#ffffff")) {
                 problems.add(target + ".svg has no opaque white background: '" + style + "'");
             }

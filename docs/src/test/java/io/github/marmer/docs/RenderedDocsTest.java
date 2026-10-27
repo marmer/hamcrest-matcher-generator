@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,12 +123,12 @@ class RenderedDocsTest {
     @Test
     @DisplayName("The guide sidebar lists every guide page and marks the current one")
     void guideSidebarListsEveryGuidePageAndMarksTheCurrentOne() {
-        final long guidePages = pages.stream().filter(page -> page.getParent().endsWith("guide")).count();
+        final long guidePages = pages.stream().filter(page -> Objects.requireNonNull(page.getParent()).endsWith("guide")).count();
         final Document guidePage = parse(OUTPUT.resolve("guide/getting-started.html"));
         final Element current = guidePage.selectFirst("nav.site-side-guide a[aria-current=page]");
         assertAll(
             () -> assertNotNull(current, "current chapter is marked"),
-            () -> assertEquals("Getting started", current.text()),
+            () -> assertEquals("Getting started", Objects.requireNonNull(current).text()),
             () -> assertEquals(guidePages, guidePage.select("nav.site-side-guide ol:not(.site-side-plain) li").size(), "every guide page"));
     }
 
@@ -293,7 +294,7 @@ class RenderedDocsTest {
     }
 
     private static Path resolve(final Path page, final String relativePath) {
-        return page.getParent().resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8)).normalize();
+        return Objects.requireNonNull(page.getParent()).resolve(URLDecoder.decode(relativePath, StandardCharsets.UTF_8)).normalize();
     }
 
     private static boolean hasAnchor(final Document document, final String fragment) {
