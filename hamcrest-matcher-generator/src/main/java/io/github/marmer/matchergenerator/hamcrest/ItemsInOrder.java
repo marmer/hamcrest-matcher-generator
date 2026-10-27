@@ -29,35 +29,26 @@ public final class ItemsInOrder<E> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(
-            final Object value,
-            final String path,
-            final List<String> failures,
-            final List<String> unaddressed) {
+    void collectFailures(final Object value, final String path, final MismatchReport report) {
         final List<?> items = elementsOf(value);
         if (items.size() != itemMatchers.size()) {
-            failures.add(
-                    BeanPropertyMatcher.withPath(
-                            path,
-                            "expected "
-                                    + count(itemMatchers.size())
-                                    + " but was "
-                                    + count(items.size())));
+            report.fail(
+                    path,
+                    "expected " + count(itemMatchers.size()) + " but was " + count(items.size()));
         }
         for (var i = 0; i < Math.min(items.size(), itemMatchers.size()); i++) {
-            BeanPropertyMatcher.collectValueFailures(
-                    itemMatchers.get(i), items.get(i), path + "[" + i + "]", failures, unaddressed);
+            PathWalk.collectValueFailures(
+                    itemMatchers.get(i), items.get(i), PathWalk.indexed(path, i), report);
         }
     }
 
     @Override
-    void collectChecks(final String path, final List<BeanPropertyMatcher.Check> checks) {
+    void collectChecks(final String path, final List<PathWalk.Check> checks) {
         if (itemMatchers.isEmpty()) {
-            checks.add(new BeanPropertyMatcher.Check(path, this));
+            checks.add(new PathWalk.Check(path, this));
         }
         for (var i = 0; i < itemMatchers.size(); i++) {
-            BeanPropertyMatcher.collectValueChecks(
-                    path + "[" + i + "]", itemMatchers.get(i), checks);
+            PathWalk.collectValueChecks(PathWalk.indexed(path, i), itemMatchers.get(i), checks);
         }
     }
 

@@ -42,54 +42,47 @@ public final class Entries<K, V> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(
-            final Object value,
-            final String path,
-            final List<String> failures,
-            final List<String> unaddressed) {
+    void collectFailures(final Object value, final String path, final MismatchReport report) {
         final Map<?, ?> actual = (Map<?, ?>) value;
         valueMatchers.forEach(
                 (key, matcher) -> {
                     if (actual.containsKey(key)) {
-                        BeanPropertyMatcher.collectValueFailures(
+                        PathWalk.collectValueFailures(
                                 matcher,
                                 actual.get(key),
-                                path + "[" + keyText(key) + "]",
-                                failures,
-                                unaddressed);
+                                PathWalk.segment(path, keyText(key)),
+                                report);
                     } else {
-                        failures.add(
-                                BeanPropertyMatcher.withPath(
-                                        path,
-                                        "missing key "
-                                                + keyText(key)
-                                                + " with "
-                                                + BeanPropertyMatcher.describeMatcher(matcher)));
+                        report.fail(
+                                path,
+                                "missing key "
+                                        + keyText(key)
+                                        + " with "
+                                        + PathWalk.describeMatcher(matcher));
                     }
                 });
         actual.forEach(
                 (key, actualValue) -> {
                     if (!valueMatchers.containsKey(key)) {
-                        failures.add(
-                                BeanPropertyMatcher.withPath(
-                                        path,
-                                        "unexpected key "
-                                                + keyText(key)
-                                                + " with "
-                                                + PropertyDescription.describeValue(actualValue)));
+                        report.fail(
+                                path,
+                                "unexpected key "
+                                        + keyText(key)
+                                        + " with "
+                                        + PropertyDescription.describeValue(actualValue));
                     }
                 });
     }
 
     @Override
-    void collectChecks(final String path, final List<BeanPropertyMatcher.Check> checks) {
+    void collectChecks(final String path, final List<PathWalk.Check> checks) {
         if (valueMatchers.isEmpty()) {
-            checks.add(new BeanPropertyMatcher.Check(path, this));
+            checks.add(new PathWalk.Check(path, this));
         }
         valueMatchers.forEach(
                 (key, matcher) ->
-                        BeanPropertyMatcher.collectValueChecks(
-                                path + "[" + keyText(key) + "]", matcher, checks));
+                        PathWalk.collectValueChecks(
+                                PathWalk.segment(path, keyText(key)), matcher, checks));
     }
 
     @Override

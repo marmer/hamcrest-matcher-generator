@@ -42,34 +42,29 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
 
     /**
      * Adds the failures for a value this matcher {@link #appliesTo applies to}. Unaddressed
-     * properties of generated matchers in the items are added to {@code unaddressed}.
+     * properties of generated matchers in the items are added to the report as such.
      */
-    abstract void collectFailures(
-            Object value, String path, List<String> failures, List<String> unaddressed);
+    abstract void collectFailures(Object value, String path, MismatchReport report);
 
-    abstract void collectChecks(String path, List<BeanPropertyMatcher.Check> checks);
+    abstract void collectChecks(String path, List<PathWalk.Check> checks);
 
     final void collectFailuresOf(
-            final @Nullable Object value,
-            final String path,
-            final List<String> failures,
-            final List<String> unaddressed) {
+            final @Nullable Object value, final String path, final MismatchReport report) {
         if (value != null && appliesTo(value)) {
-            collectFailures(value, path, failures, unaddressed);
+            collectFailures(value, path, report);
         } else {
-            failures.add(
-                    BeanPropertyMatcher.withPath(
-                            path,
-                            "expected "
-                                    + BeanPropertyMatcher.describeMatcher(this)
-                                    + " but was "
-                                    + PropertyDescription.describeValue(value)));
+            report.fail(
+                    path,
+                    "expected "
+                            + PathWalk.describeMatcher(this)
+                            + " but was "
+                            + PropertyDescription.describeValue(value));
         }
     }
 
     @Override
     public final boolean matches(final @Nullable Object actual) {
-        return failuresOf(actual).isEmpty();
+        return linesOf(actual).isEmpty();
     }
 
     @Override
@@ -77,17 +72,13 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
             final @Nullable Object actual, final Description description) {
         description.appendText(
                 String.join(
-                        BeanPropertyMatcher.isInsideForeignMatcher()
-                                ? ", "
-                                : BeanPropertyMatcher.FAILURE_SEPARATOR,
-                        failuresOf(actual)));
+                        PathWalk.isInsideForeignMatcher() ? ", " : PathWalk.FAILURE_SEPARATOR,
+                        linesOf(actual)));
     }
 
-    private List<String> failuresOf(final @Nullable Object actual) {
-        final List<String> failures = new ArrayList<>();
-        final List<String> unaddressed = new ArrayList<>();
-        collectFailuresOf(actual, "", failures, unaddressed);
-        BeanPropertyMatcher.addUnaddressedLine(failures, unaddressed);
-        return failures;
+    private List<String> linesOf(final @Nullable Object actual) {
+        final MismatchReport report = new MismatchReport();
+        collectFailuresOf(actual, "", report);
+        return report.lines();
     }
 }

@@ -36,11 +36,7 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(
-            final Object value,
-            final String path,
-            final List<String> failures,
-            final List<String> unaddressed) {
+    void collectFailures(final Object value, final String path, final MismatchReport report) {
         final List<?> items = elementsOf(value);
         final int[] matcherOfItem = assignMatchersToItems(items);
         final boolean[] matcherAssigned = new boolean[itemMatchers.size()];
@@ -50,27 +46,31 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
                 unusedItems.add(items.get(item));
             } else {
                 matcherAssigned[matcherOfItem[item]] = true;
+                // the item passed the value checks: this only collects what it leaves unaddressed
+                PathWalk.collectValueFailures(
+                        itemMatchers.get(matcherOfItem[item]),
+                        items.get(item),
+                        PathWalk.indexed(path, item),
+                        report);
             }
         }
         for (var matcher = 0; matcher < itemMatchers.size(); matcher++) {
             if (!matcherAssigned[matcher]) {
-                failures.add(
-                        BeanPropertyMatcher.withPath(
-                                path,
-                                describeMissingAndTakeClosest(
-                                        itemMatchers.get(matcher), unusedItems)));
+                report.fail(
+                        path,
+                        describeMissingAndTakeClosest(itemMatchers.get(matcher), unusedItems));
             }
         }
         for (final Object unused : unusedItems) {
-            failures.add(
-                    BeanPropertyMatcher.withPath(
-                            path, "unexpected " + PropertyDescription.describeValue(unused)));
+            report.fail(path, "unexpected " + PropertyDescription.describeValue(unused));
         }
     }
 
     /**
      * Finds a maximum assignment of items to matchers, one item per matcher, so that the result
-     * does not depend on the order in which matchers happen to claim items.
+     * does not depend on the order in which matchers happen to claim items. A matcher fits an item
+     * by the value checks alone: what a completeness-checked matcher leaves unaddressed does not
+     * make an item another one.
      *
      * @return per item the index of its matcher or {@link #UNASSIGNED}
      */
@@ -79,8 +79,7 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
         for (var matcher = 0; matcher < itemMatchers.size(); matcher++) {
             for (var item = 0; item < items.size(); item++) {
                 fits[matcher][item] =
-                        BeanPropertyMatcher.matchesQuietly(
-                                itemMatchers.get(matcher), items.get(item));
+                        PathWalk.matchesByValues(itemMatchers.get(matcher), items.get(item));
             }
         }
         final int[] matcherOfItem = new int[items.size()];
@@ -118,11 +117,11 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
     /** Describes a missing item. The closest candidate is taken out of the unused items. */
     private static String describeMissingAndTakeClosest(
             final Matcher<?> matcher, final List<@Nullable Object> unused) {
-        final String missing = "missing " + BeanPropertyMatcher.describeMatcher(matcher);
+        final String missing = "missing " + PathWalk.describeMatcher(matcher);
         @Nullable Object closest = null;
         @Nullable List<String> closestDifferences = null;
         for (final Object candidate : unused) {
-            final List<String> differences = BeanPropertyMatcher.differencesOf(matcher, candidate);
+            final List<String> differences = PathWalk.differencesOf(matcher, candidate);
             if (differences != null
                     && (closestDifferences == null
                             || differences.size() < closestDifferences.size())) {
@@ -142,13 +141,13 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
     }
 
     @Override
-    void collectChecks(final String path, final List<BeanPropertyMatcher.Check> checks) {
+    void collectChecks(final String path, final List<PathWalk.Check> checks) {
         if (itemMatchers.isEmpty()) {
-            checks.add(new BeanPropertyMatcher.Check(path, this));
+            checks.add(new PathWalk.Check(path, this));
         }
         // no path segment names an item of an unordered collection, so each matcher is one check
         for (final Matcher<?> matcher : itemMatchers) {
-            checks.add(new BeanPropertyMatcher.Check(path, matcher));
+            checks.add(new PathWalk.Check(path, matcher));
         }
     }
 
