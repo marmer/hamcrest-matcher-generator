@@ -32,7 +32,7 @@ Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<pr
 
 ## Module Structure
 
-The published modules are `matcher-generator-annotations` (`@GenerateMatchers` and the deprecated 5.x alias `@MatcherConfiguration`, the only type left in the old package), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test) and `hamcrest-matcher-generator` (the Hamcrest backend, registered via `ServiceLoader`, plus the `BeanPropertyMatcher` runtime library). `hamcrest-matcher-generator-dependencies` and `hamcrest-matcher-generator-annotationprocessor` are code-free bridge jars for 5.x users: jar packaging, a dependency on `hamcrest-matcher-generator` at `${project.version}`, no relocation (ADR 0002; `BridgeJarIT` in each); the parent is `matcher-generator-parent`. Each published jar sets `Automatic-Module-Name` to its package root (`AutomaticModuleNameIT`). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
+The published modules are `matcher-generator-annotations` (`@GenerateMatchers` and the deprecated 5.x alias `@MatcherConfiguration`, the only type left in the old package), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test) and `hamcrest-matcher-generator` (the Hamcrest backend, registered via `ServiceLoader`, plus the `BeanPropertyMatcher` runtime library). `hamcrest-matcher-generator-dependencies` and `hamcrest-matcher-generator-annotationprocessor` are code-free bridge jars for 5.x users: jar packaging, a dependency on `hamcrest-matcher-generator` at `${project.version}`, no relocation (ADR 0002; `BridgeJarIT` in each); the parent is `matcher-generator-parent`. Each published jar sets `Automatic-Module-Name` to its package root (`AutomaticModuleNameIT`). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers. They form one reactor group through the aggregator `hamcrest-matcher-generator-endtoend/pom.xml` (their parent, `maven.deploy.skip`, and `-Xlint:all -Werror` for their compilation). The exception is `hamcrest-matcher-generator-endtoend-plain-java-minimal` and `hamcrest-matcher-generator-endtoend-java-records`, which compile with `-Xlint:all,-processing -Werror`: javac's processing lint flags the test sources' own annotations (JUnit, JetBrains) that no processor claims, not generated code, and their poms say so; the root `dev` profile adds that group unless `-DskipEndtoend` is set.
 
 ## Architecture: Generation Flow
 
@@ -48,9 +48,7 @@ isSomePojo()
 
 ## KAPT Configuration (Kotlin end-to-end modules)
 
-`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor through the `kotlin-maven-plugin` `test-kapt` execution into `target/generated-sources/kapt/test/`. A `maven-antrun-plugin` `move` at `process-test-sources` relocates the matchers to `target/generated-test-sources/test-annotations`, where javac compiles them. Keep that order; the poms are the source of truth.
-
-Open gap: javac compiles only the generated matchers that test sources reference; see #110.
+`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor through the `kotlin-maven-plugin` `test-kapt` execution into `target/generated-sources/kapt/test/`. A `build-helper-maven-plugin` `add-test-source` registers that directory as a test source root, so javac compiles every generated matcher, not only the ones Java tests reference (#110). The poms are the source of truth.
 
 ## Testing Approach
 
