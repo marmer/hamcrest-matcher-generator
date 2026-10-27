@@ -1,5 +1,5 @@
 ---
-name: owner-todos
+name: brief-me
 description: "Your to-dos: the owner's action list. Use when writing the final report or end-of-session summary of an implementation, wayfinder or retro session."
 ---
 
