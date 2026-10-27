@@ -18,7 +18,9 @@ import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.TestMatcher;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.Test;
 
@@ -213,5 +215,35 @@ class ReferenceMatchingTest {
                                 }));
 
         assertTrue(isNodeLike(reference).matches(new Node("root")));
+    }
+
+    @Test
+    void aNullReferenceValueMustBeNullWhateverItsKind() {
+        final Function<Node, Matcher<?>> like = ReferenceMatchingTest::isNodeLike;
+        final List<Matcher<?>> matchers =
+                List.of(
+                        ReferenceMatching.value(null),
+                        ReferenceMatching.nested(null, like),
+                        ReferenceMatching.list(null, like),
+                        ReferenceMatching.collection(null, like),
+                        ReferenceMatching.array(null, like),
+                        ReferenceMatching.map(null, like));
+
+        for (final Matcher<?> matcher : matchers) {
+            assertTrue(matcher.matches(null), matcher::toString);
+            assertFalse(matcher.matches("something"), matcher::toString);
+        }
+    }
+
+    @Test
+    void aNullItemOfTheReferenceMustBeNullInTheActualValueToo() {
+        final Function<Node, Matcher<?>> like = ReferenceMatchingTest::isNodeLike;
+        final List<Node> reference = new ArrayList<>();
+        reference.add(null);
+
+        final Matcher<?> matcher = ReferenceMatching.list(reference, like);
+
+        assertTrue(matcher.matches(new ArrayList<>(reference)));
+        assertFalse(matcher.matches(List.of(new Node("x"))));
     }
 }
