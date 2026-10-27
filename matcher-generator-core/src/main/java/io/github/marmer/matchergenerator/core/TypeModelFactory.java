@@ -1,6 +1,5 @@
 package io.github.marmer.matchergenerator.core;
 
-import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.ArrayList;
@@ -137,7 +136,7 @@ class TypeModelFactory {
                 element.getSimpleName().toString(),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
-                Nullability.UNSPECIFIED))
+                NullabilityResolver.of(element)))
             .collect(Collectors.toList());
     }
 
@@ -169,7 +168,7 @@ class TypeModelFactory {
                 propertyName(element),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
-                Nullability.UNSPECIFIED))
+                NullabilityResolver.of(element)))
             .collect(Collectors.toList());
 
         if (type.getKind() == ElementKind.RECORD) {

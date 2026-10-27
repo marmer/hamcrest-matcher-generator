@@ -4,9 +4,9 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.CompilationSubject;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
-import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
+import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -140,7 +140,189 @@ class CoreProcessorIT {
                 CLASS_PROPERTY
             ),
             describe(model.properties()));
-        model.properties().forEach(property -> assertEquals(Nullability.UNSPECIFIED, property.nullability()));
+        assertEquals(
+            List.of(
+                "name:UNSPECIFIED",
+                "active:NON_NULL",
+                "wrapped:UNSPECIFIED",
+                "count:NON_NULL",
+                "class:UNSPECIFIED"),
+            describeNullability(model.properties()));
+    }
+
+    private static List<String> describeNullability(final List<PropertyModel> properties) {
+        return properties.stream()
+            .map(property -> property.name() + ":" + property.nullability())
+            .collect(Collectors.toList());
+    }
+
+    private static final JavaFileObject JETBRAINS_NULLABLE = JavaFileObjects.forSourceLines(
+        "org.jetbrains.annotations.Nullable",
+        "package org.jetbrains.annotations;",
+        "public @interface Nullable {",
+        "}"
+    );
+
+    private static final JavaFileObject JETBRAINS_NOT_NULL = JavaFileObjects.forSourceLines(
+        "org.jetbrains.annotations.NotNull",
+        "package org.jetbrains.annotations;",
+        "public @interface NotNull {",
+        "}"
+    );
+
+    @Test
+    @DisplayName("JSpecify annotations on the return type decide the nullability")
+    void jSpecifyAnnotationsOnTheReturnTypeDecideTheNullability() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SpecifiedPojo",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NonNull;",
+            "import org.jspecify.annotations.Nullable;",
+            "public class SpecifiedPojo {",
+            "    public @Nullable String getMaybe() { return null; }",
+            "    public @NonNull String getSure() { return \"\"; }",
+            "    public String getUnknown() { return \"\"; }",
+            "    public @Nullable String[] getMaybeArrayElements() { return null; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SpecifiedPojo\""), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of(
+                "maybe:NULLABLE",
+                "sure:NON_NULL",
+                "unknown:UNSPECIFIED",
+                "maybeArrayElements:UNSPECIFIED",
+                "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Inside a NullMarked scope a property without Nullable is non null")
+    void insideANullMarkedScopeAPropertyWithoutNullableIsNonNull() {
+        final JavaFileObject marked = JavaFileObjects.forSourceLines(
+            "some.other.pck.MarkedPojo",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;",
+            "import org.jspecify.annotations.NullUnmarked;",
+            "import org.jspecify.annotations.Nullable;",
+            "@NullMarked",
+            "public class MarkedPojo {",
+            "    public String getName() { return \"\"; }",
+            "    public @Nullable String getMaybe() { return null; }",
+            "    public Inner getInner() { return null; }",
+            "    @NullUnmarked",
+            "    public String getUnmarked() { return \"\"; }",
+            "    public static class Inner {",
+            "        public String getInnerName() { return \"\"; }",
+            "    }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.MarkedPojo\""), marked);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(
+            List.of("name:NON_NULL", "maybe:NULLABLE", "inner:NON_NULL", "unmarked:UNSPECIFIED", "class:UNSPECIFIED"),
+            describeNullability(model.properties()));
+        assertEquals(
+            List.of("innerName:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(model.nestedTypes().get(0).properties()));
+    }
+
+    @Test
+    @DisplayName("A NullMarked package makes its properties non null")
+    void aNullMarkedPackageMakesItsPropertiesNonNull() {
+        final JavaFileObject packageInfo = JavaFileObjects.forSourceLines(
+            "some.other.pck.package-info",
+            "@NullMarked",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;"
+        );
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.PackagePojo",
+            "package some.other.pck;",
+            "public class PackagePojo {",
+            "    public String getName() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.PackagePojo\""), packageInfo, bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(List.of("name:NON_NULL", "class:UNSPECIFIED"), describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Kotlin nullability annotations on the accessor decide the nullability")
+    void kotlinNullabilityAnnotationsOnTheAccessorDecideTheNullability() {
+        final JavaFileObject kotlinProbe = JavaFileObjects.forSourceLines(
+            "some.other.pck.KotlinProbe",
+            "package some.other.pck;",
+            "import org.jetbrains.annotations.NotNull;",
+            "import org.jetbrains.annotations.Nullable;",
+            "@kotlin.Metadata",
+            "public class KotlinProbe {",
+            "    @NotNull public String getName() { return \"\"; }",
+            "    @Nullable public String getMaybe() { return null; }",
+            "    @Nullable public Boolean isFlag() { return null; }",
+            "    public boolean getEnabled() { return true; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("\"some.other.pck.KotlinProbe\""),
+            kotlinProbe, KOTLIN_METADATA, JETBRAINS_NULLABLE, JETBRAINS_NOT_NULL);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("name:NON_NULL", "maybe:NULLABLE", "isFlag:NULLABLE", "enabled:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Record components carry their nullability")
+    void recordComponentsCarryTheirNullability() {
+        final JavaFileObject record = JavaFileObjects.forSourceLines(
+            "some.other.pck.SpecifiedRecord",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.Nullable;",
+            "public record SpecifiedRecord(@Nullable String maybe, String unknown, int count) {",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SpecifiedRecord\""), record);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("maybe:NULLABLE", "unknown:UNSPECIFIED", "count:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Backends learn whether JSpecify resolves at compile time")
+    void backendsLearnWhetherJSpecifyResolvesAtCompileTime() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomePojo", "package some.other.pck;", "public class SomePojo {", "}");
+
+        compile(configuration("\"some.other.pck.SomePojo\""), bean);
+        compile(
+            Compiler.javac().withClasspath(classPathWithout("jspecify")),
+            configuration("\"some.other.pck.SomePojo\""), bean);
+
+        assertEquals(
+            List.of(true, false),
+            RecordingBackend.contexts().stream().map(GenerationContext::jspecifyAvailable).toList());
+    }
+
+    private static List<File> classPathWithout(final String fragment) {
+        return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
+            .filter(entry -> !entry.contains(fragment))
+            .map(File::new)
+            .collect(Collectors.toList());
     }
 
     @Test
