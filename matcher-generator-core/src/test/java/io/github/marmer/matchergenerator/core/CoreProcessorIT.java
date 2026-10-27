@@ -71,6 +71,12 @@ class CoreProcessorIT {
         );
     }
 
+    private static JavaFileObject prefixedConfiguration(final String configuredType, final String prefix) {
+        return configuration("value = " + configuredType + ", generation = "
+            + "@MatcherConfiguration.GenerationConfiguration(packageConfig = "
+            + "@MatcherConfiguration.GenerationConfiguration.PackageConfiguration(\"" + prefix + "\"))");
+    }
+
     private Compilation compile(final JavaFileObject... sources) {
         return compile(Compiler.javac().withOptions("-Akapt.kotlin.generated=" + kotlinOutput), sources);
     }
@@ -391,24 +397,31 @@ class CoreProcessorIT {
             "public class SomePojo {",
             "}"
         );
-        final JavaFileObject configuration = JavaFileObjects.forSourceLines(
-            "some.pck.SomeConfiguration",
-            "package some.pck;",
-            "import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;",
-            "@MatcherConfiguration(value = \"some.other.pck.SomePojo\", generation = "
-                + "@MatcherConfiguration.GenerationConfiguration(packageConfig = "
-                + "@MatcherConfiguration.GenerationConfiguration.PackageConfiguration(\"prefix.\")))",
-            "public final class SomeConfiguration {",
-            "}"
-        );
-
-        final Compilation compilation = compile(configuration, bean);
+        final Compilation compilation = compile(prefixedConfiguration("\"some.other.pck.SomePojo\"", "prefix."), bean);
 
         CompilationSubject.assertThat(compilation).succeeded();
         final TypeModel model = onlyModel();
         assertEquals("some.other.pck", model.packageName());
         assertEquals("prefix.some.other.pck", model.targetPackage());
         assertTrue(compilation.generatedSourceFile("prefix.some.other.pck.SomePojoRecorded").isPresent());
+    }
+
+    @Test
+    @DisplayName("A configured package prefix is the target package of a type in the default package")
+    void aConfiguredPackagePrefixIsTheTargetPackageOfADefaultPackageType() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "DefaultPojo",
+            "public class DefaultPojo {",
+            "}"
+        );
+
+        final Compilation compilation = compile(prefixedConfiguration("\"DefaultPojo\"", "prefix"), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals("", model.packageName());
+        assertEquals("prefix", model.targetPackage());
+        assertTrue(compilation.generatedSourceFile("prefix.DefaultPojoRecorded").isPresent());
     }
 
     @Test

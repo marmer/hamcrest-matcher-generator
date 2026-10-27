@@ -104,10 +104,12 @@ class TypeModelFactory {
 
     private String getTargetPackage(final TypeElement type) {
         final String configuredPackage = getConfiguredPackage();
+        final String packageName = packageNameOf(type);
         if (configuredPackage.isBlank()) {
-            return packageNameOf(type);
+            return packageName;
         }
-        return configuredPackage.replaceAll("\\.+$", "") + "." + packageOf(type);
+        final String prefix = configuredPackage.replaceAll("\\.+$", "");
+        return packageName.isEmpty() ? prefix : prefix + "." + packageName;
     }
 
     private String getConfiguredPackage() {
