@@ -53,7 +53,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void flatMismatchListsOnlyTheFailingChecks() throws IOException {
         final Order order =
-                new Order(
+                Order.of(
                         "o-1", "ada@example.org", new Customer("Ada", BERLIN), List.of(), Map.of());
 
         golden.assertMessage(
@@ -69,8 +69,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void nestedGeneratedMatchersAreFlattenedIntoDotPaths() throws IOException {
         final Order order =
-                new Order(
-                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+                Order.of("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
         golden.assertMessage(
                 "nested",
@@ -92,7 +91,7 @@ class BeanPropertyMatcherMessageTest {
 
     @Test
     void nullInsteadOfANestedObjectIsOneFailureWithTheWholeExpectation() throws IOException {
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(), Map.of());
+        final Order order = Order.of("o-1", "ada@example.org", null, List.of(), Map.of());
 
         golden.assertMessage(
                 "null-nested",
@@ -112,8 +111,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void nonEqualityMatchersAreDescribedByTheMatcher() throws IOException {
         final Order order =
-                new Order(
-                        "o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
+                Order.of("o-1", "ada@example.org", new Customer("Ada", PARIS), List.of(), Map.of());
 
         golden.assertMessage(
                 "non-equality",
@@ -145,7 +143,7 @@ class BeanPropertyMatcherMessageTest {
     void valuesOfGeneratedTypesPrintFromTheirPropertiesNotViaToString() throws IOException {
         isOrderLine(); // a generated type is known to print from its properties once its matcher
         // exists
-        final Order order = new Order("o-1", "ada@example.org", null, List.of(LINE_1), Map.of());
+        final Order order = Order.of("o-1", "ada@example.org", null, List.of(LINE_1), Map.of());
 
         golden.assertMessage(
                 "generated-values",
@@ -159,7 +157,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideContainsRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+                Order.of("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
         golden.assertMessage(
                 "inside-contains",
@@ -180,7 +178,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideHasItemRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
+                Order.of("o-1", "ada@example.org", null, List.of(LINE_1, LINE_2), Map.of());
 
         golden.assertMessage(
                 "inside-has-item",
@@ -198,7 +196,7 @@ class BeanPropertyMatcherMessageTest {
     @Test
     void generatedMatchersInsideHasEntryRenderOnOneLine() throws IOException {
         final Order order =
-                new Order("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
+                Order.of("o-1", "ada@example.org", null, List.of(), Map.of("bySku", LINE_2));
 
         golden.assertMessage(
                 "inside-has-entry",
@@ -219,7 +217,7 @@ class BeanPropertyMatcherMessageTest {
     }
 
     private static Order someOrder() {
-        return new Order("o-1", "ada@example.org", null, List.of(), Map.of());
+        return Order.of("o-1", "ada@example.org", null, List.of(), Map.of());
     }
 
     @Test

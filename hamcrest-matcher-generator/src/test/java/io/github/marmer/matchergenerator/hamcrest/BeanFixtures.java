@@ -6,8 +6,6 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.List;
 import java.util.Map;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import org.hamcrest.Description;
@@ -53,6 +51,10 @@ final class BeanFixtures {
 
     static TestMatcher<Booking> isBooking() {
         return new TestMatcher<>(Booking.class, "id", "customer", "contacts");
+    }
+
+    static TestMatcher<Registry> isRegistry() {
+        return new TestMatcher<>(Registry.class, "bySku", "contacts");
     }
 
     static TestMatcher<Contact> isContact() {
@@ -122,7 +124,6 @@ final class BeanFixtures {
 
     @Value
     @Builder
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Order {
         @Builder.Default String id = "o-1";
         @Builder.Default String email = "ada@example.org";
@@ -136,24 +137,19 @@ final class BeanFixtures {
         @Builder.Default Map<OrderLine, String> byLine = Map.of();
         @Builder.Default List<List<OrderLine>> batches = List.of();
 
-        public Order(
+        static Order of(
                 final String id,
                 final String email,
                 final @Nullable Customer customer,
                 final List<OrderLine> lines,
                 final Map<String, OrderLine> bySku) {
-            this(
-                    id,
-                    email,
-                    customer,
-                    lines,
-                    bySku,
-                    new OrderLine[0],
-                    List.of(),
-                    Map.of(),
-                    Map.of(),
-                    Map.of(),
-                    List.of());
+            return builder()
+                    .id(id)
+                    .email(email)
+                    .customer(customer)
+                    .lines(lines)
+                    .bySku(bySku)
+                    .build();
         }
     }
 
@@ -186,5 +182,12 @@ final class BeanFixtures {
         String name;
         String phone;
         @Nullable Address address;
+    }
+
+    /** Small bean for the completeness tests of the collection matchers. */
+    @Value
+    public static class Registry {
+        Map<String, OrderLine> bySku;
+        Contact[] contacts;
     }
 }

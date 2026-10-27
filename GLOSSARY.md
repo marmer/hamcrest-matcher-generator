@@ -40,7 +40,7 @@ A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `Ge
 _Avoid_: bean matcher, nested matcher
 
 **Collection matcher**:
-A runtime matcher for a collection or map property, created by `itemsInOrder(...)`, `itemsInAnyOrder(...)` or `entries(...)` in `CollectionMatchers`. Mismatches name the size, the path of every failing item or entry, and missing, closest and unexpected items or keys. Arrays count as lists. With the completeness check, `itemsInAnyOrder(...)` assigns items by their value checks and reports the unaddressed properties of an assigned item with its position, as in `contacts[1].phone`.
+A runtime matcher for a collection or map property, created by `itemsInOrder(...)`, `itemsInAnyOrder(...)` or `entries(...)` in `CollectionMatchers`. Mismatches name the size, the path of every failing item or entry, and missing, closest and unexpected items or keys. Arrays count as lists. With the completeness check, `itemsInAnyOrder(...)` assigns items by their value checks and reports the properties neither checked nor ignored of an assigned item with its position, as in `contacts[1].phone`.
 _Avoid_: collection assertion, container matcher
 
 **One-line rendering**:
