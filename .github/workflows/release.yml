@@ -153,8 +153,8 @@ jobs:
         name: Read the Maven coordinates
         run: |
           {
-            echo "artifact_id=$(./mvnw -B -q -N help:evaluate -Dexpression=project.artifactId -DforceStdout)"
-            echo "version=$(./mvnw -B -q -N help:evaluate -Dexpression=project.version -DforceStdout)"
+            echo "artifact_id=$(./mvnw -B -q -pl hamcrest-matcher-generator org.apache.maven.plugins:maven-help-plugin:3.5.2:evaluate -Dexpression=project.artifactId -DforceStdout)"
+            echo "version=$(./mvnw -B -q -pl hamcrest-matcher-generator org.apache.maven.plugins:maven-help-plugin:3.5.2:evaluate -Dexpression=project.version -DforceStdout)"
           } >> "$GITHUB_OUTPUT"
 
   announce:

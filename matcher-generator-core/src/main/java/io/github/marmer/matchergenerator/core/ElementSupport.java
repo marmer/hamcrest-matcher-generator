@@ -1,6 +1,7 @@
 package io.github.marmer.matchergenerator.core;
 
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -14,7 +15,42 @@ import javax.tools.Diagnostic;
  */
 final class ElementSupport {
 
+    /**
+     * Processor option. When given (as {@code -Amatchergenerator.verbose} or with the value {@code true}), every note
+     * is emitted, including one per skipped property with its reason.
+     */
+    static final String VERBOSE_OPTION = "matchergenerator.verbose";
+    private static final String KOTLIN_METADATA = "kotlin.Metadata";
+
     private ElementSupport() {
+    }
+
+    /**
+     * Whether the annotation mirror is an instance of the annotation with the given qualified name.
+     */
+    static boolean isOfType(final AnnotationMirror mirror, final String qualifiedName) {
+        return mirror.getAnnotationType().asElement().toString().equals(qualifiedName);
+    }
+
+    static boolean hasAnnotation(final Element element, final String qualifiedName) {
+        return element.getAnnotationMirrors().stream().anyMatch(mirror -> isOfType(mirror, qualifiedName));
+    }
+
+    /**
+     * Whether the given type was compiled by Kotlin. Pass the declaring type of a member.
+     */
+    static boolean isDeclaredInKotlin(final Element type) {
+        return hasAnnotation(type, KOTLIN_METADATA);
+    }
+
+    /**
+     * The mirror of {@code kotlin.Metadata} on the element, if there is one.
+     */
+    static Optional<AnnotationMirror> kotlinMetadata(final Element type) {
+        return type.getAnnotationMirrors().stream()
+            .filter(mirror -> isOfType(mirror, KOTLIN_METADATA))
+            .map(AnnotationMirror.class::cast)
+            .findFirst();
     }
 
     static boolean isPublic(final Element element) {
@@ -45,6 +81,13 @@ final class ElementSupport {
     }
 
     /**
+     * Emits a note at the element alone, but only when the verbose option is set.
+     */
+    static void logNote(final ProcessingEnvironment processingEnv, final String message, final Element element) {
+        logNote(processingEnv, message, element, null, null);
+    }
+
+    /**
      * Emits a note, but only when the verbose option is set. Without an annotation mirror the note is placed at the
      * element alone.
      */
@@ -68,8 +111,8 @@ final class ElementSupport {
 
     static boolean isVerbose(final ProcessingEnvironment processingEnv) {
         final Map<String, String> options = processingEnv.getOptions();
-        return options.containsKey(MatcherGenerationProcessorWorker.VERBOSE_OPTION)
-            && (options.get(MatcherGenerationProcessorWorker.VERBOSE_OPTION) == null
-                || Boolean.parseBoolean(options.get(MatcherGenerationProcessorWorker.VERBOSE_OPTION)));
+        return options.containsKey(VERBOSE_OPTION)
+            && (options.get(VERBOSE_OPTION) == null
+                || Boolean.parseBoolean(options.get(VERBOSE_OPTION)));
     }
 }

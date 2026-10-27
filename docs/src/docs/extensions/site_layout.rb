@@ -23,7 +23,7 @@ require 'pathname'
 module SiteLayout
   REPOSITORY_URL = 'https://github.com/marmer/hamcrest-matcher-generator'
   JAVADOC_URL = 'https://javadoc.io/doc/io.github.marmer.testutils'
-  CHANGELOG_URL = "#{REPOSITORY_URL}/blob/development/CHANGELOG.md"
+  CHANGELOG_URL = "#{REPOSITORY_URL}/blob/HEAD/CHANGELOG.md"
   LINKEDIN_URL = 'https://de.linkedin.com/in/mariano-mertinat'
   MAINTAINER_URL = 'https://github.com/marmer'
   PAGE_KINDS = { 'guide' => 'guide', 'architecture' => 'arch' }.freeze

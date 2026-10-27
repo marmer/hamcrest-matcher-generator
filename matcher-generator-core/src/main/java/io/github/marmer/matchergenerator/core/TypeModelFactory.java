@@ -4,11 +4,13 @@ import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -26,8 +28,6 @@ import javax.lang.model.type.TypeMirror;
  * Creates the {@link TypeModel} of a configured type.
  */
 class TypeModelFactory {
-    private static final String KOTLIN_METADATA = "kotlin.Metadata";
-
     private final ProcessingEnvironment processingEnv;
     private final AnnotationMirror configurationMirror;
 
@@ -45,8 +45,7 @@ class TypeModelFactory {
      * that Kotlin compiled. Java types keep the bean rules.
      */
     private static boolean isDeclaredInKotlin(final ExecutableElement element) {
-        return element.getEnclosingElement().getAnnotationMirrors().stream()
-            .anyMatch(mirror -> mirror.getAnnotationType().toString().equals(KOTLIN_METADATA));
+        return ElementSupport.isDeclaredInKotlin(element.getEnclosingElement());
     }
 
     private static boolean hasReturnType(final ExecutableElement element) {
@@ -150,9 +149,8 @@ class TypeModelFactory {
 
     private List<PropertyModel> properties(final TypeElement type) {
         final List<ExecutableElement> getters = new ArrayList<>();
-        final Map<String, Boolean> seenSimpleNames = new LinkedHashMap<>();
-        final Map<String, ExecutableElement> skipped = new LinkedHashMap<>();
-        final Map<String, String> reasons = new LinkedHashMap<>();
+        final Set<String> seenSimpleNames = new HashSet<>();
+        final Map<String, SkippedCandidate> skipped = new LinkedHashMap<>();
         transitiveInheritedElements(type).stream()
             .filter(this::isPropertyCandidate)
             .map(ExecutableElement.class::cast)
@@ -160,13 +158,12 @@ class TypeModelFactory {
                 final String name = element.getSimpleName().toString();
                 final Optional<String> reason = skipReason(element);
                 if (reason.isPresent()) {
-                    skipped.putIfAbsent(name, element);
-                    reasons.putIfAbsent(name, reason.get());
-                } else if (seenSimpleNames.putIfAbsent(name, true) == null) {
+                    skipped.putIfAbsent(name, new SkippedCandidate(element, reason.get()));
+                } else if (seenSimpleNames.add(name)) {
                     getters.add(element);
                 }
             });
-        logSkippedProperties(type, skipped, reasons, seenSimpleNames);
+        logSkippedProperties(type, skipped, seenSimpleNames);
         final List<PropertyModel> getterProperties = getters.stream()
             .map(element -> new PropertyModel(
                 propertyName(element),
@@ -235,6 +232,10 @@ class TypeModelFactory {
             return Optional.of("no property name follows the '" + propertyPrefix(name) + "' prefix");
         }
         final boolean kotlin = isDeclaredInKotlin(element);
+        if (kotlin && !Character.isUpperCase(withoutPrefix(name).charAt(0))) {
+            return Optional.of("in Kotlin, an upper case letter must follow the '" + propertyPrefix(name)
+                + "' prefix");
+        }
         if (name.startsWith("get") && returnKind == TypeKind.BOOLEAN && !kotlin) {
             return Optional.of("a boolean property must use the 'is' prefix");
         }
@@ -246,22 +247,25 @@ class TypeModelFactory {
 
     private void logSkippedProperties(
         final TypeElement type,
-        final Map<String, ExecutableElement> skipped,
-        final Map<String, String> reasons,
-        final Map<String, Boolean> acceptedNames
+        final Map<String, SkippedCandidate> skipped,
+        final Set<String> acceptedNames
     ) {
-        skipped.forEach((name, element) -> {
+        skipped.forEach((name, candidate) -> {
             // an accessor overridden by an accepted one is not skipped, the property exists
-            if (!acceptedNames.containsKey(name)) {
+            if (!acceptedNames.contains(name)) {
                 ElementSupport.logNote(
                     processingEnv,
-                    "Skipped property '" + name + "' of " + type.getQualifiedName() + ": " + reasons.get(name),
-                    element,
-                    null,
-                    null
+                    "Skipped property '" + name + "' of " + type.getQualifiedName() + ": " + candidate.reason(),
+                    candidate.element()
                 );
             }
         });
+    }
+
+    /**
+     * A method that looks like a property accessor but is none, with the reason why.
+     */
+    private record SkippedCandidate(ExecutableElement element, String reason) {
     }
 
     private static String propertyPrefix(final String name) {
@@ -281,6 +285,10 @@ class TypeModelFactory {
     }
 
     private String withoutPropertyPrefix(final String name) {
-        return decapitalized(name.replaceFirst("^((get)|(is))", ""));
+        return decapitalized(withoutPrefix(name));
+    }
+
+    private static String withoutPrefix(final String name) {
+        return name.replaceFirst("^((get)|(is))", "");
     }
 }

@@ -24,7 +24,7 @@ JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin
 # Single integration test class
 ./mvnw failsafe:integration-test -pl hamcrest-matcher-generator -Dit.test=ClassName
 
-# Release build (adds GPG signing with the BC signer, sources/Dokka javadoc jars, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
+# Release build (adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
 ./mvnw verify -P release    # dry run, no publishing
 ```
 
@@ -38,8 +38,8 @@ The published modules are `matcher-generator-annotations` (`@GenerateMatchers` a
 
 1. Compiler detects `@GenerateMatchers` (CLASS retention) or the deprecated `@MatcherConfiguration` (SOURCE retention) on a type (both in the `annotations` module)
 2. `MatcherGenerationProcessor.java` (core) — APT entry point, delegates immediately to the worker and loads every `GeneratorBackend` via `ServiceLoader`
-3. `MatcherGenerationProcessorWorker.java` (core) — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, builds an immutable `TypeModel` per type with `TypeModelFactory`, runs every backend on it and writes the returned `GeneratedSource` (Java via `createSourceFile`, Kotlin via `createResource`)
-4. `HamcrestGeneratorBackend.java` / `MatcherGenerator.java` (Hamcrest backend, package `...annotationprocessing.hamcrest`) — builds a `<TypeName>Matcher` class via JavaPoet from the `TypeModel`; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
+3. `MatcherGenerationProcessorWorker.java` (core) — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, builds an immutable `TypeModel` per type with `TypeModelFactory`, runs every backend on it and writes the returned `GeneratedSource` (Java via `createSourceFile`, Kotlin written into the directory of the `kapt.kotlin.generated` processor option)
+4. `HamcrestGeneratorBackend.java` / `MatcherGenerator.java` (Hamcrest backend, package `io.github.marmer.matchergenerator.hamcrest`) — builds a `<TypeName>Matcher` class via JavaPoet from the `TypeModel`; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
 
 **Generated matcher API** (per property `foo`):
 ```java
