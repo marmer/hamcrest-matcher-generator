@@ -36,6 +36,12 @@ unknown or missing license, so a new dependency with an unseen license name must
 Every published jar carries `META-INF/LICENSE`, `META-INF/NOTICE` and `THIRD-PARTY.txt`, which a per-module test checks.
 Build plugins and the `docs` module's tooling are not checked.
 
+| Static analysis (JDK 21+ profile `static-analysis`, part of `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`)
+| Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
+of the modules, including tests and end-to-end sources. Error Prone and NullAway fail the compile at ERROR with no
+baseline; NullAway covers the `io.github.marmer` packages in JSpecify mode. Generated code is not checked and carries no
+license header. The JDK 17 leg skips the profile.
+
 | Frozen 5.x suite (part of `Domain docs in sync`)
 | The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, except that its parent and own
 version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:

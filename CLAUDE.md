@@ -15,6 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify
 JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
 
+# Skip the JDK 21+ static-analysis profile (Spotless, Error Prone, NullAway) for a faster local build
+./mvnw -o clean install -DskipStaticAnalysis=true
+
 # Windows with jabba-managed JDK
 JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin:$PATH" ./mvnw clean install
 
@@ -72,6 +75,8 @@ End-to-end modules are the final validation layer: they apply `@GenerateMatchers
 - **JDK 25 implicit annotation processing disabled**: `@AutoService` was removed from `MatcherGenerationProcessor.java`; a manual `META-INF/services/javax.annotation.processing.Processor` resource is used instead. The `endtoend-plain-java-minimal` module uses `<annotationProcessorPaths>` to declare the AP explicitly.
 - **Lombok on newer JDKs**: each JDK needs a Lombok release that supports it (JDK 25 ≥ 1.18.44, JDK 27 ≥ 1.18.48); an unsupported JDK fails in javac with `ExceptionInInitializerError: com.sun.tools.javac.tree.EndPosTable`.
 - **Agent edits to `.claude/settings*.json` are blocked** in auto mode (Self-Modification): give the owner the exact snippet to add instead of loading `update-config`.
+- **Error Prone and NullAway (JDK 21+ profile `static-analysis`)**: javac needs the `--add-exports` from `.mvn/jvm.config` in the Maven JVM, `-XDshould-stop.ifError=FLOW` and the Error Prone flags inside one `-Xplugin:ErrorProne ...` argument. When the plugin fails to start, javac reports the check flags as `invalid flag: -Xep:...`, which hides the real error. A module that declares its own `annotationProcessorPaths` must use `combine.children="append"`, or the profile's Error Prone and NullAway paths are dropped.
+- **google-java-format 1.37.0** fails inside Spotless with an `InvocationTargetException` on Javadoc-carrying files, and Spotless hides the cause. The root pom pins 1.36.0 until that is fixed.
 - **Maven Central HTTP 429** (rate limit, frequent with parallel subagents sharing `~/.m2`): Maven may store the 429 error text as a `.pom` or `.jar` in `~/.m2/repository`, failing later builds ("Non-parseable POM", `NoClassDefFoundError`). Delete that version directory and rebuild offline with `-o`; the SessionStart hook pre-fetches dependencies for that and logs to /tmp/session-start.log; if ~/.m2 is empty, read that log first.
 
 ## Agent skills
