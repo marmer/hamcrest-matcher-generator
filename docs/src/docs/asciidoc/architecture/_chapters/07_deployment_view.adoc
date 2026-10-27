@@ -33,7 +33,7 @@ Mapping of Building Blocks to Infrastructure::
 |===
 | Building block | Deployed to
 
-| `matcher-generator-annotations`, `matcher-generator-core`, `hamcrest-matcher-generator` and the two relocation POMs
+| `matcher-generator-annotations`, `matcher-generator-core`, `hamcrest-matcher-generator` and the two bridge jars
 | Maven Central through the Central Portal.
 
 | `*-endtoend-*` modules, `docs`

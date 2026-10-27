@@ -56,7 +56,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Technical debt: the 5.x compatibility layer stays forever
 |high
 |tolerable
-|To let 5.x users upgrade by a version bump, 6.0.0 keeps the deprecated `@MatcherConfiguration` annotation as an alias, a relocation POM for the changed artifact and the 5.x method names such as `resetFoo` (link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]). As 6.0.0 is the final feature release, there is no later major version that would remove them.
+|To let 5.x users upgrade by a version bump, 6.0.0 keeps the deprecated `@MatcherConfiguration` annotation as an alias, bridge jars for the changed artifacts and the 5.x method names such as `resetFoo` (link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]). As 6.0.0 is the final feature release, there is no later major version that would remove them.
 |Accepted. An end-to-end module with unchanged 5.x tests keeps the layer working (<<qs-x2,QS-X2>>); the deprecated alias is the only code in the old package.
 
 |Technical debt: the Kotlin DSL backend depends on the Hamcrest backend
