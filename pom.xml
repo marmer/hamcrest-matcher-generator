@@ -217,6 +217,7 @@
             <resource>
                 <directory>${project.build.directory}/generated-resources/licenses</directory>
             </resource>
+            <!-- Assumes the module is a direct child of the repository root, where LICENSE and NOTICE live. -->
             <resource>
                 <directory>${project.basedir}/..</directory>
                 <includes>
@@ -404,6 +405,16 @@
                 <!-- Project dependencies only: build plugins are not checked. Allow-lists are explicit; EPL is allowed for test scope only. -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <failOnBlacklist>true</failOnBlacklist>
+                    <failOnMissing>true</failOnMissing>
+                    <licenseMerges>
+                        <licenseMerge>Apache-2.0|Apache License, Version 2.0|Apache License 2.0|The Apache Software License, Version 2.0|The Apache License, Version 2.0|Apache 2.0</licenseMerge>
+                        <licenseMerge>MIT|MIT License|The MIT License|The MIT License (MIT)</licenseMerge>
+                        <licenseMerge>BSD-2-Clause|BSD 2-Clause License|The BSD 2-Clause License</licenseMerge>
+                        <licenseMerge>BSD-3-Clause|BSD 3-Clause License|The BSD 3-Clause License|BSD License 3|New BSD License</licenseMerge>
+                    </licenseMerges>
+                </configuration>
                 <executions>
                     <execution>
                         <id>runtime-licenses</id>
@@ -411,18 +422,10 @@
                             <goal>add-third-party</goal>
                         </goals>
                         <configuration>
-                            <excludedScopes>test</excludedScopes>
+                            <excludedScopes>test,system</excludedScopes>
                             <includedLicenses>Apache-2.0|MIT|BSD-2-Clause|BSD-3-Clause</includedLicenses>
-                            <failOnBlacklist>true</failOnBlacklist>
-                            <failOnMissing>true</failOnMissing>
                             <outputDirectory>${project.build.directory}/generated-resources/licenses</outputDirectory>
                             <thirdPartyFilename>THIRD-PARTY.txt</thirdPartyFilename>
-                            <licenseMerges>
-                                <licenseMerge>Apache-2.0|Apache License, Version 2.0|Apache License 2.0|The Apache Software License, Version 2.0|The Apache License, Version 2.0|Apache 2.0</licenseMerge>
-                                <licenseMerge>MIT|MIT License|The MIT License|The MIT License (MIT)</licenseMerge>
-                                <licenseMerge>BSD-2-Clause|BSD 2-Clause License|The BSD 2-Clause License</licenseMerge>
-                                <licenseMerge>BSD-3-Clause|BSD 3-Clause License|The BSD 3-Clause License|BSD License 3|New BSD License</licenseMerge>
-                            </licenseMerges>
                         </configuration>
                     </execution>
                     <execution>
@@ -434,15 +437,9 @@
                         <configuration>
                             <includedScopes>test</includedScopes>
                             <includedLicenses>Apache-2.0|MIT|BSD-2-Clause|BSD-3-Clause|EPL-1.0|EPL-2.0</includedLicenses>
-                            <failOnBlacklist>true</failOnBlacklist>
-                            <failOnMissing>true</failOnMissing>
                             <outputDirectory>${project.build.directory}/license-check</outputDirectory>
                             <thirdPartyFilename>THIRD-PARTY-test.txt</thirdPartyFilename>
-                            <licenseMerges>
-                                <licenseMerge>Apache-2.0|Apache License, Version 2.0|Apache License 2.0|The Apache Software License, Version 2.0|The Apache License, Version 2.0|Apache 2.0</licenseMerge>
-                                <licenseMerge>MIT|MIT License|The MIT License|The MIT License (MIT)</licenseMerge>
-                                <licenseMerge>BSD-2-Clause|BSD 2-Clause License|The BSD 2-Clause License</licenseMerge>
-                                <licenseMerge>BSD-3-Clause|BSD 3-Clause License|The BSD 3-Clause License|BSD License 3|New BSD License</licenseMerge>
+                            <licenseMerges combine.children="append">
                                 <licenseMerge>EPL-1.0|Eclipse Public License - v 1.0|Eclipse Public License 1.0</licenseMerge>
                                 <licenseMerge>EPL-2.0|Eclipse Public License - v 2.0|Eclipse Public License 2.0|Eclipse Public License v2.0</licenseMerge>
                             </licenseMerges>
