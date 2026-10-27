@@ -175,6 +175,31 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("In a Kotlin class an upper case letter must follow the is and get prefix")
+    void kotlinAccessorsNeedAnUpperCaseLetterAfterThePrefix() {
+        final JavaFileObject kotlinProbe = JavaFileObjects.forSourceLines(
+            "some.other.pck.KotlinProbe",
+            "package some.other.pck;",
+            "@kotlin.Metadata",
+            "public class KotlinProbe {",
+            "    public String getName() { return \"\"; }",
+            "    public String getaway() { return \"\"; }",
+            "    public boolean isActive() { return true; }",
+            "    public boolean isolate() { return true; }",
+            "    public String isolated() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("\"some.other.pck.KotlinProbe\""), kotlinProbe, KOTLIN_METADATA);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("name:java.lang.String:getName", "active:boolean:isActive", CLASS_PROPERTY),
+            describe(onlyModel().properties()));
+    }
+
+    @Test
     @DisplayName("Kotlin getters whose names are not Java identifiers are skipped (QS-U4)")
     void kotlinGettersWithMangledNamesAreSkipped(@TempDir final Path classes) throws IOException {
         final JavaFileObject mangled = JavaFileObjects.forSourceLines(
@@ -500,7 +525,7 @@ class CoreProcessorIT {
 
         CompilationSubject.assertThat(compilation).succeeded();
         CompilationSubject.assertThat(compilation)
-            .hadWarningContaining("Neither a type nor a type exists for 'not.existing.Type'")
+            .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
             .inFile(configuration)
             .onLine(3);
         assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
@@ -517,7 +542,7 @@ class CoreProcessorIT {
 
         CompilationSubject.assertThat(compilation).failed();
         CompilationSubject.assertThat(compilation)
-            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.Type'")
+            .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
             .inFile(configuration)
             .onLine(3);
         assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
@@ -536,13 +561,39 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(compilation).failed();
         assertEquals(2, compilation.errors().size(), () -> "Errors: " + compilation.errors());
         CompilationSubject.assertThat(compilation)
-            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.Type'")
+            .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
             .inFile(configuration);
         CompilationSubject.assertThat(compilation)
-            .hadErrorContaining("Neither a type nor a type exists for 'not.existing.pck'")
+            .hadErrorContaining("Neither a type nor a package exists for 'not.existing.pck'")
             .inFile(configuration);
         assertEquals(List.of(), compilation.warnings().stream().map(d -> d.getMessage(null)).toList());
         assertEquals(List.of(), RecordingBackend.models());
+    }
+
+    @Test
+    @DisplayName("Every unresolvable name is reported at its own annotation value")
+    void unresolvableNamesAreReportedAtTheirOwnValue() {
+        final JavaFileObject configuration = generateMatchersConfiguration("{\"not.existing.First\", \"not.existing.Second\"}");
+
+        final Compilation compilation = compile(configuration);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(2, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        final long firstColumn = columnOf(compilation, "'not.existing.First'");
+        final long secondColumn = columnOf(compilation, "'not.existing.Second'");
+        assertTrue(firstColumn > 0 && secondColumn > firstColumn, firstColumn + " / " + secondColumn);
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("'not.existing.First'").inFile(configuration).onLine(3).atColumn((int) firstColumn);
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("'not.existing.Second'").inFile(configuration).onLine(3).atColumn((int) secondColumn);
+    }
+
+    private static long columnOf(final Compilation compilation, final String messagePart) {
+        return compilation.errors().stream()
+            .filter(diagnostic -> diagnostic.getMessage(null).contains(messagePart))
+            .mapToLong(javax.tools.Diagnostic::getColumnNumber)
+            .findFirst()
+            .orElseThrow();
     }
 
     @Test
@@ -603,6 +654,49 @@ class CoreProcessorIT {
         assertEquals(
             List.of("some.other.pck.EmptyPojo", "some.other.pck.EmptyInterface"),
             RecordingBackend.models().stream().map(TypeModel::qualifiedName).collect(Collectors.toList()));
+    }
+
+    @Test
+    @DisplayName("A configured nested type without properties is warned about, not its unconfigured container")
+    void aConfiguredNestedTypeWithoutPropertiesIsWarnedAbout() {
+        final JavaFileObject outer = JavaFileObjects.forSourceLines(
+            "some.other.pck.Outer",
+            "package some.other.pck;",
+            "public class Outer {",
+            "    public String getOuterProperty() { return \"\"; }",
+            "    public static class Inner {",
+            "        public void doSomething() { }",
+            "    }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Outer.Inner\""), outer);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+            .hadWarningContaining("Type 'some.other.pck.Outer.Inner' has no properties");
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(1, RecordingBackend.models().size());
+    }
+
+    @Test
+    @DisplayName("A configured nested type with properties is not warned about, whatever its container holds")
+    void aConfiguredNestedTypeWithPropertiesIsNotWarnedAbout() {
+        final JavaFileObject outer = JavaFileObjects.forSourceLines(
+            "some.other.pck.Outer",
+            "package some.other.pck;",
+            "public class Outer {",
+            "    public static class Inner {",
+            "        public String getInnerProperty() { return \"\"; }",
+            "    }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Outer.Inner\""), outer);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(1, RecordingBackend.models().size());
     }
 
     @Test
