@@ -99,6 +99,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Same reasoning: Structurizr's JAXB and activation artifacts (CDDL/GPL) only ever reach this module's tooling. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <excludedArtifacts>jaxb-api|javax\.activation-api</excludedArtifacts>
+                </configuration>
+            </plugin>
             <!-- asciidoctorj-diagram's structurizr block wants the home of a Structurizr CLI. A folder whose lib/ holds
                 the jars is enough, so no CLI download and no Docker is needed. -->
             <plugin>
