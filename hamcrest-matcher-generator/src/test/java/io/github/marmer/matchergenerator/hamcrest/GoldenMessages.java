@@ -5,12 +5,9 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.hamcrest.Matcher;
 
@@ -41,13 +38,14 @@ final class GoldenMessages {
     }
 
     void assertMessage(final String scenario, final String actualMessage) throws IOException {
-        try (InputStream in =
-                GoldenMessages.class.getResourceAsStream(directory + "/" + scenario + ".txt")) {
-            final String expected =
-                    in == null
-                            ? "<missing golden file>"
-                            : new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(expected, actualMessage + "\n");
-        }
+        GoldenFiles.forModule()
+                .assertGolden(
+                        GoldenMessages.class.getPackageName().replace('.', '/')
+                                + "/"
+                                + directory
+                                + "/"
+                                + scenario
+                                + ".txt",
+                        actualMessage + "\n");
     }
 }

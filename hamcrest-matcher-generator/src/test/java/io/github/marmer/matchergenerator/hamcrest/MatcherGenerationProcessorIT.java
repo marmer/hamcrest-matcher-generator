@@ -14,8 +14,6 @@ import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -1668,7 +1666,6 @@ class MatcherGenerationProcessorIT {
             final Compilation compilation, final String scenario, final String qualifiedName)
             throws IOException {
         final String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-        final String expected = readGolden(scenario, simpleName + ".java");
         final JavaFileObject generated =
                 compilation
                         .generatedSourceFile(qualifiedName)
@@ -1676,18 +1673,14 @@ class MatcherGenerationProcessorIT {
                                 () ->
                                         new AssertionError(
                                                 "No source generated for " + qualifiedName));
-        assertEquals(expected, generated.getCharContent(true).toString());
-    }
-
-    private static String readGolden(final String scenario, final String fileName)
-            throws IOException {
-        final String resourceName = "MatcherGenerationProcessorIT/" + scenario + "/" + fileName;
-        try (InputStream in =
-                MatcherGenerationProcessorIT.class.getResourceAsStream(resourceName)) {
-            if (in == null) {
-                throw new AssertionError("Missing golden file: " + resourceName);
-            }
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        GoldenFiles.forModule()
+                .assertGolden(
+                        MatcherGenerationProcessorIT.class.getPackageName().replace('.', '/')
+                                + "/MatcherGenerationProcessorIT/"
+                                + scenario
+                                + "/"
+                                + simpleName
+                                + ".java",
+                        generated.getCharContent(true).toString());
     }
 }
