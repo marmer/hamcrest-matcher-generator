@@ -5,7 +5,7 @@ An annotation processor that generates type-specific test assertions (Hamcrest m
 ## Language
 
 **Property model**:
-The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends.
+The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
 _Avoid_: bean model, metadata
 
 **Property**:

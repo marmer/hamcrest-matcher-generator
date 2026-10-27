@@ -40,6 +40,9 @@ class CoreProcessorIT {
      */
     private static final String CLASS_PROPERTY = "class:java.lang.Class<?>:getClass";
 
+    @TempDir
+    Path kotlinOutput;
+
     @BeforeEach
     void resetRecording() {
         RecordingBackend.reset();
@@ -56,8 +59,12 @@ class CoreProcessorIT {
         );
     }
 
-    private static Compilation compile(final JavaFileObject... sources) {
-        return Compiler.javac()
+    private Compilation compile(final JavaFileObject... sources) {
+        return compile(Compiler.javac().withOptions("-Akapt.kotlin.generated=" + kotlinOutput), sources);
+    }
+
+    private static Compilation compile(final Compiler compiler, final JavaFileObject... sources) {
+        return compiler
             .withProcessors(new MatcherGenerationProcessor(() -> NOW))
             .compile(Arrays.asList(sources));
     }
@@ -168,6 +175,7 @@ class CoreProcessorIT {
         writeClassFile(compiledMangled, classes, "kotlin.Metadata", null, null);
 
         final Compilation compilation = Compiler.javac()
+            .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
             .withProcessors(new MatcherGenerationProcessor(() -> NOW))
             .withClasspath(classPathWith(classes))
             .compile(configuration("\"some.other.pck.Mangled\""));
@@ -386,11 +394,48 @@ class CoreProcessorIT {
         for (final String name : List.of("First", "Second")) {
             assertTrue(compilation.generatedSourceFile("some.other.pck." + name + "Recorded").isPresent(), name);
             assertTrue(compilation.generatedSourceFile("some.other.pck." + name + "Second").isPresent(), name);
-            assertTrue(
-                compilation.generatedFile(StandardLocation.SOURCE_OUTPUT, "some.other.pck", name + "Dsl.kt")
-                    .isPresent(),
-                name);
+            assertTrue(Files.isRegularFile(kotlinOutput.resolve("some/other/pck/" + name + "Dsl.kt")), name);
         }
+    }
+
+    @Test
+    @DisplayName("Kotlin sources go to the directory KAPT names")
+    void kotlinSourcesGoToTheDirectoryKaptNames() throws IOException {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomePojo",
+            "package some.other.pck;",
+            "public class SomePojo {",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SomePojo\""), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            "package some.other.pck\n\nclass SomePojoDsl\n",
+            Files.readString(kotlinOutput.resolve("some/other/pck/SomePojoDsl.kt")));
+        assertFalse(compilation.generatedFile(StandardLocation.SOURCE_OUTPUT, "some.other.pck", "SomePojoDsl.kt")
+            .isPresent());
+    }
+
+    @Test
+    @DisplayName("Kotlin output without the KAPT directory is an error naming backend and type")
+    void kotlinOutputWithoutTheKaptDirectoryIsAnError() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomePojo",
+            "package some.other.pck;",
+            "public class SomePojo {",
+            "}"
+        );
+
+        final Compilation compilation = compile(Compiler.javac(), configuration("\"some.other.pck.SomePojo\""), bean);
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation).hadErrorCount(1);
+        CompilationSubject.assertThat(compilation)
+            .hadErrorContaining("io.github.marmer.matchergenerator.core.FileOnlyBackends$KotlinBackend");
+        CompilationSubject.assertThat(compilation).hadErrorContaining("some.other.pck.SomePojo");
+        CompilationSubject.assertThat(compilation).hadErrorContaining("kapt.kotlin.generated");
     }
 
     @Test
