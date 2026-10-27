@@ -6,7 +6,6 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -35,10 +34,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
 
     /**
-     * The pairs of matcher and item being checked on this thread. A pair met again on its way down
-     * counts as equal, so cyclic graphs terminate.
+     * The items being checked by a matcher on this thread, by identity. A pair of matcher and item
+     * met again on its way down counts as equal, so cyclic graphs terminate.
      */
-    private static final ThreadLocal<Set<Visit>> CHECKING = ThreadLocal.withInitial(HashSet::new);
+    private static final ThreadLocal<Map<BeanPropertyMatcher<?>, Set<Object>>> CHECKING =
+            ThreadLocal.withInitial(IdentityHashMap::new);
 
     /** The matchers being described on this thread, which a cyclic matcher meets again. */
     private static final ThreadLocal<Set<BeanPropertyMatcher<?>>> DESCRIBING =
@@ -194,14 +194,20 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      * completeness check are added to the unaddressed paths of the report, not to its failures.
      */
     void collectFailures(final Object item, final String prefix, final MismatchReport report) {
-        final Visit visit = new Visit(this, item);
-        if (!CHECKING.get().add(visit)) {
+        final Set<Object> items =
+                CHECKING.get()
+                        .computeIfAbsent(
+                                this, key -> Collections.newSetFromMap(new IdentityHashMap<>()));
+        if (!items.add(item)) {
             return;
         }
         try {
             collectFailuresOnce(item, prefix, report);
         } finally {
-            CHECKING.get().remove(visit);
+            items.remove(item);
+            if (items.isEmpty()) {
+                CHECKING.get().remove(this);
+            }
         }
     }
 
@@ -260,29 +266,6 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                     });
         } finally {
             DESCRIBING.get().remove(this);
-        }
-    }
-
-    /** A matcher checking an item, compared by identity. */
-    private static final class Visit {
-        private final Object matcher;
-        private final Object item;
-
-        Visit(final Object matcher, final Object item) {
-            this.matcher = matcher;
-            this.item = item;
-        }
-
-        @Override
-        public boolean equals(final @Nullable Object other) {
-            return other instanceof Visit
-                    && ((Visit) other).matcher == matcher
-                    && ((Visit) other).item == item;
-        }
-
-        @Override
-        public int hashCode() {
-            return 31 * System.identityHashCode(matcher) + System.identityHashCode(item);
         }
     }
 

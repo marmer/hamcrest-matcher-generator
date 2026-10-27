@@ -7,6 +7,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,9 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public final class ReferenceMatching {
-    private static final ThreadLocal<Map<Built, Object>> BUILDING = new ThreadLocal<>();
+    /** The matchers built so far on this thread: per reference object, by identity, per type. */
+    private static final ThreadLocal<Map<Object, Map<Class<?>, Object>>> BUILDING =
+            new ThreadLocal<>();
 
     private ReferenceMatching() {}
 
@@ -52,17 +55,17 @@ public final class ReferenceMatching {
             final Consumer<M> preset) {
         final boolean outermost = BUILDING.get() == null;
         if (outermost) {
-            BUILDING.set(new HashMap<>());
+            BUILDING.set(new IdentityHashMap<>());
         }
         try {
-            final Map<Built, Object> built = BUILDING.get();
-            final Built key = new Built(reference, matcherType);
-            final @Nullable Object known = built.get(key);
+            final Map<Class<?>, Object> built =
+                    BUILDING.get().computeIfAbsent(reference, key -> new HashMap<>());
+            final @Nullable Object known = built.get(matcherType);
             if (known != null) {
                 return (M) known;
             }
             final M matcher = create.get();
-            built.put(key, matcher);
+            built.put(matcherType, matcher);
             preset.accept(matcher);
             return matcher;
         } finally {
@@ -145,28 +148,5 @@ public final class ReferenceMatching {
     private static <E> Matcher<Object> itemMatcher(
             final @Nullable E item, final Function<? super E, ? extends Matcher<?>> like) {
         return (Matcher<Object>) nested(item, like);
-    }
-
-    /** A reference object, compared by identity, and the matcher type it is matched as. */
-    private static final class Built {
-        private final Object reference;
-        private final Class<?> matcherType;
-
-        Built(final Object reference, final Class<?> matcherType) {
-            this.reference = reference;
-            this.matcherType = matcherType;
-        }
-
-        @Override
-        public boolean equals(final @Nullable Object other) {
-            return other instanceof Built
-                    && ((Built) other).reference == reference
-                    && ((Built) other).matcherType.equals(matcherType);
-        }
-
-        @Override
-        public int hashCode() {
-            return 31 * System.identityHashCode(reference) + matcherType.hashCode();
-        }
     }
 }
