@@ -58,9 +58,6 @@
                     </goals>
                     <properties>
                         <skipTests>${skipTests}</skipTests>
-                        <!-- RelocationPomTest of the frozen suite asserts the former relocation POMs; the bridge jars have their
-                            own tests (BridgeJarIT). The suite itself stays unchanged. -->
-                        <test>!RelocationPomTest</test>
                     </properties>
                     <streamLogsOnFailures>true</streamLogsOnFailures>
                 </configuration>
