@@ -20,6 +20,9 @@
         <!-- -DskipTests=true on the outer build compiles the suite without running it; the outer build then did not
             resolve the Surefire provider, which the isolated build may not fetch from the network. -->
         <skipTests>false</skipTests>
+        <!-- 3.8.1, the version of the other modules, does not follow the relocation in annotationProcessorPaths. The
+            suite is built with a version that does, the way a current 5.x user's build would. -->
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     </properties>
 
     <!-- The runner only orders itself after the modules whose artifacts the suite consumes. invoker:install puts these
@@ -42,6 +45,46 @@
 
     <build>
         <plugins>
+            <!-- Resolves that compiler plugin into the outer local repository, the only remote of the isolated build. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>resolve-compiler-plugin-for-suite</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>help</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- The suite's RelocationPomTest reads the relocation POMs from sibling directories of the module. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>provide-relocation-poms-beside-suite</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/it</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>hamcrest-matcher-generator-dependencies/pom.xml</include>
+                                        <include>hamcrest-matcher-generator-annotationprocessor/pom.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
@@ -51,7 +94,7 @@
                     <pomIncludes>
                         <pomInclude>pom.xml</pomInclude>
                     </pomIncludes>
-                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <cloneProjectsTo>${project.build.directory}/it/hamcrest-matcher-generator-endtoend-5x-compatibility</cloneProjectsTo>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <!-- The outer local repository serves as the only remote, so the suite resolves nothing from the network. -->
                     <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
@@ -60,6 +103,7 @@
                     </goals>
                     <properties>
                         <skipTests>${skipTests}</skipTests>
+                        <maven-compiler-plugin.version>${maven-compiler-plugin.version}</maven-compiler-plugin.version>
                     </properties>
                     <streamLogsOnFailures>true</streamLogsOnFailures>
                 </configuration>

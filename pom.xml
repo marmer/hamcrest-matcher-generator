@@ -64,6 +64,7 @@
         <!-- Plugin and dependency Versions-->
         <kotlin.version>2.1.20</kotlin.version>
         <mockito.version>3.11.1</mockito.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     </properties>
 
     <repositories>
@@ -308,7 +309,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.0</version>
+                    <version>${maven-compiler-plugin.version}</version>
                     <executions>
                         <!-- Replacing default-compile as it is treated specially by maven -->
                         <execution>
