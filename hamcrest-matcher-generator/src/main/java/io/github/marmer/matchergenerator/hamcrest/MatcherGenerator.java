@@ -17,6 +17,7 @@ import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -57,11 +58,29 @@ class MatcherGenerator {
     private final TypeModel model;
     private final GenerationContext context;
     private final String simpleMatcherName;
+    private final List<PropertyModel> presetProperties;
+    private @Nullable Map<String, MatcherType> referenceTypes;
 
     MatcherGenerator(final TypeModel model, final GenerationContext context) {
         this.model = model;
         this.context = context;
-        this.simpleMatcherName = model.simpleName() + "Matcher";
+        this.simpleMatcherName = matcherNameOf(model);
+        this.presetProperties =
+                PropertyModel.distinctByName(model.properties()).stream()
+                        .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
+                        .collect(Collectors.toList());
+    }
+
+    private static String matcherNameOf(final TypeModel type) {
+        return type.simpleName() + "Matcher";
+    }
+
+    private static String initializerNameOf(final TypeModel type) {
+        return "is" + type.simpleName();
+    }
+
+    private static String referenceInitializerNameOf(final TypeModel type) {
+        return initializerNameOf(type) + "Like";
     }
 
     private static String capitalized(final String value) {
@@ -266,7 +285,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getApiInitializer() {
-        return MethodSpec.methodBuilder("is" + model.simpleName())
+        return MethodSpec.methodBuilder(initializerNameOf(model))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addStatement("return new $T()", getGeneratedTypeName())
                 .returns(getGeneratedTypeName())
@@ -274,7 +293,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getReferenceInitializer() {
-        return MethodSpec.methodBuilder("is" + model.simpleName() + "Like")
+        return MethodSpec.methodBuilder(referenceInitializerNameOf(model))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
                 .addStatement(
@@ -283,7 +302,7 @@ class MatcherGenerator {
                         REFERENCE,
                         getGeneratedTypeName(),
                         getGeneratedTypeName(),
-                        presetProperties().isEmpty() ? "" : REFERENCE)
+                        presetProperties.isEmpty() ? "" : REFERENCE)
                 .returns(getGeneratedTypeName())
                 .build();
     }
@@ -294,25 +313,17 @@ class MatcherGenerator {
                 MethodSpec.methodBuilder("presetFrom")
                         .addModifiers(Modifier.PRIVATE)
                         .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME);
-        if (!presetProperties().isEmpty()) {
+        if (!presetProperties.isEmpty()) {
             method.addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL);
         }
-        presetProperties()
-                .forEach(
-                        property ->
-                                method.addStatement(
-                                        "$L.preset($S, $L)",
-                                        BUILDER_FIELD_NAME,
-                                        property.name(),
-                                        presetOf(property)));
+        presetProperties.forEach(
+                property ->
+                        method.addStatement(
+                                "$L.preset($S, $L)",
+                                BUILDER_FIELD_NAME,
+                                property.name(),
+                                presetOf(property)));
         return method.build();
-    }
-
-    /** The properties preset from a reference object: all but {@code class}. */
-    private List<PropertyModel> presetProperties() {
-        return PropertyModel.distinctByName(model.properties()).stream()
-                .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
-                .collect(Collectors.toList());
     }
 
     private CodeBlock presetOf(final PropertyModel property) {
@@ -326,23 +337,19 @@ class MatcherGenerator {
             final MatcherType item = matcherTypeOf(((ArrayType) type).getComponentType());
             return item == null ? valuePreset(value) : referencePreset("array", value, item);
         }
-        if (type.getKind() == TypeKind.DECLARED) {
-            final DeclaredType declared = (DeclaredType) type;
-            final List<? extends TypeMirror> arguments = declared.getTypeArguments();
-            if (arguments.size() == 1 && inherits(asTypeElement(type), COLLECTION)) {
-                final MatcherType item = matcherTypeOf(arguments.get(0));
-                if (item != null) {
-                    return referencePreset(
-                            inherits(asTypeElement(type), LIST) ? "list" : "collection",
-                            value,
-                            item);
-                }
+        final @Nullable List<TypeMirror> collectionItem = argumentsAs(type, COLLECTION);
+        if (collectionItem != null && collectionItem.size() == 1) {
+            final MatcherType item = matcherTypeOf(collectionItem.get(0));
+            if (item != null) {
+                return referencePreset(
+                        argumentsAs(type, LIST) != null ? "list" : "collection", value, item);
             }
-            if (arguments.size() == 2 && inherits(asTypeElement(type), MAP)) {
-                final MatcherType item = matcherTypeOf(arguments.get(1));
-                if (item != null) {
-                    return referencePreset("map", value, item);
-                }
+        }
+        final @Nullable List<TypeMirror> mapTypes = argumentsAs(type, MAP);
+        if (mapTypes != null && mapTypes.size() == 2) {
+            final MatcherType item = matcherTypeOf(mapTypes.get(1));
+            if (item != null) {
+                return referencePreset("map", value, item);
             }
         }
         return valuePreset(value);
@@ -380,35 +387,42 @@ class MatcherGenerator {
     }
 
     private Map<String, MatcherType> referenceTypes() {
+        if (referenceTypes == null) {
+            referenceTypes = collectReferenceTypes();
+        }
+        return referenceTypes;
+    }
+
+    private Map<String, MatcherType> collectReferenceTypes() {
         final Map<String, MatcherType> types = new HashMap<>();
         context.generatedTypes()
                 .forEach(
                         generated ->
-                                collectReferenceTypes(
+                                collectInto(
                                         generated,
                                         ClassName.get(
                                                 generated.targetPackage(),
-                                                generated.simpleName() + "Matcher"),
+                                                matcherNameOf(generated)),
                                         types));
         return types;
     }
 
-    private void collectReferenceTypes(
+    private void collectInto(
             final TypeModel generated,
             final ClassName className,
             final Map<String, MatcherType> types) {
         if (isComparedDeeply(generated)) {
             types.put(
                     generated.qualifiedName(),
-                    new MatcherType(className, "is" + generated.simpleName() + "Like"));
+                    new MatcherType(className, referenceInitializerNameOf(generated)));
         }
         generated
                 .nestedTypes()
                 .forEach(
                         nested ->
-                                collectReferenceTypes(
+                                collectInto(
                                         nested,
-                                        className.nestedClass(nested.simpleName() + "Matcher"),
+                                        className.nestedClass(matcherNameOf(nested)),
                                         types));
     }
 
@@ -418,14 +432,62 @@ class MatcherGenerator {
                         .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
     }
 
-    /** Whether the type is, or has among its supertypes, the type of the given name. */
-    private boolean inherits(final TypeElement type, final String qualifiedName) {
+    /**
+     * The type arguments the type gives to one of its supertypes, as in {@code Lines extends
+     * ArrayList<Line>} giving {@code Line} to {@code Collection}.
+     *
+     * @return the arguments, or {@code null} if the type has no such supertype
+     */
+    private @Nullable List<TypeMirror> argumentsAs(
+            final TypeMirror type, final String qualifiedName) {
+        return type.getKind() == TypeKind.DECLARED
+                ? argumentsAs(
+                        asTypeElement(type),
+                        ((DeclaredType) type).getTypeArguments(),
+                        qualifiedName)
+                : null;
+    }
+
+    private @Nullable List<TypeMirror> argumentsAs(
+            final TypeElement type,
+            final List<? extends TypeMirror> arguments,
+            final String qualifiedName) {
         if (type.getQualifiedName().contentEquals(qualifiedName)) {
-            return true;
+            return new ArrayList<>(arguments);
+        }
+        final Map<String, TypeMirror> bindings = new HashMap<>();
+        for (var i = 0; i < Math.min(arguments.size(), type.getTypeParameters().size()); i++) {
+            bindings.put(
+                    type.getTypeParameters().get(i).getSimpleName().toString(), arguments.get(i));
         }
         return Stream.concat(Stream.of(type.getSuperclass()), type.getInterfaces().stream())
                 .filter(supertype -> supertype.getKind() == TypeKind.DECLARED)
-                .anyMatch(supertype -> inherits(asTypeElement(supertype), qualifiedName));
+                .map(
+                        supertype ->
+                                argumentsAs(
+                                        asTypeElement(supertype),
+                                        boundArguments((DeclaredType) supertype, bindings),
+                                        qualifiedName))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** The arguments of a supertype with the type variables of the subtype replaced. */
+    private static List<TypeMirror> boundArguments(
+            final DeclaredType supertype, final Map<String, TypeMirror> bindings) {
+        return supertype.getTypeArguments().stream()
+                .map(
+                        argument ->
+                                argument.getKind() == TypeKind.TYPEVAR
+                                        ? bindings.getOrDefault(
+                                                ((TypeVariable) argument)
+                                                        .asElement()
+                                                        .getSimpleName()
+                                                        .toString(),
+                                                argument)
+                                        : argument)
+                .collect(Collectors.toList());
     }
 
     /** The matcher generated for a type and the name of its method for reference objects. */

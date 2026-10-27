@@ -1076,6 +1076,96 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
+    @DisplayName("Reference object matcher should find the item type of collection subtypes")
+    void referenceObjectMatcherShouldFindTheItemTypeOfCollectionSubtypes() throws IOException {
+        // Preparation
+        JavaFileObject configuration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SomeConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers({"some.other.pck.Holder", "some.other.pck.Line"})
+            public final class SomeConfiguration{
+
+            }
+            """);
+        JavaFileObject holder =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Holder",
+                        """
+            package some.other.pck;
+
+            import some.lib.Flipped;
+            import some.lib.Index;
+            import some.lib.Lines;
+            import some.lib.Named;
+
+            public class Holder {
+                public Lines getLines() { return null; }
+                public Index getIndex() { return null; }
+                public Named<Line> getNamed() { return null; }
+                public Flipped<Line, String> getFlipped() { return null; }
+            }
+            """);
+        JavaFileObject lines =
+                JavaFileObjects.forSourceLines(
+                        "some.lib.Lines",
+                        """
+            package some.lib;
+
+            public class Lines extends java.util.ArrayList<some.other.pck.Line> {}
+            """);
+        JavaFileObject index =
+                JavaFileObjects.forSourceLines(
+                        "some.lib.Index",
+                        """
+            package some.lib;
+
+            public class Index extends java.util.HashMap<String, some.other.pck.Line> {}
+            """);
+        JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.lib.Named",
+                        """
+            package some.lib;
+
+            public class Named<T> extends java.util.HashSet<T> {}
+            """);
+        JavaFileObject flipped =
+                JavaFileObjects.forSourceLines(
+                        "some.lib.Flipped",
+                        """
+            package some.lib;
+
+            public class Flipped<V, K> extends java.util.HashMap<K, V> {}
+            """);
+        JavaFileObject line =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Line",
+                        """
+            package some.other.pck;
+
+            public class Line {
+                public String getSku() { return null; }
+            }
+            """);
+
+        // Execution
+        Compilation compilation =
+                compile(configuration, holder, line, lines, index, named, flipped);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "reference-object-matcher-finds-item-type-of-collection-subtypes",
+                "some.other.pck.HolderMatcher");
+    }
+
+    @Test
     @DisplayName("Reference object matcher should refer to matchers of other configurations")
     void referenceObjectMatcherShouldReferToMatchersOfOtherConfigurations() throws IOException {
         // Preparation

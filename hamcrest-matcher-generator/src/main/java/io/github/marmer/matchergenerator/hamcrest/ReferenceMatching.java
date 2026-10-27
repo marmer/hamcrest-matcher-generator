@@ -28,6 +28,10 @@ import org.jspecify.annotations.Nullable;
  * matcher only, which the object finds again on its way back to itself. The matchers then form the
  * same cycle as the objects, and the checking walks of the {@link BeanPropertyMatcher} count a pair
  * met again as equal.
+ *
+ * <p>Only types whose matcher is generated in the same processing round are compared deeply; a type
+ * from another round or compilation is compared by {@code equals}. A back-reference to the root
+ * reference object shares the root matcher, so an override on the root applies there too.
  */
 @NullMarked
 public final class ReferenceMatching {
