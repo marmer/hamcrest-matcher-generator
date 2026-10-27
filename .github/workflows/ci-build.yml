@@ -37,8 +37,9 @@ jobs:
 
       - name: Prepare source directories for sonar
         run: |
-          mkdir -p hamcrest-matcher-generator-annotationprocessor/src/{main,test}/{java,kotlin}
-          mkdir -p hamcrest-matcher-generator-dependencies/src/{main,test}/{java,kotlin}
+          mkdir -p hamcrest-matcher-generator/src/{main,test}/{java,kotlin}
+          mkdir -p matcher-generator-annotations/src/{main,test}/{java,kotlin}
+          mkdir -p matcher-generator-core/src/{main,test}/{java,kotlin}
         if: success()
 
       - name: Build
@@ -56,19 +57,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator-annotationprocessor,hamcrest-matcher-generator-dependencies"
+        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator,matcher-generator-core,matcher-generator-annotations"
         if: success()
 
   verify-matrix:
-    name: Verify JDK ${{ matrix.java-version }}
+    name: Verify JDK ${{ matrix.role }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        java-version: [11, 17, 25]
+        include:
+          - role: "17"
+            java-version: "17"
+          - role: "21"
+            java-version: "21"
+          - role: "25"
+            java-version: "25"
+          # Newest GA JDK. setup-java takes no "latest" alias; Renovate bumps this version (#134).
+          - role: latest
+            java-version: "27"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ matrix.java-version }}
+      - name: Set up JDK ${{ matrix.role }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java-version }}
@@ -81,8 +92,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-jdk${{ matrix.java-version }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-jdk${{ matrix.java-version }}-
+          key: ${{ runner.os }}-m2-jdk${{ matrix.role }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-jdk${{ matrix.role }}-
 
       - name: Verify
         run: ./mvnw -B clean verify

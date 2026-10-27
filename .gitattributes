@@ -1,0 +1,2 @@
+# Golden files are compared character by character; keep their line endings LF on every platform.
+hamcrest-matcher-generator-annotationprocessor/src/test/resources/io/github/marmer/annotationprocessing/MatcherGenerationProcessorIT/** text eol=lf

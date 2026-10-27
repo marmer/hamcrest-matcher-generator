@@ -3,12 +3,15 @@
 
 Rules (see docs/agents/domain.md, "Redundancy rules"):
   1. Every term in GLOSSARY.md (lines of the form `**Term**:`) has a row in the table of
-     docs/src/12_glossary.adoc (a `|Term` line followed by a `|definition` line).
-  2. Every ADR file docs/adr/NNNN-*.md is linked from docs/src/09_architecture_decisions.adoc
+     docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc (a `|Term` line followed by a `|definition` line).
+  2. Every ADR file docs/adr/NNNN-*.md is linked from docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc
      (matched by its filename).
   3. The glossary table contains no leftover template placeholder rows such as `<Term-1>`.
+  4. Every required check that docs/agents/wayfinding.md names ("required checks of the
+     `development` ruleset pass (`Build`, ...)") is the name of a job in .github/workflows/,
+     with `${{ matrix.role }}` expanded to each `role:` of the job's matrix.
 
-A missing GLOSSARY.md or docs/adr/ means there is nothing to check for that rule and it passes.
+A missing GLOSSARY.md, docs/adr/ or required-checks list means there is nothing to check for that rule and it passes.
 
 Usage:
   scripts/agents/check-domain-docs-sync.py              # check the repository this script lives in
@@ -22,12 +25,17 @@ from pathlib import Path
 
 GLOSSARY_MD = "GLOSSARY.md"
 ADR_DIR = "docs/adr"
-GLOSSARY_ADOC = "docs/src/12_glossary.adoc"
-DECISIONS_ADOC = "docs/src/09_architecture_decisions.adoc"
+GLOSSARY_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc"
+DECISIONS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc"
+WAYFINDING_MD = "docs/agents/wayfinding.md"
+WORKFLOW_DIR = ".github/workflows"
 
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
 PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
+REQUIRED_CHECKS = re.compile(r"required checks of the `development` ruleset pass \(([^)]*)\)")
+JOB_NAME = re.compile(r"^    name:\s*(.+?)\s*$")
+MATRIX_ROLE = re.compile(r"^\s*-?\s*role:\s*[\"']?([^\"'\s]+)[\"']?\s*$")
 
 
 def read(path):
@@ -90,6 +98,37 @@ def check_adrs(root, violations):
             violations.append(f"{DECISIONS_ADOC}: ADR file {ADR_DIR}/{adr.name} is not linked")
 
 
+def workflow_job_names(root):
+    """Job display names of every workflow, with `${{ matrix.role }}` expanded per matrix role."""
+    names = set()
+    workflow_dir = root / WORKFLOW_DIR
+    if not workflow_dir.is_dir():
+        return names
+    for workflow in sorted(workflow_dir.glob("*.y*ml")):
+        jobs = []  # (name, roles) per job, in file order
+        for line in read(workflow).splitlines():
+            if m := JOB_NAME.match(line):
+                jobs.append((m.group(1).strip("\"'"), []))
+            elif jobs and (m := MATRIX_ROLE.match(line)):
+                jobs[-1][1].append(m.group(1))
+        for name, roles in jobs:
+            if "${{ matrix.role }}" in name:
+                names.update(name.replace("${{ matrix.role }}", role) for role in roles)
+            else:
+                names.add(name)
+    return names
+
+
+def check_required_checks(root, violations):
+    m = REQUIRED_CHECKS.search(read(root / WAYFINDING_MD))
+    if not m:
+        return
+    jobs = workflow_job_names(root)
+    for check in re.findall(r"`([^`]+)`", m.group(1)):
+        if check not in jobs:
+            violations.append(f"{WAYFINDING_MD}: required check '{check}' is not a job name in {WORKFLOW_DIR}/")
+
+
 def main():
     if len(sys.argv) > 2:
         sys.exit(__doc__)
@@ -97,6 +136,7 @@ def main():
     violations = []
     check_glossary(root, violations)
     check_adrs(root, violations)
+    check_required_checks(root, violations)
     for violation in violations:
         print(violation)
     if violations:

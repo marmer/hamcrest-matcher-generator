@@ -1,0 +1,326 @@
+package io.github.marmer.matchergenerator.core;
+
+import io.github.marmer.matchergenerator.core.model.TypeModel;
+import io.github.marmer.matchergenerator.core.spi.GeneratedSource;
+import io.github.marmer.matchergenerator.core.spi.GenerationContext;
+import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import javax.annotation.processing.Generated;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+
+public class MatcherGenerationProcessorWorker {
+    /**
+     * The processor option KAPT passes with the directory Kotlin sources have to be written to.
+     */
+    static final String KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated";
+    static final String GENERATE_MATCHERS = "io.github.marmer.matchergenerator.annotations.GenerateMatchers";
+    /**
+     * The deprecated 5.x alias. Referenced by name only, so the core does not depend on a deprecated type.
+     */
+    static final String MATCHER_CONFIGURATION =
+        "io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration";
+    private static final Set<String> CONFIGURATION_ANNOTATIONS = Set.of(GENERATE_MATCHERS, MATCHER_CONFIGURATION);
+    /**
+     * The only property Object contributes. It is not something a type declares, so it does not count as a property
+     * of a type without properties.
+     */
+    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
+    /**
+     * Kind of the {@code kotlin.Metadata} annotation that marks a file facade.
+     */
+    private static final int KOTLIN_FILE_FACADE_KIND = 2;
+    /**
+     * Generator name of the 5.x processor. Types it generated are skipped as well.
+     */
+    private static final String LEGACY_GENERATOR_NAME = "io.github.marmer.annotationprocessing.MatcherGenerationProcessor";
+
+    private final Supplier<LocalDateTime> timeProvider;
+    private final ProcessingEnvironment processingEnv;
+    private final String generatorName;
+    private final List<GeneratorBackend> backends;
+
+    public MatcherGenerationProcessorWorker(
+        final Supplier<LocalDateTime> timeProvider,
+        final ProcessingEnvironment processingEnv,
+        final String generatorName,
+        final List<GeneratorBackend> backends
+    ) {
+        this.timeProvider = timeProvider;
+        this.processingEnv = processingEnv;
+        this.generatorName = generatorName;
+        this.backends = List.copyOf(backends);
+    }
+
+    private static List<AnnotationMirror> getConfigurationMirrors(final Element element) {
+        return element.getAnnotationMirrors().stream()
+            .filter(mirror -> CONFIGURATION_ANNOTATIONS.stream().anyMatch(name -> ElementSupport.isOfType(mirror, name)))
+            .collect(Collectors.toList());
+    }
+
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
+
+    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+        if (roundEnv.processingOver()) {
+            return false;
+        }
+        ElementSupport.logNote(processingEnv, "Matcher generation started", null);
+        final Set<Element> configurationElements = new LinkedHashSet<>();
+        annotations.stream()
+            .filter(annotation -> CONFIGURATION_ANNOTATIONS.contains(annotation.getQualifiedName().toString()))
+            .forEach(annotation -> configurationElements.addAll(roundEnv.getElementsAnnotatedWith(annotation)));
+        if (configurationElements.isEmpty()) {
+            return false;
+        }
+        configurationElements.forEach(this::generateMatchers);
+        return true;
+    }
+
+    private void generateMatchers(final Element configurationElement) {
+        final List<AnnotationMirror> mirrors = getConfigurationMirrors(configurationElement);
+        if (mirrors.size() != 1) {
+            processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.ERROR,
+                "Use either @GenerateMatchers or @MatcherConfiguration on a type, not both",
+                configurationElement
+            );
+            return;
+        }
+        getAllTypeElementsFor(configurationElement, mirrors.get(0))
+            .forEach((typeElement, configuredTypes) -> {
+                if (isSelfGenerated(typeElement)) {
+                    printSkipNoteBecauseOfSelfGenerationFor(typeElement);
+                } else {
+                    generateFor(typeElement, configuredTypes, configurationElement, mirrors.get(0));
+                }
+            });
+    }
+
+    private void generateFor(
+        final TypeElement typeElement,
+        final Set<TypeElement> configuredTypes,
+        final Element configurationElement,
+        final AnnotationMirror configurationMirror
+    ) {
+        final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror)
+            .create(typeElement);
+        configuredTypes.forEach(configuredType -> warnIfWithoutProperties(model, configuredType));
+        final GenerationContext context = new GenerationContext(generatorName, timeProvider.get());
+        backends.forEach(backend -> write(
+            backend,
+            backend.generate(model, context),
+            typeElement,
+            configurationElement
+        ));
+    }
+
+    /**
+     * Warns about the configured type itself, which is the generated type or one of its nested types. A type that is
+     * only the container of a configured nested type is never warned about.
+     */
+    private void warnIfWithoutProperties(final TypeModel generatedModel, final TypeElement configuredType) {
+        findModel(generatedModel, configuredType.getQualifiedName().toString())
+            .filter(MatcherGenerationProcessorWorker::hasNoProperties)
+            .filter(model -> !isKotlinFileFacade(configuredType))
+            .ifPresent(model -> processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.WARNING,
+                "Type '" + configuredType.getQualifiedName() + "' has no properties to match",
+                configuredType
+            ));
+    }
+
+    private static Optional<TypeModel> findModel(final TypeModel model, final String qualifiedName) {
+        if (model.qualifiedName().equals(qualifiedName)) {
+            return Optional.of(model);
+        }
+        return model.nestedTypes().stream()
+            .map(nested -> findModel(nested, qualifiedName))
+            .flatMap(Optional::stream)
+            .findFirst();
+    }
+
+    private static boolean hasNoProperties(final TypeModel model) {
+        return model.properties().stream().allMatch(property -> property.accessor().equals(OBJECT_CLASS_ACCESSOR));
+    }
+
+    /**
+     * The class Kotlin generates for top level functions. It has no properties by design and is no user type.
+     */
+    private static boolean isKotlinFileFacade(final TypeElement type) {
+        return ElementSupport.kotlinMetadata(type).stream()
+            .flatMap(mirror -> mirror.getElementValues().entrySet().stream())
+            .filter(entry -> entry.getKey().getSimpleName().contentEquals("k"))
+            .anyMatch(entry -> Integer.valueOf(KOTLIN_FILE_FACADE_KIND).equals(entry.getValue().getValue()));
+    }
+
+    private void write(
+        final GeneratorBackend backend,
+        final GeneratedSource source,
+        final TypeElement typeElement,
+        final Element configurationElement
+    ) {
+        final Element[] originatingElements = {typeElement, configurationElement};
+        try {
+            if (source.language() == GeneratedSource.Language.JAVA) {
+                writeJava(source, originatingElements);
+            } else {
+                writeKotlin(backend, source, typeElement);
+            }
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void writeJava(final GeneratedSource source, final Element[] originatingElements) throws IOException {
+        final String name = source.packageName().isEmpty()
+            ? source.simpleName()
+            : source.packageName() + "." + source.simpleName();
+        final FileObject file = processingEnv.getFiler().createSourceFile(name, originatingElements);
+        try (Writer writer = file.openWriter()) {
+            writer.write(source.content());
+        }
+    }
+
+    private void writeKotlin(
+        final GeneratorBackend backend,
+        final GeneratedSource source,
+        final TypeElement typeElement
+    ) throws IOException {
+        final String outputDirectory = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED);
+        if (outputDirectory == null) {
+            processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.ERROR,
+                "Backend " + backend.getClass().getName() + " generated Kotlin for "
+                    + typeElement.getQualifiedName() + ", which is only compiled when the annotation processor runs"
+                    + " with KAPT (processor option '" + KAPT_KOTLIN_GENERATED + "' is missing)",
+                typeElement);
+            return;
+        }
+        final Path directory = Path.of(outputDirectory, source.packageName().split("\\."));
+        Files.createDirectories(directory);
+        Files.writeString(
+            directory.resolve(source.simpleName() + "." + source.language().fileExtension()),
+            source.content());
+    }
+
+    /**
+     * The types to generate for, each with the configured types it stands for. A nested configured type is generated
+     * with its highest nesting type, which then is not a configured type itself.
+     */
+    private Map<TypeElement, Set<TypeElement>> getAllTypeElementsFor(
+        final Element configurationElement,
+        final AnnotationMirror configurationMirror
+    ) {
+        final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
+        final Set<String> handledNames = new HashSet<>();
+        configuredValues(configurationMirror).stream()
+            .filter(value -> handledNames.add((String) value.getValue()))
+            .forEach(value -> getAllTypeElementsFor(
+                (String) value.getValue(), configurationElement, configurationMirror, value, result));
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<AnnotationValue> configuredValues(final AnnotationMirror configurationMirror) {
+        return (List<AnnotationValue>) ElementSupport.valueAttribute(processingEnv, configurationMirror).getValue();
+    }
+
+    private void getAllTypeElementsFor(
+        final String currentQualifiedTypeOrPackageName,
+        final Element configurationType,
+        final AnnotationMirror configurationMirror,
+        final AnnotationValue configuredValue,
+        final Map<TypeElement, Set<TypeElement>> result
+    ) {
+        final Map<TypeElement, Set<TypeElement>> found = new LinkedHashMap<>();
+        processingEnv.getElementUtils()
+            .getAllPackageElements(currentQualifiedTypeOrPackageName)
+            .stream()
+            .flatMap(packageElement -> packageElement.getEnclosedElements().stream())
+            .map(TypeElement.class::cast)
+            .forEach(type -> found.computeIfAbsent(type, key -> new LinkedHashSet<>()).add(type));
+
+        final TypeElement configuredType =
+            processingEnv.getElementUtils().getTypeElement(currentQualifiedTypeOrPackageName);
+        final TypeElement highestNestingType = getHighestNestingType(configuredType);
+        if (highestNestingType != null) {
+            found.computeIfAbsent(highestNestingType, key -> new LinkedHashSet<>()).add(configuredType);
+        }
+
+        if (found.isEmpty()) {
+            printErrorBecauseOfNotExistingTypeConfigured(
+                configurationType, configurationMirror, configuredValue, currentQualifiedTypeOrPackageName);
+        }
+        found.forEach((type, configured) ->
+            result.computeIfAbsent(type, key -> new LinkedHashSet<>()).addAll(configured));
+    }
+
+    private TypeElement getHighestNestingType(final TypeElement typeElement) {
+        if (typeElement != null && typeElement.getEnclosingElement() instanceof TypeElement) {
+            return getHighestNestingType((TypeElement) typeElement.getEnclosingElement());
+        }
+        return typeElement;
+    }
+
+    /**
+     * An unresolvable name is an error for {@code @GenerateMatchers}. The deprecated alias only warns, as it did in
+     * 5.x, so existing 5.x configurations keep compiling. The diagnostic points at the failing name.
+     */
+    private void printErrorBecauseOfNotExistingTypeConfigured(
+        final Element configurationClass,
+        final AnnotationMirror mirror,
+        final AnnotationValue configuredValue,
+        final String qualifiedTypeOrPackageName
+    ) {
+        processingEnv.getMessager().printMessage(
+            ElementSupport.isOfType(mirror, GENERATE_MATCHERS) ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING,
+            "Neither a type nor a package exists for '" + qualifiedTypeOrPackageName + "'",
+            configurationClass,
+            mirror,
+            configuredValue
+        );
+    }
+
+    private void printSkipNoteBecauseOfSelfGenerationFor(final TypeElement typeElement) {
+        typeElement.getAnnotationMirrors().stream()
+            .filter(mirror -> ElementSupport.isOfType(mirror, Generated.class.getCanonicalName()))
+            .forEach(mirror -> ElementSupport.logNote(
+                processingEnv,
+                "Generation skipped for: '" + typeElement.getQualifiedName()
+                    + "' because it is already generated by this processor",
+                typeElement,
+                mirror,
+                ElementSupport.valueAttribute(processingEnv, mirror)
+            ));
+    }
+
+    private boolean isSelfGenerated(final Element element) {
+        final Generated generated = element.getAnnotation(Generated.class);
+        return generated != null && Arrays.stream(generated.value())
+            .anyMatch(name -> name.equals(generatorName) || name.equals(LEGACY_GENERATOR_NAME));
+    }
+}

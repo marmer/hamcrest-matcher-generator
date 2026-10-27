@@ -1,0 +1,80 @@
+// header file for arc42-template,
+// including all help texts
+//
+// ====================================
+
+// configure EN settings for asciidoc
+include::_chapters/config.adoc[]
+
+= hamcrest-matcher-generator
+:revnumber: {revnumber}
+:revdate: {revdate}
+:revremark: {revremark}
+:toc-title: Table of Contents
+
+//additional style for arc42 help callouts
+include::_chapters/arc42-help-style.adoc[]
+
+
+
+include::_chapters/about-arc42.adoc[]
+
+// horizontal line
+***
+
+
+
+
+
+// numbering from here on
+:numbered:
+
+<<<<
+// 1. Introduction and Goals
+include::_chapters/01_introduction_and_goals.adoc[]
+
+<<<<
+// 2. Architecture Constraints
+include::_chapters/02_architecture_constraints.adoc[]
+
+<<<<
+// 3. Context and Scope
+include::_chapters/03_context_and_scope.adoc[]
+
+<<<<
+// 4. Solution Strategy
+include::_chapters/04_solution_strategy.adoc[]
+
+<<<<
+// 5. Building Block View
+include::_chapters/05_building_block_view.adoc[]
+
+<<<<
+// 6. Runtime View
+include::_chapters/06_runtime_view.adoc[]
+
+<<<<
+// 7. Deployment View
+include::_chapters/07_deployment_view.adoc[]
+
+<<<<
+// 8. Concepts
+include::_chapters/08_concepts.adoc[]
+
+<<<<
+// 9. Architecture Decisions
+include::_chapters/09_architecture_decisions.adoc[]
+
+<<<<
+// 10. Quality Requirements
+include::_chapters/10_quality_requirements.adoc[]
+
+<<<<
+// 11. Technical Risks
+include::_chapters/11_technical_risks.adoc[]
+
+<<<<
+// 12. Glossary
+include::_chapters/12_glossary.adoc[]
+
+

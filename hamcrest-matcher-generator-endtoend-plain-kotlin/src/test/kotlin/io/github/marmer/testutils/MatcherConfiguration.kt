@@ -1,6 +1,6 @@
 package io.github.marmer.testutils
 
-import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration
+import io.github.marmer.matchergenerator.annotations.GenerateMatchers
 
-@MatcherConfiguration("io.github.marmer.testutils.model")
+@GenerateMatchers("io.github.marmer.testutils.model")
 class MatcherConfiguration 

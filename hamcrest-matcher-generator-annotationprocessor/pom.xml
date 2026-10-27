@@ -6,129 +6,33 @@
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator</artifactId>
+        <artifactId>matcher-generator-parent</artifactId>
         <version>5.1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
+    <packaging>pom</packaging>
+    <name>hamcrest-matcher-generator-annotationprocessor</name>
+    <description>Relocation POM. Moved to hamcrest-matcher-generator since 6.0.0.</description>
 
+    <!-- Resolvers that follow the relocation ignore these dependencies. They keep the old coordinates usable inside a
+        reactor build, where a relocation is not followed (the 5.x compatibility module relies on it). -->
     <dependencies>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup</groupId>
-            <artifactId>javapoet</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.truth</groupId>
-            <artifactId>truth</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.testing.compile</groupId>
-            <artifactId>compile-testing</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-launcher</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito.kotlin</groupId>
-            <artifactId>mockito-kotlin</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.github.marmer.testutils</groupId>
-            <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-            <version>5.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.glytching</groupId>
-            <artifactId>junit-extensions</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId>
-            <scope>test</scope>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArgs>
-                        <arg>-proc:none</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <argLine>
-                        --add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
-                        --add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
-                    </argLine>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <distributionManagement>
+        <relocation>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
+            <message>Since 6.0.0 hamcrest-matcher-generator-annotationprocessor is part of hamcrest-matcher-generator (the Hamcrest backend and its
+                runtime library); the configuration annotations come with it.</message>
+        </relocation>
+    </distributionManagement>
 </project>

@@ -14,6 +14,7 @@ Every implementation ticket names the model its implementer subagent starts with
 - **Exception: `sonnet`**, when the ticket is hard to break down for Haiku, e.g. a cross-cutting design inside the annotation processor or subtle generics handling. Add a one-line reason below the model line.
 - **Rare exception: `opus`**, only when even Sonnet is unlikely to succeed. Always add the reason.
 - A missing model line means `haiku`.
+- **Every checkable requirement is an acceptance criterion.** Implementers build to the criteria, so a constraint that lives only in "What to build" (e.g. "compared character by character") gets dropped; repeat it as a criterion.
 
 ## Orchestration with `/implement-spec`
 
@@ -24,9 +25,26 @@ The orchestrator usually runs on Sonnet. It starts each implementer subagent on 
 - **Escalate Haiku at once** when the orchestrator judges it has taken a fundamentally wrong direction (e.g. misread the ticket, built in the wrong place, worked around the design instead of following it), since follow-ups won't recover that.
 - **Sonnet and Opus get one follow-up** instruction; if the result still misses the bar, escalate (`sonnet` → `opus`). If Opus still misses it, stop and ask the user.
 - **Record every escalation** as a comment on the ticket: from which model to which, and why. These comments feed the retro.
-- **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments.
-- **One hard-to-reverse step per tool call** (create PR, merge, close, push), so a denied or failed step leaves the others intact.
-- **Keep the spec's status current**: pass `--map <spec>` to `issue.py claim`/`close`, and after a merge run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
+- **Subagent briefs** state that the subagent reports back only through its final answer and leaves session tools (`send_message`, `archive_session`, `create_session`) to the orchestrator; Haiku otherwise tends to call them with placeholder arguments. They tell it to take the commit attribution trailer from its own context and give only the `Claude-Session:` line, and to back every claim about the project's history or the code ("version X changed nothing") with the command that shows it, so the orchestrator can re-run it.
+- **A ticket is done when its PR is squash-merged into `development`** (see below), not when the implementer reports: the PR's `Closes #<n>` closes the ticket. Workflow changes (`.github/workflows/`) cannot be verified locally at all, so for those the PR's CI run is the only proof.
+- **One hard-to-reverse step per tool call** (create PR, enable auto-merge, close, push), so a denied or failed step leaves the others intact.
+- **Keep the spec's status current**: pass `--map <spec>` to `issue.py claim`, and after each merged PR run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
+
+## One ticket, one review, one PR
+
+These steps replace steps 3 to 8 of `/implement-spec`: there is no integration branch, no merger subagent and no batch. `development` is the trunk, and every ticket reaches it through its own small PR, so a defect is caught before the next ticket builds on it.
+
+1. **Branch**: the implementer works on `ticket-<n>`, based on the tip of `origin/development`. A ticket is only started when its blockers are merged there.
+2. **Judge**: the orchestrator checks the report against the quality bar above.
+3. **Review**: run `code-review` with both axes (Standards and Spec) on `ticket-<n>` against `origin/development`, so the Spec axis covers exactly this ticket. Findings go back to the same implementer as a follow-up; it counts as an attempt under the escalation rules. Brief which findings to fix and which stay as they are (with the reason). Ask the user only about findings that need their decision.
+4. **PR**: once the review's findings are fixed, the implementer merges the current `origin/development` tip into its branch (never rebase), re-runs the verify builds and reports. The orchestrator pushes the branch and opens a PR into `development` with the `pr` skill: `Closes #<n>`, `Part of #<spec>`. Then it enables auto-merge with the squash method (`enable_pr_auto_merge`), as the owner rule in `docs/agents/wayfinding.md` describes.
+5. **Watch**: subscribe to the PR's activity. Red CI, review threads or a merge conflict are work now: fix them on the branch and push, until GitHub merges it. Then run `issue-status.py <spec>` and start the tickets this merge unblocked from the new `development` tip.
+
+Independent frontier tickets still run in parallel, each with its own branch, review and PR. When a sibling PR merges first and conflicts, merge `origin/development` into the waiting branch and push; never force-push.
+
+## Session-end review
+
+Per-ticket reviews cannot see problems that span tickets: duplicated helpers across tickets, docs drifting from code, two tickets choosing different conventions. When the session stops taking tickets, run `code-review` with both axes on `origin/development` since its tip before the session's first merged PR, so the Spec axis covers all of the session's tickets. Fix its findings in one implementer subagent, through one PR with the same review and auto-merge steps.
 
 ## Retro at the end of every session
 

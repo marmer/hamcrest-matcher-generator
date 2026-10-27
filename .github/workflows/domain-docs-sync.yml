@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check GLOSSARY.md and ADRs are mirrored in arc42 docs
+      - name: Check GLOSSARY.md and ADRs are mirrored in arc42 docs, required checks match CI job names
         run: python3 scripts/agents/check-domain-docs-sync.py
 
       - name: Check agent scripts with a shebang are executable in git

@@ -1,0 +1,201 @@
+name: Release
+
+# release-please keeps a Release PR up to date on main. Merging it creates the tag (`6.0.0`, no `v`, so docs.yml's
+# `[0-9]*` tag trigger fires) and the GitHub Release; the jobs below then build, publish to Maven Central, attest and
+# announce it. A failed publish is re-run with workflow_dispatch and the tag; tags are never moved.
+#
+# Owner setup (docs/agents, ticket #147): GitHub App `RELEASE_APP_ID` (variable) and `RELEASE_APP_PRIVATE_KEY`
+# (secret), and the environment `release` holding CENTRAL_USERNAME, CENTRAL_PASSWORD, MAVEN_GPG_KEY and
+# MAVEN_GPG_PASSPHRASE.
+#
+# Release-PR auto-merge is deliberately NOT enabled: the owner merges the 6.0.0 Release PR by hand. Afterwards remove
+# `release-as` from release-please-config.json, then enable auto-merge for Release PRs.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to (re-)publish, e.g. 6.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PR
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # The App token (not GITHUB_TOKEN) makes the Release PR run its checks and the new tag trigger docs.yml.
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  release-build:
+    name: Release build
+    needs: release-please
+    # `!cancelled()` lets the job run when release-please was skipped (workflow_dispatch), but never after it failed.
+    if: >-
+      ${{ !cancelled() && needs.release-please.result != 'failure' &&
+      (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+    steps:
+      - name: Check the tag
+        run: |
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$TAG' is not a release tag (expected MAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || needs.release-please.outputs.tag_name }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      # Nothing is published unless this is green: the publish job needs this job.
+      - name: Verify
+        run: ./mvnw -B clean verify
+
+  publish:
+    name: Publish to Maven Central
+    needs: [ release-please, release-build ]
+    if: ${{ !cancelled() && needs.release-build.result == 'success' }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write       # create the GitHub Release if release-please did not (workflow_dispatch)
+      id-token: write       # build-provenance attestation
+      attestations: write
+    outputs:
+      artifact_id: ${{ steps.coordinates.outputs.artifact_id }}
+      version: ${{ steps.coordinates.outputs.version }}
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || needs.release-please.outputs.tag_name }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      # The release profile signs with the BC signer (MAVEN_GPG_KEY, MAVEN_GPG_PASSPHRASE) and attaches sources,
+      # Javadoc and the CycloneDX SBOM. central-publishing-maven-plugin waits until Central reports `published`, so
+      # this step only succeeds for a confirmed publish. The tests ran in the release-build job.
+      - name: Deploy to Maven Central
+        run: ./mvnw -B -P release -DskipTests deploy
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Collect the published artifacts
+        run: |
+          mkdir -p "$RUNNER_TEMP/dist"
+          # The modules excluded from Central in the release profile (end-to-end, docs) are not release artifacts.
+          find . -path '*/target/*.jar' -not -path '*endtoend*' -not -path './docs/*' -exec cp {} "$RUNNER_TEMP/dist/" \;
+          ls -l "$RUNNER_TEMP/dist"
+
+      - uses: actions/attest@v2
+        with:
+          subject-path: ${{ runner.temp }}/dist/*.jar
+
+      - name: Ensure the GitHub Release exists
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - id: coordinates
+        name: Read the Maven coordinates
+        run: |
+          {
+            echo "artifact_id=$(./mvnw -B -q -pl hamcrest-matcher-generator org.apache.maven.plugins:maven-help-plugin:3.5.2:evaluate -Dexpression=project.artifactId -DforceStdout)"
+            echo "version=$(./mvnw -B -q -pl hamcrest-matcher-generator org.apache.maven.plugins:maven-help-plugin:3.5.2:evaluate -Dexpression=project.version -DforceStdout)"
+          } >> "$GITHUB_OUTPUT"
+
+  announce:
+    name: Announce release
+    needs: [ release-please, publish ]
+    if: ${{ !cancelled() && needs.publish.result == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+      ARTIFACT_ID: ${{ needs.publish.outputs.artifact_id }}
+      VERSION: ${{ needs.publish.outputs.version }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag || needs.release-please.outputs.tag_name }}
+
+      - id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # One comment on the merged Release PR is the owner's single notification for a release.
+      - name: Comment on the merged Release PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          sha=$(git rev-list -n 1 "refs/tags/$TAG")
+          pr=$(gh api "repos/$REPO/commits/$sha/pulls" \
+            --jq '[.[] | select(.merged_at != null and (.head.ref | startswith("release-please--")))][0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "::error::No merged Release PR found for $TAG ($sha)"
+            exit 1
+          fi
+          anchor=$(scripts/release/changelog-anchor.sh "$VERSION")
+          central="https://central.sonatype.com/artifact/io.github.marmer.testutils/$ARTIFACT_ID/$VERSION"
+          release="https://github.com/$REPO/releases/tag/$TAG"
+          changelog="https://github.com/$REPO/blob/$TAG/CHANGELOG.md#$anchor"
+          gh pr comment "$pr" --repo "$REPO" --body "@marmer $TAG is published.
+
+          - [Maven Central]($central)
+          - [GitHub Release]($release)
+          - [CHANGELOG]($changelog)"

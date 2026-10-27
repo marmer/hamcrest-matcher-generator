@@ -11,31 +11,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build + run integration tests
 ./mvnw clean verify
 
+# Other JDKs in cloud sessions (the SessionStart hook installs Temurin 17 and the newest GA)
+JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify
+JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
+
 # Windows with jabba-managed JDK
 JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin:$PATH" ./mvnw clean install
 
 # Single unit test class
-./mvnw test -pl hamcrest-matcher-generator-annotationprocessor -Dtest=ClassName
+./mvnw test -pl hamcrest-matcher-generator -Dtest=ClassName
 
 # Single integration test class
-./mvnw failsafe:integration-test -pl hamcrest-matcher-generator-annotationprocessor -Dit.test=ClassName
+./mvnw failsafe:integration-test -pl hamcrest-matcher-generator -Dit.test=ClassName
 
-# Release build (adds GPG signing, Javadoc; still targets the dead OSSRH, see wayfinder map #52)
-./mvnw clean install -P release
+# Release build (adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
+./mvnw verify -P release    # dry run, no publishing
 ```
 
 Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<profiles>`); read them there.
 
 ## Module Structure
 
-The core modules are `hamcrest-matcher-generator-dependencies` (`@MatcherConfiguration` + `BeanPropertyMatcher` runtime base) and `hamcrest-matcher-generator-annotationprocessor` (the processor). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
+The published modules are `matcher-generator-annotations` (`@GenerateMatchers` and the deprecated 5.x alias `@MatcherConfiguration`, the only type left in the old package), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test) and `hamcrest-matcher-generator` (the Hamcrest backend, registered via `ServiceLoader`, plus the `BeanPropertyMatcher` runtime library). `hamcrest-matcher-generator-dependencies` and `hamcrest-matcher-generator-annotationprocessor` are relocation POMs to `hamcrest-matcher-generator` for 5.x users (ADR 0002); the parent is `matcher-generator-parent`. Each published jar sets `Automatic-Module-Name` to its package root (`AutomaticModuleNameIT`). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers; the current set is in the root `pom.xml`.
 
 ## Architecture: Generation Flow
 
-1. Compiler detects `@MatcherConfiguration` on a type (SOURCE retention, in `dependencies` module)
-2. `MatcherGenerationProcessor.java` — APT entry point, delegates immediately to the Kotlin worker
-3. `MatcherGenerationProcessorWorker.kt` — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, passes each to `MatcherGenerator`
-4. `MatcherGenerator.kt` — builds a `<TypeName>Matcher` class via JavaPoet; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
+1. Compiler detects `@GenerateMatchers` (CLASS retention) or the deprecated `@MatcherConfiguration` (SOURCE retention) on a type (both in the `annotations` module)
+2. `MatcherGenerationProcessor.java` (core) — APT entry point, delegates immediately to the worker and loads every `GeneratorBackend` via `ServiceLoader`
+3. `MatcherGenerationProcessorWorker.java` (core) — resolves configured class names or package strings to `TypeElement`s, skips already-`@Generated` types, builds an immutable `TypeModel` per type with `TypeModelFactory`, runs every backend on it and writes the returned `GeneratedSource` (Java via `createSourceFile`, Kotlin written into the directory of the `kapt.kotlin.generated` processor option)
+4. `HamcrestGeneratorBackend.java` / `MatcherGenerator.java` (Hamcrest backend, package `io.github.marmer.matchergenerator.hamcrest`) — builds a `<TypeName>Matcher` class via JavaPoet from the `TypeModel`; the generated class extends `TypeSafeMatcher<T>` and wraps an internal `BeanPropertyMatcher<T>` instance
 
 **Generated matcher API** (per property `foo`):
 ```java
@@ -57,19 +61,23 @@ The flow must be: KAPT generates → `add-test-source` registers → javac compi
 
 ## Testing Approach
 
-Annotation processor tests (file `MatcherGenerationProcessorWorkerIT.kt`, class `MatcherGenerationProcessorIT`: use the class name for `-Dit.test`) use **Google Compile Testing**: they compile in-memory Java source strings and assert on the generated output. This runs as a Maven Failsafe integration test.
+Annotation processor tests (file `MatcherGenerationProcessorIT.java` in `hamcrest-matcher-generator/src/test/java`, class `MatcherGenerationProcessorIT`: use the class name for `-Dit.test`) use **Google Compile Testing**: they compile in-memory Java source strings and assert on the generated output. Expected generated sources are **golden files** under `src/test/resources/io/github/marmer/matchergenerator/hamcrest/MatcherGenerationProcessorIT/<scenario>/`, compared character for character: `assertGeneratedSource` reads the golden file and `assertEquals`s it against the generated file's `getCharContent(true)`, so any whitespace difference fails. This runs as a Maven Failsafe integration test.
+
+Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with `-pl matcher-generator-core -Dit.test=CoreProcessorIT`) use the same harness with a **recording test backend** (registered via `META-INF/services` in the core test resources) and assert on the recorded `TypeModel` instead of generated Hamcrest code.
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit 5 unit tests.
 
-End-to-end modules are the final validation layer: they apply `@MatcherConfiguration` to real POJOs and exercise the generated matchers in actual test assertions.
+End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. `endtoend-5x-compatibility` is the exception: it is an unchanged 5.x suite (old annotation, old artifact coordinates) and must keep compiling and passing without edits. A reactor build does not follow relocations, so the relocation POMs also declare the target as a dependency, and `RelocationPomTest` checks the relocation itself.
 
 ## Known Pitfalls
 
-- **compile-testing on Java 17** requires `--add-opens=jdk.compiler/com.sun.tools.javac.*=ALL-UNNAMED` in Failsafe `<argLine>` — already configured in the annotationprocessor pom.
+- **compile-testing on Java 17** requires `--add-opens=jdk.compiler/com.sun.tools.javac.*=ALL-UNNAMED` in Failsafe `<argLine>` — configured once in the root pom's `pluginManagement` for `maven-failsafe-plugin` (next to the `module.jar` property), so no module repeats it.
+- **Unresolvable names fail the build for `@GenerateMatchers`**: one error per name. The deprecated `@MatcherConfiguration` only warns, as in 5.x, so keep configured names in `@GenerateMatchers` resolvable. Set `-Amatchergenerator.verbose` to see one note per skipped property with its reason.
+- **`docs` module needs JDK 21+**: it is only built when the root profile `docs` (`<jdk>[21,)</jdk>`) is active, so a JDK 17 build skips it silently.
 - **JUnit Platform version mismatch**: Surefire 3.5.2 needs `junit-platform-launcher:1.12.1` explicitly on the classpath — already in root pom.
 - **KAPT generated sources not found**: use `build-helper-maven-plugin:add-test-source` to register `target/generated-sources/kapt/test` *before* the compile phase; do not use antrun to move files.
 - **JDK 25 implicit annotation processing disabled**: `@AutoService` was removed from `MatcherGenerationProcessor.java`; a manual `META-INF/services/javax.annotation.processing.Processor` resource is used instead. The `endtoend-plain-java-minimal` module uses `<annotationProcessorPaths>` to declare the AP explicitly.
-- **Lombok on JDK 25**: requires Lombok ≥ 1.18.44; version 1.18.36 does not support JDK 25.
+- **Lombok on newer JDKs**: each JDK needs a Lombok release that supports it (JDK 25 ≥ 1.18.44, JDK 27 ≥ 1.18.48); an unsupported JDK fails in javac with `ExceptionInInitializerError: com.sun.tools.javac.tree.EndPosTable`.
 - **Agent edits to `.claude/settings*.json` are blocked** in auto mode (Self-Modification): give the owner the exact snippet to add instead of loading `update-config`.
 - **Maven Central HTTP 429** (rate limit, frequent with parallel subagents sharing `~/.m2`): Maven may store the 429 error text as a `.pom` or `.jar` in `~/.m2/repository`, failing later builds ("Non-parseable POM", `NoClassDefFoundError`). Delete that version directory and rebuild offline with `-o`; the SessionStart hook pre-fetches dependencies for that and logs to /tmp/session-start.log; if ~/.m2 is empty, read that log first.
 
@@ -85,7 +93,7 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 
 ### Domain docs
 
-Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root (created lazily). The human-facing arc42 docs (`docs/arc42.adoc`, `docs/src/`) must be kept in sync with them. See `docs/agents/domain.md`.
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root (created lazily). The human-facing arc42 docs (`docs/src/docs/asciidoc/architecture/index.adoc`, chapters in `docs/src/docs/asciidoc/architecture/_chapters/`, built by the `docs` Maven module) must be kept in sync with them. See `docs/agents/domain.md`.
 
 ### Implementation process
 

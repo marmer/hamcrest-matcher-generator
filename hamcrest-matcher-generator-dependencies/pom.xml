@@ -1,61 +1,38 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>hamcrest-matcher-generator</artifactId>
+        <artifactId>matcher-generator-parent</artifactId>
         <version>5.1.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
+    <packaging>pom</packaging>
     <name>hamcrest-matcher-generator-dependencies</name>
-    <description>Dependencies for projects using generated classes of hamcrest-matcher-generator</description>
+    <description>Relocation POM. Moved to hamcrest-matcher-generator since 6.0.0.</description>
 
+    <!-- Resolvers that follow the relocation ignore these dependencies. They keep the old coordinates usable inside a
+        reactor build, where a relocation is not followed (the 5.x compatibility module relies on it). -->
     <dependencies>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-            <scope>provided</scope>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.44</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
+    <distributionManagement>
+        <relocation>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
+            <message>Since 6.0.0 hamcrest-matcher-generator-dependencies is part of hamcrest-matcher-generator (the Hamcrest backend and its
+                runtime library); the configuration annotations come with it.</message>
+        </relocation>
+    </distributionManagement>
 </project>
