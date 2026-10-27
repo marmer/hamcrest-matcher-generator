@@ -46,7 +46,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <!-- Shared by dependencyManagement and the Lombok end-to-end module's annotationProcessorPaths, which does not read it. -->
+        <!-- Shared by dependencyManagement and the Lombok end-to-end module's annotationProcessorPaths, which does not read it.
+             The frozen 5.x suite pins its own literal and does not follow this property. -->
         <lombok.version>1.18.48</lombok.version>
         <!-- Filled by jacoco prepare-agent (unit tests) and prepare-agent-integration (ITs) in modules that measure coverage. -->
         <argLine></argLine>
