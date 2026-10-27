@@ -10,14 +10,15 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
@@ -112,23 +113,29 @@ public class MatcherGenerationProcessorWorker {
             );
             return;
         }
-        getAllTypeElementsFor(configurationElement, mirrors.get(0))
-            .forEach((typeElement, configuredTypes) -> {
-                if (isSelfGenerated(typeElement)) {
-                    printSkipNoteBecauseOfSelfGenerationFor(typeElement);
-                } else {
-                    generateFor(typeElement, configuredTypes, configurationElement, mirrors.get(0));
-                }
-            });
+        final AnnotationMirror configurationMirror = mirrors.get(0);
+        final Map<String, AnnotationValue> exclusions = distinctEntries(configurationMirror, EXCLUDE_ATTRIBUTE);
+        final Predicate<TypeElement> excluded = excludedBy(exclusions);
+        final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
+            getAllTypeElementsFor(configurationElement, configurationMirror);
+        warnAboutUnmatchedExclusions(typesByGeneratedType, configurationElement, configurationMirror, exclusions);
+        withoutExcludedTypes(typesByGeneratedType, excluded).forEach((typeElement, configuredTypes) -> {
+            if (isSelfGenerated(typeElement)) {
+                printSkipNoteBecauseOfSelfGenerationFor(typeElement);
+            } else {
+                generateFor(typeElement, configuredTypes, configurationElement, configurationMirror, excluded);
+            }
+        });
     }
 
     private void generateFor(
         final TypeElement typeElement,
         final Set<TypeElement> configuredTypes,
         final Element configurationElement,
-        final AnnotationMirror configurationMirror
+        final AnnotationMirror configurationMirror,
+        final Predicate<TypeElement> excluded
     ) {
-        final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror)
+        final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror, excluded)
             .create(typeElement);
         configuredTypes.forEach(configuredType -> warnIfWithoutProperties(model, configuredType));
         final GenerationContext context = new GenerationContext(generatorName, timeProvider.get());
@@ -238,12 +245,9 @@ public class MatcherGenerationProcessorWorker {
         final AnnotationMirror configurationMirror
     ) {
         final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        final Set<String> handledNames = new HashSet<>();
-        attributeValues(configurationMirror, VALUE_ATTRIBUTE).stream()
-            .filter(value -> handledNames.add((String) value.getValue()))
-            .forEach(value -> getAllTypeElementsFor(
-                (String) value.getValue(), configurationElement, configurationMirror, value, result));
-        return withoutExcludedTypes(result, configurationElement, configurationMirror);
+        distinctEntries(configurationMirror, VALUE_ATTRIBUTE).forEach((name, configuredValue) ->
+            getAllTypeElementsFor(name, configurationElement, configurationMirror, configuredValue, result));
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -253,25 +257,35 @@ public class MatcherGenerationProcessorWorker {
     }
 
     /**
-     * Leaves out the configured types an {@code exclude} entry names, either by class name or by package. Every entry
-     * that matches no configured type is one warning at the entry. A generated type whose configured types are all
-     * excluded is not generated at all.
+     * The entries of a list attribute, each name once, with the value that named it first, so that a diagnostic can
+     * point at it.
      */
-    private Map<TypeElement, Set<TypeElement>> withoutExcludedTypes(
-        final Map<TypeElement, Set<TypeElement>> types,
+    private Map<String, AnnotationValue> distinctEntries(final AnnotationMirror configurationMirror, final String name) {
+        final Map<String, AnnotationValue> entries = new LinkedHashMap<>();
+        attributeValues(configurationMirror, name)
+            .forEach(entry -> entries.putIfAbsent((String) entry.getValue(), entry));
+        return entries;
+    }
+
+    private Predicate<TypeElement> excludedBy(final Map<String, AnnotationValue> exclusions) {
+        return type -> exclusions.keySet().stream().anyMatch(entry -> isNamedBy(type, entry));
+    }
+
+    /**
+     * Every exclusion that names none of the types the processor models, neither a generated type nor one of their
+     * public member types, is one warning at the exclusion.
+     */
+    private void warnAboutUnmatchedExclusions(
+        final Map<TypeElement, Set<TypeElement>> typesByGeneratedType,
         final Element configurationElement,
-        final AnnotationMirror configurationMirror
+        final AnnotationMirror configurationMirror,
+        final Map<String, AnnotationValue> exclusions
     ) {
-        final Set<String> handledNames = new HashSet<>();
-        final List<AnnotationValue> exclusions = attributeValues(configurationMirror, EXCLUDE_ATTRIBUTE).stream()
-            .filter(exclusion -> handledNames.add((String) exclusion.getValue()))
+        final List<TypeElement> modelledTypes = typesByGeneratedType.keySet().stream()
+            .flatMap(generatedType -> withPublicMemberTypes(generatedType).stream())
             .collect(Collectors.toList());
-        final Set<TypeElement> configuredTypes = types.values().stream()
-            .flatMap(Set::stream)
-            .collect(Collectors.toSet());
-        for (final AnnotationValue exclusion : exclusions) {
-            final String name = (String) exclusion.getValue();
-            if (configuredTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
+        exclusions.forEach((name, exclusion) -> {
+            if (modelledTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
                 processingEnv.getMessager().printMessage(
                     Diagnostic.Kind.WARNING,
                     "Exclusion '" + name + "' matches no configured type",
@@ -280,15 +294,38 @@ public class MatcherGenerationProcessorWorker {
                     exclusion
                 );
             }
-        }
+        });
+    }
+
+    /**
+     * The type followed by its public member types, recursively, which is the set of types the type model holds.
+     */
+    private static List<TypeElement> withPublicMemberTypes(final TypeElement type) {
+        final List<TypeElement> result = new ArrayList<>();
+        result.add(type);
+        type.getEnclosedElements().stream()
+            .filter(TypeElement.class::isInstance)
+            .map(TypeElement.class::cast)
+            .filter(ElementSupport::isPublic)
+            .forEach(member -> result.addAll(withPublicMemberTypes(member)));
+        return result;
+    }
+
+    /**
+     * Drops excluded generated types with all their configured types, and the excluded configured types of the
+     * generated types that stay. A generated type without configured types left is not generated.
+     */
+    private static Map<TypeElement, Set<TypeElement>> withoutExcludedTypes(
+        final Map<TypeElement, Set<TypeElement>> typesByGeneratedType,
+        final Predicate<TypeElement> excluded
+    ) {
         final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        types.forEach((type, configured) -> {
-            final Set<TypeElement> kept = configured.stream()
-                .filter(configuredType -> exclusions.stream()
-                    .noneMatch(exclusion -> isNamedBy(configuredType, (String) exclusion.getValue())))
+        typesByGeneratedType.forEach((generatedType, configuredTypes) -> {
+            final Set<TypeElement> kept = configuredTypes.stream()
+                .filter(excluded.negate())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-            if (!kept.isEmpty()) {
-                result.put(type, kept);
+            if (!excluded.test(generatedType) && !kept.isEmpty()) {
+                result.put(generatedType, kept);
             }
         });
         return result;
