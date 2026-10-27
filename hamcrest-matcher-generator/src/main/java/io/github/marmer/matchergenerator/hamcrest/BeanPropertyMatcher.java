@@ -2,7 +2,6 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.hamcrest.Matchers.allOf;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,8 +74,9 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     private boolean hasAccessibleMethod(String methodName) {
         try {
-            Method m = expectedClass.getMethod(methodName);
-            return m.getParameterCount() == 0;
+            // getMethod without parameter types only finds methods without parameters
+            expectedClass.getMethod(methodName);
+            return true;
         } catch (NoSuchMethodException e) {
             return false;
         }
