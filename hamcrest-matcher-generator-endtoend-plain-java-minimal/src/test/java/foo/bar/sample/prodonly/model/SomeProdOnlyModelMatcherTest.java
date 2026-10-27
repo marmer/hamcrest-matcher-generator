@@ -14,7 +14,11 @@ class SomeProdOnlyModelMatcherTest {
     @SneakyThrows
     void test_ProdMatcherCanBeGeneratedIfMatcherConfigurationIsLocatedNearbyProductionSources() {
         assertThat(new SomeProdOnlyModel() {
-        }, isSomeProdOnlyModel());
+            @Override
+            public String getSomeProdOnlyProp() {
+                return "prodValue";
+            }
+        }, isSomeProdOnlyModel().withSomeProdOnlyProp("prodValue"));
     }
 
 }

@@ -6,9 +6,9 @@
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>matcher-generator-parent</artifactId>
+        <artifactId>hamcrest-matcher-generator-endtoend</artifactId>
         <version>5.1.0</version>
-        <relativePath>..</relativePath>
+        <relativePath>../hamcrest-matcher-generator-endtoend/pom.xml</relativePath>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-endtoend-plain-kotlin</artifactId>
@@ -83,30 +83,27 @@
                                 <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
-                                <sourceDir>${project.build.directory}/generated-test-sources/test-annotations
-                                </sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
+                <!-- javac compiles only the KAPT matchers that Java sources reference, unless the output is a test source root. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
-                        <phase>process-test-sources</phase>
+                        <id>add-kapt-test-sources</id>
+                        <phase>generate-test-sources</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>add-test-source</goal>
                         </goals>
                         <configuration>
-                            <target>
-                                <move todir="${project.basedir}/target/generated-test-sources/test-annotations"
-                                    force="true">
-                                    <fileset dir="${project.basedir}/target/generated-sources/kapt/test/"/>
-                                </move>
-                            </target>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/kapt/test</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>

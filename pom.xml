@@ -508,11 +508,7 @@
         <profile>
             <id>dev</id>
             <modules>
-                <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
-                <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
-                <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
-                <module>hamcrest-matcher-generator-endtoend-java-records</module>
-                <module>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</module>
+                <module>hamcrest-matcher-generator-endtoend</module>
             </modules>
             <activation>
                 <property>
@@ -576,10 +572,12 @@
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <configuration>
                             <excludeArtifacts>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-java-minimal</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-kotlin</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-java-records</excludeArtifact>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend-lombok</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                             </excludeArtifacts>

@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
-        <artifactId>matcher-generator-parent</artifactId>
+        <artifactId>hamcrest-matcher-generator-endtoend</artifactId>
         <version>5.1.0</version>
+        <relativePath>../hamcrest-matcher-generator-endtoend/pom.xml</relativePath>
     </parent>
 
     <artifactId>hamcrest-matcher-generator-endtoend-java-records</artifactId>
