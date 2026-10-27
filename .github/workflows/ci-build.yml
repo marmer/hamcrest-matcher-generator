@@ -120,8 +120,10 @@ jobs:
           key: ${{ runner.os }}-m2-release-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2-release-
 
-      - name: Release build without signing and publishing
-        run: ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
+      # The CycloneDX skip and the missing BOMs only show up in the deploy lifecycle with the central-publishing
+      # extension, not in verify. skipPublishing=true uploads nothing; the dummy settings only supply the server entry.
+      - name: Release deploy lifecycle without signing and publishing
+        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
 
       - name: Check release artifacts
         run: scripts/ci/check-release-artifacts.sh release-dry-run.log
