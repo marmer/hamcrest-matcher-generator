@@ -897,6 +897,86 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
+    @DisplayName(
+            "Completeness check methods should be generated: ignoring per property and checking all")
+    void completenessCheckMethodsShouldBeGenerated() throws IOException {
+        // Preparation
+        JavaFileObject configuration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SomeConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+            @MatcherConfiguration({"some.other.pck.SimplePojo"})
+            public final class SomeConfiguration{
+
+            }
+            """);
+        JavaFileObject javaFileObject =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.SimplePojo",
+                        """
+            package some.other.pck;
+
+            public interface SimplePojo {
+                String getProperty();
+            }
+            """);
+
+        // Execution
+        Compilation compilation = compile(configuration, javaFileObject);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "completeness-check-methods-should-be-generated",
+                "some.other.pck.SimplePojoMatcher");
+    }
+
+    @Test
+    @DisplayName(
+            "Completeness check methods should be generated for types configured with GenerateMatchers")
+    void completenessCheckMethodsShouldBeGeneratedForGenerateMatchers() throws IOException {
+        // Preparation
+        JavaFileObject configuration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SomeConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.SimplePojo")
+            public final class SomeConfiguration{
+
+            }
+            """);
+        JavaFileObject javaFileObject =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.SimplePojo",
+                        """
+            package some.other.pck;
+
+            public interface SimplePojo {
+                String getProperty();
+            }
+            """);
+
+        // Execution
+        Compilation compilation = compile(configuration, javaFileObject);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "completeness-check-methods-should-be-generated",
+                "some.other.pck.SimplePojoMatcher");
+    }
+
+    @Test
     @DisplayName("Generics and wildcard properties should be handled properly")
     void genericsAndWildcardPropertiesShouldBeHandledProperly() throws IOException {
         // Preparation

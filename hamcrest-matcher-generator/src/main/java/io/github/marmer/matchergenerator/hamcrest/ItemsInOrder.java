@@ -29,7 +29,11 @@ public final class ItemsInOrder<E> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(final Object value, final String path, final List<String> failures) {
+    void collectFailures(
+            final Object value,
+            final String path,
+            final List<String> failures,
+            final List<String> unaddressed) {
         final List<?> items = elementsOf(value);
         if (items.size() != itemMatchers.size()) {
             failures.add(
@@ -42,7 +46,7 @@ public final class ItemsInOrder<E> extends PathAwareMatcher {
         }
         for (var i = 0; i < Math.min(items.size(), itemMatchers.size()); i++) {
             BeanPropertyMatcher.collectValueFailures(
-                    itemMatchers.get(i), items.get(i), path + "[" + i + "]", failures);
+                    itemMatchers.get(i), items.get(i), path + "[" + i + "]", failures, unaddressed);
         }
     }
 

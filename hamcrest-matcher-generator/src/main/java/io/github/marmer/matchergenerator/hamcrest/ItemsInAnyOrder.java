@@ -36,7 +36,11 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(final Object value, final String path, final List<String> failures) {
+    void collectFailures(
+            final Object value,
+            final String path,
+            final List<String> failures,
+            final List<String> unaddressed) {
         final List<?> items = elementsOf(value);
         final int[] matcherOfItem = assignMatchersToItems(items);
         final boolean[] matcherAssigned = new boolean[itemMatchers.size()];

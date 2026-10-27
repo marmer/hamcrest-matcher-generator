@@ -36,6 +36,16 @@ public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterf
     return this;
   }
 
+  public SimplePojoInterfaceMatcher ignoringSomeStringProperty() {
+    beanPropertyMatcher.ignore("someStringProperty");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher() {
     return beanPropertyMatcher;

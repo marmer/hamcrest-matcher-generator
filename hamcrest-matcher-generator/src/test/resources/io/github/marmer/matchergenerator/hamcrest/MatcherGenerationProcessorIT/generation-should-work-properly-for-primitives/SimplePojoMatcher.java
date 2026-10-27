@@ -164,6 +164,56 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
+  public SimplePojoMatcher ignoringIntProperty() {
+    beanPropertyMatcher.ignore("intProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringShortProperty() {
+    beanPropertyMatcher.ignore("shortProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringLongProperty() {
+    beanPropertyMatcher.ignore("longProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringDoubleProperty() {
+    beanPropertyMatcher.ignore("doubleProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringFloatProperty() {
+    beanPropertyMatcher.ignore("floatProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringCharProperty() {
+    beanPropertyMatcher.ignore("charProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringByteProperty() {
+    beanPropertyMatcher.ignore("byteProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringBooleanProperty() {
+    beanPropertyMatcher.ignore("booleanProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SimplePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;

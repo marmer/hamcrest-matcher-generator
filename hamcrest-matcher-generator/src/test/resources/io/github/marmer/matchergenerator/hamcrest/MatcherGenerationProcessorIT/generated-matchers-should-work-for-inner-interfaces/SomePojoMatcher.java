@@ -36,6 +36,16 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
     return this;
   }
 
+  public SomePojoMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SomePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SomePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -69,6 +79,11 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
 
     public InnerInterfaceMatcher() {
       beanPropertyMatcher = new BeanPropertyMatcher<SomePojo.InnerInterface>(SomePojo.InnerInterface.class);
+    }
+
+    public InnerInterfaceMatcher checkingAllProperties() {
+      beanPropertyMatcher.checkingAllProperties();
+      return this;
     }
 
     @Override

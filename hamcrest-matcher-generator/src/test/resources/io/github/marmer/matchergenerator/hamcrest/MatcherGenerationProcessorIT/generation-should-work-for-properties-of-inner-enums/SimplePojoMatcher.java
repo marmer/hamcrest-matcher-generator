@@ -37,6 +37,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
+  public SimplePojoMatcher ignoringSomeProperty() {
+    beanPropertyMatcher.ignore("someProperty");
+    return this;
+  }
+
+  public SimplePojoMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
     return beanPropertyMatcher;
@@ -70,6 +80,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
 
     public InnerTypeMatcher() {
       beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType>(SimplePojo.InnerType.class);
+    }
+
+    public InnerTypeMatcher checkingAllProperties() {
+      beanPropertyMatcher.checkingAllProperties();
+      return this;
     }
 
     @Override
@@ -135,6 +150,21 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
 
       public InnerEnumMatcher withClass(final Class<?> value) {
         beanPropertyMatcher.with("class", Matchers.equalTo(value));
+        return this;
+      }
+
+      public InnerEnumMatcher ignoringDeclaringClass() {
+        beanPropertyMatcher.ignore("declaringClass");
+        return this;
+      }
+
+      public InnerEnumMatcher ignoringClass() {
+        beanPropertyMatcher.ignore("class");
+        return this;
+      }
+
+      public InnerEnumMatcher checkingAllProperties() {
+        beanPropertyMatcher.checkingAllProperties();
         return this;
       }
 

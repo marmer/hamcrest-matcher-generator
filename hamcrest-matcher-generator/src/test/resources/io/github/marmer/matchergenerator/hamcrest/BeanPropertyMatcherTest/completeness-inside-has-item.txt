@@ -1,0 +1,3 @@
+
+Expected: Booking with 1 property check
+     but: contacts: expected a collection containing Contact {name "Ada"} but mismatches were: [Contact {neither checked nor ignored: phone, address}]

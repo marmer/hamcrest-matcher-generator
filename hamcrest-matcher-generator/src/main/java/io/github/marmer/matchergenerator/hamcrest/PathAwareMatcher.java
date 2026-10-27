@@ -40,15 +40,22 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
      */
     abstract boolean appliesTo(Object value);
 
-    /** Adds the failures for a value this matcher {@link #appliesTo applies to}. */
-    abstract void collectFailures(Object value, String path, List<String> failures);
+    /**
+     * Adds the failures for a value this matcher {@link #appliesTo applies to}. Unaddressed
+     * properties of generated matchers in the items are added to {@code unaddressed}.
+     */
+    abstract void collectFailures(
+            Object value, String path, List<String> failures, List<String> unaddressed);
 
     abstract void collectChecks(String path, List<BeanPropertyMatcher.Check> checks);
 
     final void collectFailuresOf(
-            final @Nullable Object value, final String path, final List<String> failures) {
+            final @Nullable Object value,
+            final String path,
+            final List<String> failures,
+            final List<String> unaddressed) {
         if (value != null && appliesTo(value)) {
-            collectFailures(value, path, failures);
+            collectFailures(value, path, failures, unaddressed);
         } else {
             failures.add(
                     BeanPropertyMatcher.withPath(
@@ -78,7 +85,9 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
 
     private List<String> failuresOf(final @Nullable Object actual) {
         final List<String> failures = new ArrayList<>();
-        collectFailuresOf(actual, "", failures);
+        final List<String> unaddressed = new ArrayList<>();
+        collectFailuresOf(actual, "", failures, unaddressed);
+        BeanPropertyMatcher.addUnaddressedLine(failures, unaddressed);
         return failures;
     }
 }

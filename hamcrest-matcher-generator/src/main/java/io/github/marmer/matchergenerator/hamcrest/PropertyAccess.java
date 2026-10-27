@@ -43,7 +43,11 @@ final class PropertyAccess {
                         .collect(Collectors.toUnmodifiableList()));
     }
 
-    private static boolean isDeclaredByObject(final String propertyName) {
+    /**
+     * @return whether the property is one every object has (such as {@code class}), declared by
+     *     {@link Object} rather than by the type
+     */
+    static boolean isDeclaredByObject(final String propertyName) {
         return Arrays.stream(Object.class.getMethods())
                 .filter(method -> method.getParameterCount() == 0)
                 .anyMatch(

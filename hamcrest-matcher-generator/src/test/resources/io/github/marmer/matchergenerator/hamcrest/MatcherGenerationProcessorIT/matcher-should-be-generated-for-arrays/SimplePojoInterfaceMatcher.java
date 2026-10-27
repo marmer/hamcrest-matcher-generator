@@ -100,6 +100,36 @@ public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterf
     return this;
   }
 
+  public SimplePojoInterfaceMatcher ignoringSomeStringArray() {
+    beanPropertyMatcher.ignore("someStringArray");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher ignoringSomeMultidimensionalStringArray() {
+    beanPropertyMatcher.ignore("someMultidimensionalStringArray");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher ignoringSomeInnerTypeArray() {
+    beanPropertyMatcher.ignore("someInnerTypeArray");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher ignoringSomePrimitiveArray() {
+    beanPropertyMatcher.ignore("somePrimitiveArray");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher ignoringSomeMultidimensionalPrimitiveArray() {
+    beanPropertyMatcher.ignore("someMultidimensionalPrimitiveArray");
+    return this;
+  }
+
+  public SimplePojoInterfaceMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher() {
     return beanPropertyMatcher;

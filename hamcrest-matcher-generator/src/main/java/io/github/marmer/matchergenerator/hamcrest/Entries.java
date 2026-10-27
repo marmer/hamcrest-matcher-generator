@@ -42,7 +42,11 @@ public final class Entries<K, V> extends PathAwareMatcher {
     }
 
     @Override
-    void collectFailures(final Object value, final String path, final List<String> failures) {
+    void collectFailures(
+            final Object value,
+            final String path,
+            final List<String> failures,
+            final List<String> unaddressed) {
         final Map<?, ?> actual = (Map<?, ?>) value;
         valueMatchers.forEach(
                 (key, matcher) -> {
@@ -51,7 +55,8 @@ public final class Entries<K, V> extends PathAwareMatcher {
                                 matcher,
                                 actual.get(key),
                                 path + "[" + keyText(key) + "]",
-                                failures);
+                                failures,
+                                unaddressed);
                     } else {
                         failures.add(
                                 BeanPropertyMatcher.withPath(

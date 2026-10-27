@@ -67,6 +67,26 @@ public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> imple
     return this;
   }
 
+  public SimplePojoEnumMatcher ignoringSomeStringProperty() {
+    beanPropertyMatcher.ignore("someStringProperty");
+    return this;
+  }
+
+  public SimplePojoEnumMatcher ignoringDeclaringClass() {
+    beanPropertyMatcher.ignore("declaringClass");
+    return this;
+  }
+
+  public SimplePojoEnumMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SimplePojoEnumMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher() {
     return beanPropertyMatcher;

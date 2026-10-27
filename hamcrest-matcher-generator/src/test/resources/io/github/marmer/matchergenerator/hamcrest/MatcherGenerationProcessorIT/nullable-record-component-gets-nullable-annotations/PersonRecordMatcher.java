@@ -86,6 +86,31 @@ public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> implement
     return this;
   }
 
+  public PersonRecordMatcher ignoringName() {
+    beanPropertyMatcher.ignore("name");
+    return this;
+  }
+
+  public PersonRecordMatcher ignoringNickname() {
+    beanPropertyMatcher.ignore("nickname");
+    return this;
+  }
+
+  public PersonRecordMatcher ignoringAge() {
+    beanPropertyMatcher.ignore("age");
+    return this;
+  }
+
+  public PersonRecordMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public PersonRecordMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<PersonRecord> beanPropertyMatcher() {
     return beanPropertyMatcher;

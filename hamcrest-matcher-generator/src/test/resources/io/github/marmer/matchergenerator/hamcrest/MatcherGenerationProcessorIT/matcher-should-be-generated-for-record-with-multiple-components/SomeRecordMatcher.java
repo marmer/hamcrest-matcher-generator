@@ -68,6 +68,26 @@ public class SomeRecordMatcher extends TypeSafeMatcher<SomeRecord> implements Ge
     return this;
   }
 
+  public SomeRecordMatcher ignoringName() {
+    beanPropertyMatcher.ignore("name");
+    return this;
+  }
+
+  public SomeRecordMatcher ignoringAge() {
+    beanPropertyMatcher.ignore("age");
+    return this;
+  }
+
+  public SomeRecordMatcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SomeRecordMatcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SomeRecord> beanPropertyMatcher() {
     return beanPropertyMatcher;

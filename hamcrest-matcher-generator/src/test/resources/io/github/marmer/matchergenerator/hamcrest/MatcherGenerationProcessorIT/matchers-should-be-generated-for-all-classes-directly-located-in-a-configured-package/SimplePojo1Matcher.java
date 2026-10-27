@@ -36,6 +36,16 @@ public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> implements 
     return this;
   }
 
+  public SimplePojo1Matcher ignoringClass() {
+    beanPropertyMatcher.ignore("class");
+    return this;
+  }
+
+  public SimplePojo1Matcher checkingAllProperties() {
+    beanPropertyMatcher.checkingAllProperties();
+    return this;
+  }
+
   @Override
   public BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher() {
     return beanPropertyMatcher;

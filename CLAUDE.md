@@ -60,6 +60,8 @@ isSomePojo()
     .withFoo("value")         // equality shorthand
     .withFoo(is("value"))     // Hamcrest matcher overload
     .resetFoo()               // remove this property check (v5.1.0)
+    .ignoringFoo()            // count this property as addressed by the completeness check
+    .checkingAllProperties()  // opt this matcher into the completeness check (off by default)
 ```
 
 ## KAPT Configuration (Kotlin end-to-end modules)
