@@ -1,15 +1,18 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.core;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/**
- * Every published jar carries the license, the NOTICE and the list of third-party dependencies.
- */
+/** Every published jar carries the license, the NOTICE and the list of third-party dependencies. */
 class LicenseFilesIT {
 
     @Test

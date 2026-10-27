@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package foo.bar;
 
 import java.util.List;
@@ -17,20 +21,22 @@ class InheritanceAndGenericLearningTest {
     @Test
     @DisplayName("A generics with inheritance learning test")
     @SneakyThrows
-    // The raw "cast trick" casts demonstrate a documented generics limitation: the assertions only compile through them.
+    // The raw "cast trick" casts demonstrate a documented generics limitation: the assertions only
+    // compile through them.
     @SuppressWarnings("unchecked")
     void test_AGenericsWithInheritanceLearningTest() {
-        final Bottom element = new Bottom() {
-        };
+        final Bottom element = new Bottom() {};
         final Container<Top> topContainer = new Container<>(element);
         final Container<Mid> midContainer = new Container<>(element);
         final Container<Bottom> bottomContainer = new Container<>(element);
 
         MatcherAssert.assertThat(topContainer, getContainerSuperMatcher());
-        MatcherAssert.assertThat(topContainer, (Matcher) getContainerExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                topContainer, (Matcher) getContainerExtendsMatcher()); // cast trick for compiler
         MatcherAssert.assertThat(midContainer, getContainerSuperMatcher());
         MatcherAssert.assertThat(midContainer, getContainerExtendsMatcher());
-        MatcherAssert.assertThat(bottomContainer, (Matcher) getContainerSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                bottomContainer, (Matcher) getContainerSuperMatcher()); // cast trick for compiler
         MatcherAssert.assertThat(bottomContainer, getContainerExtendsMatcher());
 
         final List<Top> topList = List.of(element);
@@ -38,26 +44,36 @@ class InheritanceAndGenericLearningTest {
         final List<Bottom> bottomList = List.of(element);
 
         MatcherAssert.assertThat(topList, getListSuperMatcher());
-        MatcherAssert.assertThat(topList, (Matcher) getListExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                topList, (Matcher) getListExtendsMatcher()); // cast trick for compiler
         MatcherAssert.assertThat(midList, getListSuperMatcher());
         MatcherAssert.assertThat(midList, getListExtendsMatcher());
-        MatcherAssert.assertThat(bottomList, (Matcher) getListSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                bottomList, (Matcher) getListSuperMatcher()); // cast trick for compiler
         MatcherAssert.assertThat(bottomList, getListExtendsMatcher());
 
         MatcherAssert.assertThat(topList, getListSuperSuperMatcher());
-        MatcherAssert.assertThat(topList, (Matcher) getListSuperExtendsMatcher()); // cast trick for compiler
-        MatcherAssert.assertThat(topList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
-        MatcherAssert.assertThat(topList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                topList, (Matcher) getListSuperExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                topList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                topList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
 
         MatcherAssert.assertThat(midList, getListSuperSuperMatcher());
         MatcherAssert.assertThat(midList, getListSuperExtendsMatcher());
-        MatcherAssert.assertThat(midList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
-        MatcherAssert.assertThat(midList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                midList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                midList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
 
-        MatcherAssert.assertThat(bottomList, (Matcher) getListSuperSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                bottomList, (Matcher) getListSuperSuperMatcher()); // cast trick for compiler
         MatcherAssert.assertThat(bottomList, getListSuperExtendsMatcher());
-        MatcherAssert.assertThat(bottomList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
-        MatcherAssert.assertThat(bottomList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                bottomList, (Matcher) getListExtendsSuperMatcher()); // cast trick for compiler
+        MatcherAssert.assertThat(
+                bottomList, (Matcher) getListExtendsExtendsMatcher()); // cast trick for compiler
     }
 
     @NotNull
@@ -69,8 +85,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -83,8 +98,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -97,8 +111,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -111,8 +124,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -125,8 +137,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -139,8 +150,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -153,8 +163,7 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
@@ -167,14 +176,11 @@ class InheritanceAndGenericLearningTest {
             }
 
             @Override
-            public void describeTo(final Description description) {
-            }
+            public void describeTo(final Description description) {}
         };
     }
 
-    public interface Top {
-
-    }
+    public interface Top {}
 
     @Data
     @AllArgsConstructor
@@ -183,12 +189,7 @@ class InheritanceAndGenericLearningTest {
         private T element;
     }
 
-    public interface Mid extends Top {
+    public interface Mid extends Top {}
 
-    }
-
-    public interface Bottom extends Mid {
-
-    }
-
+    public interface Bottom extends Mid {}
 }

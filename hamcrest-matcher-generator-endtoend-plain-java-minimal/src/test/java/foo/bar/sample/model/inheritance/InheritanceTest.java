@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package foo.bar.sample.model.inheritance;
 
 import static foo.bar.sample.model.inheritance.FirstChildMatcher.isFirstChild;
@@ -16,7 +20,8 @@ class InheritanceTest {
 
     @Test
     @DisplayName("Matchers.contains should work for mixed inherited types")
-    // The raw (Matcher) cast is the "Known Issue" workaround: it forces the Matcher overload of contains.
+    // The raw (Matcher) cast is the "Known Issue" workaround: it forces the Matcher overload of
+    // contains.
     @SuppressWarnings("unchecked")
     void match_EverythingShouldWorkFineEvenWithInheritance() {
 
@@ -25,21 +30,20 @@ class InheritanceTest {
         final String firstName = "First name";
         final String secondName = "Second name";
 
-        final Main main = new Main(
-            asList(
-                new FirstChild(firstId, firstName),
-                new SecondChild(secondId, secondName)
-            ));
+        final Main main =
+                new Main(
+                        asList(
+                                new FirstChild(firstId, firstName),
+                                new SecondChild(secondId, secondName)));
 
-        MatcherAssert.assertThat(main, isMain()
-            .withParents(contains(
-                // Known "Issue" - needed to enforce the usage of the Matcher method instead of the item method
-                (Matcher) isFirstChild()
-                    .withId(firstId)
-                    .withName(firstName),
-                isSecondChild()
-                    .withId(secondId)
-                    .withName(secondName)
-            )));
+        MatcherAssert.assertThat(
+                main,
+                isMain().withParents(
+                                contains(
+                                        // Known "Issue" - needed to enforce the usage of the
+                                        // Matcher method instead of the item method
+                                        (Matcher)
+                                                isFirstChild().withId(firstId).withName(firstName),
+                                        isSecondChild().withId(secondId).withName(secondName))));
     }
 }

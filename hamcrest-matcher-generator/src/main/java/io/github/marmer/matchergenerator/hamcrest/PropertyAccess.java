@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.hamcrest;
 
 import java.beans.PropertyDescriptor;
@@ -14,33 +18,43 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Reads properties of beans and records and knows the property names of the types with a generated matcher.
+ * Reads properties of beans and records and knows the property names of the types with a generated
+ * matcher.
  */
 @NullMarked
 final class PropertyAccess {
     static final Object NO_SUCH_PROPERTY = new Object();
 
     private static final Map<Class<?>, List<String>> PROPERTIES_OF_GENERATED_TYPES =
-        Collections.synchronizedMap(new WeakHashMap<>());
+            Collections.synchronizedMap(new WeakHashMap<>());
 
-    private PropertyAccess() {
-    }
+    private PropertyAccess() {}
 
     /**
-     * Registers the printed properties of a type. The first registration wins, so several matchers of one type never
-     * change how its values print. Properties every object has (such as {@code class}) are not printed.
+     * Registers the printed properties of a type. The first registration wins, so several matchers
+     * of one type never change how its values print. Properties every object has (such as {@code
+     * class}) are not printed.
      */
     static void registerGeneratedType(final Class<?> type, final List<String> propertyNames) {
-        PROPERTIES_OF_GENERATED_TYPES.putIfAbsent(type, propertyNames.stream()
-            .filter(name -> !isDeclaredByObject(name))
-            .collect(Collectors.toUnmodifiableList()));
+        PROPERTIES_OF_GENERATED_TYPES.putIfAbsent(
+                type,
+                propertyNames.stream()
+                        .filter(name -> !isDeclaredByObject(name))
+                        .collect(Collectors.toUnmodifiableList()));
     }
 
     private static boolean isDeclaredByObject(final String propertyName) {
         return Arrays.stream(Object.class.getMethods())
-            .filter(method -> method.getParameterCount() == 0)
-            .anyMatch(method -> method.getName().equals(propertyName)
-                || method.getName().equals("get" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1)));
+                .filter(method -> method.getParameterCount() == 0)
+                .anyMatch(
+                        method ->
+                                method.getName().equals(propertyName)
+                                        || method.getName()
+                                                .equals(
+                                                        "get"
+                                                                + Character.toUpperCase(
+                                                                        propertyName.charAt(0))
+                                                                + propertyName.substring(1)));
     }
 
     static @Nullable List<String> propertiesOfGeneratedType(final Class<?> type) {
@@ -51,7 +65,8 @@ final class PropertyAccess {
      * @return the property value or {@link #NO_SUCH_PROPERTY}
      */
     static @Nullable Object read(final Object item, final String propertyName) {
-        final PropertyDescriptor descriptor = PropertyUtil.getPropertyDescriptor(propertyName, item);
+        final PropertyDescriptor descriptor =
+                PropertyUtil.getPropertyDescriptor(propertyName, item);
         if (descriptor != null && descriptor.getReadMethod() != null) {
             return invoke(descriptor.getReadMethod(), item, propertyName);
         }
@@ -63,7 +78,8 @@ final class PropertyAccess {
         }
     }
 
-    private static @Nullable Object invoke(final Method method, final Object item, final String propertyName) {
+    private static @Nullable Object invoke(
+            final Method method, final Object item, final String propertyName) {
         try {
             return method.invoke(item);
         } catch (final IllegalAccessException | InvocationTargetException e) {

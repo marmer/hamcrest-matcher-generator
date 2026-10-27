@@ -1,4 +1,2 @@
-/**
- * Some directory
- */
+/** Some directory */
 package foo.bar.sample.model;

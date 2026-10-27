@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.ArrayList;
@@ -6,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -16,9 +19,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Matcher for beans.
- * <p>
- * A mismatch lists only the failing checks, one line each, with property path, expected and actual value. Generated
- * matchers used as property checks are flattened into dot paths.
+ *
+ * <p>A mismatch lists only the failing checks, one line each, with property path, expected and
+ * actual value. Generated matchers used as property checks are flattened into dot paths.
  *
  * @param <T> Type of the bean.
  * @author marmer
@@ -26,17 +29,21 @@ import org.jspecify.annotations.Nullable;
  */
 @NullMarked
 public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
-    private static final String FAILURE_SEPARATOR = "\n          "; // aligns with Hamcrest's "     but: "
+    private static final String FAILURE_SEPARATOR =
+            "\n          "; // aligns with Hamcrest's "     but: "
     private static final Matcher<Object> PROPERTY_EXISTS = new PropertyExists();
 
     /**
-     * Depth of the calls a generated matcher makes into the foreign (non-generated) matchers it holds. Above zero, a
-     * generated matcher is part of a Hamcrest matcher such as {@code contains(..)} and renders on one line.
+     * Depth of the calls a generated matcher makes into the foreign (non-generated) matchers it
+     * holds. Above zero, a generated matcher is part of a Hamcrest matcher such as {@code
+     * contains(..)} and renders on one line.
      */
-    private static final ThreadLocal<int[]> FOREIGN_CALL_DEPTH = ThreadLocal.withInitial(() -> new int[1]);
+    private static final ThreadLocal<int[]> FOREIGN_CALL_DEPTH =
+            ThreadLocal.withInitial(() -> new int[1]);
 
     @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> propertyChecks = new LinkedHashMap<>();
+
     private final Class<? super T> expectedClass;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
@@ -45,10 +52,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     /**
      * @param expectedClass the type to match
-     * @param propertyNames all properties of the type in declaration order, used to print values of the type from
-     *                      their properties instead of via {@code toString()}
+     * @param propertyNames all properties of the type in declaration order, used to print values of
+     *     the type from their properties instead of via {@code toString()}
      */
-    public BeanPropertyMatcher(final Class<? super T> expectedClass, final String... propertyNames) {
+    public BeanPropertyMatcher(
+            final Class<? super T> expectedClass, final String... propertyNames) {
         this(expectedClass);
         PropertyAccess.registerGeneratedType(expectedClass, List.of(propertyNames));
     }
@@ -68,7 +76,9 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     private static @Nullable BeanPropertyMatcher<?> generatedOrNull(final Matcher<?> matcher) {
-        return matcher instanceof GeneratedBeanMatcher ? ((GeneratedBeanMatcher) matcher).beanPropertyMatcher() : null;
+        return matcher instanceof GeneratedBeanMatcher
+                ? ((GeneratedBeanMatcher) matcher).beanPropertyMatcher()
+                : null;
     }
 
     private static String describeValue(final @Nullable Object value) {
@@ -81,8 +91,8 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     private static String describeChecks(final List<Check> checks) {
         return checks.stream()
-            .map(check -> check.path() + " " + describeMatcher(check.matcher()))
-            .collect(Collectors.joining(", "));
+                .map(check -> check.path() + " " + describeMatcher(check.matcher()))
+                .collect(Collectors.joining(", "));
     }
 
     private static String withPath(final String path, final String text) {
@@ -94,8 +104,8 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     }
 
     /**
-     * Describes an expectation. A generated matcher used as a leaf (its property is not an instance of the matched
-     * type, often {@code null}) is described on one line, not as a block.
+     * Describes an expectation. A generated matcher used as a leaf (its property is not an instance
+     * of the matched type, often {@code null}) is described on one line, not as a block.
      */
     private static String describeExpected(final Matcher<?> matcher) {
         final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
@@ -115,8 +125,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         if (isInsideForeignMatcher()) {
             description.appendText(typeName() + " {" + describeChecks(checks) + "}");
         } else {
-            description.appendText(typeName() + " with " + checks.size()
-                + (checks.size() == 1 ? " property check" : " property checks"));
+            description.appendText(
+                    typeName()
+                            + " with "
+                            + checks.size()
+                            + (checks.size() == 1 ? " property check" : " property checks"));
         }
     }
 
@@ -141,9 +154,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @Override
     protected void describeMismatchSafely(final T item, final Description mismatchDescription) {
         final List<String> failures = failuresOf(item);
-        mismatchDescription.appendText(isInsideForeignMatcher()
-            ? typeName() + " {" + String.join(", ", failures) + "}"
-            : String.join(FAILURE_SEPARATOR, failures));
+        mismatchDescription.appendText(
+                isInsideForeignMatcher()
+                        ? typeName() + " {" + String.join(", ", failures) + "}"
+                        : String.join(FAILURE_SEPARATOR, failures));
     }
 
     private String typeName() {
@@ -153,57 +167,85 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private List<String> failuresOf(final Object item) {
         final List<String> failures = new ArrayList<>();
         if (!expectedClass.isInstance(item)) {
-            failures.add("expected an instance of " + expectedClass.getName() + " but was a "
-                + item.getClass().getName() + " (" + describeValue(item) + ")");
+            failures.add(
+                    "expected an instance of "
+                            + expectedClass.getName()
+                            + " but was a "
+                            + item.getClass().getName()
+                            + " ("
+                            + describeValue(item)
+                            + ")");
         }
         collectFailures(item, "", failures);
         return failures;
     }
 
-    private void collectFailures(final Object item, final String prefix, final List<String> failures) {
-        propertyChecks.forEach((name, matchers) -> {
-            final Object value = PropertyAccess.read(item, name);
-            for (final Matcher<?> matcher : matchers) {
-                collectFailure(name, matcher, value, prefix + name, failures);
-            }
-        });
+    private void collectFailures(
+            final Object item, final String prefix, final List<String> failures) {
+        propertyChecks.forEach(
+                (name, matchers) -> {
+                    final Object value = PropertyAccess.read(item, name);
+                    for (final Matcher<?> matcher : matchers) {
+                        collectFailure(name, matcher, value, prefix + name, failures);
+                    }
+                });
     }
 
-    private void collectFailure(final String name, final Matcher<?> matcher, final @Nullable Object value, final String path,
-                                final List<String> failures) {
+    private void collectFailure(
+            final String name,
+            final Matcher<?> matcher,
+            final @Nullable Object value,
+            final String path,
+            final List<String> failures) {
         final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
         if (value == PropertyAccess.NO_SUCH_PROPERTY) {
-            failures.add(withPath(path, "expected " + describeExpected(matcher) + " but " + typeName()
-                + " has no property \"" + name + "\""));
+            failures.add(
+                    withPath(
+                            path,
+                            "expected "
+                                    + describeExpected(matcher)
+                                    + " but "
+                                    + typeName()
+                                    + " has no property \""
+                                    + name
+                                    + "\""));
         } else if (nested != null && nested.expectedClass.isInstance(value)) {
             nested.collectFailures(value, path + ".", failures);
         } else if (nested != null) {
-            failures.add(withPath(path, "expected " + describeExpected(matcher) + " but was " + describeValue(value)));
+            failures.add(
+                    withPath(
+                            path,
+                            "expected "
+                                    + describeExpected(matcher)
+                                    + " but was "
+                                    + describeValue(value)));
         } else if (!callingForeign(() -> matcher.matches(value))) {
             final PropertyDescription mismatch = new PropertyDescription();
-            callingForeign(() -> {
-                matcher.describeMismatch(value, mismatch);
-                return null;
-            });
-            failures.add(withPath(path, "expected " + describeExpected(matcher) + " but " + mismatch));
+            callingForeign(
+                    () -> {
+                        matcher.describeMismatch(value, mismatch);
+                        return null;
+                    });
+            failures.add(
+                    withPath(path, "expected " + describeExpected(matcher) + " but " + mismatch));
         }
     }
 
     private void collectChecks(final String prefix, final List<Check> checks) {
-        propertyChecks.forEach((name, matchers) -> {
-            for (final Matcher<?> matcher : matchers) {
-                final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-                if (nested != null) {
-                    nested.collectChecks(prefix + name + ".", checks);
-                } else {
-                    checks.add(new Check(prefix + name, matcher));
-                }
-            }
-        });
+        propertyChecks.forEach(
+                (name, matchers) -> {
+                    for (final Matcher<?> matcher : matchers) {
+                        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
+                        if (nested != null) {
+                            nested.collectChecks(prefix + name + ".", checks);
+                        } else {
+                            checks.add(new Check(prefix + name, matcher));
+                        }
+                    }
+                });
     }
 
-    private record Check(String path, Matcher<?> matcher) {
-    }
+    private record Check(String path, Matcher<?> matcher) {}
 
     private static final class PropertyExists extends BaseMatcher<Object> {
         @Override

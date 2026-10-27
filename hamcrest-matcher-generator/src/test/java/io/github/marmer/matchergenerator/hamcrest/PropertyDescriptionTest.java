@@ -1,3 +1,7 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,13 +43,16 @@ class PropertyDescriptionTest {
 
     @Test
     void testDescribeValue_CollectionOfGeneratedTypes_ShouldPrintEachFromItsProperties() {
-        assertEquals("[Item {sku \"A-1\"}, Item {sku \"B-2\"}]",
-            PropertyDescription.describeValue(List.of(ITEM_1, ITEM_2)));
+        assertEquals(
+                "[Item {sku \"A-1\"}, Item {sku \"B-2\"}]",
+                PropertyDescription.describeValue(List.of(ITEM_1, ITEM_2)));
     }
 
     @Test
     void testDescribeValue_CollectionWithNullAndGeneratedType_ShouldPrintTheNull() {
-        assertEquals("[null, Item {sku \"A-1\"}]", PropertyDescription.describeValue(Arrays.asList(null, ITEM_1)));
+        assertEquals(
+                "[null, Item {sku \"A-1\"}]",
+                PropertyDescription.describeValue(Arrays.asList(null, ITEM_1)));
     }
 
     @Test
@@ -54,39 +61,53 @@ class PropertyDescriptionTest {
         map.put("first", ITEM_1);
         map.put("second", ITEM_2);
 
-        assertEquals("{first=Item {sku \"A-1\"}, second=Item {sku \"B-2\"}}", PropertyDescription.describeValue(map));
+        assertEquals(
+                "{first=Item {sku \"A-1\"}, second=Item {sku \"B-2\"}}",
+                PropertyDescription.describeValue(map));
     }
 
     @Test
     void testDescribeValue_MapWithGeneratedKey_ShouldPrintTheKeyFromItsProperties() {
-        assertEquals("{Item {sku \"A-1\"}=plain}", PropertyDescription.describeValue(Map.of(ITEM_1, "plain")));
+        assertEquals(
+                "{Item {sku \"A-1\"}=plain}",
+                PropertyDescription.describeValue(Map.of(ITEM_1, "plain")));
     }
 
     @Test
     void testDescribeValue_EntryWithGeneratedValue_ShouldPrintFromItsProperties() {
-        assertEquals("<key=Item {sku \"A-1\"}>", PropertyDescription.describeValue(Map.entry("key", ITEM_1)));
+        assertEquals(
+                "<key=Item {sku \"A-1\"}>",
+                PropertyDescription.describeValue(Map.entry("key", ITEM_1)));
     }
 
     @Test
     void testDescribeValue_EntryWithGeneratedKey_ShouldPrintFromItsProperties() {
-        assertEquals("<Item {sku \"A-1\"}=value>", PropertyDescription.describeValue(Map.entry(ITEM_1, "value")));
+        assertEquals(
+                "<Item {sku \"A-1\"}=value>",
+                PropertyDescription.describeValue(Map.entry(ITEM_1, "value")));
     }
 
     @Test
     void testDescribeValue_CollectionOfEntriesWithGeneratedTypes_ShouldPrintTheEntryParts() {
-        assertEquals("[key=Item {sku \"A-1\"}]", PropertyDescription.describeValue(List.of(Map.entry("key", ITEM_1))));
+        assertEquals(
+                "[key=Item {sku \"A-1\"}]",
+                PropertyDescription.describeValue(List.of(Map.entry("key", ITEM_1))));
     }
 
     @Test
     void testDescribeValue_MapInsideACollection_ShouldPrintItsGeneratedTypes() {
-        assertEquals("[{key=Item {sku \"A-1\"}}]", PropertyDescription.describeValue(List.of(Map.of("key", ITEM_1))));
+        assertEquals(
+                "[{key=Item {sku \"A-1\"}}]",
+                PropertyDescription.describeValue(List.of(Map.of("key", ITEM_1))));
     }
 
     @Test
     void testDescribeValue_NestedDeeperThanTheLimit_ShouldPrintTheInnerValuesLikeHamcrest() {
         final Object tooDeep = List.of(List.of(List.of(List.of(List.of(List.of(ITEM_1))))));
 
-        assertEquals("[[[[[<[PropertyDescriptionTest.Item(sku=A-1)]>]]]]]", PropertyDescription.describeValue(tooDeep));
+        assertEquals(
+                "[[[[[<[PropertyDescriptionTest.Item(sku=A-1)]>]]]]]",
+                PropertyDescription.describeValue(tooDeep));
     }
 
     @Test
@@ -98,7 +119,8 @@ class PropertyDescriptionTest {
 
     @Test
     void testRegisterGeneratedType_PropertiesEveryObjectHas_ShouldNotBeRegistered() {
-        PropertyAccess.registerGeneratedType(Registered.class, List.of("id", "toString", "hashCode", "class"));
+        PropertyAccess.registerGeneratedType(
+                Registered.class, List.of("id", "toString", "hashCode", "class"));
 
         assertEquals(List.of("id"), PropertyAccess.propertiesOfGeneratedType(Registered.class));
     }
@@ -128,15 +150,12 @@ class PropertyDescriptionTest {
         String id;
     }
 
-    public static class Registered {
-    }
+    public static class Registered {}
 
-    public static class Twice {
-    }
+    public static class Twice {}
 
     public static class WriteOnly {
         @SuppressWarnings("unused")
-        public void setOnly(final String only) {
-        }
+        public void setOnly(final String only) {}
     }
 }
