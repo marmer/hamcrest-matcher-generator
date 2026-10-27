@@ -4,9 +4,9 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.CompilationSubject;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
-import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
+import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -20,10 +20,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -45,6 +48,7 @@ class CoreProcessorIT {
     Path kotlinOutput;
 
     @BeforeEach
+    @AfterEach
     void resetRecording() {
         RecordingBackend.reset();
     }
@@ -159,7 +163,213 @@ class CoreProcessorIT {
                 CLASS_PROPERTY
             ),
             describe(model.properties()));
-        model.properties().forEach(property -> assertEquals(Nullability.UNSPECIFIED, property.nullability()));
+        assertEquals(
+            List.of(
+                "name:UNSPECIFIED",
+                "active:NON_NULL",
+                "wrapped:UNSPECIFIED",
+                "count:NON_NULL",
+                "class:UNSPECIFIED"),
+            describeNullability(model.properties()));
+    }
+
+    private static List<String> describeNullability(final List<PropertyModel> properties) {
+        return properties.stream()
+            .map(property -> property.name() + ":" + property.nullability())
+            .collect(Collectors.toList());
+    }
+
+    private static final JavaFileObject JETBRAINS_NULLABLE = JavaFileObjects.forSourceLines(
+        "org.jetbrains.annotations.Nullable",
+        "package org.jetbrains.annotations;",
+        "public @interface Nullable {",
+        "}"
+    );
+
+    private static final JavaFileObject JETBRAINS_NOT_NULL = JavaFileObjects.forSourceLines(
+        "org.jetbrains.annotations.NotNull",
+        "package org.jetbrains.annotations;",
+        "public @interface NotNull {",
+        "}"
+    );
+
+    @Test
+    @DisplayName("JSpecify annotations on the return type decide the nullability")
+    void jSpecifyAnnotationsOnTheReturnTypeDecideTheNullability() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SpecifiedPojo",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NonNull;",
+            "import org.jspecify.annotations.Nullable;",
+            "public class SpecifiedPojo {",
+            "    public @Nullable String getMaybe() { return null; }",
+            "    public @NonNull String getSure() { return \"\"; }",
+            "    public String getUnknown() { return \"\"; }",
+            "    public @Nullable String[] getMaybeArrayElements() { return null; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SpecifiedPojo\""), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of(
+                "maybe:NULLABLE",
+                "sure:NON_NULL",
+                "unknown:UNSPECIFIED",
+                "maybeArrayElements:UNSPECIFIED",
+                "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Inside a NullMarked scope a property without Nullable is non null")
+    void insideANullMarkedScopeAPropertyWithoutNullableIsNonNull() {
+        final JavaFileObject marked = JavaFileObjects.forSourceLines(
+            "some.other.pck.MarkedPojo",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;",
+            "import org.jspecify.annotations.NullUnmarked;",
+            "import org.jspecify.annotations.Nullable;",
+            "@NullMarked",
+            "public class MarkedPojo {",
+            "    public String getName() { return \"\"; }",
+            "    public @Nullable String getMaybe() { return null; }",
+            "    public Inner getInner() { return null; }",
+            "    @NullUnmarked",
+            "    public String getUnmarked() { return \"\"; }",
+            "    public static class Inner {",
+            "        public String getInnerName() { return \"\"; }",
+            "    }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.MarkedPojo\""), marked);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(
+            List.of("name:NON_NULL", "maybe:NULLABLE", "inner:NON_NULL", "unmarked:UNSPECIFIED", "class:UNSPECIFIED"),
+            describeNullability(model.properties()));
+        assertEquals(
+            List.of("innerName:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(model.nestedTypes().get(0).properties()));
+    }
+
+    @Test
+    @DisplayName("A type variable is null agnostic inside a NullMarked scope")
+    void aTypeVariableIsNullAgnosticInsideANullMarkedScope() {
+        final JavaFileObject box = JavaFileObjects.forSourceLines(
+            "some.other.pck.Box",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;",
+            "import org.jspecify.annotations.Nullable;",
+            "@NullMarked",
+            "public class Box<T extends @Nullable Object> {",
+            "    public T getContent() { return null; }",
+            "    public @Nullable T getMaybeContent() { return null; }",
+            "    public String getLabel() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Box\""), box);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("content:UNSPECIFIED", "maybeContent:NULLABLE", "label:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("A NullMarked package makes its properties non null")
+    void aNullMarkedPackageMakesItsPropertiesNonNull() {
+        final JavaFileObject packageInfo = JavaFileObjects.forSourceLines(
+            "some.other.pck.package-info",
+            "@NullMarked",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.NullMarked;"
+        );
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.PackagePojo",
+            "package some.other.pck;",
+            "public class PackagePojo {",
+            "    public String getName() { return \"\"; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.PackagePojo\""), packageInfo, bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(List.of("name:NON_NULL", "class:UNSPECIFIED"), describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Kotlin nullability annotations on the accessor decide the nullability")
+    void kotlinNullabilityAnnotationsOnTheAccessorDecideTheNullability() {
+        final JavaFileObject kotlinProbe = JavaFileObjects.forSourceLines(
+            "some.other.pck.KotlinProbe",
+            "package some.other.pck;",
+            "import org.jetbrains.annotations.NotNull;",
+            "import org.jetbrains.annotations.Nullable;",
+            "@kotlin.Metadata",
+            "public class KotlinProbe {",
+            "    @NotNull public String getName() { return \"\"; }",
+            "    @Nullable public String getMaybe() { return null; }",
+            "    @Nullable public Boolean isFlag() { return null; }",
+            "    public boolean getEnabled() { return true; }",
+            "}"
+        );
+
+        final Compilation compilation = compile(
+            configuration("\"some.other.pck.KotlinProbe\""),
+            kotlinProbe, KOTLIN_METADATA, JETBRAINS_NULLABLE, JETBRAINS_NOT_NULL);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("name:NON_NULL", "maybe:NULLABLE", "isFlag:NULLABLE", "enabled:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Record components carry their nullability")
+    void recordComponentsCarryTheirNullability() {
+        final JavaFileObject record = JavaFileObjects.forSourceLines(
+            "some.other.pck.SpecifiedRecord",
+            "package some.other.pck;",
+            "import org.jspecify.annotations.Nullable;",
+            "public record SpecifiedRecord(@Nullable String maybe, String unknown, int count) {",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SpecifiedRecord\""), record);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+            List.of("maybe:NULLABLE", "unknown:UNSPECIFIED", "count:NON_NULL", "class:UNSPECIFIED"),
+            describeNullability(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("Backends learn whether JSpecify resolves at compile time")
+    void backendsLearnWhetherJSpecifyResolvesAtCompileTime() {
+        final JavaFileObject bean = JavaFileObjects.forSourceLines(
+            "some.other.pck.SomePojo", "package some.other.pck;", "public class SomePojo {", "}");
+
+        compile(configuration("\"some.other.pck.SomePojo\""), bean);
+        compile(
+            Compiler.javac().withClasspath(classPathWithout("jspecify")),
+            configuration("\"some.other.pck.SomePojo\""), bean);
+
+        assertEquals(
+            List.of(true, false),
+            RecordingBackend.contexts().stream().map(GenerationContext::jspecifyAvailable).toList());
+    }
+
+    private static List<File> classPathWithout(final String fragment) {
+        return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
+            .filter(entry -> !entry.contains(fragment))
+            .map(File::new)
+            .collect(Collectors.toList());
     }
 
     @Test
@@ -414,6 +624,178 @@ class CoreProcessorIT {
         assertEquals("some.other.pck", model.packageName());
         assertEquals("prefix.some.other.pck", model.targetPackage());
         assertTrue(compilation.generatedSourceFile("prefix.some.other.pck.SomePojoRecorded").isPresent());
+    }
+
+    private static JavaFileObject exclusionConfiguration(
+        final boolean deprecatedAlias,
+        final String configuredTypes,
+        final String excludedTypes
+    ) {
+        return JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            "package some.pck;",
+            deprecatedAlias
+                ? "import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;"
+                : "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+            (deprecatedAlias ? "@MatcherConfiguration(" : "@GenerateMatchers(")
+                + "value = " + configuredTypes + ", exclude = " + excludedTypes + ")",
+            "public final class SomeConfiguration {",
+            "}"
+        );
+    }
+
+    private static JavaFileObject bean(final String packageName, final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+            packageName + "." + simpleName,
+            "package " + packageName + ";",
+            "public class " + simpleName + " {",
+            "    public String getName() { return \"\"; }",
+            "}"
+        );
+    }
+
+    private static JavaFileObject outerWithPublicMemberTypes() {
+        return JavaFileObjects.forSourceLines(
+            "some.other.pck.Outer",
+            "package some.other.pck;",
+            "public class Outer {",
+            "    public String getName() { return \"\"; }",
+            "    public static class Inner {",
+            "        public String getName() { return \"\"; }",
+            "    }",
+            "    public static class Kept {",
+            "        public String getName() { return \"\"; }",
+            "    }",
+            "}"
+        );
+    }
+
+    private static List<String> recordedModelNames() {
+        return RecordingBackend.models().stream().map(TypeModel::qualifiedName).collect(Collectors.toList());
+    }
+
+    private static List<String> recordedNestedNames(final TypeModel model) {
+        return model.nestedTypes().stream().map(TypeModel::qualifiedName).collect(Collectors.toList());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded class is left out of a configured package, on both annotations")
+    void anExcludedClassIsLeftOutOfAConfiguredPackage(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck\"", "\"some.other.pck.Excluded\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Excluded"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded class name removes that configured class, on both annotations")
+    void anExcludedClassNameRemovesTheConfiguredClass(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(
+                deprecatedAlias,
+                "{\"some.other.pck.Kept\", \"some.other.pck.Excluded\"}",
+                "\"some.other.pck.Excluded\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Excluded"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded package leaves out every configured class of that package, on both annotations")
+    void anExcludedPackageLeavesOutEveryConfiguredClassOfThatPackage(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "{\"some.other.pck\", \"some.third.pck\"}",
+                "\"some.other.pck\""),
+            bean("some.other.pck", "First"),
+            bean("some.other.pck", "Second"),
+            bean("some.third.pck", "Third"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.third.pck.Third"), recordedModelNames());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("Exclusions that remove every configured type generate nothing and warn about nothing")
+    void exclusionsRemovingEveryConfiguredTypeGenerateNothingAndWarnNothing(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "{\"some.other.pck.Kept\", \"some.other.pck.Second\"}",
+                "\"some.other.pck\""),
+            bean("some.other.pck", "Kept"),
+            bean("some.other.pck", "Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of(), recordedModelNames());
+        assertEquals(List.of(), compilation.generatedSourceFiles());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded public member type of a configured package is not generated as nested model")
+    void anExcludedMemberTypeOfAConfiguredPackageIsNotNested(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck\"", "\"some.other.pck.Outer.Inner\""),
+            outerWithPublicMemberTypes());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Outer.Kept"), recordedNestedNames(onlyModel()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An excluded public member type of a configured class is not generated as nested model")
+    void anExcludedMemberTypeOfAConfiguredClassIsNotNested(final boolean deprecatedAlias) {
+        final Compilation compilation = compile(
+            exclusionConfiguration(deprecatedAlias, "\"some.other.pck.Outer\"", "\"some.other.pck.Outer.Inner\""),
+            outerWithPublicMemberTypes());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of("some.other.pck.Outer.Kept"), recordedNestedNames(onlyModel()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName("An exclude entry that matches no configured type is one warning naming the entry")
+    void anUnmatchedExcludeEntryIsOneWarningNamingTheEntry(final boolean deprecatedAlias) {
+        final JavaFileObject configuration = exclusionConfiguration(
+            deprecatedAlias, "\"some.other.pck.Kept\"", "{\"some.other.pck.Missing\", \"some.other.pck.Missing\"}");
+
+        final Compilation compilation = compile(configuration, bean("some.other.pck", "Kept"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+            .hadWarningContaining("some.other.pck.Missing")
+            .inFile(configuration)
+            .onLine(3);
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(0, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(List.of("some.other.pck.Kept"), recordedModelNames());
+    }
+
+    @Test
+    @DisplayName("An exclude entry that matches a configured type is not warned about")
+    void aMatchedExcludeEntryIsNotWarnedAbout() {
+        final Compilation compilation = compile(
+            exclusionConfiguration(false, "\"some.other.pck.Kept\"", "\"some.other.pck.Kept\""),
+            bean("some.other.pck", "Kept"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(List.of(), recordedModelNames());
     }
 
     @Test

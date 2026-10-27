@@ -5,15 +5,19 @@ import com.google.testing.compile.CompilationSubject;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MatcherGenerationProcessorIT {
 
@@ -1047,6 +1051,145 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
+    @DisplayName("Generated code is null marked and accepts null when JSpecify is on the class path")
+    void generatedCodeIsNullMarkedWhenJSpecifyIsOnTheClassPath() throws IOException {
+        JavaFileObject configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.SimplePojo")
+            public final class SomeConfiguration{
+            }
+            """);
+        JavaFileObject pojo = JavaFileObjects.forSourceLines(
+            "some.other.pck.SimplePojo",
+            """
+            package some.other.pck;
+
+            import java.util.List;
+            import java.util.Map;
+            import org.jspecify.annotations.Nullable;
+
+            public class SimplePojo<T>{
+                public String getName(){
+                    return "name";
+                }
+
+                public @Nullable String getNickname(){
+                    return null;
+                }
+
+                public int getCount(){
+                    return 1;
+                }
+
+                public @Nullable Integer getLimit(){
+                    return null;
+                }
+
+                public @Nullable List<String> getTags(){
+                    return null;
+                }
+
+                public String[] getParts(){
+                    return null;
+                }
+
+                public T getPayload(){
+                    return null;
+                }
+
+                public Map.@Nullable Entry<String, String> getEntry(){
+                    return null;
+                }
+
+                public Map.Entry<String, String> getRequiredEntry(){
+                    return null;
+                }
+
+                public static class Inner{
+                    public String getInnerName(){
+                        return null;
+                    }
+                }
+            }
+            """);
+
+        Compilation compilation = compileWithJSpecify(configuration, pojo);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "generated-code-is-null-marked-with-jspecify", "some.other.pck.SimplePojoMatcher");
+    }
+
+    @Test
+    @DisplayName("A nullable record component gets the nullable annotations")
+    void aNullableRecordComponentGetsTheNullableAnnotations() throws IOException {
+        JavaFileObject configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.PersonRecord")
+            public final class SomeConfiguration{
+            }
+            """);
+        JavaFileObject record = JavaFileObjects.forSourceLines(
+            "some.other.pck.PersonRecord",
+            """
+            package some.other.pck;
+
+            import org.jspecify.annotations.Nullable;
+
+            public record PersonRecord(String name, @Nullable String nickname, int age){
+            }
+            """);
+
+        Compilation compilation = compileWithJSpecify(configuration, record);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(compilation, "nullable-record-component-gets-nullable-annotations", "some.other.pck.PersonRecordMatcher");
+    }
+
+    @Test
+    @DisplayName("Generated code carries no JSpecify annotations when JSpecify is not on the class path")
+    void generatedCodeCarriesNoJSpecifyAnnotationsWithoutJSpecify() throws IOException {
+        JavaFileObject configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.SimplePojo")
+            public final class SomeConfiguration{
+            }
+            """);
+        JavaFileObject pojo = JavaFileObjects.forSourceLines(
+            "some.other.pck.SimplePojo",
+            """
+            package some.other.pck;
+
+            public class SimplePojo{
+                public String getName(){
+                    return "name";
+                }
+            }
+            """);
+
+        Compilation compilation = compile(configuration, pojo);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        String generated = compilation.generatedSourceFile("some.other.pck.SimplePojoMatcher")
+            .orElseThrow().getCharContent(true).toString();
+        assertFalse(generated.contains("jspecify"), generated);
+    }
+
+    @Test
     @DisplayName("Cyclic references between configured types compile")
     void cyclicReferencesBetweenConfiguredTypesCompile() {
         JavaFileObject configuration = JavaFileObjects.forSourceLines(
@@ -1163,14 +1306,32 @@ class MatcherGenerationProcessorIT {
         CompilationSubject.assertThat(compilation).generatedSourceFile("some.other.pck.HolderMatcher");
     }
 
+    /**
+     * Compiles without JSpecify on the class path, so the generated code carries no JSpecify annotations.
+     */
     private static Compilation compile(final JavaFileObject... sources) {
+        return Compiler.javac()
+            .withClasspath(classPathWithoutJSpecify())
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .compile(Arrays.asList(sources));
+    }
+
+    private static Compilation compileWithJSpecify(final JavaFileObject... sources) {
         return Compiler.javac()
             .withProcessors(new MatcherGenerationProcessor(() -> NOW))
             .compile(Arrays.asList(sources));
     }
 
+    private static List<File> classPathWithoutJSpecify() {
+        return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
+            .filter(entry -> !entry.contains("jspecify"))
+            .map(File::new)
+            .collect(Collectors.toList());
+    }
+
     private static Compilation compileVerbose(final JavaFileObject... sources) {
         return Compiler.javac()
+            .withClasspath(classPathWithoutJSpecify())
             .withProcessors(new MatcherGenerationProcessor(() -> NOW))
             .withOptions("-Amatchergenerator.verbose")
             .compile(Arrays.asList(sources));

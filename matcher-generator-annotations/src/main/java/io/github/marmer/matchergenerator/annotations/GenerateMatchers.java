@@ -21,6 +21,15 @@ public @interface GenerateMatchers {
     String[] value();
 
     /**
+     * Package names and/or full qualified class names to leave out of the types selected by {@code value}. A package
+     * excludes every configured type in it, a class name excludes that type. An entry that matches no configured type
+     * is reported as a warning.
+     *
+     * @return Package names and full qualified class names to exclude
+     */
+    String[] exclude() default {};
+
+    /**
      * Configuration of how to generate something.
      *
      * @return Configuration of how to generate something.

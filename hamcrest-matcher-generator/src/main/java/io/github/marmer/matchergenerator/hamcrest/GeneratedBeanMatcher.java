@@ -1,9 +1,12 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
+import org.jspecify.annotations.NullMarked;
+
 /**
  * Implemented by every generated matcher, so that a generated matcher used as a property check of another one can be
  * flattened into property paths when a mismatch is described.
  */
+@NullMarked
 public interface GeneratedBeanMatcher {
 
     /**

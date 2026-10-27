@@ -1,6 +1,5 @@
 package io.github.marmer.matchergenerator.core;
 
-import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.ArrayList;
@@ -11,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -30,10 +30,16 @@ import javax.lang.model.type.TypeMirror;
 class TypeModelFactory {
     private final ProcessingEnvironment processingEnv;
     private final AnnotationMirror configurationMirror;
+    private final Predicate<TypeElement> excluded;
 
-    TypeModelFactory(final ProcessingEnvironment processingEnv, final AnnotationMirror configurationMirror) {
+    TypeModelFactory(
+        final ProcessingEnvironment processingEnv,
+        final AnnotationMirror configurationMirror,
+        final Predicate<TypeElement> excluded
+    ) {
         this.processingEnv = processingEnv;
         this.configurationMirror = configurationMirror;
+        this.excluded = excluded;
     }
 
     private static String decapitalized(final String value) {
@@ -82,6 +88,7 @@ class TypeModelFactory {
         type.getEnclosedElements().stream()
             .filter(TypeElement.class::isInstance)
             .map(TypeElement.class::cast)
+            .filter(nestedType -> !excluded.test(nestedType))
             .forEach(nestedType -> {
                 if (ElementSupport.isPublic(nestedType)) {
                     publicNestedTypes.add(create(nestedType, targetPackage));
@@ -146,7 +153,7 @@ class TypeModelFactory {
                 element.getSimpleName().toString(),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
-                Nullability.UNSPECIFIED))
+                NullabilityResolver.of(element)))
             .collect(Collectors.toList());
     }
 
@@ -178,7 +185,7 @@ class TypeModelFactory {
                 propertyName(element),
                 element.getReturnType(),
                 element.getSimpleName().toString(),
-                Nullability.UNSPECIFIED))
+                NullabilityResolver.of(element)))
             .collect(Collectors.toList());
 
         if (type.getKind() == ElementKind.RECORD) {

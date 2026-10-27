@@ -10,10 +10,13 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 import org.hamcrest.beans.PropertyUtil;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Reads properties of beans and records and knows the property names of the types with a generated matcher.
  */
+@NullMarked
 final class PropertyAccess {
     static final Object NO_SUCH_PROPERTY = new Object();
 
@@ -40,14 +43,14 @@ final class PropertyAccess {
                 || method.getName().equals("get" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1)));
     }
 
-    static List<String> propertiesOfGeneratedType(final Class<?> type) {
+    static @Nullable List<String> propertiesOfGeneratedType(final Class<?> type) {
         return PROPERTIES_OF_GENERATED_TYPES.get(type);
     }
 
     /**
      * @return the property value or {@link #NO_SUCH_PROPERTY}
      */
-    static Object read(final Object item, final String propertyName) {
+    static @Nullable Object read(final Object item, final String propertyName) {
         final PropertyDescriptor descriptor = PropertyUtil.getPropertyDescriptor(propertyName, item);
         if (descriptor != null && descriptor.getReadMethod() != null) {
             return invoke(descriptor.getReadMethod(), item, propertyName);
@@ -60,7 +63,7 @@ final class PropertyAccess {
         }
     }
 
-    private static Object invoke(final Method method, final Object item, final String propertyName) {
+    private static @Nullable Object invoke(final Method method, final Object item, final String propertyName) {
         try {
             return method.invoke(item);
         } catch (final IllegalAccessException | InvocationTargetException e) {

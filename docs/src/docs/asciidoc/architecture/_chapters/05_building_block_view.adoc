@@ -55,7 +55,7 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name and generation time) and returns one `GeneratedSource`, a Java or Kotlin file.
+`GenerationContext` (generator name, generation time and whether JSpecify resolves at compile time) and returns one `GeneratedSource`, a Java or Kotlin file.
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round; the Enforcer plugin and ArchUnit tests
 guard this.
@@ -75,6 +75,14 @@ backend for its source and writes it.
 `TypeModelFactory`::
 Reads a type with the compiler's element API and creates the `TypeModel`: getters for beans, components and accessors
 for records, inherited properties and public member types.
+
+`NullabilityResolver`::
+Derives the `Nullability` of a property for the `TypeModel`: primitives are non null, JSpecify and JetBrains
+`@Nullable`/`@NonNull`/`@NotNull` on the accessor decide explicitly, and otherwise the closest `@NullMarked` or
+`@NullUnmarked` scope does. A type variable is null-agnostic and stays unspecified. Kotlin nullness is read from the
+JetBrains annotations kotlinc emits, not from `kotlin.Metadata`. The worker also sets the `GenerationContext` flag
+that tells backends whether `org.jspecify.annotations.NullMarked` resolves, which is the condition for emitting
+JSpecify annotations.
 
 `TypeModel`, `PropertyModel`, `Nullability`::
 The immutable model that backends work on (see the glossary term "Property model").
