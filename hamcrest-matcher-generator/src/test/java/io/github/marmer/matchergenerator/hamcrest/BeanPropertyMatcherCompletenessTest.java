@@ -54,6 +54,16 @@ class BeanPropertyMatcherCompletenessTest {
     }
 
     @Test
+    void classIsNotAPropertyForTheCompletenessCheck() {
+        final BeanPropertyMatcher<Address> matcher =
+                new BeanPropertyMatcher<>(Address.class, "city", "class")
+                        .with("city", equalTo("Paris"))
+                        .checkingAllProperties();
+
+        assertTrue(matcher.matches(PARIS));
+    }
+
+    @Test
     void anIgnoredPropertyIsAddressed() {
         final BeanPropertyMatcher<Address> matcher =
                 new BeanPropertyMatcher<>(Address.class, "city")

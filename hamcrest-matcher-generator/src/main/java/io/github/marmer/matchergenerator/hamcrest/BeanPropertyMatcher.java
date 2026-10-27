@@ -55,8 +55,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private boolean checkingAllProperties;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
-        this.expectedClass = expectedClass;
-        this.propertyNames = List.of();
+        this(expectedClass, List.of(), false);
     }
 
     /**
@@ -67,9 +66,18 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      */
     public BeanPropertyMatcher(
             final Class<? super T> expectedClass, final String... propertyNames) {
+        this(expectedClass, List.of(propertyNames), true);
+    }
+
+    private BeanPropertyMatcher(
+            final Class<? super T> expectedClass,
+            final List<String> propertyNames,
+            final boolean printsPropertyNames) {
         this.expectedClass = expectedClass;
-        this.propertyNames = List.of(propertyNames);
-        PropertyAccess.registerGeneratedType(expectedClass, this.propertyNames);
+        this.propertyNames = propertyNames;
+        if (printsPropertyNames) {
+            PropertyAccess.registerGeneratedType(expectedClass, propertyNames);
+        }
     }
 
     private static boolean isInsideForeignMatcher() {
@@ -222,6 +230,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
             final List<String> unaddressed) {
         if (checkingAllProperties) {
             propertyNames.stream()
+                    .filter(name -> !PropertyAccess.isDeclaredByObject(name))
                     .filter(name -> !isAddressed(name))
                     .forEach(name -> unaddressed.add(prefix + name));
         }
