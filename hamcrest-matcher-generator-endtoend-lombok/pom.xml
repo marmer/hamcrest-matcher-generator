@@ -47,7 +47,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.48</version>
+                            <version>${lombok.version}</version>
                         </path>
                         <path>
                             <groupId>io.github.marmer.testutils</groupId>
