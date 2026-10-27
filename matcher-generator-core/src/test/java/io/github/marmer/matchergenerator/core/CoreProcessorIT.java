@@ -1074,6 +1074,61 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("A type without properties that a package entry picks up is generated without a warning")
+    void aPackageScannedTypeWithoutPropertiesIsNotWarnedAbout() {
+        final JavaFileObject empty = JavaFileObjects.forSourceLines(
+            "some.other.pck.EmptyPojo",
+            "package some.other.pck;",
+            "public class EmptyPojo {",
+            "    public void doSomething() { }",
+            "}"
+        );
+        final JavaFileObject emptyInterface = JavaFileObjects.forSourceLines(
+            "some.other.pck.EmptyInterface",
+            "package some.other.pck;",
+            "public interface EmptyInterface {",
+            "    void doSomething();",
+            "}"
+        );
+
+        final Compilation compilation = compile(configuration("\"some.other.pck\""), empty, emptyInterface);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+            List.of("some.other.pck.EmptyInterface", "some.other.pck.EmptyPojo"),
+            RecordingBackend.models().stream().map(TypeModel::qualifiedName).sorted().collect(Collectors.toList()));
+    }
+
+    @Test
+    @DisplayName("A package scanned type without properties is a verbose note, and only in verbose mode")
+    void aPackageScannedTypeWithoutPropertiesIsAVerboseNote() {
+        final JavaFileObject empty = JavaFileObjects.forSourceLines(
+            "some.other.pck.EmptyPojo",
+            "package some.other.pck;",
+            "public class EmptyPojo {",
+            "    public void doSomething() { }",
+            "}"
+        );
+
+        final Compilation verbose = compileVerbose(configuration("\"some.other.pck\""), empty);
+        final Compilation quiet = compile(configuration("\"some.other.pck\""), empty);
+
+        CompilationSubject.assertThat(verbose).succeeded();
+        assertEquals(
+            List.of("Type 'some.other.pck.EmptyPojo' picked up by a package entry has no properties to match"),
+            verbose.notes().stream()
+                .map(d -> d.getMessage(null))
+                .filter(message -> message.startsWith("Type '"))
+                .collect(Collectors.toList()));
+        CompilationSubject.assertThat(quiet).succeeded();
+        assertEquals(List.of(), quiet.notes().stream()
+            .map(d -> d.getMessage(null))
+            .filter(message -> message.startsWith("Type '"))
+            .collect(Collectors.toList()));
+    }
+
+    @Test
     @DisplayName("A configured nested type without properties is warned about, not its unconfigured container")
     void aConfiguredNestedTypeWithoutPropertiesIsWarnedAbout() {
         final JavaFileObject outer = JavaFileObjects.forSourceLines(

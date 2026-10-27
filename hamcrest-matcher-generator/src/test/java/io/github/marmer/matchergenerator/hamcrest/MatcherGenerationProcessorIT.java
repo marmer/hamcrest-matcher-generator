@@ -1306,6 +1306,55 @@ class MatcherGenerationProcessorIT {
         CompilationSubject.assertThat(compilation).generatedSourceFile("some.other.pck.HolderMatcher");
     }
 
+    @Test
+    @DisplayName("Generated matchers produce no javac warning under -Xlint:all")
+    void generatedMatchersProduceNoWarningUnderLintAll() {
+        assertNoWarningUnderLintAll(false);
+    }
+
+    @Test
+    @DisplayName("Generated JSpecify null marked matchers produce no javac warning under -Xlint:all")
+    void generatedNullMarkedMatchersProduceNoWarningUnderLintAll() {
+        assertNoWarningUnderLintAll(true);
+    }
+
+    /**
+     * Matchers written in one round are compiled in the next one, which carries the annotations the generator wrote on
+     * them. With JSpecify on the class path that is {@code @NullMarked}.
+     */
+    private static void assertNoWarningUnderLintAll(final boolean withJSpecify) {
+        JavaFileObject configuration = JavaFileObjects.forSourceLines(
+            "some.pck.SomeConfiguration",
+            """
+            package some.pck;
+
+            import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+            @GenerateMatchers("some.other.pck.Pojo")
+            public final class SomeConfiguration{
+            }
+            """);
+        JavaFileObject pojo = JavaFileObjects.forSourceLines(
+            "some.other.pck.Pojo",
+            """
+            package some.other.pck;
+
+            public class Pojo{
+                public String getName(){
+                    return null;
+                }
+            }
+            """);
+        final Compilation compilation = Compiler.javac()
+            .withClasspath(withJSpecify ? classPathWithJSpecify() : classPathWithoutJSpecify())
+            .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+            .withOptions("-Xlint:all")
+            .compile(Arrays.asList(configuration, pojo));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
     /**
      * Compiles without JSpecify on the class path, so the generated code carries no JSpecify annotations.
      */
@@ -1325,6 +1374,12 @@ class MatcherGenerationProcessorIT {
     private static List<File> classPathWithoutJSpecify() {
         return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
             .filter(entry -> !entry.contains("jspecify"))
+            .map(File::new)
+            .collect(Collectors.toList());
+    }
+
+    private static List<File> classPathWithJSpecify() {
+        return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
             .map(File::new)
             .collect(Collectors.toList());
     }

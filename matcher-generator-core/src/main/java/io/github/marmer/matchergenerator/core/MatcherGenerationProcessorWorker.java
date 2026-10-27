@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -38,6 +39,9 @@ public class MatcherGenerationProcessorWorker {
      */
     static final String KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated";
     static final String GENERATE_MATCHERS = "io.github.marmer.matchergenerator.annotations.GenerateMatchers";
+    static final String GENERATED = "javax.annotation.processing.Generated";
+    static final String NULL_MARKED = "org.jspecify.annotations.NullMarked";
+    private static final Set<String> GENERATED_OUTPUT_ANNOTATIONS = Set.of(GENERATED, NULL_MARKED);
     /**
      * The deprecated 5.x alias. Referenced by name only, so the core does not depend on a deprecated type.
      */
@@ -97,7 +101,13 @@ public class MatcherGenerationProcessorWorker {
             .filter(annotation -> CONFIGURATION_ANNOTATIONS.contains(annotation.getQualifiedName().toString()))
             .forEach(annotation -> configurationElements.addAll(roundEnv.getElementsAnnotatedWith(annotation)));
         if (configurationElements.isEmpty()) {
-            return false;
+            // The matchers written in an earlier round come back without configuration, carrying the annotations the
+            // generator writes on its output (javax.annotation.processing.Generated and org.jspecify.annotations.NullMarked).
+            // Claiming them keeps javac's -Xlint:all -Werror builds clean: javac would otherwise warn that nobody claims
+            // them. The side effect is that javac does not call a later processor in this round when that processor
+            // supports exactly those annotation types and nothing else.
+            return annotations.stream()
+                .anyMatch(annotation -> GENERATED_OUTPUT_ANNOTATIONS.contains(annotation.getQualifiedName().toString()));
         }
         configurationElements.forEach(this::generateMatchers);
         return true;
@@ -119,25 +129,40 @@ public class MatcherGenerationProcessorWorker {
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
             getAllTypeElementsFor(configurationElement, configurationMirror);
         warnAboutUnmatchedExclusions(typesByGeneratedType, configurationElement, configurationMirror, exclusions);
+        final Set<String> namedTypes = namedTypes(configurationMirror);
         withoutExcludedTypes(typesByGeneratedType, excluded).forEach((typeElement, configuredTypes) -> {
             if (isSelfGenerated(typeElement)) {
                 printSkipNoteBecauseOfSelfGenerationFor(typeElement);
             } else {
-                generateFor(typeElement, configuredTypes, configurationElement, configurationMirror, excluded);
+                generateFor(typeElement, configuredTypes, namedTypes, configurationElement, configurationMirror,
+                    excluded);
             }
         });
+    }
+
+    /**
+     * The qualified names of the types the configuration names explicitly. Names that are no type, packages, are not
+     * among them.
+     */
+    private Set<String> namedTypes(final AnnotationMirror configurationMirror) {
+        return distinctEntries(configurationMirror, VALUE_ATTRIBUTE).keySet().stream()
+            .map(name -> processingEnv.getElementUtils().getTypeElement(name))
+            .filter(Objects::nonNull)
+            .map(type -> type.getQualifiedName().toString())
+            .collect(Collectors.toSet());
     }
 
     private void generateFor(
         final TypeElement typeElement,
         final Set<TypeElement> configuredTypes,
+        final Set<String> namedTypes,
         final Element configurationElement,
         final AnnotationMirror configurationMirror,
         final Predicate<TypeElement> excluded
     ) {
         final TypeModel model = new TypeModelFactory(processingEnv, configurationMirror, excluded)
             .create(typeElement);
-        configuredTypes.forEach(configuredType -> warnIfWithoutProperties(model, configuredType));
+        configuredTypes.forEach(configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
         final GenerationContext context = new GenerationContext(generatorName, timeProvider.get(), isJspecifyAvailable());
         backends.forEach(backend -> write(
             backend,
@@ -148,18 +173,35 @@ public class MatcherGenerationProcessorWorker {
     }
 
     /**
-     * Warns about the configured type itself, which is the generated type or one of its nested types. A type that is
-     * only the container of a configured nested type is never warned about.
+     * Reports the configured type itself, which is the generated type or one of its nested types, when it has no
+     * properties. A type the configuration names is warned about. A type that only a package entry picks up is a
+     * verbose note instead, since a package holds types that are no match target. A type that is only the container
+     * of a configured nested type is never reported.
      */
-    private void warnIfWithoutProperties(final TypeModel generatedModel, final TypeElement configuredType) {
-        findModel(generatedModel, configuredType.getQualifiedName().toString())
+    private void reportWithoutProperties(
+        final TypeModel generatedModel,
+        final TypeElement configuredType,
+        final Set<String> namedTypes
+    ) {
+        final String qualifiedName = configuredType.getQualifiedName().toString();
+        findModel(generatedModel, qualifiedName)
             .filter(MatcherGenerationProcessorWorker::hasNoProperties)
             .filter(model -> !isKotlinFileFacade(configuredType))
-            .ifPresent(model -> processingEnv.getMessager().printMessage(
-                Diagnostic.Kind.WARNING,
-                "Type '" + configuredType.getQualifiedName() + "' has no properties to match",
-                configuredType
-            ));
+            .ifPresent(model -> {
+                if (namedTypes.contains(qualifiedName)) {
+                    processingEnv.getMessager().printMessage(
+                        Diagnostic.Kind.WARNING,
+                        "Type '" + qualifiedName + "' has no properties to match",
+                        configuredType
+                    );
+                } else {
+                    ElementSupport.logNote(
+                        processingEnv,
+                        "Type '" + qualifiedName + "' picked up by a package entry has no properties to match",
+                        configuredType
+                    );
+                }
+            });
     }
 
     private static Optional<TypeModel> findModel(final TypeModel model, final String qualifiedName) {

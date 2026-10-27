@@ -98,7 +98,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-n3]]QS-N3
 | Compatibility / Co-existence
 | *Generated code compiles without warnings.* When a test developer compiles a project's tests with `-Xlint:all -Werror` on any JDK from 17 to the latest, the generated sources compile; they produce no warning at all, including rawtypes, unchecked and deprecation warnings.
-| None yet (planned for 6.0.0): end-to-end modules compiled with `-Xlint:all -Werror`
+| End-to-end modules compiled with `-Xlint:all -Werror` (`-Xlint:all,-processing -Werror` in the two modules that run the processor on test sources, see CLAUDE.md)
 
 | [[qs-u1]]QS-U1
 | Interaction capability / User error protection
@@ -167,7 +167,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x4]]QS-X4
 | Reliability / Fault tolerance
-| *Unusual input never crashes the compiler.* When a test developer configures types with generics, inner classes, no properties or cyclic references between types while compiling with javac or KAPT, the annotation processor generates matchers or skips the type with a warning; the compilation never ends with an uncaught exception from the processor.
+| *Unusual input never crashes the compiler.* When a test developer configures types with generics, inner classes, no properties or cyclic references between types while compiling with javac or KAPT, the annotation processor generates matchers and warns about each configured type without properties; the compilation never ends with an uncaught exception from the processor.
 | Annotation processor integration tests
 
 | [[qs-x5]]QS-X5

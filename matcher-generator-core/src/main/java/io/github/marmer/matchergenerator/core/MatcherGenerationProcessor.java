@@ -16,7 +16,9 @@ import javax.lang.model.element.TypeElement;
 
 @SupportedAnnotationTypes({
     MatcherGenerationProcessorWorker.GENERATE_MATCHERS,
-    MatcherGenerationProcessorWorker.MATCHER_CONFIGURATION
+    MatcherGenerationProcessorWorker.MATCHER_CONFIGURATION,
+    MatcherGenerationProcessorWorker.GENERATED,
+    MatcherGenerationProcessorWorker.NULL_MARKED
 })
 public class MatcherGenerationProcessor extends AbstractProcessor {
 

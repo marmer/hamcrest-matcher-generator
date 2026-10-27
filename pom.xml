@@ -46,6 +46,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <!-- Shared by dependencyManagement and the Lombok end-to-end module's annotationProcessorPaths, which does not read it. -->
+        <lombok.version>1.18.48</lombok.version>
         <!-- Filled by jacoco prepare-agent (unit tests) and prepare-agent-integration (ITs) in modules that measure coverage. -->
         <argLine></argLine>
         <argLineIt></argLineIt>
@@ -168,7 +170,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.48</version>
+                <version>${lombok.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.javaparser</groupId>
@@ -590,11 +592,7 @@
         <profile>
             <id>dev</id>
             <modules>
-                <module>hamcrest-matcher-generator-endtoend-plain-java-minimal</module>
-                <module>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</module>
-                <module>hamcrest-matcher-generator-endtoend-plain-kotlin</module>
-                <module>hamcrest-matcher-generator-endtoend-java-records</module>
-                <module>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</module>
+                <module>hamcrest-matcher-generator-endtoend</module>
             </modules>
             <activation>
                 <property>
@@ -699,10 +697,12 @@
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <configuration>
                             <excludeArtifacts>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-java-minimal</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-mixed-kotlin-java</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-kotlin</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-java-records</excludeArtifact>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend-lombok</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                             </excludeArtifacts>

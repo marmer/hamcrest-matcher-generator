@@ -17,6 +17,8 @@ class InheritanceAndGenericLearningTest {
     @Test
     @DisplayName("A generics with inheritance learning test")
     @SneakyThrows
+    // The raw "cast trick" casts demonstrate a documented generics limitation: the assertions only compile through them.
+    @SuppressWarnings("unchecked")
     void test_AGenericsWithInheritanceLearningTest() {
         final Bottom element = new Bottom() {
         };
@@ -115,7 +117,7 @@ class InheritanceAndGenericLearningTest {
     }
 
     @NotNull
-    private <T> Matcher<? extends List<? extends Mid>> getListExtendsExtendsMatcher() {
+    private Matcher<? extends List<? extends Mid>> getListExtendsExtendsMatcher() {
         return new TypeSafeMatcher<>() {
             @Override
             protected boolean matchesSafely(final List<? extends Mid> item) {
@@ -129,7 +131,7 @@ class InheritanceAndGenericLearningTest {
     }
 
     @NotNull
-    private <T> Matcher<? extends List<? super Mid>> getListExtendsSuperMatcher() {
+    private Matcher<? extends List<? super Mid>> getListExtendsSuperMatcher() {
         return new TypeSafeMatcher<>() {
             @Override
             protected boolean matchesSafely(final List<? super Mid> item) {
@@ -143,7 +145,7 @@ class InheritanceAndGenericLearningTest {
     }
 
     @NotNull
-    private <T> Matcher<? super List<? extends Mid>> getListSuperExtendsMatcher() {
+    private Matcher<? super List<? extends Mid>> getListSuperExtendsMatcher() {
         return new TypeSafeMatcher<>() {
             @Override
             protected boolean matchesSafely(final List<? extends Mid> item) {
@@ -157,7 +159,7 @@ class InheritanceAndGenericLearningTest {
     }
 
     @NotNull
-    private <T> Matcher<? super List<? super Mid>> getListSuperSuperMatcher() {
+    private Matcher<? super List<? super Mid>> getListSuperSuperMatcher() {
         return new TypeSafeMatcher<>() {
             @Override
             protected boolean matchesSafely(final List<? super Mid> item) {
