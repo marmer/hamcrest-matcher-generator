@@ -3,6 +3,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -201,6 +202,28 @@ class BeanPropertyMatcherMessageTest {
         matcher.reset("city");
 
         assertThat(BERLIN, matcher);
+    }
+
+    @Test
+    void aNestedGeneratedMatcherWithoutChecksIsDescribedByItsTypeAlone() {
+        final String message = messageOf(new Customer("Ada", null), isCustomer().with("address", isAddress()));
+
+        assertThat(message, containsString("address: expected an Address but was null"));
+    }
+
+    @Test
+    void aNestedGeneratedMatcherWithChecksIsDescribedWithThem() {
+        final String message = messageOf(new Customer("Ada", null),
+            isCustomer().with("address", isAddress().with("city", equalTo("Berlin"))));
+
+        assertThat(message, containsString("address: expected an Address with city \"Berlin\" but was null"));
+    }
+
+    @Test
+    void aPropertyWithAnEmptyNameIsReportedWithoutPath() {
+        final String message = messageOf(BERLIN, isAddress().with(""));
+
+        assertThat(message, containsString("but: expected the property to exist but Address has no property \"\""));
     }
 
     private static TestMatcher<Order> isOrder() {

@@ -332,14 +332,14 @@ class BeanPropertyMatcherTest {
     }
 
     @Test
-    void testMatches_RecordComponentWhoseAccessorThrows_ShouldFailNamingTheComponent() {
+    void testMatches_RecordComponentWhoseAccessorThrows_ShouldFailNamingTheProperty() {
         final BeanPropertyMatcher<ThrowingRecord> classUnderTest = new BeanPropertyMatcher<>(ThrowingRecord.class);
         final Matcher<ThrowingRecord> matcher = classUnderTest.with("broken", is("someValue"));
 
         final AssertionError error = assertThrows(AssertionError.class,
                 () -> matcher.matches(new ThrowingRecord("someValue")));
 
-        assertThat("message", error.getMessage(), containsString("Could not read component 'broken'"));
+        assertThat("message", error.getMessage(), containsString("Could not read property 'broken'"));
     }
 
     @Test
