@@ -5,6 +5,7 @@
 package foo.bar.sample.records.model;
 
 import static foo.bar.sample.records.model.PersonRecordMatcher.isPersonRecord;
+import static foo.bar.sample.records.model.ShippingLabelMatcher.isShippingLabel;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
@@ -38,16 +39,12 @@ class PersonRecordTest {
 
         assertThat(
                 person,
-                isPersonRecord()
-                        .checkingAllProperties()
-                        .withFirstName("Alice")
-                        .withAge(30)
-                        .ignoringClass());
+                isPersonRecord().checkingAllProperties().withFirstName("Alice").withAge(30));
     }
 
     @Test
-    @DisplayName("Completeness check fails for a property that is neither checked nor ignored")
-    void completenessCheckFailsForAPropertyThatIsNeitherCheckedNorIgnored() {
+    @DisplayName("Completeness check fails for a component that is neither checked nor ignored")
+    void completenessCheckFailsForAComponentThatIsNeitherCheckedNorIgnored() {
         PersonRecord person = new PersonRecord("Alice", 30);
 
         AssertionError error =
@@ -58,10 +55,36 @@ class PersonRecordTest {
                                         person,
                                         isPersonRecord()
                                                 .checkingAllProperties()
-                                                .withFirstName("Alice")
-                                                .withAge(30)));
+                                                .withFirstName("Alice")));
 
-        assertThat(error.getMessage(), endsWith("neither checked nor ignored: class"));
+        assertThat(error.getMessage(), endsWith("neither checked nor ignored: age"));
+    }
+
+    @Test
+    @DisplayName("Completeness check fails when a newly added component is left unaddressed")
+    void completenessCheckFailsWhenANewComponentIsLeftUnaddressed() {
+        ShippingLabel label = new ShippingLabel("Ada", "Main Street 1", "Berlin");
+
+        assertThat(
+                label,
+                isShippingLabel()
+                        .checkingAllProperties()
+                        .withRecipient("Ada")
+                        .withStreet("Main Street 1")
+                        .withCity("Berlin"));
+
+        AssertionError error =
+                assertThrows(
+                        AssertionError.class,
+                        () ->
+                                assertThat(
+                                        label,
+                                        isShippingLabel()
+                                                .checkingAllProperties()
+                                                .withRecipient("Ada")
+                                                .withStreet("Main Street 1")));
+
+        assertThat(error.getMessage(), endsWith("neither checked nor ignored: city"));
     }
 
     @Test
