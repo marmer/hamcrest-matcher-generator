@@ -6,8 +6,10 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.hamcrest.BaseMatcher;
@@ -44,21 +46,30 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> propertyChecks = new LinkedHashMap<>();
 
+    private final Set<String> ignoredProperties = new LinkedHashSet<>();
+
     private final Class<? super T> expectedClass;
+
+    private final List<String> propertyNames;
+
+    private boolean checkingAllProperties;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
         this.expectedClass = expectedClass;
+        this.propertyNames = List.of();
     }
 
     /**
      * @param expectedClass the type to match
      * @param propertyNames all properties of the type in declaration order, used to print values of
-     *     the type from their properties instead of via {@code toString()}
+     *     the type from their properties instead of via {@code toString()} and to find the
+     *     properties a completeness check misses
      */
     public BeanPropertyMatcher(
             final Class<? super T> expectedClass, final String... propertyNames) {
-        this(expectedClass);
-        PropertyAccess.registerGeneratedType(expectedClass, List.of(propertyNames));
+        this.expectedClass = expectedClass;
+        this.propertyNames = List.of(propertyNames);
+        PropertyAccess.registerGeneratedType(expectedClass, this.propertyNames);
     }
 
     private static boolean isInsideForeignMatcher() {
@@ -129,7 +140,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                     typeName()
                             + " with "
                             + checks.size()
-                            + (checks.size() == 1 ? " property check" : " property checks"));
+                            + (checks.size() == 1 ? " property check" : " property checks")
+                            + (checkingAllProperties
+                                    ? ", every property checked or ignored"
+                                    : ""));
         }
     }
 
@@ -147,8 +161,27 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         return with(propertyName, PROPERTY_EXISTS);
     }
 
+    /**
+     * Consciously excludes a property from the completeness check. Ignoring does not check the
+     * property.
+     */
+    public BeanPropertyMatcher<T> ignore(final String propertyName) {
+        ignoredProperties.add(propertyName);
+        return this;
+    }
+
+    /**
+     * Opts this matcher into the completeness check: every property must be checked or ignored.
+     * Applies to this matcher only, not to the matchers nested in it.
+     */
+    public BeanPropertyMatcher<T> checkingAllProperties() {
+        checkingAllProperties = true;
+        return this;
+    }
+
     public void reset(final String propertyName) {
         propertyChecks.remove(propertyName);
+        ignoredProperties.remove(propertyName);
     }
 
     @Override
@@ -176,19 +209,35 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             + describeValue(item)
                             + ")");
         }
-        collectFailures(item, "", failures);
+        final List<String> unaddressed = new ArrayList<>();
+        collectFailures(item, "", failures, unaddressed);
+        if (!unaddressed.isEmpty()) {
+            failures.add("neither checked nor ignored: " + String.join(", ", unaddressed));
+        }
         return failures;
     }
 
     private void collectFailures(
-            final Object item, final String prefix, final List<String> failures) {
+            final Object item,
+            final String prefix,
+            final List<String> failures,
+            final List<String> unaddressed) {
+        if (checkingAllProperties) {
+            propertyNames.stream()
+                    .filter(name -> !isAddressed(name))
+                    .forEach(name -> unaddressed.add(prefix + name));
+        }
         propertyChecks.forEach(
                 (name, matchers) -> {
                     final Object value = PropertyAccess.read(item, name);
                     for (final Matcher<?> matcher : matchers) {
-                        collectFailure(name, matcher, value, prefix + name, failures);
+                        collectFailure(name, matcher, value, prefix + name, failures, unaddressed);
                     }
                 });
+    }
+
+    private boolean isAddressed(final String name) {
+        return propertyChecks.containsKey(name) || ignoredProperties.contains(name);
     }
 
     private void collectFailure(
@@ -196,7 +245,8 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
             final Matcher<?> matcher,
             final @Nullable Object value,
             final String path,
-            final List<String> failures) {
+            final List<String> failures,
+            final List<String> unaddressed) {
         final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
         if (value == PropertyAccess.NO_SUCH_PROPERTY) {
             failures.add(
@@ -210,7 +260,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                                     + name
                                     + "\""));
         } else if (nested != null && nested.expectedClass.isInstance(value)) {
-            nested.collectFailures(value, path + ".", failures);
+            nested.collectFailures(value, path + ".", failures, unaddressed);
         } else if (nested != null) {
             failures.add(
                     withPath(
