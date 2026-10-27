@@ -48,7 +48,7 @@ for gav in org.assertj:assertj-core:3.27.3 net.bytebuddy:byte-buddy:1.15.11; do
 done
 remove_rate_limit_artifacts
 
-# Agent worktrees branch off origin/HEAD; without it they start on the stale main (4976680).
+# Agent worktrees branch off origin/HEAD; without it they start on the stale master (4976680).
 git remote set-head origin -a >/dev/null 2>&1 || true
 
 # Tickets must be green on JDK 17 and the newest GA; the container ships only JDK 21. Install Temurin
@@ -71,9 +71,9 @@ install_jdk 17 "$HOME/.jdks/17"
 
 # Non-fatal: warn when this branch carries changes that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
 # Compares content, not commits: after a squash merge the base is merged in, leaving old commits with an empty diff.
-git fetch -q origin main 2>/dev/null || true
-changed=$(git diff --name-only origin/main HEAD 2>/dev/null | wc -l)
+git fetch -q origin 2>/dev/null || true
+changed=$(git diff --name-only origin/HEAD HEAD 2>/dev/null | wc -l)
 if [ "${changed:-0}" -gt 0 ]; then
-  echo "session-start: warning: $changed file(s) on this branch differ from origin/main; see the Merging section of docs/agents/wayfinding.md" >&2
+  echo "session-start: warning: $changed file(s) on this branch differ from the remote default branch (origin/HEAD); see the Merging section of docs/agents/wayfinding.md" >&2
 fi
 exit 0

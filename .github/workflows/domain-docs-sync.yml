@@ -23,11 +23,13 @@ jobs:
       - name: Test the CI check scripts
         run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
 
-      - name: Check the main ruleset requires only existing CI job names
+      - name: Check the default branch ruleset requires only existing CI job names
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash  # -eo pipefail, so a failing API call is not hidden by the pipe
-        run: gh api repos/${{ github.repository }}/rules/branches/main | scripts/ci/check-ruleset-job-names.py
+        run: |
+          default_branch=$(gh api repos/${{ github.repository }} --jq .default_branch)
+          gh api "repos/${{ github.repository }}/rules/branches/$default_branch" | scripts/ci/check-ruleset-job-names.py
 
       - name: Check agent scripts with a shebang are executable in git
         run: |
