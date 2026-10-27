@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Class;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
@@ -13,11 +14,11 @@ import org.hamcrest.TypeSafeMatcher;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
+public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class);
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, "someProperty");
   }
 
   public SimplePojoMatcher withSomeProperty(
@@ -34,6 +35,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
   public SimplePojoMatcher withSomeProperty(final SimplePojo.InnerType.InnerEnum value) {
     beanPropertyMatcher.with("someProperty", Matchers.equalTo(value));
     return this;
+  }
+
+  @Override
+  public BeanPropertyMatcher<SimplePojo> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override
@@ -59,11 +65,16 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
       value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
       date = "2020-01-01T00:00"
   )
-  public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> {
+  public static class InnerTypeMatcher extends TypeSafeMatcher<SimplePojo.InnerType> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher;
 
     public InnerTypeMatcher() {
       beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType>(SimplePojo.InnerType.class);
+    }
+
+    @Override
+    public BeanPropertyMatcher<SimplePojo.InnerType> beanPropertyMatcher() {
+      return beanPropertyMatcher;
     }
 
     @Override
@@ -90,11 +101,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
         value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
         date = "2020-01-01T00:00"
     )
-    public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> {
+    public static class InnerEnumMatcher extends TypeSafeMatcher<SimplePojo.InnerType.InnerEnum> implements GeneratedBeanMatcher {
       private final BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher;
 
       public InnerEnumMatcher() {
-        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class);
+        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class, "declaringClass", "class");
       }
 
       public InnerEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
@@ -125,6 +136,11 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> {
       public InnerEnumMatcher withClass(final Class<?> value) {
         beanPropertyMatcher.with("class", Matchers.equalTo(value));
         return this;
+      }
+
+      @Override
+      public BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum> beanPropertyMatcher() {
+        return beanPropertyMatcher;
       }
 
       @Override

@@ -56,6 +56,7 @@ class MatcherGenerator {
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(getGeneratedAnnotation())
             .superclass(getSuperClass())
+            .addSuperinterface(GeneratedBeanMatcher.class)
             .addFields(getFields())
             .addMethod(getConstructor())
             .addMethods(getPropertyHamcrestMatcherMethods())
@@ -194,20 +195,37 @@ class MatcherGenerator {
         return MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PUBLIC)
             .addStatement(
-                "$L = new $T($T.class)",
+                "$L = new $T($T.class$L)",
                 BUILDER_FIELD_NAME,
                 getBuilderFieldType(),
-                rawTypeName()
+                rawTypeName(),
+                propertyNameArguments()
             )
             .build();
     }
 
+    private String propertyNameArguments() {
+        return PropertyModel.distinctByName(model.properties()).stream()
+            .map(property -> ", \"" + property.name() + "\"")
+            .collect(Collectors.joining());
+    }
+
     private List<MethodSpec> getMatcherMethods() {
         return List.of(
+            getBeanPropertyMatcherMethod(),
             getDescribeToMethod(),
             getMatchesSafelyMethod(),
             getDescribeMissmatchSafelyMethod()
         );
+    }
+
+    private MethodSpec getBeanPropertyMatcherMethod() {
+        return MethodSpec.methodBuilder("beanPropertyMatcher")
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
+            .addStatement("return $L", BUILDER_FIELD_NAME)
+            .returns(getBuilderFieldType())
+            .build();
     }
 
     private MethodSpec getDescribeToMethod() {

@@ -1,6 +1,7 @@
 package my.base.pck.some.other.pck;
 
 import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
+import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
 import org.hamcrest.Description;
@@ -11,11 +12,16 @@ import some.other.pck.SomePojo;
     value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
     date = "2020-01-01T00:00"
 )
-public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
+public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
 
   public SomePojoMatcher() {
     beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class);
+  }
+
+  @Override
+  public BeanPropertyMatcher<SomePojo> beanPropertyMatcher() {
+    return beanPropertyMatcher;
   }
 
   @Override
@@ -41,11 +47,16 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> {
       value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
       date = "2020-01-01T00:00"
   )
-  public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> {
+  public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
 
     public InnerInterfaceMatcher() {
       beanPropertyMatcher = new BeanPropertyMatcher<SomePojo.InnerInterface>(SomePojo.InnerInterface.class);
+    }
+
+    @Override
+    public BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher() {
+      return beanPropertyMatcher;
     }
 
     @Override
