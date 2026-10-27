@@ -28,12 +28,30 @@ remove_rate_limit_artifacts() {
 # pipeline, so pipefail still reports Maven's exit code.
 quiet_jvm() { grep -v '^Picked up JAVA_TOOL_OPTIONS' || true; }
 
+# Maven Central answers HTTP 429 under load (CLAUDE.md "Known Pitfalls"), and one rate-limited download fails the
+# whole pre-fetch. Try up to 4 times, pausing 2, 4 and 8 seconds between failed attempts, and log each failure.
+# An attempt also fails when it had to delete rate-limit artifacts, because the next attempt must re-fetch them.
+prefetch_maven_dependencies() {
+  local attempt delay=2
+  for attempt in 1 2 3 4; do
+    # A full install with one fast unit test and one integration test class: surefire and failsafe resolve
+    # their test providers only when they actually run tests, which dependency:go-offline misses.
+    if ./mvnw -B -q install -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerationProcessorIT \
+        -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false 2>&1 | quiet_jvm \
+        && ! remove_rate_limit_artifacts; then
+      return 0
+    fi
+    echo "session-start: Maven pre-fetch attempt $attempt of 4 failed." >&2
+    [ "$attempt" -eq 4 ] && break
+    sleep "$delay"
+    delay=$((delay * 2))
+    remove_rate_limit_artifacts
+  done
+  return 1
+}
+
 remove_rate_limit_artifacts
-# A full install with one fast unit test and one integration test class: surefire and failsafe resolve
-# their test providers only when they actually run tests, which dependency:go-offline misses.
-if ./mvnw -B -q install -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerationProcessorIT \
-    -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false 2>&1 | quiet_jvm \
-    && ! remove_rate_limit_artifacts; then
+if prefetch_maven_dependencies; then
   echo "Maven dependencies pre-fetched; subagents can build with -o." >&2
 else
   remove_rate_limit_artifacts
