@@ -52,13 +52,15 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
             if (!matcherAssigned[matcher]) {
                 failures.add(
                         BeanPropertyMatcher.withPath(
-                                path, missing(itemMatchers.get(matcher), unusedItems)));
+                                path,
+                                describeMissingAndTakeClosest(
+                                        itemMatchers.get(matcher), unusedItems)));
             }
         }
         for (final Object unused : unusedItems) {
             failures.add(
                     BeanPropertyMatcher.withPath(
-                            path, "unexpected " + BeanPropertyMatcher.describeValue(unused)));
+                            path, "unexpected " + PropertyDescription.describeValue(unused)));
         }
     }
 
@@ -85,6 +87,12 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
         return matcherOfItem;
     }
 
+    /**
+     * The augmenting-path step of the maximum bipartite matching: lets the matcher claim a free
+     * item it fits or take over an item from a matcher that can move on to another one.
+     *
+     * @return whether the matcher got an item
+     */
     private static boolean claim(
             final int matcher,
             final boolean[][] fits,
@@ -104,7 +112,8 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
     }
 
     /** Describes a missing item. The closest candidate is taken out of the unused items. */
-    private static String missing(final Matcher<?> matcher, final List<@Nullable Object> unused) {
+    private static String describeMissingAndTakeClosest(
+            final Matcher<?> matcher, final List<@Nullable Object> unused) {
         final String missing = "missing " + BeanPropertyMatcher.describeMatcher(matcher);
         @Nullable Object closest = null;
         @Nullable List<String> closestDifferences = null;
@@ -123,7 +132,7 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
         unused.remove(closest);
         return missing
                 + "; closest "
-                + BeanPropertyMatcher.describeValue(closest)
+                + PropertyDescription.describeValue(closest)
                 + " differs in "
                 + String.join(", ", closestDifferences);
     }
@@ -133,8 +142,9 @@ public final class ItemsInAnyOrder<E> extends PathAwareMatcher {
         if (itemMatchers.isEmpty()) {
             checks.add(new BeanPropertyMatcher.Check(path, this));
         }
+        // no path segment names an item of an unordered collection, so each matcher is one check
         for (final Matcher<?> matcher : itemMatchers) {
-            BeanPropertyMatcher.collectValueChecks(path + "[any]", matcher, checks);
+            checks.add(new BeanPropertyMatcher.Check(path, matcher));
         }
     }
 

@@ -32,7 +32,7 @@ public final class Entries<K, V> extends PathAwareMatcher {
     /** Strings are quoted, other keys are not: {@code "B-2"}, {@code RED}, {@code 42}. */
     private static String keyText(final @Nullable Object key) {
         return key instanceof String || PropertyDescription.isGeneratedType(key)
-                ? BeanPropertyMatcher.describeValue(key)
+                ? PropertyDescription.describeValue(key)
                 : String.valueOf(key);
     }
 
@@ -71,7 +71,7 @@ public final class Entries<K, V> extends PathAwareMatcher {
                                         "unexpected key "
                                                 + keyText(key)
                                                 + " with "
-                                                + BeanPropertyMatcher.describeValue(actualValue)));
+                                                + PropertyDescription.describeValue(actualValue)));
                     }
                 });
     }

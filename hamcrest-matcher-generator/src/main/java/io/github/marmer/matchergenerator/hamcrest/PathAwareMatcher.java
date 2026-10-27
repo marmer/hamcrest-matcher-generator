@@ -56,7 +56,7 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
                             "expected "
                                     + BeanPropertyMatcher.describeMatcher(this)
                                     + " but was "
-                                    + BeanPropertyMatcher.describeValue(value)));
+                                    + PropertyDescription.describeValue(value)));
         }
     }
 

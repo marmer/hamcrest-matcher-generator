@@ -80,10 +80,6 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                 : null;
     }
 
-    static String describeValue(final @Nullable Object value) {
-        return PropertyDescription.describeValue(value);
-    }
-
     static String describeMatcher(final Matcher<?> matcher) {
         return callingForeign(() -> PropertyDescription.describe(matcher));
     }
@@ -172,7 +168,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             + " but was a "
                             + item.getClass().getName()
                             + " ("
-                            + describeValue(item)
+                            + PropertyDescription.describeValue(item)
                             + ")");
         }
         collectFailures(item, "", failures);
@@ -232,7 +228,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                             "expected "
                                     + describeExpected(matcher)
                                     + " but was "
-                                    + describeValue(value)));
+                                    + PropertyDescription.describeValue(value)));
         } else if (matcher instanceof PathAwareMatcher) {
             ((PathAwareMatcher) matcher).collectFailuresOf(value, path, failures);
         } else if (!matchesQuietly(matcher, value)) {
