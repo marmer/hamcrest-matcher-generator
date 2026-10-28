@@ -14,6 +14,8 @@ Rules (see docs/agents/domain.md, "Redundancy rules"):
      (files git tracks or would add; ignored ones such as target/ do not count; a name with a `/` matches as a path
      suffix, a bare name as a file name; names starting with `~` or `/` are outside the repository and skipped), and
      every backticked `io.github.marmer...` package exists as a directory under some src/*/java.
+  6. Every public type declared in the core `spi` package (matcher-generator-core/src/main/java/**/spi) is named in
+     docs/src/docs/asciidoc/architecture/_chapters/05_building_block_view.adoc.
 
 A missing GLOSSARY.md, docs/adr/ or required-checks list means there is nothing to check for that rule and it passes.
 
@@ -37,6 +39,8 @@ DECISIONS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/09_architecture_
 WAYFINDING_MD = "docs/agents/wayfinding.md"
 WORKFLOW_DIR = ".github/workflows"
 CLAUDE_MD = "CLAUDE.md"
+BUILDING_BLOCKS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/05_building_block_view.adoc"
+CORE_MAIN_SOURCES = "matcher-generator-core/src/main/java"
 
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
@@ -44,6 +48,8 @@ PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
 REQUIRED_CHECKS = re.compile(r"required checks of the `main` ruleset pass \(([^)]*)\)")
 BACKTICKED = re.compile(r"`([^`\n]+)`")
 FILE_NAME = re.compile(r"[\w.-]+\.(?:java|kt|adoc|yml|xml)")
+PUBLIC_TYPE = re.compile(
+    r"^public\s+(?:(?:abstract|final|sealed|static)\s+)*(?:@?interface|class|record|enum)\s+(\w+)", re.MULTILINE)
 PACKAGE = re.compile(r"io\.github\.marmer(?:\.\w+)*")
 
 
@@ -153,6 +159,16 @@ def check_claude_md_references(root, violations):
             violations.append(f"{CLAUDE_MD}: package '{token}' is not a directory under any src/*/java")
 
 
+def check_spi_types_named(root, violations):
+    chapter = read(root / BUILDING_BLOCKS_ADOC)
+    for spi_dir in sorted((root / CORE_MAIN_SOURCES).glob("**/spi")):
+        for source in sorted(spi_dir.glob("*.java")):
+            for name in PUBLIC_TYPE.findall(read(source)):
+                if not re.search(rf"\b{name}\b", chapter):
+                    violations.append(
+                        f"{BUILDING_BLOCKS_ADOC}: SPI type '{name}' from {source.relative_to(root)} is not named")
+
+
 def main():
     if len(sys.argv) > 2:
         sys.exit(__doc__)
@@ -162,6 +178,7 @@ def main():
     check_adrs(root, violations)
     check_required_checks(root, violations)
     check_claude_md_references(root, violations)
+    check_spi_types_named(root, violations)
     for violation in violations:
         print(violation)
     if violations:

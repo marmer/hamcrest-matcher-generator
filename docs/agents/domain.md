@@ -37,6 +37,7 @@ Redundant documentation for agents is welcome, **as long as the human-facing arc
 - Remove any template placeholder rows (e.g. `<Term-1>`) from a chapter when you add its first real entry.
 - `scripts/agents/check-domain-docs-sync.py` checks these rules in CI, plus that the required checks named in `docs/agents/wayfinding.md` are CI job names and that every backticked file name and `io.github.marmer` package in `CLAUDE.md` exists. Run it locally with `python3 scripts/agents/check-domain-docs-sync.py`.
 - The same job (`domain-docs-sync`, display name `Domain docs in sync`, required check, `.github/workflows/domain-docs-sync.yml`) also runs the `scripts/ci` unit tests, `scripts/ci/check-frozen-5x-suite.sh` (the 5.x suite's tree hash is unchanged) and `scripts/ci/check-ruleset-job-names.py` (every status check the `main` ruleset requires is a job name; needs the GitHub API, so it only runs in CI). The CI gates are described in `08_concepts.adoc`.
+- **The backend SPI** (`GeneratorBackend`, `GenerationContext`, `GeneratedSource`) is described in arc42 chapters 5 (building blocks), 6 (runtime), 8 (concepts) and 9 (decisions, ADR 0001 and 0004), and the `Backend` term in `GLOSSARY.md`; read those before changing it.
 - If the agent docs and arc42 disagree, don't silently pick one. Surface the conflict and resolve it in both places.
 
 ## File structure
