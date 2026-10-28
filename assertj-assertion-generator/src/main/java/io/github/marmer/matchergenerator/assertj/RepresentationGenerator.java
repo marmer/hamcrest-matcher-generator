@@ -129,7 +129,10 @@ final class RepresentationGenerator {
         model.nestedTypes().forEach(nested -> flatten(nested, into));
     }
 
-    /** The number of distinct supertypes, direct and inherited, of the type. */
+    /**
+     * The number of distinct supertypes, direct and inherited, of the type. A type reached twice
+     * through a diamond is walked twice, which the set absorbs.
+     */
     private static int ancestorCount(final TypeMirror type) {
         final Set<String> ancestors = new HashSet<>();
         collectAncestors(asTypeElement(type), ancestors);
@@ -142,9 +145,8 @@ final class RepresentationGenerator {
         for (final TypeMirror supertype : supertypes) {
             if (supertype.getKind() == TypeKind.DECLARED) {
                 final TypeElement element = asTypeElement(supertype);
-                if (ancestors.add(element.getQualifiedName().toString())) {
-                    collectAncestors(element, ancestors);
-                }
+                ancestors.add(element.getQualifiedName().toString());
+                collectAncestors(element, ancestors);
             }
         }
     }
