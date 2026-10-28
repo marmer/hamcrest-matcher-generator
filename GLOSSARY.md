@@ -44,7 +44,7 @@ The dot-separated route from the asserted object to a checked value, with `[inde
 _Avoid_: property chain, field path
 
 **Assertion path**:
-The AssertJ counterpart of the **Property path**: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. Inside an array, collection or map the path restarts at the element type (`OrderLine.sku`). A missing asserted object reads `Expecting Order.customer not to be null`.
+The AssertJ counterpart of the **Property path**: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. Inside an array, collection or map the path restarts at the element type (`OrderLine.sku`). Navigation with `extracting(.., as(X))` or `first(as(X))` starts a new path at the navigated type (`Customer.name`), while `hasFooSatisfying` keeps the root path (`Order.customer.name`). A missing asserted object reads `Expecting Order.customer not to be null`.
 _Avoid_: AssertJ path, nested path
 
 **Generated bean matcher**:
