@@ -519,6 +519,88 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A property whose hasFieldOrProperty name clashes is a compile error")
+    void aPropertyWhoseHasFieldOrPropertyNameClashesIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public String getFieldOrProperty() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'fieldOrProperty'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'hasFieldOrProperty'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A property whose hasFieldOrPropertyWithValue name clashes is a compile error")
+    void aPropertyWhoseHasFieldOrPropertyWithValueNameClashesIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public String getFieldOrPropertyWithValue() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'fieldOrPropertyWithValue'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'hasFieldOrPropertyWithValue'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A boolean null property clashes with isNull and isNotNull, one error for both")
+    void aBooleanNullPropertyClashesWithIsNullAndIsNotNullInOneError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public boolean isNull() {
+                                        return true;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'null'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'isNull' and 'isNotNull'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
     @DisplayName("A name that only resembles an inherited AssertJ method is no clash")
     void aNameThatOnlyResemblesAnInheritedMethodIsNoClash() {
         final Compilation compilation =
