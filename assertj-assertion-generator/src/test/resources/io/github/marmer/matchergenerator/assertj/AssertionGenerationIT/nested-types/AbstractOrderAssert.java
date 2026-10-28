@@ -3,6 +3,7 @@ package some.other.pck;
 import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -26,21 +27,23 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
   }
 
   public SELF hasCustomer(final Order.@Nullable Customer value) {
-    requireActual();
+    isNotNull();
     return checkProperty("customer", actual.getCustomer(), value);
   }
 
   public SELF hasCustomerSatisfying(
       final Consumer<? super Order.@Nullable Customer> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".customer", actual.getCustomer(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,
@@ -65,20 +68,22 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
     }
 
     public SELF hasName(final @Nullable String value) {
-      requireActual();
+      isNotNull();
       return checkProperty("name", actual.getName(), value);
     }
 
     public SELF hasNameSatisfying(final Consumer<? super String> requirements) {
-      requireActual();
+      isNotNull();
       AssertionPath.within(path + ".name", actual.getName(), requirements);
       return myself;
     }
 
-    private void requireActual() {
+    @Override
+    public SELF isNotNull() {
       if (actual == null) {
         failWithMessage("%nExpecting %s not to be null", path);
       }
+      return myself;
     }
 
     private SELF checkProperty(final String property, final @Nullable Object actualValue,
@@ -103,20 +108,22 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
       }
 
       public SELF hasCity(final @Nullable String value) {
-        requireActual();
+        isNotNull();
         return checkProperty("city", actual.getCity(), value);
       }
 
       public SELF hasCitySatisfying(final Consumer<? super String> requirements) {
-        requireActual();
+        isNotNull();
         AssertionPath.within(path + ".city", actual.getCity(), requirements);
         return myself;
       }
 
-      private void requireActual() {
+      @Override
+      public SELF isNotNull() {
         if (actual == null) {
           failWithMessage("%nExpecting %s not to be null", path);
         }
+        return myself;
       }
 
       private SELF checkProperty(final String property, final @Nullable Object actualValue,

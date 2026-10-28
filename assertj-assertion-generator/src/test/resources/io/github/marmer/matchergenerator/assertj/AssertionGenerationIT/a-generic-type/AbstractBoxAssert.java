@@ -4,6 +4,7 @@ import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.List;
 import java.util.Map;
@@ -29,64 +30,66 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
   }
 
   public SELF hasContent(final @Nullable Object value) {
-    requireActual();
+    isNotNull();
     return checkProperty("content", actual.getContent(), value);
   }
 
   public SELF hasContentSatisfying(final Consumer<? super Object> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".content", actual.getContent(), requirements);
     return myself;
   }
 
   public SELF hasContents(final @Nullable List<?> value) {
-    requireActual();
+    isNotNull();
     return checkProperty("contents", actual.getContents(), value);
   }
 
   public SELF hasContentsSatisfying(final Consumer<? super List<?>> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".contents", actual.getContents(), requirements);
     return myself;
   }
 
   public SELF hasNumbers(final @Nullable Map<? extends String, ?> value) {
-    requireActual();
+    isNotNull();
     return checkProperty("numbers", actual.getNumbers(), value);
   }
 
   public SELF hasNumbersSatisfying(final Consumer<? super Map<? extends String, ?>> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".numbers", actual.getNumbers(), requirements);
     return myself;
   }
 
   public SELF hasSupers(final @Nullable List<? super Integer> value) {
-    requireActual();
+    isNotNull();
     return checkProperty("supers", actual.getSupers(), value);
   }
 
   public SELF hasSupersSatisfying(final Consumer<? super List<? super Integer>> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".supers", actual.getSupers(), requirements);
     return myself;
   }
 
   public SELF hasAnything(final @Nullable List<?> value) {
-    requireActual();
+    isNotNull();
     return checkProperty("anything", actual.getAnything(), value);
   }
 
   public SELF hasAnythingSatisfying(final Consumer<? super List<?>> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".anything", actual.getAnything(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,

@@ -101,4 +101,34 @@ class BeanAssertionTest {
         assertThatThrownBy(() -> assertThat(ORDER).withFailMessage("custom").hasId(1))
                 .hasMessage("custom");
     }
+
+    @Test
+    @DisplayName("A description applies to the failure of a missing asserted object")
+    void aDescriptionAppliesToTheFailureOfAMissingAssertedObject() {
+        assertThatThrownBy(() -> assertThat(null).as("the order").hasId(1))
+                .hasMessage(String.format("[the order] %nExpecting Order not to be null"));
+    }
+
+    @Test
+    @DisplayName("A custom failure message applies to the failure of a missing asserted object")
+    void aCustomFailureMessageAppliesToTheFailureOfAMissingAssertedObject() {
+        assertThatThrownBy(() -> assertThat(null).withFailMessage("custom").hasId(1))
+                .hasMessage("custom");
+    }
+
+    @Test
+    @DisplayName("An overriding error message applies to both failures")
+    void anOverridingErrorMessageAppliesToBothFailures() {
+        assertThatThrownBy(() -> assertThat(null).overridingErrorMessage("overridden").hasId(1))
+                .hasMessage("overridden");
+        assertThatThrownBy(() -> assertThat(ORDER).overridingErrorMessage("overridden").hasId(1))
+                .hasMessage("overridden");
+    }
+
+    @Test
+    @DisplayName("isNotNull names the path of the asserted object")
+    void isNotNullNamesThePathOfTheAssertedObject() {
+        assertThatThrownBy(() -> assertThat(null).isNotNull())
+                .hasMessage(String.format("%nExpecting Order not to be null"));
+    }
 }

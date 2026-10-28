@@ -3,6 +3,7 @@ package some.other.pck;
 import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -26,31 +27,33 @@ public abstract class AbstractAddressAssert<SELF extends AbstractAddressAssert<S
   }
 
   public SELF hasStreet(final @Nullable String value) {
-    requireActual();
+    isNotNull();
     return checkProperty("street", actual.street(), value);
   }
 
   public SELF hasStreetSatisfying(final Consumer<? super String> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".street", actual.street(), requirements);
     return myself;
   }
 
   public SELF hasCity(final @Nullable String value) {
-    requireActual();
+    isNotNull();
     return checkProperty("city", actual.city(), value);
   }
 
   public SELF hasCitySatisfying(final Consumer<? super String> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".city", actual.city(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,

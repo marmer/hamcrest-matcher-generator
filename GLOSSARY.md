@@ -36,11 +36,11 @@ An instance of a configured type whose property values serve as the expected val
 _Avoid_: template, prototype object
 
 **Property path**:
-The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
+The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in Hamcrest mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
 _Avoid_: property chain, field path
 
 **Assertion path**:
-The property path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. A missing asserted object reads `Expecting Order.customer not to be null`.
+The AssertJ counterpart of the **Property path**: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. A missing asserted object reads `Expecting Order.customer not to be null`.
 _Avoid_: AssertJ path, nested path
 
 **Generated bean matcher**:

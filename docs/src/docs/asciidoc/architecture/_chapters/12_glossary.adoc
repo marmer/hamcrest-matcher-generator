@@ -38,10 +38,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 |An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step with `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and uses `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`. A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
 
 |Property path
-|The route from the asserted object to the value that was checked, written with dots between property names, `[index]` for list items and `[key]` for map entries. Mismatch messages use it to say exactly which value differs, for example `customer.address.city` or `lines[1].quantity`.
+|The route from the asserted object to the value that was checked, written with dots between property names, `[index]` for list items and `[key]` for map entries. Hamcrest mismatch messages use it to say exactly which value differs, for example `customer.address.city` or `lines[1].quantity`.
 
 |Assertion path
-|The property path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. A missing asserted object reads `Expecting Order.customer not to be null`.
+|The AssertJ counterpart of the property path: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. A missing asserted object reads `Expecting Order.customer not to be null`.
 
 |Generated bean matcher
 |A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.

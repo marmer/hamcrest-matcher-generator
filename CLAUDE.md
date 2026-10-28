@@ -52,7 +52,7 @@ The published modules are `matcher-generator-annotations` (`@GenerateMatchers` a
 
 ## Architecture: Generation Flow
 
-The round-by-round flow (annotation, processor, worker, `TypeModel`, backends, written sources) is arc42 chapter 06, `docs/src/docs/asciidoc/architecture/_chapters/06_runtime_view.adoc`; read it there. The Hamcrest backend lives in package `io.github.marmer.matchergenerator.hamcrest`; its generated `<TypeName>Matcher` extends `TypeSafeMatcher<T>` and wraps a `BeanPropertyMatcher<T>`.
+The round-by-round flow (annotation, processor, worker, `TypeModel`, backends, written sources) is arc42 chapter 06, `docs/src/docs/asciidoc/architecture/_chapters/06_runtime_view.adoc`; read it there. The Hamcrest backend lives in package `io.github.marmer.matchergenerator.hamcrest`; its generated `<TypeName>Matcher` extends `TypeSafeMatcher<T>` and wraps a `BeanPropertyMatcher<T>`. The AssertJ backend (`io.github.marmer.matchergenerator.assertj`) generates an `AbstractXAssert<SELF, ACTUAL>` and a concrete `XAssert` per type.
 
 **Generated matcher API** (per property `foo`):
 ```java

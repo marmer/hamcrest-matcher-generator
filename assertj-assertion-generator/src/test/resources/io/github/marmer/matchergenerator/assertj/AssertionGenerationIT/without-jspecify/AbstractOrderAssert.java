@@ -4,6 +4,7 @@ import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -24,31 +25,33 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
   }
 
   public SELF hasId(final String value) {
-    requireActual();
+    isNotNull();
     return checkProperty("id", actual.getId(), value);
   }
 
   public SELF hasIdSatisfying(final Consumer<? super String> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".id", actual.getId(), requirements);
     return myself;
   }
 
   public SELF hasQuantity(final int value) {
-    requireActual();
+    isNotNull();
     return checkProperty("quantity", actual.getQuantity(), value);
   }
 
   public SELF hasQuantitySatisfying(final Consumer<? super Integer> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".quantity", actual.getQuantity(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final Object actualValue,

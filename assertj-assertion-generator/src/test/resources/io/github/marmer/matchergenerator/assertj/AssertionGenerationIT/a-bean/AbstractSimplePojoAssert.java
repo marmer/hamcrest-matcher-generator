@@ -5,6 +5,7 @@ import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.List;
 import java.util.Objects;
@@ -29,53 +30,55 @@ public abstract class AbstractSimplePojoAssert<SELF extends AbstractSimplePojoAs
   }
 
   public SELF hasName(final @Nullable String value) {
-    requireActual();
+    isNotNull();
     return checkProperty("name", actual.getName(), value);
   }
 
   public SELF hasNameSatisfying(final Consumer<? super String> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".name", actual.getName(), requirements);
     return myself;
   }
 
   public SELF hasAge(final int value) {
-    requireActual();
+    isNotNull();
     return checkProperty("age", actual.getAge(), value);
   }
 
   public SELF hasAgeSatisfying(final Consumer<? super Integer> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".age", actual.getAge(), requirements);
     return myself;
   }
 
   public SELF hasActive(final boolean value) {
-    requireActual();
+    isNotNull();
     return checkProperty("active", actual.isActive(), value);
   }
 
   public SELF hasActiveSatisfying(final Consumer<? super Boolean> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".active", actual.isActive(), requirements);
     return myself;
   }
 
   public SELF hasTags(final @Nullable List<? extends String> value) {
-    requireActual();
+    isNotNull();
     return checkProperty("tags", actual.getTags(), value);
   }
 
   public SELF hasTagsSatisfying(final Consumer<? super List<? extends String>> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".tags", actual.getTags(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,

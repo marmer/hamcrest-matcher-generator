@@ -3,6 +3,7 @@ package some.other.pck;
 import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
 import java.lang.Object;
+import java.lang.Override;
 import java.lang.String;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -26,20 +27,22 @@ public abstract class AbstractConflictingAssert<SELF extends AbstractConflicting
   }
 
   public SELF hasConflictProperty(final @Nullable Object value) {
-    requireActual();
+    isNotNull();
     return checkProperty("conflictProperty", actual.getConflictProperty(), value);
   }
 
   public SELF hasConflictPropertySatisfying(final Consumer<? super Object> requirements) {
-    requireActual();
+    isNotNull();
     AssertionPath.within(path + ".conflictProperty", actual.getConflictProperty(), requirements);
     return myself;
   }
 
-  private void requireActual() {
+  @Override
+  public SELF isNotNull() {
     if (actual == null) {
       failWithMessage("%nExpecting %s not to be null", path);
     }
+    return myself;
   }
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,

@@ -40,10 +40,10 @@ import javax.lang.model.type.WildcardType;
 class AssertionGenerator {
     private static final String ASSERTJ_API = "org.assertj.core.api";
     private static final String OBJECT_CLASS_ACCESSOR = "getClass";
-    private static final String ACTUAL = "actual";
+    private static final String ACTUAL_FIELD = "actual";
     private static final String PATH = "path";
     private static final String RETURN_MYSELF = "return myself";
-    private static final String REQUIRE_ACTUAL = "requireActual";
+    private static final String IS_NOT_NULL = "isNotNull";
     private static final String CHECK_PROPERTY = "checkProperty";
     private static final ClassName ABSTRACT_OBJECT_ASSERT =
             ClassName.get(ASSERTJ_API, "AbstractObjectAssert");
@@ -52,8 +52,10 @@ class AssertionGenerator {
     private static final AnnotationSpec NULLABLE =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "Nullable")).build();
 
-    private static final TypeVariableName SELF = TypeVariableName.get("SELF");
-    private static final TypeVariableName ACTUAL_TYPE = TypeVariableName.get("ACTUAL");
+    private static final String SELF_NAME = "SELF";
+    private static final String ACTUAL_TYPE_NAME = "ACTUAL";
+    private static final TypeVariableName SELF = TypeVariableName.get(SELF_NAME);
+    private static final TypeVariableName ACTUAL_TYPE = TypeVariableName.get(ACTUAL_TYPE_NAME);
     private static final ClassName REPRESENTATION =
             ClassName.get("org.assertj.core.presentation", "Representation");
 
@@ -110,10 +112,10 @@ class AssertionGenerator {
                         .addAnnotation(generatedAnnotation())
                         .addTypeVariable(
                                 TypeVariableName.get(
-                                        "SELF",
+                                        SELF_NAME,
                                         ParameterizedTypeName.get(
                                                 abstractClass, SELF, ACTUAL_TYPE)))
-                        .addTypeVariable(TypeVariableName.get("ACTUAL", assertedType()))
+                        .addTypeVariable(TypeVariableName.get(ACTUAL_TYPE_NAME, assertedType()))
                         .superclass(
                                 ParameterizedTypeName.get(
                                         ABSTRACT_OBJECT_ASSERT, SELF, ACTUAL_TYPE))
@@ -129,7 +131,7 @@ class AssertionGenerator {
                     builder.addMethod(hasSatisfyingMethod(property));
                 });
         if (!properties.isEmpty()) {
-            builder.addMethod(requireActualMethod()).addMethod(checkPropertyMethod());
+            builder.addMethod(isNotNullMethod()).addMethod(checkPropertyMethod());
         }
         model.nestedTypes()
                 .forEach(
@@ -180,14 +182,14 @@ class AssertionGenerator {
         final MethodSpec.Builder constructor =
                 MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PROTECTED)
-                        .addParameter(nullable(ACTUAL_TYPE), ACTUAL, Modifier.FINAL)
+                        .addParameter(nullable(ACTUAL_TYPE), ACTUAL_FIELD, Modifier.FINAL)
                         .addParameter(
                                 ParameterizedTypeName.get(
                                         ClassName.get(Class.class),
                                         WildcardTypeName.subtypeOf(Object.class)),
                                 "selfType",
                                 Modifier.FINAL)
-                        .addStatement("super($L, selfType)", ACTUAL);
+                        .addStatement("super($L, selfType)", ACTUAL_FIELD);
         if (!properties.isEmpty()) {
             constructor.addStatement(
                     "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName());
@@ -198,16 +200,16 @@ class AssertionGenerator {
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
         return MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(nullable(assertedType()), ACTUAL, Modifier.FINAL)
-                .addStatement("super($L, $T.class)", ACTUAL, concreteClass)
+                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
+                .addStatement("super($L, $T.class)", ACTUAL_FIELD, concreteClass)
                 .build();
     }
 
     private MethodSpec assertThatMethod(final ClassName concreteClass) {
         return MethodSpec.methodBuilder("assertThat")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(nullable(assertedType()), ACTUAL, Modifier.FINAL)
-                .addStatement("return new $T($L)", concreteClass, ACTUAL)
+                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
+                .addStatement("return new $T($L)", concreteClass, ACTUAL_FIELD)
                 .returns(concreteClass)
                 .build();
     }
@@ -217,12 +219,12 @@ class AssertionGenerator {
         return MethodSpec.methodBuilder("has" + capitalized(property.name()))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(valueType(property), "value", Modifier.FINAL)
-                .addStatement("$L()", REQUIRE_ACTUAL)
+                .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
                         "return $L($S, $L.$L(), value)",
                         CHECK_PROPERTY,
                         property.name(),
-                        ACTUAL,
+                        ACTUAL_FIELD,
                         property.accessor())
                 .returns(SELF)
                 .build();
@@ -233,26 +235,29 @@ class AssertionGenerator {
         return MethodSpec.methodBuilder("has" + capitalized(property.name()) + "Satisfying")
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(requirementsType(property), "requirements", Modifier.FINAL)
-                .addStatement("$L()", REQUIRE_ACTUAL)
+                .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
                         "$T.within($L + $S, $L.$L(), requirements)",
                         AssertionPath.class,
                         PATH,
                         "." + property.name(),
-                        ACTUAL,
+                        ACTUAL_FIELD,
                         property.accessor())
                 .addStatement(RETURN_MYSELF)
                 .returns(SELF)
                 .build();
     }
 
-    /** Fails with the path of the asserted value when there is none. */
-    private MethodSpec requireActualMethod() {
-        return MethodSpec.methodBuilder(REQUIRE_ACTUAL)
-                .addModifiers(Modifier.PRIVATE)
-                .beginControlFlow("if ($L == null)", ACTUAL)
+    /** Overrides {@code isNotNull()} so that it fails with the path of the asserted value. */
+    private MethodSpec isNotNullMethod() {
+        return MethodSpec.methodBuilder(IS_NOT_NULL)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .beginControlFlow("if ($L == null)", ACTUAL_FIELD)
                 .addStatement("failWithMessage($S, $L)", "%nExpecting %s not to be null", PATH)
                 .endControlFlow()
+                .addStatement(RETURN_MYSELF)
+                .returns(SELF)
                 .build();
     }
 
