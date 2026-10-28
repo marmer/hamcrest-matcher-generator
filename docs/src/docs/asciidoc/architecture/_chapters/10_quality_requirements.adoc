@@ -83,7 +83,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-c4]]QS-C4
 | Functional suitability / Functional correctness
 | *A cyclic object graph ends the comparison.* When a test developer compares an object whose graph contains a cycle (such as `parent.children[0].parent`) while using the Hamcrest reference-object matcher, the runtime treats an already visited pair of objects as equal and finishes the comparison; the test ends with a pass or a regular mismatch, never with a `StackOverflowError`.
-| None yet (planned for 6.0.0): runtime unit test
+| Runtime unit test `ReferenceMatchingTest`; end-to-end `ReferenceObjectTest` (java-records module)
 
 | [[qs-n1]]QS-N1
 | Compatibility / Co-existence
