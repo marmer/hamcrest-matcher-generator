@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
@@ -57,6 +58,7 @@ class CoreProcessorIT {
     @AfterEach
     void resetRecording() {
         RecordingBackend.reset();
+        ProbingBackend.reset();
     }
 
     private static JavaFileObject generateMatchersConfiguration(final String configuredTypes) {
@@ -411,6 +413,45 @@ class CoreProcessorIT {
                 RecordingBackend.contexts().stream()
                         .map(GenerationContext::jspecifyAvailable)
                         .toList());
+    }
+
+    @Test
+    @DisplayName("A backend error fails the compilation once, at the annotation of the type")
+    void aBackendErrorFailsTheCompilationOnceAtTheAnnotationOfTheType() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("\"some.other.pck.Probed\"");
+        final JavaFileObject probed =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Probed",
+                        "package some.other.pck;",
+                        "public class Probed {",
+                        "}");
+
+        final Compilation compilation = compile(configuration, probed);
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(ProbingBackend.ERROR + " for Probed")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A backend learns the inherited methods of a class, and none of a missing class")
+    void aBackendLearnsTheInheritedMethodsOfAClassAndNoneOfAMissingClass() {
+        final JavaFileObject probed =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Probed",
+                        "package some.other.pck;",
+                        "public class Probed {",
+                        "}");
+
+        compile(generateMatchersConfiguration("\"some.other.pck.Probed\""), probed);
+
+        final List<Set<String>> inherited = ProbingBackend.inheritedOfObject();
+        assertEquals(1, inherited.size());
+        assertTrue(inherited.get(0).containsAll(Set.of("getClass", "hashCode", "toString")));
+        assertEquals(List.of(Set.of()), ProbingBackend.inheritedOfMissingClass());
     }
 
     private static List<File> classPathWithout(final String fragment) {

@@ -8,6 +8,9 @@ import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Information about the current generation run that is not part of the model of a type.
@@ -18,24 +21,62 @@ import java.util.Objects;
  *     time, which is the condition for emitting JSpecify annotations
  * @param generatedTypes the models of all types generated in this run, whatever configuration asked
  *     for them. A backend learns from them which types get generated code, e.g. to refer to it.
+ * @param inheritedMethods the names of the methods of a class on the compile class path, inherited
+ *     ones included, by qualified class name; empty for a class that is not there
+ * @param errors receives the message of every compiler error a backend reports for the configured
+ *     type; the core reports it at the annotation element that configured the type
  */
 public record GenerationContext(
         String generatorName,
         LocalDateTime generationTime,
         boolean jspecifyAvailable,
-        List<TypeModel> generatedTypes) {
+        List<TypeModel> generatedTypes,
+        Function<String, Set<String>> inheritedMethods,
+        Consumer<String> errors) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
         Objects.requireNonNull(generationTime, "generationTime");
         generatedTypes = List.copyOf(generatedTypes);
+        Objects.requireNonNull(inheritedMethods, "inheritedMethods");
+        Objects.requireNonNull(errors, "errors");
     }
 
-    /** A context that knows no other generated types. */
+    /**
+     * A context that knows no other generated types and no inherited methods, and that cannot
+     * report errors.
+     */
     public GenerationContext(
             final String generatorName,
             final LocalDateTime generationTime,
             final boolean jspecifyAvailable) {
-        this(generatorName, generationTime, jspecifyAvailable, List.of());
+        this(
+                generatorName,
+                generationTime,
+                jspecifyAvailable,
+                List.of(),
+                name -> Set.of(),
+                message -> {
+                    throw new IllegalStateException("The context cannot report errors: " + message);
+                });
+    }
+
+    /**
+     * The names of the methods a class has, inherited ones included.
+     *
+     * @param qualifiedClassName the qualified name of the class
+     * @return the method names, empty when the class is not on the compile class path
+     */
+    public Set<String> inheritedMethodNames(final String qualifiedClassName) {
+        return inheritedMethods.apply(qualifiedClassName);
+    }
+
+    /**
+     * Reports a compiler error for the configured type, which fails the compilation.
+     *
+     * @param message the error, naming the offending value
+     */
+    public void reportError(final String message) {
+        errors.accept(message);
     }
 }
