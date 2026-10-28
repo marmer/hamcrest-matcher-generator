@@ -14,6 +14,7 @@ MUTATIONS = """<?xml version="1.0" encoding="UTF-8"?>
 <mutations>
   <mutation detected='true' status='KILLED' numberOfTestsRun='2'><sourceFile>A.java</sourceFile></mutation>
   <mutation detected='true' status='KILLED' numberOfTestsRun='1'><sourceFile>A.java</sourceFile></mutation>
+  <mutation detected='true' status='TIMED_OUT' numberOfTestsRun='3'><sourceFile>A.java</sourceFile></mutation>
   <mutation detected='false' status='SURVIVED' numberOfTestsRun='1'><sourceFile>B.java</sourceFile></mutation>
   <mutation detected='false' status='NO_COVERAGE' numberOfTestsRun='0'><sourceFile>B.java</sourceFile></mutation>
 </mutations>
@@ -23,7 +24,7 @@ MUTATIONS = """<?xml version="1.0" encoding="UTF-8"?>
 class CountTest(unittest.TestCase):
 
     def test_detected_and_total_come_from_every_mutation_element(self):
-        self.assertEqual((2, 4), pit.mutation_counts(MUTATIONS))
+        self.assertEqual((3, 5), pit.mutation_counts(MUTATIONS))
 
     def test_empty_report_has_no_mutations(self):
         self.assertEqual((0, 0), pit.mutation_counts("<mutations/>"))
@@ -50,7 +51,7 @@ class ModulesTest(unittest.TestCase):
             root = Path(tmp)
             self.write_report(root, "zeta", MUTATIONS)
             self.write_report(root, "alpha", "<mutations/>")
-            self.assertEqual({"alpha": (0, 0), "zeta": (2, 4)}, pit.measured_modules(root))
+            self.assertEqual({"alpha": (0, 0), "zeta": (3, 5)}, pit.measured_modules(root))
 
     def test_module_without_report_is_not_in_the_result(self):
         with tempfile.TemporaryDirectory() as tmp:

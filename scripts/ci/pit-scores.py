@@ -36,7 +36,7 @@ def measured_modules(root):
     """{module: (detected, total)} for every <module>/target/pit-reports/mutations.xml under root, sorted by name."""
     scores = {}
     for report in sorted(root.glob("*/" + str(REPORT))):
-        scores[report.parent.parent.parent.name] = mutation_counts(report.read_text(encoding="utf-8"))
+        scores[report.parents[2].name] = mutation_counts(report.read_text(encoding="utf-8"))
     return scores
 
 
