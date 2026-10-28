@@ -710,6 +710,49 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("Record components starting with is or get are properties named as the component")
+    void recordComponentsStartingWithIsOrGetArePropertiesNamedAsTheComponent() {
+        final JavaFileObject record =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.BookRecord",
+                        "package some.other.pck;",
+                        "public record BookRecord(String isbn, String getaway, String name) {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.BookRecord\""), record);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(TypeModel.Kind.RECORD, model.kind());
+        assertEquals(
+                List.of(
+                        "isbn:java.lang.String:isbn",
+                        "getaway:java.lang.String:getaway",
+                        "name:java.lang.String:name",
+                        CLASS_PROPERTY),
+                describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("A bean getter named getIsbn is the property isbn")
+    void aBeanGetterNamedGetIsbnIsThePropertyIsbn() {
+        final JavaFileObject pojo =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.IsbnPojo",
+                        "package some.other.pck;",
+                        "public class IsbnPojo {",
+                        "    public String getIsbn() { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.IsbnPojo\""), pojo);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of("isbn:java.lang.String:getIsbn", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
     @DisplayName("Inherited properties of super classes and interfaces are part of the model")
     void inheritedPropertiesArePartOfTheModel() {
         final JavaFileObject base =
