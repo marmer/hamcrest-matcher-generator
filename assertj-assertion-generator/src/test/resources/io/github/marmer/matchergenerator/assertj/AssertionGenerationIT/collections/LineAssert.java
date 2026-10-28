@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import javax.annotation.processing.Generated;
+import org.assertj.core.api.InstanceOfAssertFactory;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -10,6 +11,8 @@ import org.jspecify.annotations.Nullable;
 )
 @NullMarked
 public class LineAssert extends AbstractLineAssert<LineAssert, Line> {
+  public static final InstanceOfAssertFactory<Line, LineAssert> LINE = new InstanceOfAssertFactory<>(Line.class, LineAssert::new);
+
   public LineAssert(final @Nullable Line actual) {
     super(actual, LineAssert.class);
   }

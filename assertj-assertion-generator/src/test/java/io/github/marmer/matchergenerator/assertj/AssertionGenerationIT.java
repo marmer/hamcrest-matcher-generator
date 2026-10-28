@@ -29,6 +29,7 @@ class AssertionGenerationIT {
 
     private static final Pattern CLASS_DECLARATION =
             Pattern.compile("class (\\w+)(?:<.*?>)?\\s+extends\\s+(\\w+)", Pattern.DOTALL);
+    private static final Pattern TYPE_DECLARATION = Pattern.compile("(?:class|interface) (\\w+)");
     private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     @Test
@@ -317,23 +318,36 @@ class AssertionGenerationIT {
                                 """));
 
         CompilationSubject.assertThat(compilation).succeeded();
-        assertEquals(4, compilation.generatedSourceFiles().size());
+        assertEquals(5, compilation.generatedSourceFiles().size());
         for (final JavaFileObject source : compilation.generatedSourceFiles()) {
             final String content = source.getCharContent(true).toString();
-            final Matcher declaration = CLASS_DECLARATION.matcher(content);
+            final boolean mixin = source.getName().endsWith("/SoftAssertionsProvider.java");
+            final Matcher declaration = TYPE_DECLARATION.matcher(content);
             assertTrue(declaration.find(), content);
             assertFalse(
                     List.of("Assertions", "SoftAssertions").contains(declaration.group(1)),
                     declaration.group(1));
-            assertTrue(
-                    List.of(
-                                    "AbstractObjectAssert",
-                                    "AbstractAssertionsAssert",
-                                    "AbstractSoftAssertionsAssert")
-                            .contains(declaration.group(2)),
-                    declaration.group(2));
+            assertFalse(content.contains("extends org.assertj.core.api.Assertions"), content);
             assertFalse(content.contains("import org.assertj.core.api.Assertions;"), content);
             assertFalse(content.contains("import org.assertj.core.api.SoftAssertions;"), content);
+            if (mixin) {
+                assertTrue(
+                        content.contains(
+                                "public interface SoftAssertionsProvider"
+                                        + " extends org.assertj.core.api.SoftAssertionsProvider"),
+                        content);
+            }
+            if (!mixin) {
+                final Matcher classDeclaration = CLASS_DECLARATION.matcher(content);
+                assertTrue(classDeclaration.find(), content);
+                assertTrue(
+                        List.of(
+                                        "AbstractObjectAssert",
+                                        "AbstractAssertionsAssert",
+                                        "AbstractSoftAssertionsAssert")
+                                .contains(classDeclaration.group(2)),
+                        classDeclaration.group(2));
+            }
         }
     }
 
@@ -622,6 +636,79 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A package gets one SoftAssertionsProvider with an assertThat and a then per type")
+    void aPackageGetsOneSoftAssertionsProviderWithAnAssertThatAndAThenPerType() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Line", "some.other.pck.Order"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Line",
+                                """
+                                package some.other.pck;
+
+                                public class Line {
+                                    public String getSku() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                import org.jspecify.annotations.Nullable;
+
+                                public class Order {
+                                    public @Nullable Customer getCustomer() {
+                                        return null;
+                                    }
+
+                                    public static class Customer {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                compilation.generatedSourceFiles().stream()
+                        .filter(source -> source.getName().endsWith("/SoftAssertionsProvider.java"))
+                        .count());
+        assertGolden(
+                compilation, "soft-assertions-provider", "some.other.pck.SoftAssertionsProvider");
+    }
+
+    @Test
+    @DisplayName(
+            "Without JSpecify on the class path the SoftAssertionsProvider carries no annotations")
+    void withoutJSpecifyTheSoftAssertionsProviderCarriesNoAnnotations() throws IOException {
+        final Compilation compilation =
+                compileWithoutJSpecify(
+                        configuration("some.other.pck.Order"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                public class Order {
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(
+                compilation,
+                "soft-assertions-provider-without-jspecify",
+                "some.other.pck.SoftAssertionsProvider");
+    }
+
+    @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all with JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithJSpecify() {
         assertNoWarningUnderLintAll(classPathWithJSpecify());
@@ -631,6 +718,70 @@ class AssertionGenerationIT {
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all without JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithoutJSpecify() {
         assertNoWarningUnderLintAll(classPathWithoutJSpecify());
+    }
+
+    @Test
+    @DisplayName(
+            "The factory and the SoftAssertionsProvider mixin of a generic type produce no javac"
+                    + " warning under -Xlint:all")
+    void theFactoryAndTheMixinOfAGenericTypeProduceNoWarningUnderLintAll() throws IOException {
+        final Compilation compilation =
+                Compiler.javac()
+                        .withClasspath(classPathWithJSpecify())
+                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withOptions("-Xlint:all")
+                        .compile(
+                                configuration("some.other.pck.Box"),
+                                JavaFileObjects.forSourceLines(
+                                        "some.other.pck.Box",
+                                        """
+                                        package some.other.pck;
+
+                                        public class Box<T, U extends Number> {
+                                            public T getContent() {
+                                                return null;
+                                            }
+
+                                            public U getSize() {
+                                                return null;
+                                            }
+                                        }
+                                        """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(
+                generatedContent(compilation, "some.other.pck.SoftAssertionsProvider")
+                        .contains("proxy(BoxAssert.class, Box.class, actual)"));
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @Test
+    @DisplayName(
+            "A type parameter bounded by another type parameter is erased to Object in the factory")
+    void aTypeParameterBoundedByAnotherIsErasedToObjectInTheFactory() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Pair"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pair",
+                                """
+                                package some.other.pck;
+
+                                public class Pair<T, U extends T> {
+                                    public T getFirst() {
+                                        return null;
+                                    }
+
+                                    public U getSecond() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(
+                generatedContent(compilation, "some.other.pck.PairAssert")
+                        .contains("new Type[] {Object.class, Object.class}"));
     }
 
     private static void assertNoWarningUnderLintAll(final List<File> classPath) {
