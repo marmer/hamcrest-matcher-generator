@@ -741,6 +741,35 @@ class AssertionGenerationIT {
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
     }
 
+    @Test
+    @DisplayName(
+            "A type parameter bounded by another type parameter is erased to Object in the factory")
+    void aTypeParameterBoundedByAnotherIsErasedToObjectInTheFactory() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Pair"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pair",
+                                """
+                                package some.other.pck;
+
+                                public class Pair<T, U extends T> {
+                                    public T getFirst() {
+                                        return null;
+                                    }
+
+                                    public U getSecond() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(
+                generatedContent(compilation, "some.other.pck.PairAssert")
+                        .contains("new Type[] {Object.class, Object.class}"));
+    }
+
     private static void assertNoWarningUnderLintAll(final List<File> classPath) {
         final Compilation compilation =
                 Compiler.javac()

@@ -288,9 +288,11 @@ class AssertionGenerator {
                 .collect(CodeBlock.joining(", "));
     }
 
+    /** The erasure of the first bound, which is {@code Object} for an unbounded parameter. */
     private static TypeName boundClass(final List<? extends TypeMirror> bounds) {
-        if (!bounds.isEmpty() && bounds.get(0).getKind() == TypeKind.DECLARED) {
-            return ClassName.get(asTypeElement(bounds.get(0)));
+        final TypeMirror bound = bounds.get(0);
+        if (bound.getKind() == TypeKind.DECLARED) {
+            return ClassName.get(asTypeElement(bound));
         }
         return TypeName.OBJECT;
     }
