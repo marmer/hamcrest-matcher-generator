@@ -102,6 +102,64 @@ jobs:
       - name: Verify
         run: ./mvnw -B clean verify
 
+  mutation-testing:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Read the PIT version
+        # The history cache key includes it: PIT history files are not compatible across PIT versions.
+        run: echo "PIT_VERSION=$(sed -n 's|.*<pitest.version>\(.*\)</pitest.version>.*|\1|p' pom.xml | head -1)" >> "$GITHUB_ENV"
+
+      - name: Restore PIT history
+        # Pull requests analyse incrementally on the history the last push to main saved.
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: target/pit-history
+          key: pit-history-${{ env.PIT_VERSION }}-${{ github.run_id }}
+          restore-keys: pit-history-${{ env.PIT_VERSION }}-
+
+      - name: Mutation testing
+        # Push to main has no history to read, so every mutant is analysed (4 threads, set in the pom).
+        run: ./mvnw -B -Pmutation verify
+
+      - name: Save PIT history
+        if: github.event_name == 'push' && !cancelled()
+        uses: actions/cache/save@v4
+        with:
+          path: target/pit-history
+          key: pit-history-${{ env.PIT_VERSION }}-${{ github.run_id }}
+
+      - name: Upload PIT reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: "**/target/pit-reports/**"
+          if-no-files-found: warn
+
+      - name: Mutation score per module
+        if: always()
+        # Lists the modules that run PIT (matcher-generator-annotations has no code to mutate, so it does not);
+        # a module without a report fails this step.
+        run: |
+          {
+            echo "## PIT mutation score (threshold 90 %)"
+            python3 scripts/ci/pit-scores.py --threshold 90 --expect matcher-generator-core hamcrest-matcher-generator assertj-assertion-generator hamcrest-matcher-generator-kotlin
+          } >> "$GITHUB_STEP_SUMMARY"
+
   release-dry-run:
     name: Release dry run
     runs-on: ubuntu-latest
