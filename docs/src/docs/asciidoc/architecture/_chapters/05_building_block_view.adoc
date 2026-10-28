@@ -43,6 +43,9 @@ packages) and passes its property names to the `BeanPropertyMatcher` constructor
 `AbstractObjectAssert` and a concrete, non-final `XAssert` with a public constructor and a static `assertThat`. The
 abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(requirements)` for every property, and
 `isFoo()` and `isNotFoo()` for boolean ones; all check first that there is an asserted object.
+Every property also gets `ignoringFoo()`, and the abstract class has the opt-in completeness check: `satisfiesCheckingAllProperties(..)`
+and `hasAllPropertiesChecked()`. The assertion object keeps the names it has addressed, and the check fails with the properties
+that are neither addressed nor ignored. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
 Each target package gets one `SoftAssertionsProvider` mixin with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
