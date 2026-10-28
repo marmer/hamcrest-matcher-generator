@@ -41,6 +41,15 @@ class BeanAssertionTest {
     }
 
     @Test
+    @DisplayName("A boolean property is asserted with isFoo and isNotFoo")
+    void aBooleanPropertyIsAssertedWithIsFooAndIsNotFoo() {
+        assertThatCode(() -> assertThat(ORDER).isPaid().isNotNull()).doesNotThrowAnyException();
+        assertThatThrownBy(() -> assertThat(ORDER).isNotPaid())
+                .hasMessage(
+                        String.format("%nExpecting Order.paid to be:%n  false%nbut was:%n  true"));
+    }
+
+    @Test
     @DisplayName("hasFoo accepts null for an absent value")
     void hasFooAcceptsNullForAnAbsentValue() {
         assertThatCode(() -> CustomerAssert.assertThat(ORDER.getCustomer()).hasPhone(null))

@@ -1,3 +1,4 @@
 io.github.marmer.matchergenerator.core.RecordingBackend
+io.github.marmer.matchergenerator.core.ProbingBackend
 io.github.marmer.matchergenerator.core.FileOnlyBackends$SecondJavaBackend
 io.github.marmer.matchergenerator.core.FileOnlyBackends$KotlinBackend

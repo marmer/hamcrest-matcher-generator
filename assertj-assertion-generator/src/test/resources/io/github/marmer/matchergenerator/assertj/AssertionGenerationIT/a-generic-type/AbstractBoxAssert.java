@@ -47,7 +47,7 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
 
   public SELF hasContentsSatisfying(final Consumer<? super List<?>> requirements) {
     isNotNull();
-    AssertionPath.within(path + ".contents", actual.getContents(), requirements);
+    AssertionPath.restartingWithin(actual.getContents(), requirements);
     return myself;
   }
 
@@ -58,7 +58,7 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
 
   public SELF hasNumbersSatisfying(final Consumer<? super Map<? extends String, ?>> requirements) {
     isNotNull();
-    AssertionPath.within(path + ".numbers", actual.getNumbers(), requirements);
+    AssertionPath.restartingWithin(actual.getNumbers(), requirements);
     return myself;
   }
 
@@ -69,7 +69,7 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
 
   public SELF hasSupersSatisfying(final Consumer<? super List<? super Integer>> requirements) {
     isNotNull();
-    AssertionPath.within(path + ".supers", actual.getSupers(), requirements);
+    AssertionPath.restartingWithin(actual.getSupers(), requirements);
     return myself;
   }
 
@@ -80,7 +80,7 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
 
   public SELF hasAnythingSatisfying(final Consumer<? super List<?>> requirements) {
     isNotNull();
-    AssertionPath.within(path + ".anything", actual.getAnything(), requirements);
+    AssertionPath.restartingWithin(actual.getAnything(), requirements);
     return myself;
   }
 

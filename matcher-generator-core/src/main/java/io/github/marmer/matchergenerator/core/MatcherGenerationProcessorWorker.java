@@ -33,7 +33,9 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
@@ -181,7 +183,10 @@ public class MatcherGenerationProcessorWorker {
 
     /** A type to generate for, modelled but not yet written. */
     private record PlannedType(
-            TypeElement typeElement, TypeModel model, Element configurationElement) {}
+            TypeElement typeElement,
+            TypeModel model,
+            Element configurationElement,
+            AnnotationMirror configurationMirror) {}
 
     /**
      * The qualified names of the types the configuration names explicitly. Names that are no type,
@@ -207,7 +212,7 @@ public class MatcherGenerationProcessorWorker {
                         .create(typeElement);
         configuredTypes.forEach(
                 configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
-        return new PlannedType(typeElement, model, configurationElement);
+        return new PlannedType(typeElement, model, configurationElement, configurationMirror);
     }
 
     /**
@@ -215,25 +220,60 @@ public class MatcherGenerationProcessorWorker {
      * refer to the code generated for another type, whichever configuration asked for it.
      */
     private void generate(final List<PlannedType> planned) {
-        final GenerationContext context =
-                new GenerationContext(
-                        generatorName,
-                        timeProvider.get(),
-                        isJspecifyAvailable(),
-                        planned.stream().map(PlannedType::model).collect(Collectors.toList()));
+        final LocalDateTime generationTime = timeProvider.get();
+        final boolean jspecifyAvailable = isJspecifyAvailable();
+        final List<TypeModel> models =
+                planned.stream().map(PlannedType::model).collect(Collectors.toList());
         planned.forEach(
-                type ->
-                        backends.forEach(
-                                backend ->
-                                        backend.generate(type.model(), context)
-                                                .forEach(
-                                                        source ->
-                                                                write(
-                                                                        backend,
-                                                                        source,
-                                                                        type.typeElement(),
-                                                                        type
-                                                                                .configurationElement()))));
+                type -> {
+                    final GenerationContext context =
+                            new GenerationContext(
+                                    generatorName,
+                                    generationTime,
+                                    jspecifyAvailable,
+                                    models,
+                                    this::inheritedMethodNames,
+                                    message -> printBackendError(type, message));
+                    backends.forEach(
+                            backend ->
+                                    backend.generate(type.model(), context)
+                                            .forEach(
+                                                    source ->
+                                                            write(
+                                                                    backend,
+                                                                    source,
+                                                                    type.typeElement(),
+                                                                    type.configurationElement())));
+                });
+    }
+
+    /**
+     * A backend found a problem in a configured type, such as a generated method name that clashes
+     * with an inherited one. It is reported once, at the annotation that configured the type.
+     */
+    private void printBackendError(final PlannedType type, final String message) {
+        processingEnv
+                .getMessager()
+                .printMessage(
+                        Diagnostic.Kind.ERROR,
+                        message,
+                        type.configurationElement(),
+                        type.configurationMirror());
+    }
+
+    /**
+     * The names of the methods of a class on the compile class path, inherited ones included. A
+     * class that is not on the class path has none.
+     */
+    private Set<String> inheritedMethodNames(final String qualifiedClassName) {
+        final TypeElement type = processingEnv.getElementUtils().getTypeElement(qualifiedClassName);
+        if (type == null) {
+            return Set.of();
+        }
+        return ElementFilter.methodsIn(processingEnv.getElementUtils().getAllMembers(type)).stream()
+                .filter(method -> !method.getModifiers().contains(Modifier.PRIVATE))
+                .map(method -> method.getSimpleName().toString())
+                .collect(Collectors.toSet());
     }
 
     /**

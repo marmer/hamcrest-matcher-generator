@@ -62,6 +62,16 @@ public abstract class AbstractSimplePojoAssert<SELF extends AbstractSimplePojoAs
     return myself;
   }
 
+  public SELF isActive() {
+    isNotNull();
+    return checkProperty("active", actual.isActive(), true);
+  }
+
+  public SELF isNotActive() {
+    isNotNull();
+    return checkProperty("active", actual.isActive(), false);
+  }
+
   public SELF hasTags(final @Nullable List<? extends String> value) {
     isNotNull();
     return checkProperty("tags", actual.getTags(), value);
@@ -69,7 +79,7 @@ public abstract class AbstractSimplePojoAssert<SELF extends AbstractSimplePojoAs
 
   public SELF hasTagsSatisfying(final Consumer<? super List<? extends String>> requirements) {
     isNotNull();
-    AssertionPath.within(path + ".tags", actual.getTags(), requirements);
+    AssertionPath.restartingWithin(actual.getTags(), requirements);
     return myself;
   }
 

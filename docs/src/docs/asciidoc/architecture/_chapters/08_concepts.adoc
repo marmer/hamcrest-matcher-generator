@@ -59,3 +59,12 @@ block all merges.
 | The agent-facing glossary and ADRs are mirrored in these chapters, the required checks named in the agent docs are
 CI job names, and the file names and packages that `CLAUDE.md` mentions exist.
 |===
+
+=== Diagnostics
+
+The core reports a misconfiguration as a compiler diagnostic at the annotation that configured the type, once per
+problem and naming the offending value (the unresolvable names of #113). A backend that finds a problem in a configured
+type reports it the same way through `GenerationContext.reportError(message)`: the core prints the message as a compiler
+error at the `@GenerateMatchers` annotation. The backend leaves the offending member out of its generated code, so the
+error is the only one the user sees. The AssertJ backend does this for a generated method whose name an inherited
+AssertJ method already has: one error per property, naming the property and the clashing methods.
