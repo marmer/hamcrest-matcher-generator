@@ -33,9 +33,9 @@ public class RecordingBackend implements GeneratorBackend {
     }
 
     @Override
-    public GeneratedSource generate(final TypeModel model, final GenerationContext context) {
+    public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
         MODELS.add(model);
         CONTEXTS.add(context);
-        return StubSources.emptyClass(model, "Recorded");
+        return List.of(StubSources.emptyClass(model, "Recorded"));
     }
 }
