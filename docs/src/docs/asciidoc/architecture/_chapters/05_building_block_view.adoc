@@ -65,7 +65,11 @@ property whose type is a configured type that is compared deeply (neither an enu
 types are written as their Kotlin counterparts (`String`, `Int`, `List<out T>`, a star projection for a type variable). A
 type without properties gets no file. The names of the Hamcrest matcher API come from the public class `MatcherNaming` of the Hamcrest
 backend, the one dependency between backends the Enforcer plugin and ArchUnit allow. Without KAPT (`GenerationContext.kotlinOutputAvailable`
-is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`.
+is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`. A property whose
+name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with an `Any` member
+(`equals`, `hashCode`, `toString`) gets no DSL functions; `GenerationContext.reportWarning` reports it as a compiler warning,
+and the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
+take the runtime collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`) whose items are the DSL's entry functions.
 The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
@@ -89,7 +93,7 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, and `reportNote` for a compiler note) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.
