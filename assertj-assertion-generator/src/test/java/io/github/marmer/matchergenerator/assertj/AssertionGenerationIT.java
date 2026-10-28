@@ -172,6 +172,34 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A type without properties gets no helpers that nothing uses")
+    void aTypeWithoutPropertiesGetsNoHelpersThatNothingUses() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Empty"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Empty",
+                                """
+                                package some.other.pck;
+
+                                public class Empty {
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(compilation, "without-properties", "some.other.pck.AbstractEmptyAssert");
+        final String content =
+                compilation
+                        .generatedSourceFile("some.other.pck.AbstractEmptyAssert")
+                        .orElseThrow()
+                        .getCharContent(true)
+                        .toString();
+        assertFalse(content.contains("requireActual"), content);
+        assertFalse(content.contains("checkProperty"), content);
+        assertFalse(content.contains("path"), content);
+    }
+
+    @Test
     @DisplayName("A property with a getter of two types is asserted as Object")
     void aPropertyWithAGetterOfTwoTypesIsAssertedAsObject() throws IOException {
         final Compilation compilation =

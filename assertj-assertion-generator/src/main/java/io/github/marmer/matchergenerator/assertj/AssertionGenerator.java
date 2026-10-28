@@ -117,20 +117,20 @@ class AssertionGenerator {
                         .superclass(
                                 ParameterizedTypeName.get(
                                         ABSTRACT_OBJECT_ASSERT, SELF, ACTUAL_TYPE))
-                        .addField(
-                                FieldSpec.builder(
-                                                String.class,
-                                                PATH,
-                                                Modifier.PRIVATE,
-                                                Modifier.FINAL)
-                                        .build())
                         .addMethod(abstractConstructor());
+        if (!properties.isEmpty()) {
+            builder.addField(
+                    FieldSpec.builder(String.class, PATH, Modifier.PRIVATE, Modifier.FINAL)
+                            .build());
+        }
         properties.forEach(
                 property -> {
                     builder.addMethod(hasMethod(property));
                     builder.addMethod(hasSatisfyingMethod(property));
                 });
-        builder.addMethod(requireActualMethod()).addMethod(checkPropertyMethod());
+        if (!properties.isEmpty()) {
+            builder.addMethod(requireActualMethod()).addMethod(checkPropertyMethod());
+        }
         model.nestedTypes()
                 .forEach(
                         nested -> {
@@ -177,19 +177,22 @@ class AssertionGenerator {
     }
 
     private MethodSpec abstractConstructor() {
-        return MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PROTECTED)
-                .addParameter(nullable(ACTUAL_TYPE), ACTUAL, Modifier.FINAL)
-                .addParameter(
-                        ParameterizedTypeName.get(
-                                ClassName.get(Class.class),
-                                WildcardTypeName.subtypeOf(Object.class)),
-                        "selfType",
-                        Modifier.FINAL)
-                .addStatement("super($L, selfType)", ACTUAL)
-                .addStatement(
-                        "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName())
-                .build();
+        final MethodSpec.Builder constructor =
+                MethodSpec.constructorBuilder()
+                        .addModifiers(Modifier.PROTECTED)
+                        .addParameter(nullable(ACTUAL_TYPE), ACTUAL, Modifier.FINAL)
+                        .addParameter(
+                                ParameterizedTypeName.get(
+                                        ClassName.get(Class.class),
+                                        WildcardTypeName.subtypeOf(Object.class)),
+                                "selfType",
+                                Modifier.FINAL)
+                        .addStatement("super($L, selfType)", ACTUAL);
+        if (!properties.isEmpty()) {
+            constructor.addStatement(
+                    "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName());
+        }
+        return constructor.build();
     }
 
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
