@@ -18,7 +18,7 @@ own `@Generated` marker are skipped with a note.
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
-. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run, the inherited method names of a class on the compile class path and the error reporting, `reportError`). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
+. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run, the inherited method names of a class on the compile class path, the error reporting `reportError`, whether KAPT's Kotlin output directory is there and the note reporting `reportNote`). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
 `SoftAssertionsProvider` mixin per target package, from the first type of that package by name (see the glossary
@@ -26,8 +26,10 @@ entry *Soft assertions mixin*), and the same type writes the `PropertyRepresenta
 entry *Generated representation*). The worker writes Java sources through the compiler's `Filer`, so they are compiled
 in the same build.
 . Kotlin sources are written into the directory named by the processor option `kapt.kotlin.generated`, which only KAPT
-provides (see ADR 0004). Without that option the worker reports one compile error that names the backend and the
-type, because the Kotlin file would otherwise never be compiled.
+provides (see ADR 0004). The `GenerationContext` tells the backends whether that option is there. The Kotlin DSL backend
+generates nothing without it and reports one compiler note, once per compilation; a backend that returns Kotlin anyway
+makes the worker report one compile error that names the backend and the type, because the Kotlin file would otherwise
+never be compiled.
 
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
 

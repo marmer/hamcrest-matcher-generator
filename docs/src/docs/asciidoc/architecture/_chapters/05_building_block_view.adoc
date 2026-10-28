@@ -55,6 +55,19 @@ the core reports one compiler error at the annotation, naming the property and t
 the inherited method names and the error reporting through `GenerationContext`. The backend depends only on the core;
 the generated code needs AssertJ on the test class path.
 
+| `hamcrest-matcher-generator-kotlin`
+| The opt-in Kotlin DSL backend (ADR 0004). It writes one `<Type>MatcherDsl.kt` per configured type next to the Java
+matcher, with KotlinPoet from Java: an entry function `isOrder { }` and a scope class `OrderSpec` per type (nested types
+included). The scope class is marked with `@MatcherDsl`, a Java annotation in this artifact that carries Kotlin's `@DslMarker`,
+and delegates every call to the generated Java matcher, so mismatch messages are identical. A scope has
+`name(value)`, `name(matcher)` and `ignoringName()` for every property, `checkingAllProperties()`, and `customer { }` for a
+property whose type is a configured type that is compared deeply (neither an enum nor a type without properties). Java
+types are written as their Kotlin counterparts (`String`, `Int`, `List<out T>`, a star projection for a type variable). A
+type without properties gets no file. The names of the Hamcrest matcher API come from the public class `MatcherNaming` of the Hamcrest
+backend, the one dependency between backends the Enforcer plugin and ArchUnit allow. Without KAPT (`GenerationContext.kotlinOutputAvailable`
+is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`.
+The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
+
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
 | Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see ADR 0002).
 
@@ -76,9 +89,9 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, and `reportError` for a compiler error at the annotation, see chapter 8) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two).
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, and `reportNote` for a compiler note) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
-configured type. Backends depend only on the core, never the other way round; the Enforcer plugin and ArchUnit tests
+configured type. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.
 
 === Level 2

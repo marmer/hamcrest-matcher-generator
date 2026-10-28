@@ -22,6 +22,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 runtimeLibrary = component "BeanPropertyMatcher" "Runtime library that generated matchers call at test time." "Java"
             }
             assertjBackend = container "assertj-assertion-generator" "The AssertJ backend: an AbstractXAssert and an XAssert per configured type, and the small AssertionPath runtime." "Java, Maven module"
+            kotlinBackend = container "hamcrest-matcher-generator-kotlin" "The opt-in Kotlin DSL backend: a Kotlin DSL file per configured type on top of the generated Hamcrest matchers. Runs under KAPT only." "Java, KotlinPoet, Maven module"
             bridge = container "Bridge jars" "hamcrest-matcher-generator-dependencies and -annotationprocessor are code-free jars that bring 5.x users to the new coordinates." "Java, Maven modules"
             endtoend = container "End-to-end modules" "Apply the processor to real beans and records and exercise the generated matchers." "Java, Kotlin, Maven modules"
             docs = container "docs" "Renders this documentation and checks it. Needs JDK 21 or later." "Asciidoctor, Structurizr, Maven module"
@@ -51,7 +52,11 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         core -> annotations "Reads the configuration from"
         worker -> hamcrestBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
         worker -> assertjBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
+        worker -> kotlinBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
         hamcrestBackend -> core "Implements GeneratorBackend of"
+        kotlinBackend -> core "Implements GeneratorBackend of"
+        kotlinBackend -> hamcrestBackend "Reuses the naming of the generated matchers of (the one allowed dependency between backends)"
+        endtoend -> kotlinBackend "Apply the processor to Kotlin classes and use the DSL"
         assertjBackend -> core "Implements GeneratorBackend of"
         assertjBackend -> assertj "Generates classes that extend AbstractObjectAssert of"
         endtoend -> assertjBackend "Apply the processor to beans and records"
@@ -86,6 +91,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 containerInstance core
                 containerInstance hamcrestBackend
                 containerInstance assertjBackend
+                containerInstance kotlinBackend
                 containerInstance bridge
             }
             releaseWorkflow -> centralNode "Uploads one bundle to" "central-publishing-maven-plugin"
