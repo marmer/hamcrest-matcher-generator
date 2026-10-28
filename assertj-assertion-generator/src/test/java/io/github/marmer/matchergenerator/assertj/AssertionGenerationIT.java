@@ -29,6 +29,7 @@ class AssertionGenerationIT {
 
     private static final Pattern CLASS_DECLARATION =
             Pattern.compile("class (\\w+)(?:<.*?>)?\\s+extends\\s+(\\w+)", Pattern.DOTALL);
+    private static final Pattern TYPE_DECLARATION = Pattern.compile("(?:class|interface) (\\w+)");
     private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     @Test
@@ -320,25 +321,33 @@ class AssertionGenerationIT {
         assertEquals(5, compilation.generatedSourceFiles().size());
         for (final JavaFileObject source : compilation.generatedSourceFiles()) {
             final String content = source.getCharContent(true).toString();
-            if (source.getName().endsWith("/SoftAssertionsProvider.java")) {
-                assertTrue(content.contains("interface SoftAssertionsProvider "), content);
-                assertFalse(content.contains("extends org.assertj.core.api.Assertions"), content);
-            } else {
-                final Matcher declaration = CLASS_DECLARATION.matcher(content);
-                assertTrue(declaration.find(), content);
-                assertFalse(
-                        List.of("Assertions", "SoftAssertions").contains(declaration.group(1)),
-                        declaration.group(1));
+            final boolean mixin = source.getName().endsWith("/SoftAssertionsProvider.java");
+            final Matcher declaration = TYPE_DECLARATION.matcher(content);
+            assertTrue(declaration.find(), content);
+            assertFalse(
+                    List.of("Assertions", "SoftAssertions").contains(declaration.group(1)),
+                    declaration.group(1));
+            assertFalse(content.contains("extends org.assertj.core.api.Assertions"), content);
+            assertFalse(content.contains("import org.assertj.core.api.Assertions;"), content);
+            assertFalse(content.contains("import org.assertj.core.api.SoftAssertions;"), content);
+            if (mixin) {
+                assertTrue(
+                        content.contains(
+                                "public interface SoftAssertionsProvider"
+                                        + " extends org.assertj.core.api.SoftAssertionsProvider"),
+                        content);
+            }
+            if (!mixin) {
+                final Matcher classDeclaration = CLASS_DECLARATION.matcher(content);
+                assertTrue(classDeclaration.find(), content);
                 assertTrue(
                         List.of(
                                         "AbstractObjectAssert",
                                         "AbstractAssertionsAssert",
                                         "AbstractSoftAssertionsAssert")
-                                .contains(declaration.group(2)),
-                        declaration.group(2));
+                                .contains(classDeclaration.group(2)),
+                        classDeclaration.group(2));
             }
-            assertFalse(content.contains("import org.assertj.core.api.Assertions;"), content);
-            assertFalse(content.contains("import org.assertj.core.api.SoftAssertions;"), content);
         }
     }
 
@@ -712,8 +721,10 @@ class AssertionGenerationIT {
     }
 
     @Test
-    @DisplayName("The factory of a generic type produces no javac warning under -Xlint:all")
-    void theFactoryOfAGenericTypeProducesNoWarningUnderLintAll() {
+    @DisplayName(
+            "The factory and the SoftAssertionsProvider mixin of a generic type produce no javac"
+                    + " warning under -Xlint:all")
+    void theFactoryAndTheMixinOfAGenericTypeProduceNoWarningUnderLintAll() throws IOException {
         final Compilation compilation =
                 Compiler.javac()
                         .withClasspath(classPathWithJSpecify())
@@ -738,6 +749,9 @@ class AssertionGenerationIT {
                                         """));
 
         CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(
+                generatedContent(compilation, "some.other.pck.SoftAssertionsProvider")
+                        .contains("proxy(BoxAssert.class, Box.class, actual)"));
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
     }
 
