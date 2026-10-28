@@ -454,6 +454,23 @@ class CoreProcessorIT {
         assertEquals(List.of(Set.of()), ProbingBackend.inheritedOfMissingClass());
     }
 
+    @Test
+    @DisplayName("A private method of the class is no inherited method name")
+    void aPrivateMethodOfTheClassIsNoInheritedMethodName() {
+        final JavaFileObject probed =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Probed",
+                        "package some.other.pck;",
+                        "public class Probed {",
+                        "}");
+
+        compile(generateMatchersConfiguration("\"some.other.pck.Probed\""), probed);
+
+        final Set<String> own = ProbingBackend.inheritedOfItself().get(0);
+        assertTrue(own.contains("generate"), () -> "Names: " + own);
+        assertFalse(own.contains("hiddenFromSubclasses"), () -> "Names: " + own);
+    }
+
     private static List<File> classPathWithout(final String fragment) {
         return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
                 .filter(entry -> !entry.contains(fragment))

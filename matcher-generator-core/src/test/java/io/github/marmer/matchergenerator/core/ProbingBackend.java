@@ -21,6 +21,7 @@ public class ProbingBackend implements GeneratorBackend {
     static final String ERROR = "Probe reports an error";
     private static final List<Set<String>> INHERITED = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> MISSING = new CopyOnWriteArrayList<>();
+    private static final List<Set<String>> OWN = new CopyOnWriteArrayList<>();
 
     static List<Set<String>> inheritedOfObject() {
         return List.copyOf(INHERITED);
@@ -30,9 +31,19 @@ public class ProbingBackend implements GeneratorBackend {
         return List.copyOf(MISSING);
     }
 
+    static List<Set<String>> inheritedOfItself() {
+        return List.copyOf(OWN);
+    }
+
     static void reset() {
         INHERITED.clear();
         MISSING.clear();
+        OWN.clear();
+    }
+
+    /** Private, so that its name must not be among the names a subclass inherits. */
+    private static String hiddenFromSubclasses() {
+        return ERROR;
     }
 
     @Override
@@ -42,7 +53,8 @@ public class ProbingBackend implements GeneratorBackend {
         }
         INHERITED.add(context.inheritedMethodNames("java.lang.Object"));
         MISSING.add(context.inheritedMethodNames("no.such.Class"));
-        context.reportError(ERROR + " for " + model.simpleName());
+        OWN.add(context.inheritedMethodNames(ProbingBackend.class.getName()));
+        context.reportError(hiddenFromSubclasses() + " for " + model.simpleName());
         return List.of(StubSources.emptyClass(model, "Probe"));
     }
 }
