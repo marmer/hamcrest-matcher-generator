@@ -78,6 +78,8 @@
         <spotless.version>3.10.4</spotless.version>
         <!-- PIT (#127); the CI mutation job keys its history cache on this value. -->
         <pitest.version>1.30.1</pitest.version>
+        <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
+        <pitest-history-plugin.version>0.0.1</pitest-history-plugin.version>
         <!-- PINNED at 1.36.0. 1.37.0 fails inside Spotless's in-process formatter run (InvocationTargetException on
              Javadoc-carrying files, cause hidden by Spotless). Recheck on every Renovate bump of google-java-format or
              Spotless: try the new version with spotless:apply and remove this pin only when that run is clean. -->
@@ -815,13 +817,13 @@
                                 <dependency>
                                     <groupId>org.pitest</groupId>
                                     <artifactId>pitest-junit5-plugin</artifactId>
-                                    <version>1.2.3</version>
+                                    <version>${pitest-junit5-plugin.version}</version>
                                 </dependency>
                                 <!-- Incremental analysis (historyInputFile) needs the history plugin; PIT 1.23+ ships it apart from the core. -->
                                 <dependency>
                                     <groupId>org.pitest</groupId>
                                     <artifactId>pitest-history-plugin</artifactId>
-                                    <version>0.0.1</version>
+                                    <version>${pitest-history-plugin.version}</version>
                                 </dependency>
                             </dependencies>
                             <configuration>
