@@ -76,7 +76,7 @@
         <errorprone.version>2.51.0</errorprone.version>
         <nullaway.version>0.14.3</nullaway.version>
         <spotless.version>3.10.4</spotless.version>
-        <!-- Invoker consumer builds of the 5.x suite (#123); managed in pluginManagement, Renovate bumps it. -->
+        <!-- maven-invoker-plugin of the 5.x consumer builds; managed in pluginManagement, Renovate bumps it. -->
         <maven-invoker-plugin.version>3.9.1</maven-invoker-plugin.version>
         <!-- PIT (#127); the CI mutation job keys its history cache on this value. -->
         <pitest.version>1.30.1</pitest.version>
