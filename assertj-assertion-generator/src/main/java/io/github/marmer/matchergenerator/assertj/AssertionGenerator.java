@@ -506,7 +506,8 @@ class AssertionGenerator {
 
     /**
      * {@code satisfiesCheckingAllProperties(requirements)}: the scope form of the completeness
-     * check. The requirements run on this assertion, then every property has to be addressed.
+     * check. Only the calls made by the requirements count, so the set of the chain before is set
+     * aside while they run and merged back afterwards, which also keeps the chain when they fail.
      */
     private MethodSpec satisfiesCheckingAllPropertiesMethod() {
         return MethodSpec.methodBuilder("satisfiesCheckingAllProperties")
@@ -517,8 +518,19 @@ class AssertionGenerator {
                         "requirements",
                         Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
+                .addStatement(
+                        "final $T<$T> chain = new $T<>($L)",
+                        Set.class,
+                        String.class,
+                        HashSet.class,
+                        ADDRESSED)
+                .addStatement("$L.clear()", ADDRESSED)
+                .beginControlFlow("try")
                 .addStatement("requirements.accept(myself)")
                 .addStatement("return hasAllPropertiesChecked()")
+                .nextControlFlow("finally")
+                .addStatement("$L.addAll(chain)", ADDRESSED)
+                .endControlFlow()
                 .returns(SELF)
                 .build();
     }

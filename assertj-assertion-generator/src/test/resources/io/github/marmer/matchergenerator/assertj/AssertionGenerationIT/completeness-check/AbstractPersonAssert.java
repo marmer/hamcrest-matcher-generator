@@ -116,8 +116,14 @@ public abstract class AbstractPersonAssert<SELF extends AbstractPersonAssert<SEL
 
   public SELF satisfiesCheckingAllProperties(final Consumer<? super SELF> requirements) {
     isNotNull();
-    requirements.accept(myself);
-    return hasAllPropertiesChecked();
+    final Set<String> chain = new HashSet<>(addressed);
+    addressed.clear();
+    try {
+      requirements.accept(myself);
+      return hasAllPropertiesChecked();
+    } finally {
+      addressed.addAll(chain);
+    }
   }
 
   public SELF hasAllPropertiesChecked() {

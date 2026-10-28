@@ -60,7 +60,7 @@ The form in which a generated matcher describes itself and its mismatch, `OrderL
 _Avoid_: compact mode, inline mode
 
 **Completeness check**:
-The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted. Opt-in per assertion. A property counts as addressed by a check (`withFoo` in Hamcrest, `hasFoo`, `hasFooSatisfying`, `isFoo`, `isNotFoo` in AssertJ) or by `ignoringFoo()`, which both backends generate. Hamcrest runs the check with `checkingAllProperties()`; AssertJ runs it with the scope `satisfiesCheckingAllProperties(..)` or the closing call `hasAllPropertiesChecked()`. Value mismatches fail first, and the check then names the properties that are neither checked nor ignored.
+The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted. Opt-in per assertion. A property counts as addressed by a check (`withFoo` in Hamcrest, `hasFoo`, `hasFooSatisfying`, `isFoo`, `isNotFoo` in AssertJ) or by `ignoringFoo()`, which both backends generate. Hamcrest runs the check with `checkingAllProperties()`; AssertJ runs it with the scope `satisfiesCheckingAllProperties(..)` or the closing call `hasAllPropertiesChecked()`. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. Value mismatches fail first, and the check then names the properties that are neither checked nor ignored.
 _Avoid_: strict mode, exhaustiveness
 
 **DSL scope**:

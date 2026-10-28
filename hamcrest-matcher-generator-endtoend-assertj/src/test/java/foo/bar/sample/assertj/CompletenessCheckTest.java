@@ -73,6 +73,8 @@ class CompletenessCheckTest {
                                                 order ->
                                                         order.hasId(42)
                                                                 .hasTotal(new BigDecimal("9.99"))
+                                                                // Only pins that satisfying counts
+                                                                // as addressed.
                                                                 .hasTagsSatisfying(tags -> {})
                                                                 .isNotPaid()
                                                                 .ignoringCustomer()))
@@ -99,9 +101,49 @@ class CompletenessCheckTest {
     }
 
     @Test
+    @DisplayName("The scope form counts only what its lambda addresses, not the chain before it")
+    void theScopeFormCountsOnlyWhatItsLambdaAddresses() {
+        final Customer customer =
+                new Customer("Ada", null, new Address("1 Rue de Rivoli", "Paris"));
+
+        assertThatThrownBy(
+                        () ->
+                                CustomerAssert.assertThat(customer)
+                                        .hasName("Ada")
+                                        .satisfiesCheckingAllProperties(
+                                                c -> c.hasPhone(null).ignoringAddress()))
+                .isInstanceOf(AssertionError.class)
+                .hasMessage(
+                        String.format(
+                                "%nExpecting every property of Customer to be checked or ignored,"
+                                        + " but these were neither: name"));
+    }
+
+    @Test
     @DisplayName(
-            "Adding a property to a type fails a test that checks the type with the short form")
-    void addingAPropertyFailsATestThatChecksTheTypeWithTheShortForm() {
+            "A scope that addresses every property passes, and the chain after it still counts")
+    void aScopeThatAddressesEveryPropertyPassesAndTheChainAfterItStillCounts() {
+        final Customer customer =
+                new Customer("Ada", null, new Address("1 Rue de Rivoli", "Paris"));
+
+        assertThatCode(
+                        () ->
+                                CustomerAssert.assertThat(customer)
+                                        .hasName("Ada")
+                                        .satisfiesCheckingAllProperties(
+                                                c ->
+                                                        c.hasName("Ada")
+                                                                .hasPhone(null)
+                                                                .ignoringAddress())
+                                        .hasAllPropertiesChecked())
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("A property that is not checked fails the short form")
+    void aPropertyThatIsNotCheckedFailsTheShortForm() {
+        // QS-C2: the check is what makes a newly added property fail a test that uses it. The
+        // city below stands for such a property, which the test does not check yet.
         final Address address = new Address("1 Rue de Rivoli", "Paris");
 
         assertThatCode(
