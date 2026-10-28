@@ -338,6 +338,208 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A collection or map property restarts the path at the element type")
+    void aCollectionOrMapPropertyRestartsThePathAtTheElementType() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Invoice", "some.other.pck.Line"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Invoice",
+                                """
+                                package some.other.pck;
+
+                                import java.util.List;
+                                import java.util.Map;
+
+                                public class Invoice {
+                                    public String getNumber() {
+                                        return null;
+                                    }
+
+                                    public List<Line> getLines() {
+                                        return null;
+                                    }
+
+                                    public Map<String, Line> getLinesByCode() {
+                                        return null;
+                                    }
+
+                                    public Line[] getArray() {
+                                        return null;
+                                    }
+
+                                    public Tags getTags() {
+                                        return null;
+                                    }
+
+                                    public Runnable getTask() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Line",
+                                """
+                                package some.other.pck;
+
+                                public class Line {
+                                    public String getSku() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Tags",
+                                """
+                                package some.other.pck;
+
+                                public class Tags extends java.util.ArrayList<String> {
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.AbstractInvoiceAssert");
+        assertTrue(
+                content.contains("AssertionPath.restartingWithin(actual.getLines(), requirements)"),
+                content);
+        assertTrue(
+                content.contains(
+                        "AssertionPath.restartingWithin(actual.getLinesByCode(), requirements)"),
+                content);
+        assertTrue(
+                content.contains("AssertionPath.restartingWithin(actual.getArray(), requirements)"),
+                content);
+        assertTrue(
+                content.contains("AssertionPath.restartingWithin(actual.getTags(), requirements)"),
+                content);
+        assertTrue(
+                content.contains(
+                        "AssertionPath.within(path + \".task\", actual.getTask(), requirements)"),
+                content);
+        assertTrue(
+                content.contains(
+                        "AssertionPath.within(path + \".number\", actual.getNumber(), requirements)"),
+                content);
+        assertGolden(compilation, "collections", "some.other.pck.AbstractInvoiceAssert");
+        assertGolden(compilation, "collections", "some.other.pck.InvoiceAssert");
+        assertGolden(compilation, "collections", "some.other.pck.AbstractLineAssert");
+        assertGolden(compilation, "collections", "some.other.pck.LineAssert");
+    }
+
+    @Test
+    @DisplayName("A boolean property gets isFoo and isNotFoo, and other properties get none")
+    void aBooleanPropertyGetsIsFooAndIsNotFoo() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Switches"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Switches",
+                                """
+                                package some.other.pck;
+
+                                public class Switches {
+                                    public boolean isActive() {
+                                        return true;
+                                    }
+
+                                    public Boolean getFlagged() {
+                                        return null;
+                                    }
+
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.AbstractSwitchesAssert");
+        assertTrue(content.contains("public SELF isActive() {"), content);
+        assertTrue(content.contains("public SELF isNotActive() {"), content);
+        assertTrue(content.contains("public SELF isFlagged() {"), content);
+        assertTrue(content.contains("public SELF isNotFlagged() {"), content);
+        assertFalse(content.contains("isName("), content);
+        assertFalse(content.contains("isNotName("), content);
+    }
+
+    @Test
+    @DisplayName("A generated method named like an inherited AssertJ method is a compile error")
+    void aGeneratedMethodNamedLikeAnInheritedOneIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public String getSameClassAs() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'sameClassAs'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'hasSameClassAs'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A boolean property whose isFoo name clashes with an inherited method is an error")
+    void aBooleanPropertyWhoseNameClashesIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public boolean isIn() {
+                                        return true;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'in'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'isIn'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A name that only resembles an inherited AssertJ method is no clash")
+    void aNameThatOnlyResemblesAnInheritedMethodIsNoClash() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Pojo"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public String getSameClass() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all with JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithJSpecify() {
         assertNoWarningUnderLintAll(classPathWithJSpecify());
@@ -415,6 +617,15 @@ class AssertionGenerationIT {
         return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
                 .map(File::new)
                 .collect(Collectors.toList());
+    }
+
+    private static String generatedContent(
+            final Compilation compilation, final String qualifiedName) throws IOException {
+        return compilation
+                .generatedSourceFile(qualifiedName)
+                .orElseThrow(() -> new AssertionError("No source generated for " + qualifiedName))
+                .getCharContent(true)
+                .toString();
     }
 
     private static void assertGolden(

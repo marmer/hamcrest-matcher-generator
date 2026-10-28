@@ -17,11 +17,14 @@ import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -47,6 +50,8 @@ class AssertionGenerator {
     private static final String CHECK_PROPERTY = "checkProperty";
     private static final ClassName ABSTRACT_OBJECT_ASSERT =
             ClassName.get(ASSERTJ_API, "AbstractObjectAssert");
+    private static final Set<String> ITERABLE_OR_MAP =
+            Set.of("java.lang.Iterable", "java.util.Map");
     private static final AnnotationSpec NULL_MARKED =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
     private static final AnnotationSpec NULLABLE =
@@ -125,10 +130,22 @@ class AssertionGenerator {
                     FieldSpec.builder(String.class, PATH, Modifier.PRIVATE, Modifier.FINAL)
                             .build());
         }
+        final Set<String> inherited =
+                context.inheritedMethodNames(ABSTRACT_OBJECT_ASSERT.toString());
         properties.forEach(
                 property -> {
-                    builder.addMethod(hasMethod(property));
-                    builder.addMethod(hasSatisfyingMethod(property));
+                    final List<MethodSpec> methods = generatedMethods(property);
+                    final List<String> clashing =
+                            methods.stream()
+                                    .map(method -> method.name)
+                                    .filter(inherited::contains)
+                                    .collect(Collectors.toList());
+                    if (!clashing.isEmpty()) {
+                        context.reportError(clashMessage(property, clashing));
+                    }
+                    methods.stream()
+                            .filter(method -> !inherited.contains(method.name))
+                            .forEach(builder::addMethod);
                 });
         if (!properties.isEmpty()) {
             builder.addMethod(isNotNullMethod()).addMethod(checkPropertyMethod());
@@ -214,6 +231,35 @@ class AssertionGenerator {
                 .build();
     }
 
+    /**
+     * The methods generated for a property. The names of those that an inherited AssertJ method
+     * already has are reported once for the property and the methods are left out, so that the only
+     * compiler error is the processor's.
+     */
+    private List<MethodSpec> generatedMethods(final PropertyModel property) {
+        final List<MethodSpec> methods = new ArrayList<>();
+        methods.add(hasMethod(property));
+        methods.add(hasSatisfyingMethod(property));
+        if (isBoolean(property)) {
+            methods.add(booleanMethod("is" + capitalized(property.name()), property, true));
+            methods.add(booleanMethod("isNot" + capitalized(property.name()), property, false));
+        }
+        return methods;
+    }
+
+    private String clashMessage(final PropertyModel property, final List<String> methodNames) {
+        return "Property '"
+                + property.name()
+                + "' of '"
+                + model.qualifiedName()
+                + "' generates "
+                + methodNames.stream()
+                        .map(name -> "'" + name + "'")
+                        .collect(Collectors.joining(" and "))
+                + ", which clashes with inherited AssertJ methods of the same names;"
+                + " rename the property";
+    }
+
     /** {@code hasFoo(value)}: deep equality of the property with the value. */
     private MethodSpec hasMethod(final PropertyModel property) {
         return MethodSpec.methodBuilder("has" + capitalized(property.name()))
@@ -230,22 +276,78 @@ class AssertionGenerator {
                 .build();
     }
 
-    /** {@code hasFooSatisfying(requirements)}: the requirements for the property value. */
+    /**
+     * {@code hasFooSatisfying(requirements)}: the requirements for the property value. The path
+     * continues into the requirements, except for a collection or map, whose elements start at
+     * their own type.
+     */
     private MethodSpec hasSatisfyingMethod(final PropertyModel property) {
-        return MethodSpec.methodBuilder("has" + capitalized(property.name()) + "Satisfying")
+        final MethodSpec.Builder method =
+                MethodSpec.methodBuilder("has" + capitalized(property.name()) + "Satisfying")
+                        .addModifiers(Modifier.PUBLIC)
+                        .addParameter(requirementsType(property), "requirements", Modifier.FINAL)
+                        .addStatement("$L()", IS_NOT_NULL);
+        if (isIterableOrMap(property.type())) {
+            method.addStatement(
+                    "$T.restartingWithin($L.$L(), requirements)",
+                    AssertionPath.class,
+                    ACTUAL_FIELD,
+                    property.accessor());
+        } else {
+            method.addStatement(
+                    "$T.within($L + $S, $L.$L(), requirements)",
+                    AssertionPath.class,
+                    PATH,
+                    "." + property.name(),
+                    ACTUAL_FIELD,
+                    property.accessor());
+        }
+        return method.addStatement(RETURN_MYSELF).returns(SELF).build();
+    }
+
+    /** {@code isFoo()} or {@code isNotFoo()}: the property value is {@code expected}. */
+    private MethodSpec booleanMethod(
+            final String name, final PropertyModel property, final boolean expected) {
+        return MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(requirementsType(property), "requirements", Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
-                        "$T.within($L + $S, $L.$L(), requirements)",
-                        AssertionPath.class,
-                        PATH,
-                        "." + property.name(),
+                        "return $L($S, $L.$L(), $L)",
+                        CHECK_PROPERTY,
+                        property.name(),
                         ACTUAL_FIELD,
-                        property.accessor())
-                .addStatement(RETURN_MYSELF)
+                        property.accessor(),
+                        expected)
                 .returns(SELF)
                 .build();
+    }
+
+    /** Whether the property is a boolean, primitive or boxed, that has a single type. */
+    private boolean isBoolean(final PropertyModel property) {
+        final TypeMirror type = property.type();
+        return !isConflicting(property)
+                && (type.getKind() == TypeKind.BOOLEAN
+                        || type.getKind() == TypeKind.DECLARED
+                                && asTypeElement(type)
+                                        .getQualifiedName()
+                                        .contentEquals(Boolean.class.getCanonicalName()));
+    }
+
+    /** Whether the type is an array, or a collection or a map, whose elements are asserted. */
+    private static boolean isIterableOrMap(final TypeMirror type) {
+        if (type.getKind() == TypeKind.ARRAY) {
+            return true;
+        }
+        return type.getKind() == TypeKind.DECLARED && isOrExtendsIterableOrMap(asTypeElement(type));
+    }
+
+    private static boolean isOrExtendsIterableOrMap(final TypeElement type) {
+        if (ITERABLE_OR_MAP.contains(type.getQualifiedName().toString())) {
+            return true;
+        }
+        return Stream.concat(Stream.of(type.getSuperclass()), type.getInterfaces().stream())
+                .filter(supertype -> supertype.getKind() == TypeKind.DECLARED)
+                .anyMatch(supertype -> isOrExtendsIterableOrMap(asTypeElement(supertype)));
     }
 
     /** Overrides {@code isNotNull()} so that it fails with the path of the asserted value. */
@@ -376,7 +478,7 @@ class AssertionGenerator {
         return WildcardTypeName.subtypeOf(typeVarsToWildcards(argument, boxPrimitives));
     }
 
-    private TypeElement asTypeElement(final TypeMirror type) {
+    private static TypeElement asTypeElement(final TypeMirror type) {
         return (TypeElement) ((DeclaredType) type).asElement();
     }
 }
