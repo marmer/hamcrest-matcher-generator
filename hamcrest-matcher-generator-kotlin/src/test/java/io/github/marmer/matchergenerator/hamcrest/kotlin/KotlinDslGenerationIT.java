@@ -389,7 +389,7 @@ import java.util.Set;
                                 package some.other.pck;
 
                                 public class Conflicting {
-                                    public org.hamcrest.Matcher<String> getMatcher() {
+                                    public org.hamcrest.Matcher<String> getNeedle() {
                                         return null;
                                     }
 
@@ -561,6 +561,116 @@ import java.util.Set;
                     List.of(kotlinOutput.resolve("some/other/pck/FirstMatcherDsl.kt")),
                     files.filter(Files::isRegularFile).collect(Collectors.toList()));
         }
+    }
+
+    @Test
+    @DisplayName("Kotlin keywords as property names are escaped with backticks")
+    void kotlinKeywordsAsPropertyNamesAreEscapedWithBackticks() throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.Keywords"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Keywords",
+                                """
+                                package some.other.pck;
+
+                                public class Keywords {
+                                    public String getFun() {
+                                        return null;
+                                    }
+
+                                    public String getObject() {
+                                        return null;
+                                    }
+
+                                    public String getIn() {
+                                        return null;
+                                    }
+
+                                    public String getInterface() {
+                                        return null;
+                                    }
+
+                                    public String getWhen() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden("kotlin-keywords", "some/other/pck/KeywordsMatcherDsl.kt");
+    }
+
+    @Test
+    @DisplayName(
+            "A property named like a DSL member or an Any member is left out with a warning, the Java matcher keeps it")
+    void aPropertyNamedLikeADslMemberIsLeftOutWithAWarning() throws IOException {
+        final JavaFileObject configuration = configuration("some.other.pck.Clashing");
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Clashing",
+                                """
+                                package some.other.pck;
+
+                                public class Clashing {
+                                    public String getName() {
+                                        return null;
+                                    }
+
+                                    public String getCheckingAllProperties() {
+                                        return null;
+                                    }
+
+                                    public String getDelegate() {
+                                        return null;
+                                    }
+
+                                    public String getBlock() {
+                                        return null;
+                                    }
+
+                                    public String getMatcher() {
+                                        return null;
+                                    }
+
+                                    public String getEquals() {
+                                        return null;
+                                    }
+
+                                    public String getHashCode() {
+                                        return null;
+                                    }
+
+                                    public String getToString() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        for (final String name :
+                List.of(
+                        "checkingAllProperties",
+                        "delegate",
+                        "block",
+                        "matcher",
+                        "equals",
+                        "hashCode",
+                        "toString")) {
+            CompilationSubject.assertThat(compilation)
+                    .hadWarningContaining(
+                            "The Kotlin DSL of some.other.pck.Clashing leaves out the property "
+                                    + name)
+                    .inFile(configuration)
+                    .onLine(3);
+        }
+        CompilationSubject.assertThat(compilation).hadWarningCount(7);
+        assertGolden("clashing-names", "some/other/pck/ClashingMatcherDsl.kt");
+        assertTrue(
+                compilation.generatedSourceFile("some.other.pck.ClashingMatcher").isPresent(),
+                "The Java matcher keeps every property");
     }
 
     private static JavaFileObject simpleBean(final String name) {

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -39,6 +40,22 @@ import org.jspecify.annotations.Nullable;
 final class KotlinDslGenerator {
 
     private static final String DELEGATE = "delegate";
+
+    /**
+     * The names a DSL scope uses for its own members, and the members of {@code Any}. A property of
+     * one of these names gets no DSL functions, which would hide or be hidden by those members. The
+     * Java matcher keeps the property.
+     */
+    private static final Set<String> RESERVED_NAMES =
+            Set.of(
+                    MatcherNaming.CHECKING_ALL_PROPERTIES,
+                    DELEGATE,
+                    "block",
+                    "matcher",
+                    "equals",
+                    "hashCode",
+                    "toString");
+
     private static final ClassName MATCHER = new ClassName("org.hamcrest", "Matcher");
     private static final ClassName MATCHER_DSL =
             new ClassName(MatcherDsl.class.getPackageName(), MatcherDsl.class.getSimpleName());
@@ -163,6 +180,16 @@ final class KotlinDslGenerator {
 
     private void addProperty(
             final TypeSpec.Builder scope, final TypeModel type, final PropertyModel property) {
+        if (RESERVED_NAMES.contains(property.name())) {
+            context.reportWarning(
+                    "The Kotlin DSL of "
+                            + type.qualifiedName()
+                            + " leaves out the property "
+                            + property.name()
+                            + ", whose name clashes with a member of the DSL scope; the Java"
+                            + " matcher keeps it");
+            return;
+        }
         final boolean conflicting =
                 type.properties().stream()
                                 .filter(other -> other.name().equals(property.name()))

@@ -30,6 +30,8 @@ import java.util.function.Function;
  *     then.
  * @param notes receives the message of every compiler note a backend reports; the core prints it
  *     whatever the verbose option says
+ * @param warnings receives the message of every compiler warning a backend reports for the
+ *     configured type; the core reports it at the annotation element that configured the type
  */
 public record GenerationContext(
         String generatorName,
@@ -39,7 +41,8 @@ public record GenerationContext(
         Function<String, Set<String>> inheritedMethods,
         Consumer<String> errors,
         boolean kotlinOutputAvailable,
-        Consumer<String> notes) {
+        Consumer<String> notes,
+        Consumer<String> warnings) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
@@ -48,11 +51,12 @@ public record GenerationContext(
         Objects.requireNonNull(inheritedMethods, "inheritedMethods");
         Objects.requireNonNull(errors, "errors");
         Objects.requireNonNull(notes, "notes");
+        Objects.requireNonNull(warnings, "warnings");
     }
 
     /**
      * A context that knows no other generated types and no inherited methods, that offers no Kotlin
-     * output, and that cannot report errors or notes.
+     * output, and that cannot report errors, notes or warnings.
      */
     public GenerationContext(
             final String generatorName,
@@ -70,6 +74,10 @@ public record GenerationContext(
                 false,
                 message -> {
                     throw new IllegalStateException("The context cannot report notes: " + message);
+                },
+                message -> {
+                    throw new IllegalStateException(
+                            "The context cannot report warnings: " + message);
                 });
     }
 
@@ -100,5 +108,15 @@ public record GenerationContext(
      */
     public void reportNote(final String message) {
         notes.accept(message);
+    }
+
+    /**
+     * Reports a compiler warning for the configured type, which does not fail the compilation. A
+     * backend that reports one per problem names the problem in the message.
+     *
+     * @param message the warning
+     */
+    public void reportWarning(final String message) {
+        warnings.accept(message);
     }
 }
