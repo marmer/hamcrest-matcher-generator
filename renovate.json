@@ -41,6 +41,7 @@
       "matchPackageNames": [
         "org.pitest:pitest-maven",
         "org.pitest:pitest-junit5-plugin",
+        "org.pitest:pitest-history-plugin",
         "org.jacoco:jacoco-maven-plugin",
         "org.sonarsource.scanner.maven:sonar-maven-plugin"
       ],

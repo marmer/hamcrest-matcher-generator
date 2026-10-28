@@ -121,7 +121,8 @@ jobs:
   mutation-testing:
     name: Mutation testing
     runs-on: ubuntu-latest
-    # Unlike the other jobs, which set none: the full PIT run took 8:25 locally, so 60 min caps a hung minion.
+    # The build, verify-matrix and release-dry-run jobs set no timeout; sonar and this job do.
+    # The full PIT run took 8:25 locally, so 60 min caps a hung minion.
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
