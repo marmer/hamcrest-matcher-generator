@@ -21,7 +21,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |medium
 |disabling
 |The autopilot depends on four credentials: the SonarCloud token (a personal token without expiry date that SonarCloud removes after 60 days without use), the GPG signing key (three years), the Maven Central Portal token (from the legacy username/password account) and the private key of the GitHub App that creates release pull requests. When one expires or is revoked, either every merge stops (Sonar is a required check) or releases fail.
-|A weekly reminder workflow validates the Sonar token and the Central token and checks the GPG key's expiry date; 30 days before an expiry it opens an issue that mentions the maintainer and links the renewal steps. The Sonar token has no expiry date to warn about; the validation catches a removed or revoked one, and CI runs keep it in use. Invalid credentials fail with an explicit message instead of an unclear red build. The maintainer runbook lists every credential, where it is stored and how to renew it.
+|A weekly reminder workflow (`credential-reminder.yml`) validates the Sonar token and the Central token and reads the expiry of the Sonar token and of the GPG key; the Central token and the App key have their expiry dates in repository variables. 30 days before an expiry it opens or updates an issue that mentions the maintainer and links the renewal steps. The validation also catches a removed or revoked Sonar token, and CI runs keep it in use. Invalid credentials fail with an explicit message instead of an unclear red build. The maintainer runbook lists every credential, where it is stored and how to renew it.
 
 |Risk: free external services change or fail
 |medium
