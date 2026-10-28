@@ -9,7 +9,8 @@ Rules:
 - the top-level `permissions:` is exactly `contents: read`, per-job additions belong to the job that needs them;
 - every `setup-java` step has `cache: maven`, and no step caches ~/.m2 by hand
   (the Sonar and PIT caches are not Maven caches);
-- CI (`ci-build.yml`) runs on `pull_request` and on `push` to main.
+- the workflows that run required checks (`ci-build.yml`, `domain-docs-sync.yml`) run on `pull_request` and on
+  `push` to main, not on every branch.
 
 Usage:
   scripts/ci/check-workflow-hardening.py [<root-dir>]
@@ -20,6 +21,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_DIR = ".github/workflows"
+# Workflows whose jobs are required checks (ruleset): pull_request plus push to main only, no bare `push:`.
+REQUIRED_CHECK_WORKFLOWS = ("ci-build.yml", "domain-docs-sync.yml")
 
 USES = re.compile(r"^\s*(?:-\s+)?uses:\s*(\S+)")
 STEP_START = re.compile(r"^(\s*)-\s")
@@ -111,12 +114,12 @@ def java_cache_problems(text):
 
 
 def ci_trigger_problems(text):
-    """CI must run on pull requests and on pushes to main."""
+    """Workflows that run required checks must run on pull requests and on pushes to main (not every branch)."""
     has_pull_request = re.search(r"^  pull_request:", text, re.MULTILINE)
     has_push_to_main = re.search(r"^  push:\n    branches: \[ ?main ?\]", text, re.MULTILINE)
     if has_pull_request and has_push_to_main:
         return []
-    return ["CI must run on `pull_request` and on `push` to main"]
+    return ["required-check workflows must run on `pull_request` and on `push` to main"]
 
 
 def check_workflows(root):
@@ -129,7 +132,7 @@ def check_workflows(root):
             problems.append(f"{name}:{number}: `uses: {reference}` is not pinned to a full commit SHA")
         problems += [f"{name}: {problem}" for problem in permissions_problems(text)]
         problems += [f"{name}: {problem}" for problem in java_cache_problems(text)]
-        if path.name == "ci-build.yml":
+        if path.name in REQUIRED_CHECK_WORKFLOWS:
             problems += [f"{name}: {problem}" for problem in ci_trigger_problems(text)]
     return problems
 

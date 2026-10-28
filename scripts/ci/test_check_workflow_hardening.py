@@ -1,6 +1,7 @@
 """Unit tests for check-workflow-hardening.py (stdlib unittest only, no API calls) and a check of the repository's workflows."""
 import importlib.util
 import os
+import tempfile
 import textwrap
 import unittest
 from pathlib import Path
@@ -11,6 +12,7 @@ check = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check)
 
 SHA = "11d5960a326750d5838078e36cf38b85af677262"
+REQUIRED_CHECK_MESSAGE = ["required-check workflows must run on `pull_request` and on `push` to main"]
 
 
 def workflow(text):
@@ -225,7 +227,42 @@ class CiTriggerTest(unittest.TestCase):
               build:
                 runs-on: ubuntu-latest
         """)
-        self.assertEqual(["CI must run on `pull_request` and on `push` to main"], check.ci_trigger_problems(text))
+        self.assertEqual(REQUIRED_CHECK_MESSAGE, check.ci_trigger_problems(text))
+
+    def test_bare_push_on_every_branch_is_reported(self):
+        text = workflow("""
+            on:
+              push:
+              pull_request:
+            jobs:
+              build:
+                runs-on: ubuntu-latest
+        """)
+        self.assertEqual(REQUIRED_CHECK_MESSAGE, check.ci_trigger_problems(text))
+
+    def test_required_check_workflows_with_bare_push_are_reported_in_a_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            pinned = f"    steps:\n      - uses: actions/checkout@{SHA} # v4.4.0\n"
+            permissions = "permissions:\n  contents: read\n\n"
+            (workflows / "domain-docs-sync.yml").write_text(
+                "on:\n  push:\n  pull_request:\n\n" + permissions + "jobs:\n  j:\n    runs-on: x\n" + pinned,
+                encoding="utf-8")
+            (workflows / "docs.yml").write_text(
+                "on:\n  push:\n  pull_request:\n\n" + permissions + "jobs:\n  j:\n    runs-on: x\n" + pinned,
+                encoding="utf-8")
+            problems = check.check_workflows(root)
+        self.assertEqual(
+            [f".github/workflows/domain-docs-sync.yml: {REQUIRED_CHECK_MESSAGE[0]}"],
+            problems)
+
+    def test_domain_docs_sync_runs_on_pull_requests_and_push_to_main_only(self):
+        text = (HERE.parents[1] / ".github" / "workflows" / "domain-docs-sync.yml").read_text(encoding="utf-8")
+        self.assertIn("name: \"Domain docs sync\"", text)
+        self.assertIn("name: Domain docs in sync", text)
+        self.assertEqual([], check.ci_trigger_problems(text))
 
 
 class RepositoryWorkflowsTest(unittest.TestCase):
