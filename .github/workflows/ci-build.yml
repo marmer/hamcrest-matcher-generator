@@ -105,6 +105,8 @@ jobs:
   mutation-testing:
     name: Mutation testing
     runs-on: ubuntu-latest
+    # Unlike the other jobs, which set none: the full PIT run took 8:25 locally, so 60 min caps a hung minion.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
