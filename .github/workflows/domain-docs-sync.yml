@@ -12,13 +12,16 @@ jobs:
     name: Domain docs in sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Check domain docs, required checks and CLAUDE.md references
         run: python3 scripts/agents/check-domain-docs-sync.py
 
       - name: Check the frozen 5.x compatibility suite is unchanged
         run: scripts/ci/check-frozen-5x-suite.sh
+
+      - name: Check the workflows are SHA-pinned, have minimal permissions and cache Maven through setup-java
+        run: python3 scripts/ci/check-workflow-hardening.py
 
       - name: Test the CI check scripts
         run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
