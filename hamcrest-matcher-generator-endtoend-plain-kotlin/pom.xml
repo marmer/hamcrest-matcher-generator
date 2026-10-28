@@ -52,6 +52,11 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
+                <configuration>
+                    <!-- The generated DSL promises Kotlin 1.9 language features only (spec 104). -->
+                    <languageVersion>1.9</languageVersion>
+                    <apiVersion>1.9</apiVersion>
+                </configuration>
                 <executions>
                     <execution>
                         <id>test-kapt</id>

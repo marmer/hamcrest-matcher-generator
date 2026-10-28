@@ -44,6 +44,20 @@ internal class KotlinDslTest {
     }
 
     @Test
+    @DisplayName("A wrong value in a nested scope or in a Kotlin property fails")
+    fun test_WrongValuesFail() {
+        assertThrows(AssertionError::class.java) {
+            assertThat(parcel, isParcel { recipient { place { city("Hamburg") } } })
+        }
+        assertThrows(AssertionError::class.java) {
+            assertThat(
+                KotlinProbe(enabled = true, isX = null, isLabel = "label"),
+                isKotlinProbe { isLabel("other") }
+            )
+        }
+    }
+
+    @Test
     @DisplayName("A mismatch reads the same as with the Java matcher")
     fun test_MismatchMessageIsTheOneOfTheJavaMatcher() {
         val dsl = isParcel { recipient { place { city("Hamburg") } } }

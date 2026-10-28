@@ -34,6 +34,17 @@ internal class KotlinDslTest {
     }
 
     @Test
+    @DisplayName("A wrong value in a nested scope fails")
+    fun test_WrongValueInNestedScopeFails() {
+        assertThrows(AssertionError::class.java) {
+            assertThat(order, isOrder { customer { address { city("Hamburg") } } })
+        }
+        assertThrows(AssertionError::class.java) {
+            assertThat(order, isOrder { id(7L) })
+        }
+    }
+
+    @Test
     @DisplayName("A matcher takes the place of a value")
     fun test_MatchersInScopes() {
         assertThat(order, isOrder {

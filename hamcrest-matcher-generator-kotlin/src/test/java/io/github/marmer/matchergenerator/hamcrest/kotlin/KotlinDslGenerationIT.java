@@ -14,12 +14,19 @@ import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -238,10 +245,11 @@ class KotlinDslGenerationIT {
                         configuration("some.other.pck.Box"),
                         JavaFileObjects.forSourceLines(
                                 "some.other.pck.Box",
-                                """
+"""
                                 package some.other.pck;
 
                                 import java.util.List;
+import java.util.Set;
 
                                 public class Box<T extends Number> {
                                     public T getValue() {
@@ -475,6 +483,72 @@ class KotlinDslGenerationIT {
         CompilationSubject.assertThat(compilation).succeeded();
         assertFalse(Files.exists(kotlinOutput.resolve("some/other/pck/EmptyMatcherDsl.kt")));
         assertGolden("without-properties", "some/other/pck/ContainerMatcherDsl.kt");
+    }
+
+    @Test
+    @DisplayName("Without KAPT the note is reported once across processing rounds")
+    void withoutKaptTheNoteIsReportedOnceAcrossProcessingRounds() {
+        final Compilation compilation =
+                Compiler.javac()
+                        .withProcessors(
+                                new MatcherGenerationProcessor(() -> NOW),
+                                new LateConfigurationProcessor())
+                        .compile(
+                                configuration("some.other.pck.First"),
+                                simpleBean("First"),
+                                simpleBean("Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(
+                compilation.generatedSourceFile("some.pck.LateConfiguration").isPresent(),
+                "Configuration generated for the second round");
+        assertTrue(compilation.generatedSourceFile("some.other.pck.FirstMatcher").isPresent());
+        assertTrue(compilation.generatedSourceFile("some.other.pck.SecondMatcher").isPresent());
+        CompilationSubject.assertThat(compilation).hadNoteCount(1);
+    }
+
+    /**
+     * Writes a second configuration in the first round, so that the matcher generator runs for a
+     * type again in a later round with the same backend instances.
+     */
+    private static final class LateConfigurationProcessor extends AbstractProcessor {
+        private boolean written;
+
+        @Override
+        public Set<String> getSupportedAnnotationTypes() {
+            return Set.of("*");
+        }
+
+        @Override
+        public SourceVersion getSupportedSourceVersion() {
+            return SourceVersion.latestSupported();
+        }
+
+        @Override
+        public boolean process(
+                final Set<? extends TypeElement> annotations, final RoundEnvironment round) {
+            if (written || round.processingOver()) {
+                return false;
+            }
+            written = true;
+            try (Writer writer =
+                    processingEnv
+                            .getFiler()
+                            .createSourceFile("some.pck.LateConfiguration")
+                            .openWriter()) {
+                writer.write(
+                        """
+                        package some.pck;
+
+                        @io.github.marmer.matchergenerator.annotations.GenerateMatchers("some.other.pck.Second")
+                        public final class LateConfiguration {
+                        }
+                        """);
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return false;
+        }
     }
 
     @Test
