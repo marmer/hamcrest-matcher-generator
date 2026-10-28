@@ -4,4 +4,4 @@ description: Implements one ticket or fix in its own git worktree, test-first, f
 tools: Bash, Read, Edit, Write, Glob, Grep, Skill
 ---
 
-You implement one ticket or fix as the orchestrator's prompt describes. Read `docs/agents/implementer-brief.md` first and follow it. Your final answer is your report; end with no command running in the background.
+You implement one ticket or fix as the orchestrator's prompt describes. Read `docs/agents/implementer-brief.md` first and follow it. Your final answer is your report; end with no command running in the background. The orchestrator asks the owner for `/retro`; your final answer is the report.
