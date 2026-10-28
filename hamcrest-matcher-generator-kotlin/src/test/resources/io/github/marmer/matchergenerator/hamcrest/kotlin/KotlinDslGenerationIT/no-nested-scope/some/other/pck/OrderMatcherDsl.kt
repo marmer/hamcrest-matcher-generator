@@ -100,26 +100,3 @@ public class StatusSpec(
     delegate.ignoringClass()
   }
 }
-
-public fun isUnconfigured(block: UnconfiguredSpec.() -> Unit): OrderMatcher.UnconfiguredMatcher = OrderMatcher.UnconfiguredMatcher.isUnconfigured().also { UnconfiguredSpec(it).block() }
-
-@MatcherDsl
-public class UnconfiguredSpec(
-  private val `delegate`: OrderMatcher.UnconfiguredMatcher,
-) {
-  public fun checkingAllProperties() {
-    delegate.checkingAllProperties()
-  }
-
-  public fun `class`(`value`: Class<*>?) {
-    delegate.withClass(value)
-  }
-
-  public fun `class`(matcher: Matcher<in Class<*>>) {
-    delegate.withClass(matcher)
-  }
-
-  public fun ignoringClass() {
-    delegate.ignoringClass()
-  }
-}

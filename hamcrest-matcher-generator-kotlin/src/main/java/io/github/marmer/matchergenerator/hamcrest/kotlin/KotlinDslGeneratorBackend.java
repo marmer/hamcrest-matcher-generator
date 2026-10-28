@@ -30,6 +30,9 @@ public class KotlinDslGeneratorBackend implements GeneratorBackend {
             noteMissingKaptOnce(context);
             return List.of();
         }
+        if (!KotlinDslGenerator.hasAnythingToGenerate(model)) {
+            return List.of();
+        }
         return List.of(
                 new GeneratedSource(
                         model.targetPackage(),

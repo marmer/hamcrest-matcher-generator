@@ -5,6 +5,7 @@
 package io.github.marmer.matchergenerator.hamcrest.kotlin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
@@ -441,6 +442,39 @@ class KotlinDslGenerationIT {
                     name);
         }
         assertEquals(0, withKapt.notes().size(), () -> "Notes: " + withKapt.notes());
+    }
+
+    @Test
+    @DisplayName("A type without properties gets no DSL, unless a nested type has properties")
+    void aTypeWithoutPropertiesGetsNoDsl() throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.Empty", "some.other.pck.Container"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Empty",
+                                """
+                                package some.other.pck;
+
+                                public class Empty {
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Container",
+                                """
+                                package some.other.pck;
+
+                                public class Container {
+                                    public static class Content {
+                                        public String getLabel() {
+                                            return null;
+                                        }
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertFalse(Files.exists(kotlinOutput.resolve("some/other/pck/EmptyMatcherDsl.kt")));
+        assertGolden("without-properties", "some/other/pck/ContainerMatcherDsl.kt");
     }
 
     @Test

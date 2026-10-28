@@ -31,6 +31,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
+            <version>5.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
         </dependency>
@@ -62,6 +68,11 @@
                                 <annotationProcessorPath>
                                     <groupId>io.github.marmer.testutils</groupId>
                                     <artifactId>hamcrest-matcher-generator</artifactId>
+                                    <version>${project.version}</version>
+                                </annotationProcessorPath>
+                                <annotationProcessorPath>
+                                    <groupId>io.github.marmer.testutils</groupId>
+                                    <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
                                     <version>${project.version}</version>
                                 </annotationProcessorPath>
                             </annotationProcessorPaths>

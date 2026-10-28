@@ -97,8 +97,22 @@ final class KotlinDslGenerator {
     private static boolean isComparedDeeply(final TypeModel type) {
         return ((TypeElement) ((DeclaredType) type.type()).asElement()).getKind()
                         != ElementKind.ENUM
-                && type.properties().stream()
-                        .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
+                && hasProperties(type);
+    }
+
+    private static boolean hasProperties(final TypeModel type) {
+        return type.properties().stream()
+                .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
+    }
+
+    /**
+     * Whether the type or one of its nested types has a property to check. A type without
+     * properties gets no DSL, which also spares the Kotlin compiler types it cannot see, such as
+     * the class Kotlin generates for top level functions.
+     */
+    static boolean hasAnythingToGenerate(final TypeModel type) {
+        return hasProperties(type)
+                || type.nestedTypes().stream().anyMatch(KotlinDslGenerator::hasAnythingToGenerate);
     }
 
     private static String specName(final TypeModel type) {
@@ -119,8 +133,10 @@ final class KotlinDslGenerator {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
         final ClassName matcher = new ClassName(type.targetPackage(), matcherNames);
-        file.addFunction(entryFunction(type, matcher));
-        file.addType(scopeClass(type, matcher));
+        if (hasProperties(type)) {
+            file.addFunction(entryFunction(type, matcher));
+            file.addType(scopeClass(type, matcher));
+        }
         type.nestedTypes().forEach(nested -> addTo(file, nested, matcherNames));
     }
 
