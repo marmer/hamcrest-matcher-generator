@@ -327,10 +327,10 @@ class AssertionGenerator {
         final TypeMirror type = property.type();
         return !isConflicting(property)
                 && (type.getKind() == TypeKind.BOOLEAN
-                        || type.getKind() == TypeKind.DECLARED
+                        || (type.getKind() == TypeKind.DECLARED
                                 && asTypeElement(type)
                                         .getQualifiedName()
-                                        .contentEquals(Boolean.class.getCanonicalName()));
+                                        .contentEquals(Boolean.class.getCanonicalName())));
     }
 
     /** Whether the type is an array, or a collection or a map, whose elements are asserted. */
