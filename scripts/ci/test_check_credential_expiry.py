@@ -100,6 +100,20 @@ class ParsingTest(unittest.TestCase):
 
         self.assertIsNone(check.gpg_expiry(listing))
 
+    def test_gpg_expiry_ignores_revoked_invalid_and_expired_subkeys(self):
+        listing = "\n".join([
+            "pub:u:4096:1:AAAA:1700000000:1798761600::u:::scSC:::::::",
+            "sub:r:4096:1:BBBB:1700000000:1600000000:::::e::::::::",
+            "sub:i:4096:1:CCCC:1700000000:1600000001:::::e::::::::",
+            "sub:d:4096:1:DDDD:1700000000:1600000002:::::e::::::::",
+        ])
+
+        self.assertEqual(date(2027, 1, 1), check.gpg_expiry(listing))
+
+    def test_gpg_expiry_with_only_unusable_keys_is_an_error(self):
+        with self.assertRaises(ValueError):
+            check.gpg_expiry("pub:r:4096:1:AAAA:1700000000:1798761600::u:::scSC:::::::")
+
     def test_gpg_expiry_without_any_key_record_is_an_error(self):
         with self.assertRaises(ValueError):
             check.gpg_expiry("tru:t:1:1700000000:0:3:1:5")

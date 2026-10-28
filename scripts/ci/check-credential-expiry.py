@@ -35,6 +35,8 @@ OWNER = "marmer"
 RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/issues/147"
 # Field index 6 of a `gpg --with-colons` pub or sub record is the expiry as epoch seconds (empty: no expiry).
 GPG_EXPIRY_FIELD = 6
+# Field 2 (validity) values of keys that need no renewal: revoked, invalid, disabled.
+UNUSABLE_VALIDITY = ("r", "i", "d")
 
 RENEWAL_STEPS = {
     "Sonar token": (
@@ -71,8 +73,11 @@ def parse_date(text):
 
 
 def gpg_expiry(listing):
-    """The earliest expiry among the pub and sub records of a `gpg --with-colons --list-keys` listing."""
-    records = [line.split(":") for line in listing.splitlines() if line.split(":")[0] in ("pub", "sub")]
+    """The earliest expiry among the usable pub and sub records of a `gpg --with-colons --list-keys` listing.
+
+    Revoked (r), invalid (i) and disabled (d) keys and subkeys are skipped: renewing them is not needed."""
+    records = [fields for fields in (line.split(":") for line in listing.splitlines())
+               if fields[0] in ("pub", "sub") and (len(fields) < 2 or fields[1] not in UNUSABLE_VALIDITY)]
     if not records:
         raise ValueError("gpg listed no key")
     expiries = []
