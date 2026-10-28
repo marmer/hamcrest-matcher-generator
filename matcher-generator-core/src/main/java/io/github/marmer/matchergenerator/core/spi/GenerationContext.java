@@ -25,6 +25,11 @@ import java.util.function.Function;
  *     ones included, by qualified class name; empty for a class that is not there
  * @param errors receives the message of every compiler error a backend reports for the configured
  *     type; the core reports it at the annotation element that configured the type
+ * @param kotlinOutputAvailable whether Kotlin sources can be compiled in this run, which is the
+ *     case when the annotation processor runs with KAPT. A backend that emits Kotlin only does so
+ *     then.
+ * @param notes receives the message of every compiler note a backend reports; the core prints it
+ *     whatever the verbose option says
  */
 public record GenerationContext(
         String generatorName,
@@ -32,7 +37,9 @@ public record GenerationContext(
         boolean jspecifyAvailable,
         List<TypeModel> generatedTypes,
         Function<String, Set<String>> inheritedMethods,
-        Consumer<String> errors) {
+        Consumer<String> errors,
+        boolean kotlinOutputAvailable,
+        Consumer<String> notes) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
@@ -40,11 +47,12 @@ public record GenerationContext(
         generatedTypes = List.copyOf(generatedTypes);
         Objects.requireNonNull(inheritedMethods, "inheritedMethods");
         Objects.requireNonNull(errors, "errors");
+        Objects.requireNonNull(notes, "notes");
     }
 
     /**
-     * A context that knows no other generated types and no inherited methods, and that cannot
-     * report errors.
+     * A context that knows no other generated types and no inherited methods, that offers no Kotlin
+     * output, and that cannot report errors or notes.
      */
     public GenerationContext(
             final String generatorName,
@@ -58,6 +66,10 @@ public record GenerationContext(
                 name -> Set.of(),
                 message -> {
                     throw new IllegalStateException("The context cannot report errors: " + message);
+                },
+                false,
+                message -> {
+                    throw new IllegalStateException("The context cannot report notes: " + message);
                 });
     }
 
@@ -78,5 +90,15 @@ public record GenerationContext(
      */
     public void reportError(final String message) {
         errors.accept(message);
+    }
+
+    /**
+     * Reports a compiler note, which does not fail the compilation. A backend that reports the same
+     * note for every type has to keep track of that itself.
+     *
+     * @param message the note
+     */
+    public void reportNote(final String message) {
+        notes.accept(message);
     }
 }

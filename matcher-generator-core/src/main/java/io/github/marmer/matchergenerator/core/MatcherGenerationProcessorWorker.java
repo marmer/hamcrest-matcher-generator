@@ -233,7 +233,9 @@ public class MatcherGenerationProcessorWorker {
                                     jspecifyAvailable,
                                     models,
                                     this::inheritedMethodNames,
-                                    message -> printBackendError(type, message));
+                                    message -> printBackendError(type, message),
+                                    processingEnv.getOptions().containsKey(KAPT_KOTLIN_GENERATED),
+                                    this::printBackendNote);
                     backends.forEach(
                             backend ->
                                     backend.generate(type.model(), context)
@@ -259,6 +261,11 @@ public class MatcherGenerationProcessorWorker {
                         message,
                         type.configurationElement(),
                         type.configurationMirror());
+    }
+
+    /** A backend has something to tell that is no problem. It is a note without an element. */
+    private void printBackendNote(final String message) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
 
     /**
