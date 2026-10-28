@@ -510,7 +510,8 @@ class CoreProcessorIT {
     }
 
     @Test
-    @DisplayName("A backend warning is a compiler warning at the annotation, and the compilation succeeds")
+    @DisplayName(
+            "A backend warning is a compiler warning at the annotation, and the compilation succeeds")
     void aBackendWarningIsACompilerWarningAtTheAnnotationAndTheCompilationSucceeds() {
         final JavaFileObject configuration =
                 generateMatchersConfiguration("\"some.other.pck.Warned\"");
