@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -39,7 +38,6 @@ import org.jspecify.annotations.Nullable;
  */
 final class KotlinDslGenerator {
 
-    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
     private static final String DELEGATE = "delegate";
     private static final ClassName MATCHER = new ClassName("org.hamcrest", "Matcher");
     private static final ClassName MATCHER_DSL =
@@ -78,7 +76,7 @@ final class KotlinDslGenerator {
             final Map<String, Scope> scopes) {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
-        if (isComparedDeeply(type)) {
+        if (MatcherNaming.isComparedDeeply(type)) {
             scopes.putIfAbsent(
                     type.qualifiedName(),
                     new Scope(
@@ -91,27 +89,12 @@ final class KotlinDslGenerator {
     }
 
     /**
-     * Whether a property of the type is checked with a nested scope: the type is not an enum and
-     * tells something apart, like the Hamcrest backend decides for reference objects.
-     */
-    private static boolean isComparedDeeply(final TypeModel type) {
-        return ((TypeElement) ((DeclaredType) type.type()).asElement()).getKind()
-                        != ElementKind.ENUM
-                && hasProperties(type);
-    }
-
-    private static boolean hasProperties(final TypeModel type) {
-        return type.properties().stream()
-                .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
-    }
-
-    /**
      * Whether the type or one of its nested types has a property to check. A type without
      * properties gets no DSL, which also spares the Kotlin compiler types it cannot see, such as
      * the class Kotlin generates for top level functions.
      */
     static boolean hasAnythingToGenerate(final TypeModel type) {
-        return hasProperties(type)
+        return MatcherNaming.hasProperties(type)
                 || type.nestedTypes().stream().anyMatch(KotlinDslGenerator::hasAnythingToGenerate);
     }
 
@@ -133,7 +116,7 @@ final class KotlinDslGenerator {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
         final ClassName matcher = new ClassName(type.targetPackage(), matcherNames);
-        if (hasProperties(type)) {
+        if (MatcherNaming.hasProperties(type)) {
             file.addFunction(entryFunction(type, matcher));
             file.addType(scopeClass(type, matcher));
         }
@@ -188,7 +171,7 @@ final class KotlinDslGenerator {
         type.properties().stream()
                 .filter(other -> other.name().equals(property.name()))
                 .forEach(other -> scope.addFunction(valueFunction(other)));
-        if (!isMatcher(property.type())) {
+        if (!MatcherNaming.isMatcherType(property.type())) {
             scope.addFunction(matcherFunction(property, conflicting));
             final @Nullable Scope nested = nestedScopeOf(property.type());
             if (nested != null) {
@@ -249,13 +232,5 @@ final class KotlinDslGenerator {
         }
         return scopes.get(
                 ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName().toString());
-    }
-
-    private static boolean isMatcher(final TypeMirror type) {
-        return type.getKind() == TypeKind.DECLARED
-                && "org.hamcrest.Matcher"
-                        .contentEquals(
-                                ((TypeElement) ((DeclaredType) type).asElement())
-                                        .getQualifiedName());
     }
 }

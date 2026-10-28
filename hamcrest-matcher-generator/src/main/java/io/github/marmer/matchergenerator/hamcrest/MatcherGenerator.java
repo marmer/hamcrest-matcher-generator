@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -135,7 +134,7 @@ class MatcherGenerator {
     }
 
     private @Nullable MethodSpec toHamcrestMatcher(final PropertyModel property) {
-        if (isMatcher(property.type())) {
+        if (MatcherNaming.isMatcherType(property.type())) {
             return null;
         }
         return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property.name()))
@@ -148,7 +147,7 @@ class MatcherGenerator {
     }
 
     private @Nullable MethodSpec toHamcrestMatcherReset(final PropertyModel property) {
-        if (isMatcher(property.type())) {
+        if (MatcherNaming.isMatcherType(property.type())) {
             return null;
         }
         return MethodSpec.methodBuilder(MatcherNaming.resetMethodName(property.name()))
@@ -393,7 +392,7 @@ class MatcherGenerator {
             final TypeModel generated,
             final ClassName className,
             final Map<String, MatcherType> types) {
-        if (isComparedDeeply(generated)) {
+        if (MatcherNaming.isComparedDeeply(generated)) {
             types.put(
                     generated.qualifiedName(),
                     new MatcherType(className, MatcherNaming.referenceInitializerName(generated)));
@@ -406,12 +405,6 @@ class MatcherGenerator {
                                         nested,
                                         className.nestedClass(MatcherNaming.matcherName(nested)),
                                         types));
-    }
-
-    private boolean isComparedDeeply(final TypeModel generated) {
-        return asTypeElement(generated.type()).getKind() != ElementKind.ENUM
-                && generated.properties().stream()
-                        .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
     }
 
     /**
@@ -584,13 +577,6 @@ class MatcherGenerator {
 
     private TypeElement asTypeElement(final TypeMirror type) {
         return (TypeElement) ((DeclaredType) type).asElement();
-    }
-
-    private boolean isMatcher(final TypeMirror type) {
-        return type.getKind() == TypeKind.DECLARED
-                && Matcher.class
-                        .getCanonicalName()
-                        .equals(asTypeElement(type).getQualifiedName().toString());
     }
 
     private TypeName rawTypeName() {

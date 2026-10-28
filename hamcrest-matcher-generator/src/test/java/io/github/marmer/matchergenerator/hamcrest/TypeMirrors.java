@@ -27,6 +27,11 @@ final class TypeMirrors {
      * given.
      */
     static TypeMirror stringType() {
+        return typeNamed("java.lang.String");
+    }
+
+    /** A real declared type mirror of the named class, which has to be on the class path. */
+    static TypeMirror typeNamed(final String qualifiedName) {
         final AtomicReference<@Nullable TypeMirror> string = new AtomicReference<>();
         CompilationSubject.assertThat(
                         Compiler.javac()
@@ -50,7 +55,7 @@ final class TypeMirrors {
                                                         null,
                                                         processingEnv
                                                                 .getElementUtils()
-                                                                .getTypeElement("java.lang.String")
+                                                                .getTypeElement(qualifiedName)
                                                                 .asType());
                                                 return false;
                                             }

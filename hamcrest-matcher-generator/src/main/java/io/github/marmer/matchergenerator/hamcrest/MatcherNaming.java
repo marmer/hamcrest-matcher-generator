@@ -6,6 +6,12 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.Locale;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import org.hamcrest.Matcher;
 
 /**
  * The names the generated Hamcrest matchers use. A backend built on top of the Hamcrest backend,
@@ -15,6 +21,8 @@ public final class MatcherNaming {
 
     /** The method that switches the completeness check of a matcher on. */
     public static final String CHECKING_ALL_PROPERTIES = "checkingAllProperties";
+
+    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
 
     private MatcherNaming() {}
 
@@ -66,6 +74,43 @@ public final class MatcherNaming {
      */
     public static String resetMethodName(final String property) {
         return "reset" + capitalized(property);
+    }
+
+    /**
+     * Whether a property of this type is checked deeply with the matcher generated for the type, as
+     * opposed to by {@code equals}: the type is no enum and has a property besides the one {@code
+     * Object.getClass()} contributes, since it would tell nothing apart otherwise.
+     *
+     * @param type a configured type, or one of its nested types
+     * @return whether a matcher of the type is used to check a property of that type
+     */
+    public static boolean isComparedDeeply(final TypeModel type) {
+        return ((TypeElement) ((DeclaredType) type.type()).asElement()).getKind()
+                        != ElementKind.ENUM
+                && hasProperties(type);
+    }
+
+    /**
+     * @param type a configured type, or one of its nested types
+     * @return whether the type has a property besides the one {@code Object.getClass()} contributes
+     */
+    public static boolean hasProperties(final TypeModel type) {
+        return type.properties().stream()
+                .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
+    }
+
+    /**
+     * @param type the type of a property
+     * @return whether the type is Hamcrest's {@code Matcher}, which a property takes as a value and
+     *     which therefore gets no overload that takes a matcher
+     */
+    public static boolean isMatcherType(final TypeMirror type) {
+        return type.getKind() == TypeKind.DECLARED
+                && Matcher.class
+                        .getCanonicalName()
+                        .contentEquals(
+                                ((TypeElement) ((DeclaredType) type).asElement())
+                                        .getQualifiedName());
     }
 
     private static String capitalized(final String value) {
