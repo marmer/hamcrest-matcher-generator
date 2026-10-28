@@ -20,8 +20,10 @@ a verbose note instead, since packages hold types that are no match target. Each
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run, the inherited method names of a class on the compile class path and the error reporting, `reportError`). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
-. Each backend returns its `GeneratedSource` files, one per generated class. The worker writes Java sources through the compiler's `Filer`, so they
-are compiled in the same build.
+. Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
+`SoftAssertionsProvider` mixin per target package, from the first type of that package by name (see the glossary
+entry *Soft assertions mixin*). The worker writes Java sources through the compiler's `Filer`, so they are compiled
+in the same build.
 . Kotlin sources are written into the directory named by the processor option `kapt.kotlin.generated`, which only KAPT
 provides (see ADR 0004). Without that option the worker reports one compile error that names the backend and the
 type, because the Kotlin file would otherwise never be compiled.

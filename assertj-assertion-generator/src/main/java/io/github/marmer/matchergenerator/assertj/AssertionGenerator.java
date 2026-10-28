@@ -6,6 +6,7 @@ package io.github.marmer.matchergenerator.assertj;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -50,6 +51,9 @@ class AssertionGenerator {
     private static final String CHECK_PROPERTY = "checkProperty";
     private static final ClassName ABSTRACT_OBJECT_ASSERT =
             ClassName.get(ASSERTJ_API, "AbstractObjectAssert");
+    private static final ClassName INSTANCE_OF_ASSERT_FACTORY =
+            ClassName.get(ASSERTJ_API, "InstanceOfAssertFactory");
+    private static final ClassName REFLECT_TYPE = ClassName.get("java.lang.reflect", "Type");
     private static final Set<String> ITERABLE_OR_MAP =
             Set.of("java.lang.Iterable", "java.util.Map");
     private static final AnnotationSpec NULL_MARKED =
@@ -103,7 +107,8 @@ class AssertionGenerator {
                         ClassName.get(model.targetPackage(), concreteName())));
     }
 
-    private TypeSpec topLevel(final TypeSpec.Builder builder) {
+    /** The builder's type as a top level type, null marked when JSpecify is available. */
+    TypeSpec topLevel(final TypeSpec.Builder builder) {
         if (context.jspecifyAvailable()) {
             builder.addAnnotation(NULL_MARKED);
         }
@@ -175,6 +180,7 @@ class AssertionGenerator {
                         .superclass(
                                 ParameterizedTypeName.get(
                                         abstractClass, concreteClass, assertedType()))
+                        .addField(instanceOfAssertFactoryField(concreteClass))
                         .addMethod(concreteConstructor(concreteClass))
                         .addMethod(assertThatMethod(concreteClass));
         model.nestedTypes()
@@ -212,6 +218,87 @@ class AssertionGenerator {
                     "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName());
         }
         return constructor.build();
+    }
+
+    /**
+     * The {@code InstanceOfAssertFactory} constant of the type, such as {@code ORDER_LINE}, which
+     * navigates to the type with {@code as(..)}. A generic type is created with its raw class and
+     * the erasures of its bounds as type arguments, since the type arguments are not known at run
+     * time.
+     */
+    private FieldSpec instanceOfAssertFactoryField(final ClassName concreteClass) {
+        final ClassName rawClass = rawClass();
+        final FieldSpec.Builder field =
+                FieldSpec.builder(
+                        ParameterizedTypeName.get(
+                                INSTANCE_OF_ASSERT_FACTORY, rawClass, concreteClass),
+                        factoryName(),
+                        Modifier.PUBLIC,
+                        Modifier.STATIC,
+                        Modifier.FINAL);
+        if (model.typeParameters().isEmpty()) {
+            field.initializer(
+                    "new $T<>($T.class, $T::new)",
+                    INSTANCE_OF_ASSERT_FACTORY,
+                    rawClass,
+                    concreteClass);
+        } else {
+            field.addAnnotation(
+                    AnnotationSpec.builder(SuppressWarnings.class)
+                            .addMember("value", "$S", "rawtypes")
+                            .build());
+            field.initializer(
+                    "new $T<>($T.class, new $T[] {$L}, $T::new)",
+                    INSTANCE_OF_ASSERT_FACTORY,
+                    rawClass,
+                    REFLECT_TYPE,
+                    typeArgumentClasses(),
+                    concreteClass);
+        }
+        return field.build();
+    }
+
+    /**
+     * A default method of the soft assertions mixin, such as {@code assertThat(Order)}: a soft
+     * proxy of the concrete assertion class for the value.
+     */
+    MethodSpec softAssertionMethod(final String name, final ClassName concreteClass) {
+        return MethodSpec.methodBuilder(name)
+                .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
+                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
+                .addStatement(
+                        "return proxy($T.class, $T.class, $L)",
+                        concreteClass,
+                        rawClass(),
+                        ACTUAL_FIELD)
+                .returns(concreteClass)
+                .build();
+    }
+
+    /** The erasure of the type, which is the class of the values the assertions accept. */
+    private ClassName rawClass() {
+        return ClassName.get(asTypeElement(model.type()));
+    }
+
+    /** The erasures of the bounds of the type parameters, as class literals, comma separated. */
+    private CodeBlock typeArgumentClasses() {
+        return asTypeElement(model.type()).getTypeParameters().stream()
+                .map(parameter -> boundClass(parameter.getBounds()))
+                .map(clazz -> CodeBlock.of("$T.class", clazz))
+                .collect(CodeBlock.joining(", "));
+    }
+
+    /** The erasure of the first bound, which is {@code Object} for an unbounded parameter. */
+    private static TypeName boundClass(final List<? extends TypeMirror> bounds) {
+        final TypeMirror bound = bounds.get(0);
+        if (bound.getKind() == TypeKind.DECLARED) {
+            return ClassName.get(asTypeElement(bound));
+        }
+        return TypeName.OBJECT;
+    }
+
+    private String factoryName() {
+        return model.simpleName().replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase(Locale.ROOT);
     }
 
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
@@ -431,7 +518,7 @@ class AssertionGenerator {
                         .toArray(TypeName[]::new));
     }
 
-    private AnnotationSpec generatedAnnotation() {
+    AnnotationSpec generatedAnnotation() {
         return AnnotationSpec.builder(Generated.class)
                 .addMember("value", "$S", context.generatorName())
                 .addMember("date", "$S", context.generationTime())
