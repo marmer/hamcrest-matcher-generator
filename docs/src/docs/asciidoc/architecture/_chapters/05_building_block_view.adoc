@@ -41,11 +41,14 @@ packages) and passes its property names to the `BeanPropertyMatcher` constructor
 | `assertj-assertion-generator`
 | The AssertJ backend: it turns a `TypeModel` into two classes with JavaPoet, `AbstractXAssert<SELF, ACTUAL>` on
 `AbstractObjectAssert` and a concrete, non-final `XAssert` with a public constructor and a static `assertThat`. The
-abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(requirements)` for every property; both
-check first that there is an asserted object. Failures use AssertJ's own `Expecting ...` wording and name the property
-path from the root type. The runtime class `AssertionPath` carries that path into assertions created inside a
-`hasFooSatisfying` requirement. The backend depends only on the core; the generated code needs AssertJ on the
-test class path.
+abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(requirements)` for every property, and
+`isFoo()` and `isNotFoo()` for boolean ones; all check first that there is an asserted object. Failures use AssertJ's
+own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
+that path into assertions created inside a `hasFooSatisfying` requirement; inside an array, collection or map the path
+restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and
+the core reports one compiler error at the annotation, naming the property and the methods. The core hands the backend
+the inherited method names and the error reporting through `GenerationContext`. The backend depends only on the core;
+the generated code needs AssertJ on the test class path.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
 | Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see ADR 0002).
@@ -68,7 +71,7 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time and the models of all types generated in the run, so that generated code can refer to the code of another type) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two).
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, and `reportError` for a compiler error at the annotation, see chapter 8) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round; the Enforcer plugin and ArchUnit tests
 guard this.

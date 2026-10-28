@@ -70,6 +70,45 @@ class AssertionPathTest {
     }
 
     @Test
+    @DisplayName("Inside a restarting requirement an assertion starts at its own type")
+    void insideARestartingRequirementAnAssertionStartsAtItsOwnType() {
+        final List<String> started = new ArrayList<>();
+
+        AssertionPath.within(
+                "Order.lines",
+                "outer",
+                outer -> {
+                    AssertionPath.restartingWithin(
+                            List.of("line"),
+                            lines ->
+                                    lines.forEach(
+                                            line ->
+                                                    started.add(
+                                                            AssertionPath.rootedAt("OrderLine"))));
+                    started.add(AssertionPath.rootedAt("Lines"));
+                });
+
+        assertEquals(List.of("OrderLine", "Order.lines"), started);
+    }
+
+    @Test
+    @DisplayName("A requirement inside a restarting one continues from the element type")
+    void aRequirementInsideARestartingOneContinuesFromTheElementType() {
+        final List<String> started = new ArrayList<>();
+
+        AssertionPath.restartingWithin(
+                List.of("line"),
+                lines ->
+                        AssertionPath.within(
+                                "OrderLine.parcel",
+                                "parcel",
+                                parcel -> started.add(AssertionPath.rootedAt("Parcel"))));
+
+        assertEquals(List.of("OrderLine.parcel"), started);
+        assertEquals("Order", AssertionPath.rootedAt("Order"));
+    }
+
+    @Test
     @DisplayName("The path is restored when the requirement fails")
     void thePathIsRestoredWhenTheRequirementFails() {
         assertThrows(

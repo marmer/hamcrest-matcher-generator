@@ -18,7 +18,7 @@ own `@Generated` marker are skipped with a note.
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
-. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
+. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run, the inherited method names of a class on the compile class path and the error reporting, `reportError`). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The worker writes Java sources through the compiler's `Filer`, so they
 are compiled in the same build.
@@ -38,7 +38,8 @@ Notable aspects::
 
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
-* A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests.
+* A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests. A backend
+reports it through `GenerationContext.reportError`, once per problem, at the annotation (see chapter 8, Diagnostics).
 
 === Describing a mismatch (Hamcrest)
 
