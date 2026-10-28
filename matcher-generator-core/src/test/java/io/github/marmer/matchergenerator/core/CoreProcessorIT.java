@@ -509,6 +509,29 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(compilation).hadNoteContaining(ProbingBackend.NOTE);
     }
 
+    @Test
+    @DisplayName("A backend warning is a compiler warning at the annotation, and the compilation succeeds")
+    void aBackendWarningIsACompilerWarningAtTheAnnotationAndTheCompilationSucceeds() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("\"some.other.pck.Warned\"");
+        final JavaFileObject warned =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Warned",
+                        "package some.other.pck;",
+                        "public class Warned {",
+                        "    public String getName() { return null; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, warned);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(ProbingBackend.WARNING)
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
     private static List<File> classPathWithout(final String fragment) {
         return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
                 .filter(entry -> !entry.contains(fragment))
