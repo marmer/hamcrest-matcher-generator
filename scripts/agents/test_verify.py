@@ -76,6 +76,7 @@ for a in "$@"; do
 done
 echo "$repo" >> "$MVNW_RECORD"
 (cd "$repo" && find . -type f | sort) >> "$MVNW_RECORD"
+if [ -n "${MVNW_REWRITE:-}" ]; then echo rewritten > "$repo/org/example/lib/1/lib-1.jar"; fi
 case " $* " in *" -o "*) if [ -n "${MVNW_OFFLINE_FAIL:-}" ]; then echo "in offline mode"; exit 1; fi ;; esac
 exit "${MVNW_EXIT:-0}"
 """
@@ -119,6 +120,12 @@ class FreshRepoStepTest(unittest.TestCase):
         self.assertTrue((self.seed / "io/github/marmer/testutils/x/x-1.jar").exists(), "the seed was touched")
         log = (self.root / "logs" / "fresh-repo.log").read_text(encoding="utf-8")
         self.assertIn("args: -o -B clean verify -Dmaven.repo.local=", log)
+
+    def test_in_place_rewrites_in_the_copy_leave_the_seed_untouched(self):
+        result = self.run_fresh(MVNW_REWRITE="1")
+
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertEqual("jar", (self.seed / "org/example/lib/1/lib-1.jar").read_text(encoding="utf-8"))
 
     def test_failed_build_fails_the_step_and_still_cleans_up(self):
         result = self.run_fresh(MVNW_EXIT="1")

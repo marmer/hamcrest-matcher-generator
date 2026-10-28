@@ -49,10 +49,13 @@ step_verify-jdk17() { JAVA_HOME="$HOME/.jdks/17" ./mvnw -o -B clean verify; }
 step_verify-latest() { JAVA_HOME="$HOME/.jdks/latest" ./mvnw -o -B clean verify; }
 step_fresh-repo() {
   # CI verifies on a fresh runner; a shared ~/.m2 holds the artifacts of earlier installs and hides missing ones.
-  # The throw-away repository is a hard-link copy of the seed minus the project's own artifacts.
+  # The throw-away repository is a plain copy of the seed (Maven rewrites files in place, so no hard links) minus the project's own artifacts.
   local seed="${VERIFY_SEED_REPO:-$HOME/.m2/repository}" repo status=0
   repo="$(mktemp -d "$(dirname "$seed")/fresh-repo.XXXXXX")"
-  cp -al "$seed/." "$repo/" 2>/dev/null || cp -a "$seed/." "$repo/"
+  fresh_repo="$repo"
+  trap 'rm -rf "$fresh_repo"' EXIT
+  trap 'rm -rf "$fresh_repo"; exit 130' INT TERM
+  cp -a "$seed/." "$repo/"
   rm -rf "$repo/io/github/marmer/testutils"
   # Offline while the seed has everything; a gap ("offline mode") repeats the build online.
   ./mvnw -o -B clean verify "-Dmaven.repo.local=$repo" 2>&1 | tee "$logdir/fresh-repo-offline.log" || status=$?
@@ -61,6 +64,7 @@ step_fresh-repo() {
     ./mvnw -B clean verify "-Dmaven.repo.local=$repo" 2>&1 || status=$?
   fi
   rm -rf "$repo"
+  trap - EXIT INT TERM
   return "$status"
 }
 step_domain-docs() { python3 scripts/agents/check-domain-docs-sync.py; }

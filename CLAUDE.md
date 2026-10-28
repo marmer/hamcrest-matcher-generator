@@ -15,14 +15,12 @@ scripts/agents/verify.sh
 
 # Docs module (docs profile, JDK 21+ only; a JDK 17 build skips it)
 ./mvnw -pl docs verify
-
 # Same build as CI's Build job (no tests; run it after changing a pom or .github/workflows/)
 ./mvnw -B clean install -DskipTests
-
 # Mutation testing (profile mutation, JDK 21+, about 10 min); scripts/ci/pit-scores.py prints the per-module score
 ./mvnw verify -Pmutation
-
-# Release dry run (verify only, no GPG, no deploy), then check the bundle contents. The release profile (adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
+# Release profile: adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token
+# Release dry run (verify only, no GPG, no deploy), then check the bundle contents
 ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 scripts/ci/check-release-artifacts.sh
 
@@ -32,6 +30,9 @@ JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
 
 # Skip the JDK 21+ static-analysis profile (Spotless, Error Prone, NullAway) for a faster local build
 ./mvnw -o clean install -DskipStaticAnalysis=true
+
+# Windows with jabba-managed JDK
+JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin:$PATH" ./mvnw clean install
 
 # Single unit test class, single integration test class
 ./mvnw test -pl hamcrest-matcher-generator -Dtest=ClassName
