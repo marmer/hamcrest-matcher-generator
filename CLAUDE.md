@@ -5,6 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ```bash
+# Every check in the right order (Spotless, install, verify on JDK 21 and 17, docs sync); --latest, --release, --only <step>
+scripts/agents/verify.sh
+
 # Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set)
 ./mvnw clean install
 
@@ -97,22 +100,7 @@ End-to-end modules are the final validation layer: they apply `@GenerateMatchers
 
 ## Known Pitfalls
 
-- **compile-testing on Java 17** requires `--add-opens=jdk.compiler/com.sun.tools.javac.*=ALL-UNNAMED` in Failsafe `<argLine>` — configured once in the root pom's `pluginManagement` for `maven-failsafe-plugin` (next to the `module.jar` property), so no module repeats it.
-- **Unresolvable names fail the build for `@GenerateMatchers`**: one error per name. The deprecated `@MatcherConfiguration` only warns, as in 5.x, so keep configured names in `@GenerateMatchers` resolvable. Set `-Amatchergenerator.verbose` to see one note per skipped property with its reason.
-- **`docs` module needs JDK 21+**: it is only built when the root profile `docs` (`<jdk>[21,)</jdk>`) is active, so a JDK 17 build skips it silently.
-- **`maven-compiler-plugin` before 3.12 does not follow a relocation in `annotationProcessorPaths`** (fails with "Missing: ...annotationprocessor:jar"): that is why the 5.x artifacts are bridge jars, not relocation POMs (ADR 0002). Do not turn them back into pom-only relocations. The root pom's `maven-compiler-plugin.version` stays below 3.12 (newer versions break the Kotlin end-to-end modules, see #110) and the 5.x consumer build uses it too.
-- **JUnit Platform version mismatch**: Surefire 3.5.2 needs `junit-platform-launcher:1.12.1` explicitly on the classpath — already in root pom.
-- **JDK 25 implicit annotation processing disabled**: `@AutoService` was removed from `MatcherGenerationProcessor.java`; a manual `META-INF/services/javax.annotation.processing.Processor` resource is used instead. The `endtoend-plain-java-minimal` module uses `<annotationProcessorPaths>` to declare the AP explicitly.
-- **Lombok on newer JDKs**: each JDK needs a Lombok release that supports it (JDK 25 ≥ 1.18.44, JDK 27 ≥ 1.18.48); an unsupported JDK fails in javac with `ExceptionInInitializerError: com.sun.tools.javac.tree.EndPosTable`.
-- **Agent edits to `.claude/settings*.json` are blocked** in auto mode (Self-Modification): give the owner the exact snippet to add instead of loading `update-config`.
-- **Error Prone and NullAway (JDK 21+ profile `static-analysis`)**: javac needs the `--add-exports` from `.mvn/jvm.config` in the Maven JVM (Error Prone calls javac internals, JEP 396). The file is harmless on JDK 17: it exports packages that exist there too, and nothing on that leg uses them, so keep it on every JDK. The `mvn` launcher reads it into `MAVEN_OPTS`, and `./mvnw` runs that launcher, so both pick it up. The rest: `-XDshould-stop.ifError=FLOW` and the Error Prone flags inside one `-Xplugin:ErrorProne ...` argument. When the plugin fails to start, javac reports the check flags as `invalid flag: -Xep:...`, which hides the real error. A module that declares its own `annotationProcessorPaths` must use `combine.children="append"`, or the profile's Error Prone and NullAway paths are dropped.
-- **JaCoCo branch floor 0.99** merges the unit and IT exec files per module: a filtered run (`-Dit.test=...`) fails the check or leaves a stale exec. Use `clean`; `-Djacoco.skip=true` for intermediate installs; with `-am` filters add `-Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false`.
-- **Spotless runs in the `install` lifecycle** and fails on new, unformatted code: run `./mvnw -o com.diffplug.spotless:spotless-maven-plugin:<spotless.version from the root pom>:apply` first (the `spotless:apply` prefix does not resolve offline).
-- **End-to-end fixtures live outside the configured model package**: package configuration scans the test classes there too and generates assertions for them.
-- **google-java-format 1.37.0** fails inside Spotless with an `InvocationTargetException` on Javadoc-carrying files, and Spotless hides the cause. The root pom pins 1.36.0 until that is fixed.
-- **Shared `~/.m2` serves stale sibling artifacts**: `-pl` without `-am` resolves sibling modules from `~/.m2`, so a build can pass against an old sibling; build the full reactor (`install -DskipTests`) first. This covers core, the backends and the generator jar that end-to-end modules run: after a generator change, `install -pl <backend> -am -DskipTests`, then `clean verify` the end-to-end module, because incremental compilation can skip regenerating its sources and stay green on stale classes.
-- **Maven Central HTTP 429** (rate limit, frequent with parallel subagents sharing `~/.m2`): Maven may store the 429 error text as a `.pom` or `.jar` in `~/.m2/repository`, failing later builds ("Non-parseable POM", `NoClassDefFoundError`). Delete that version directory and rebuild offline with `-o`; the SessionStart hook pre-fetches dependencies for that and logs to /tmp/session-start.log; if ~/.m2 is empty, read that log first.
-- **Squash merges and reformat commits**: after a squash merge, a follow-up commit adds the squash sha to `.git-blame-ignore-revs`; a reformat commit holds only `spotless:apply` output, with any config change in an earlier commit.
+Read `docs/agents/build-pitfalls.md` when building, testing, or changing poms, CI or workflows.
 
 ## Agent skills
 
