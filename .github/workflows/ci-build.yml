@@ -4,28 +4,26 @@ on:
   push:
     branches: [ main ]
   pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           java-version: 21
           distribution: temurin
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
 
       - name: Build
         run: ./mvnw -B clean install -DskipTests
@@ -41,8 +39,12 @@ jobs:
     name: Sonar
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # pull-requests: read lets the analysis read the pull request it decorates; the job otherwise has contents: read only.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
@@ -53,27 +55,21 @@ jobs:
         run: python3 scripts/ci/check-sonar-token.py
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           java-version: 21
           distribution: temurin
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
 
       - name: Prepare source directories for sonar
         run: |
@@ -107,23 +103,17 @@ jobs:
           - role: latest
             java-version: "27"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up JDK ${{ matrix.role }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-jdk${{ matrix.role }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-jdk${{ matrix.role }}-
 
       - name: Verify
         run: ./mvnw -B clean verify
@@ -134,10 +124,10 @@ jobs:
     # Unlike the other jobs, which set none: the full PIT run took 8:25 locally, so 60 min caps a hung minion.
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           java-version: 21
           distribution: temurin
@@ -153,7 +143,7 @@ jobs:
       - name: Restore PIT history
         # Pull requests analyse incrementally on the history the last push to main saved.
         if: github.event_name == 'pull_request'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: target/pit-history
           key: pit-history-${{ env.PIT_VERSION }}-${{ github.run_id }}
@@ -165,14 +155,14 @@ jobs:
 
       - name: Save PIT history
         if: github.event_name == 'push' && !cancelled()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: target/pit-history
           key: pit-history-${{ env.PIT_VERSION }}-${{ github.run_id }}
 
       - name: Upload PIT reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pit-reports
           path: "**/target/pit-reports/**"
@@ -192,23 +182,17 @@ jobs:
     name: Release dry run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           java-version: 21
           distribution: temurin
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-release-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-release-
 
       # The CycloneDX skip and the missing BOMs only show up in the deploy lifecycle with the central-publishing
       # extension, not in verify. skipPublishing=true uploads nothing; the dummy settings only supply the server entry.

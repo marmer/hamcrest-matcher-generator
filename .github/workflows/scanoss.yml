@@ -1,0 +1,36 @@
+name: SCANOSS
+
+# Snippet and license scan of the sources against the SCANOSS knowledge base (public API, no key). Non-blocking: the
+# scan step cannot fail the job, and the findings go to the job summary only. Not a required check.
+on:
+  pull_request:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scanoss:
+    name: SCANOSS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install the SCANOSS CLI
+        # A virtual environment, because the runner's system Python refuses global pip installs.
+        run: |
+          python3 -m venv "$RUNNER_TEMP/scanoss"
+          "$RUNNER_TEMP/scanoss/bin/pip" install --quiet scanoss==1.54.3
+
+      - name: Scan the sources
+        id: scan
+        # Non-blocking: an unreachable API or a failed scan leaves the job green; the summary says the scan produced nothing.
+        continue-on-error: true
+        run: "$RUNNER_TEMP/scanoss/bin/scanoss-py scan --output scanoss-results.json ."
+
+      - name: Summarise the scan in the job summary
+        if: always()
+        run: python3 scripts/ci/scanoss-summary.py scanoss-results.json >> "$GITHUB_STEP_SUMMARY"
