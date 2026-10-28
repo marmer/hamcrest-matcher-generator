@@ -20,7 +20,6 @@ import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -64,29 +63,11 @@ class MatcherGenerator {
     MatcherGenerator(final TypeModel model, final GenerationContext context) {
         this.model = model;
         this.context = context;
-        this.simpleMatcherName = matcherNameOf(model);
+        this.simpleMatcherName = MatcherNaming.matcherName(model);
         this.presetProperties =
                 PropertyModel.distinctByName(model.properties()).stream()
                         .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
                         .collect(Collectors.toList());
-    }
-
-    private static String matcherNameOf(final TypeModel type) {
-        return type.simpleName() + "Matcher";
-    }
-
-    private static String initializerNameOf(final TypeModel type) {
-        return "is" + type.simpleName();
-    }
-
-    private static String referenceInitializerNameOf(final TypeModel type) {
-        return initializerNameOf(type) + "Like";
-    }
-
-    private static String capitalized(final String value) {
-        return value.isEmpty()
-                ? value
-                : value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
     String simpleMatcherName() {
@@ -157,7 +138,7 @@ class MatcherGenerator {
         if (isMatcher(property.type())) {
             return null;
         }
-        return MethodSpec.methodBuilder("with" + capitalized(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property.name()))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(toParameterizedMatcherType(property), "matcher", Modifier.FINAL)
                 .addStatement("$L.with($S, matcher)", BUILDER_FIELD_NAME, property.name())
@@ -170,7 +151,7 @@ class MatcherGenerator {
         if (isMatcher(property.type())) {
             return null;
         }
-        return MethodSpec.methodBuilder("reset" + capitalized(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.resetMethodName(property.name()))
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("$L.reset($S)", BUILDER_FIELD_NAME, property.name())
                 .addStatement(RETURN_THIS)
@@ -202,7 +183,8 @@ class MatcherGenerator {
         return PropertyModel.distinctByName(model.properties()).stream()
                 .map(
                         property ->
-                                MethodSpec.methodBuilder("ignoring" + capitalized(property.name()))
+                                MethodSpec.methodBuilder(
+                                                MatcherNaming.ignoringMethodName(property.name()))
                                         .addModifiers(Modifier.PUBLIC)
                                         .addStatement(
                                                 "$L.ignore($S)",
@@ -215,7 +197,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getCheckingAllPropertiesMethod() {
-        return MethodSpec.methodBuilder("checkingAllProperties")
+        return MethodSpec.methodBuilder(MatcherNaming.CHECKING_ALL_PROPERTIES)
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME)
                 .addStatement(RETURN_THIS)
@@ -224,7 +206,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec toEqualsMatcher(final PropertyModel property) {
-        return MethodSpec.methodBuilder("with" + capitalized(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property.name()))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(toEqualsMatcherParameterType(property), "value", Modifier.FINAL)
                 .addStatement(
@@ -285,7 +267,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getApiInitializer() {
-        return MethodSpec.methodBuilder(initializerNameOf(model))
+        return MethodSpec.methodBuilder(MatcherNaming.initializerName(model))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addStatement("return new $T()", getGeneratedTypeName())
                 .returns(getGeneratedTypeName())
@@ -293,7 +275,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getReferenceInitializer() {
-        return MethodSpec.methodBuilder(referenceInitializerNameOf(model))
+        return MethodSpec.methodBuilder(MatcherNaming.referenceInitializerName(model))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
                 .addStatement(
@@ -402,7 +384,7 @@ class MatcherGenerator {
                                         generated,
                                         ClassName.get(
                                                 generated.targetPackage(),
-                                                matcherNameOf(generated)),
+                                                MatcherNaming.matcherName(generated)),
                                         types));
         return types;
     }
@@ -414,7 +396,7 @@ class MatcherGenerator {
         if (isComparedDeeply(generated)) {
             types.put(
                     generated.qualifiedName(),
-                    new MatcherType(className, referenceInitializerNameOf(generated)));
+                    new MatcherType(className, MatcherNaming.referenceInitializerName(generated)));
         }
         generated
                 .nestedTypes()
@@ -422,7 +404,7 @@ class MatcherGenerator {
                         nested ->
                                 collectInto(
                                         nested,
-                                        className.nestedClass(matcherNameOf(nested)),
+                                        className.nestedClass(MatcherNaming.matcherName(nested)),
                                         types));
     }
 
