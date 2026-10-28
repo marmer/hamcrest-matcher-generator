@@ -14,8 +14,14 @@ import urllib.error
 import urllib.request
 
 VALIDATE_URL = "https://sonarcloud.io/api/authentication/validate"
-RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/blob/research/sonarqube-cloud-token/docs/research/sonarqube-cloud-token.md"
+# The setup checklist (#147) until MAINTAINING.md (#137) exists; then point this at that file.
+RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/issues/147"
 MISSING_OR_INVALID = "SONAR_TOKEN missing or invalid"
+
+
+def report_invalid_token(err):
+    print(f"::error::{MISSING_OR_INVALID}: SonarQube Cloud rejects it. Runbook: {RUNBOOK}", file=err)
+    return 1
 
 
 def main(environ=os.environ, opener=urllib.request.urlopen, out=sys.stdout, err=sys.stderr):
@@ -29,21 +35,16 @@ def main(environ=os.environ, opener=urllib.request.urlopen, out=sys.stdout, err=
             body = json.load(response)
     except urllib.error.HTTPError as error:
         if error.code in (401, 403):
-            return invalid(err)
+            return report_invalid_token(err)
         print(f"::error::could not validate SONAR_TOKEN: SonarQube Cloud answered HTTP {error.code}", file=err)
         return 1
     except (OSError, ValueError) as error:
         print(f"::error::could not validate SONAR_TOKEN: {type(error).__name__} while calling SonarQube Cloud", file=err)
         return 1
     if not isinstance(body, dict) or body.get("valid") is not True:
-        return invalid(err)
+        return report_invalid_token(err)
     print("SONAR_TOKEN accepted by SonarQube Cloud", file=out)
     return 0
-
-
-def invalid(err):
-    print(f"::error::{MISSING_OR_INVALID}: SonarQube Cloud rejects it. Runbook: {RUNBOOK}", file=err)
-    return 1
 
 
 if __name__ == "__main__":

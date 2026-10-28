@@ -75,6 +75,19 @@ class SonarTokenCheckTest(unittest.TestCase):
         self.assertEqual(1, code)
         self.assertIn("SONAR_TOKEN missing or invalid", err)
 
+    def test_http_403_counts_as_invalid(self):
+        error = urllib.error.HTTPError(check.VALIDATE_URL, 403, "Forbidden", None, None)
+        code, _, err = run({"SONAR_TOKEN": TOKEN}, Answer(error=error))
+        self.assertEqual(1, code)
+        self.assertIn("SONAR_TOKEN missing or invalid", err)
+
+    def test_other_http_error_is_not_blamed_on_the_token(self):
+        error = urllib.error.HTTPError(check.VALIDATE_URL, 500, "Server Error", None, None)
+        code, _, err = run({"SONAR_TOKEN": TOKEN}, Answer(error=error))
+        self.assertEqual(1, code)
+        self.assertNotIn("SONAR_TOKEN missing or invalid", err)
+        self.assertIn("could not validate SONAR_TOKEN", err)
+
     def test_unreachable_sonar_fails_without_blaming_the_token(self):
         error = urllib.error.URLError("name resolution failed")
         code, _, err = run({"SONAR_TOKEN": TOKEN}, Answer(error=error))
@@ -89,7 +102,8 @@ class SonarTokenCheckTest(unittest.TestCase):
 
     def test_token_is_never_printed(self):
         for answer in (Answer({"valid": True}), Answer({"valid": False}),
-                       Answer(error=urllib.error.URLError("down"))):
+                       Answer(error=urllib.error.URLError("down")),
+                       Answer(error=urllib.error.HTTPError(check.VALIDATE_URL, 500, "Server Error", None, None))):
             _, out, err = run({"SONAR_TOKEN": TOKEN}, answer)
             self.assertNotIn(TOKEN, out)
             self.assertNotIn(TOKEN, err)
