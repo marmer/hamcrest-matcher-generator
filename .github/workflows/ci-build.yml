@@ -22,6 +22,47 @@ jobs:
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build
+        run: ./mvnw -B clean install -DskipTests
+        if: success()
+
+      - name: Test
+        # The poms bind the JaCoCo agents and the reports Sonar reads (target/site/jacoco and jacoco-it) to the lifecycle.
+        run: ./mvnw -B verify
+        if: success()
+
+  sonar:
+    # Blocking: fails on a red quality gate (sonar.qualitygate.wait). Not a dependency of Build or the JDK matrix.
+    name: Sonar
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Validate SONAR_TOKEN
+        # Runs before the build: a missing or rejected token fails here with the runbook link.
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: python3 scripts/ci/check-sonar-token.py
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -43,26 +84,13 @@ jobs:
           mkdir -p matcher-generator-core/src/{main,test}/{java,kotlin}
           mkdir -p assertj-assertion-generator/src/{main,test}/{java,kotlin}
           mkdir -p hamcrest-matcher-generator-kotlin/src/{main,test}/{java,kotlin}
-        if: success()
 
-      - name: Build
-        run: ./mvnw -B clean install -DskipTests
-        if: success()
-
-      - name: Test
-        # The poms bind the JaCoCo agents and the reports Sonar reads (target/site/jacoco and jacoco-it) to the lifecycle.
-        run: ./mvnw -B verify
-        if: success()
-
-      # Temporarily non-blocking: SONAR_TOKEN is no longer authorized. The SonarCloud setup is decided in
-      # wayfinder map #52 ("Quality gates: what blocks a merge and what runs locally", #62).
-      - name: Sonar
-        continue-on-error: true
+      - name: Verify and analyse
+        # One invocation: verify writes the JaCoCo reports Sonar reads; the scanner version is pinned in the root pom.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator,assertj-assertion-generator,hamcrest-matcher-generator-kotlin,matcher-generator-core,matcher-generator-annotations"
-        if: success()
+        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.qualitygate.wait=true -am --projects "hamcrest-matcher-generator,assertj-assertion-generator,hamcrest-matcher-generator-kotlin,matcher-generator-core,matcher-generator-annotations"
 
   verify-matrix:
     name: Verify JDK ${{ matrix.role }}
