@@ -885,6 +885,77 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A subtype is tested before its supertype, so the subtype's branch is reachable")
+    void aSubtypeIsTestedBeforeItsSupertype() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Animal", "some.other.pck.Dog"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Animal",
+                                """
+                                package some.other.pck;
+
+                                public class Animal {
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Dog",
+                                """
+                                package some.other.pck;
+
+                                public class Dog extends Animal {
+                                    public String getBreed() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.PropertyRepresentation");
+        assertTrue(content.indexOf("instanceof Dog ") >= 0, content);
+        assertTrue(
+                content.indexOf("instanceof Dog ") < content.indexOf("instanceof Animal "),
+                content);
+        assertGolden(compilation, "subtype-order", "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
+    @DisplayName("A generic configured type is tested with a wildcard, like its assertions")
+    void aGenericConfiguredTypeIsTestedWithAWildcard() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Box"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Box",
+                                """
+                                package some.other.pck;
+
+                                import java.util.List;
+
+                                public class Box<T> {
+                                    public T getContent() {
+                                        return null;
+                                    }
+
+                                    public List<T> getContents() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.PropertyRepresentation");
+        assertTrue(content.contains("instanceof Box<?> actual"), content);
+        assertGolden(
+                compilation, "representation-generic", "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all with JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithJSpecify() {
         assertNoWarningUnderLintAll(classPathWithJSpecify());
