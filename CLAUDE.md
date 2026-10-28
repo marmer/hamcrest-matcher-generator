@@ -5,16 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ```bash
-# Every check in the right order (Spotless, install, verify on JDK 21 and 17, docs sync); --latest, --release, --only <step>
+# Every check in the right order (Spotless, install, verify on JDK 21 and 17, docs sync); --latest, --release, --fresh, --only <step>
 scripts/agents/verify.sh
 
-# Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set)
+# Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set); verify also runs the integration tests
 ./mvnw clean install
-
-# Build + run integration tests
 ./mvnw clean verify
-
-# Without the end-to-end modules
 ./mvnw -DskipEndtoend clean verify
 
 # Docs module (docs profile, JDK 21+ only; a JDK 17 build skips it)
@@ -23,7 +19,10 @@ scripts/agents/verify.sh
 # Same build as CI's Build job (no tests; run it after changing a pom or .github/workflows/)
 ./mvnw -B clean install -DskipTests
 
-# Release dry run (verify only, no GPG, no deploy), then check the bundle contents
+# Mutation testing (profile mutation, JDK 21+, about 10 min); scripts/ci/pit-scores.py prints the per-module score
+./mvnw verify -Pmutation
+
+# Release dry run (verify only, no GPG, no deploy), then check the bundle contents. The release profile (adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
 ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 scripts/ci/check-release-artifacts.sh
 
@@ -34,24 +33,16 @@ JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
 # Skip the JDK 21+ static-analysis profile (Spotless, Error Prone, NullAway) for a faster local build
 ./mvnw -o clean install -DskipStaticAnalysis=true
 
-# Windows with jabba-managed JDK
-JAVA_HOME="/c/Users/MarianoMertinat/.jabba/jdk/corretto@17" PATH="$JAVA_HOME/bin:$PATH" ./mvnw clean install
-
-# Single unit test class
+# Single unit test class, single integration test class
 ./mvnw test -pl hamcrest-matcher-generator -Dtest=ClassName
-
-# Single integration test class
 ./mvnw failsafe:integration-test -pl hamcrest-matcher-generator -Dit.test=ClassName
-
-# Release build (adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token)
-./mvnw verify -P release    # dry run, no publishing
 ```
 
 Maven profiles and the module list live in the root `pom.xml` (`<modules>`, `<profiles>`); read them there.
 
 ## Module Structure
 
-The published modules are `matcher-generator-annotations` (`@GenerateMatchers` and the deprecated 5.x alias `@MatcherConfiguration`, the only type left in the old package), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test), `hamcrest-matcher-generator` (the Hamcrest backend, registered via `ServiceLoader`, plus the `BeanPropertyMatcher` runtime library) and `assertj-assertion-generator` (the AssertJ backend: `AbstractXAssert`/`XAssert` per type, plus the small `AssertionPath` runtime; depends only on core, enforced by Enforcer `bannedDependencies` and an ArchUnit test). `hamcrest-matcher-generator-dependencies` and `hamcrest-matcher-generator-annotationprocessor` are code-free bridge jars for 5.x users: jar packaging, a dependency on `hamcrest-matcher-generator` at `${project.version}`, no relocation (ADR 0002; `BridgeJarIT` in each); the parent is `matcher-generator-parent`. Each published jar sets `Automatic-Module-Name` to its package root (`AutomaticModuleNameIT`). Every `*-endtoend-*` module applies the processor to real POJOs/records and exercises the generated matchers. They form one reactor group through the aggregator `hamcrest-matcher-generator-endtoend/pom.xml` (their parent, `maven.deploy.skip`, and `-Xlint:all -Werror` for their compilation). The AssertJ backend's end-to-end module is `hamcrest-matcher-generator-endtoend-assertj`. A new published backend module needs: the root `<modules>`, `scripts/ci/check-release-artifacts.sh`, `.github/workflows/ci-build.yml` (`mkdir` line and Sonar `--projects`), the core Enforcer exclude list, `AutomaticModuleNameIT` and `LicenseFilesIT`, a `src/test/resources` directory for the golden IT, and for its end-to-end module the aggregator and the release `excludeArtifact` list. The exception is `hamcrest-matcher-generator-endtoend-plain-java-minimal` and `hamcrest-matcher-generator-endtoend-java-records`, which compile with `-Xlint:all,-processing -Werror`: javac's processing lint flags the test sources' own annotations (JUnit, JetBrains) that no processor claims, not generated code, and their poms say so; the root `dev` profile adds that group unless `-DskipEndtoend` is set.
+The published modules are listed in the root pom's `<modules>`. Their roles: `matcher-generator-annotations` (`@GenerateMatchers` and the deprecated 5.x alias `@MatcherConfiguration`, the only type left in the old package), `matcher-generator-core` (property model, type discovery, diagnostics, `GeneratorBackend` SPI and the processor entry point; no Hamcrest/AssertJ, enforced by Enforcer `bannedDependencies` and an ArchUnit test), `hamcrest-matcher-generator` (the Hamcrest backend, registered via `ServiceLoader`, plus the `BeanPropertyMatcher` runtime library), `assertj-assertion-generator` (the AssertJ backend: `AbstractXAssert`/`XAssert` per type, plus the small `AssertionPath` runtime; depends only on core, enforced by Enforcer `bannedDependencies` and an ArchUnit test) and `hamcrest-matcher-generator-kotlin` (the opt-in Kotlin DSL backend: one `XMatcherDsl.kt` per type, delegating to the Hamcrest matcher, so it is the single backend-to-backend dependency, on the Hamcrest backend; ADR 0004). `hamcrest-matcher-generator-dependencies` and `hamcrest-matcher-generator-annotationprocessor` are code-free bridge jars for 5.x users: jar packaging, a dependency on `hamcrest-matcher-generator` at `${project.version}`, no relocation (ADR 0002; `BridgeJarIT` in each); the parent is `matcher-generator-parent`. Each published jar sets `Automatic-Module-Name` to its package root (`AutomaticModuleNameIT`). The `*-endtoend-*` modules form one reactor group through the aggregator `hamcrest-matcher-generator-endtoend/pom.xml` (their parent, `maven.deploy.skip`, and `-Xlint:all -Werror` for their compilation). A new published backend module needs: the root `<modules>`, `scripts/ci/check-release-artifacts.sh`, `.github/workflows/ci-build.yml` (the `mkdir` source-dir line, the Sonar `--projects` list and the PIT `--expect` list of the `Mutation testing` job), a `mutation` profile in its pom, the core Enforcer exclude list, `AutomaticModuleNameIT` and `LicenseFilesIT`, a `src/test/resources` directory for the golden IT, and for its end-to-end module the aggregator and the release `excludeArtifact` list. The exception is `hamcrest-matcher-generator-endtoend-plain-java-minimal` and `hamcrest-matcher-generator-endtoend-java-records`, which compile with `-Xlint:all,-processing -Werror`: javac's processing lint flags the test sources' own annotations (JUnit, JetBrains) that no processor claims, not generated code, and their poms say so; the root `dev` profile adds that group unless `-DskipEndtoend` is set.
 
 ## Architecture: Generation Flow
 
@@ -79,8 +70,14 @@ XAssert.assertThat(x)
     .satisfiesCheckingAllProperties(a -> a.hasFoo(1).ignoringBar())   // same check, scoped to the lambda
 assertThat(x).extracting(X::getFoo, as(FOO))   // FOO: public static InstanceOfAssertFactory<Foo, FooAssert> on every XAssert
 // per target package one generated mixin `SoftAssertionsProvider` (extends AssertJ's) with default assertThat(X)/then(X) per type; a SoftAssertions subclass implements it
+// per target package one generated `PropertyRepresentation extends StandardRepresentation`; the user registers it with `Assertions.useRepresentation(..)`, never automatically
 ```
 The backend's golden ITs are `AssertionGenerationIT` (`-Dit.test=AssertionGenerationIT`, goldens under `assertj-assertion-generator/src/test/resources/.../AssertionGenerationIT/<scenario>/`); the end-to-end module is `hamcrest-matcher-generator-endtoend-assertj`.
+
+**Generated Kotlin DSL** (opt-in `hamcrest-matcher-generator-kotlin`, KAPT only, one `XMatcherDsl.kt` per type; scope classes carry `@MatcherDsl`):
+```kotlin
+isOrder { id(42L); customer { name("Ada") }; checkingAllProperties() }   // ignoringName() counts a property as addressed
+```
 
 ## KAPT Configuration (Kotlin end-to-end modules)
 
@@ -95,6 +92,8 @@ Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit 5 unit tests. Hamcrest mismatch messages are tested against golden `.txt` files in `BeanPropertyMatcherMessageTest` (and `PropertyDescriptionTest` for value rendering).
 
 Regenerate golden files with `-Dgolden.update=true` and review `git diff --stat` and the diff of `src/test/resources` (it also rewrites unrelated goldens when other output changed); never edit them by script, and never revert them with `git checkout` (that drops hand edits too): regenerate. After a scripted change `git diff --numstat` shows 0 deleted lines when only additions were meant. Hamcrest goldens: reinstall core first (`-pl hamcrest-matcher-generator` reads core from `~/.m2`). JavaPoet quirks in the AssertJ goldens: `$W` leaves a trailing space after `=` (leave long field initializers unwrapped) and the output carries `import java.lang.X;` lines.
+
+The plain-kotlin end-to-end module checks compile failures through maven-invoker consumer builds under `src/it` (`right-scope`, `wrong-scope`, `wrong-value-type`, BeanShell `postbuild.bsh` hooks); `-DskipTests` skips them, and they must pass on a fresh local repository (`scripts/agents/verify.sh --only fresh-repo`).
 
 End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. `endtoend-5x-compatibility` is the exception: it is the 5.x suite (old annotation, old artifact coordinates), frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard; it must keep compiling and passing. It is not a reactor module: `endtoend-5x-compatibility-runner` runs it with `maven-invoker-plugin` as a consumer build. `invoker:install` puts the reactor artifacts (both bridge jars, the backend they depend on and the parent) into `endtoend-5x-compatibility-runner/target/local-repo`, and the suite resolves the 5.x coordinates from there like a real 5.x user would, with the project's own compiler plugin; the outer local repository is its only remote (`src/it/settings.xml`). Only the suite's parent and own version are `@project.version@`, which invoker filters when it clones the module (so it does not build in place), and its dependency versions follow `${project.version}`; nothing else in the module changes. `-DskipTests` compiles the suite without running it. Run it alone with `./mvnw verify -pl hamcrest-matcher-generator-endtoend-5x-compatibility-runner` after a full `install`. The suite runs every test it has; `RelocationPomTest` was deleted with the owner's approval (#159) because it asserted the former relocation POMs and cannot hold for bridge jars, whose shape `BridgeJarIT` checks. A suite that is a reactor module with the old coordinates would be built against the reactor's own bridge modules, not what a consumer resolves.
 
