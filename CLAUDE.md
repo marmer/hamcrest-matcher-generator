@@ -98,9 +98,9 @@ Regenerate golden files with `-Dgolden.update=true` and review `git diff --stat`
 
 End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. `endtoend-5x-compatibility` is the exception: it is the 5.x suite (old annotation, old artifact coordinates), frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard; it must keep compiling and passing. It is not a reactor module: `endtoend-5x-compatibility-runner` runs it with `maven-invoker-plugin` as a consumer build. `invoker:install` puts the reactor artifacts (both bridge jars, the backend they depend on and the parent) into `endtoend-5x-compatibility-runner/target/local-repo`, and the suite resolves the 5.x coordinates from there like a real 5.x user would, with the project's own compiler plugin; the outer local repository is its only remote (`src/it/settings.xml`). Only the suite's parent and own version are `@project.version@`, which invoker filters when it clones the module (so it does not build in place), and its dependency versions follow `${project.version}`; nothing else in the module changes. `-DskipTests` compiles the suite without running it. Run it alone with `./mvnw verify -pl hamcrest-matcher-generator-endtoend-5x-compatibility-runner` after a full `install`. The suite runs every test it has; `RelocationPomTest` was deleted with the owner's approval (#159) because it asserted the former relocation POMs and cannot hold for bridge jars, whose shape `BridgeJarIT` checks. A suite that is a reactor module with the old coordinates would be built against the reactor's own bridge modules, not what a consumer resolves.
 
-## Known Pitfalls
+## Build pitfalls
 
-Read `docs/agents/build-pitfalls.md` when building, testing, or changing poms, CI or workflows.
+Read `docs/agents/build-pitfalls.md` when a build fails (HTTP 429, empty `~/.m2`), when building or testing, changing poms, CI or workflows, editing `.claude/` settings or hooks, or merging or committing after a squash merge.
 
 ## Agent skills
 
