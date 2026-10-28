@@ -1,6 +1,6 @@
 #!/bin/bash
 # Pre-fetches Maven dependencies once per cloud session so parallel subagents can build offline (-o)
-# instead of each hitting Maven Central (HTTP 429, see CLAUDE.md "Known Pitfalls").
+# instead of each hitting Maven Central (HTTP 429, see `docs/agents/build-pitfalls.md`).
 set -uo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
@@ -9,7 +9,7 @@ fi
 
 cd "$CLAUDE_PROJECT_DIR"
 
-# Keep a record of this run; CLAUDE.md "Known Pitfalls" points agents here.
+# Keep a record of this run; `docs/agents/build-pitfalls.md` points agents here.
 exec > >(tee /tmp/session-start.log) 2>&1
 echo "session-start: $(date -u +%FT%TZ)"
 
@@ -28,7 +28,7 @@ remove_rate_limit_artifacts() {
 # pipeline, so pipefail still reports Maven's exit code.
 quiet_jvm() { grep -v '^Picked up JAVA_TOOL_OPTIONS' || true; }
 
-# Maven Central answers HTTP 429 under load (CLAUDE.md "Known Pitfalls"), and one rate-limited download fails the
+# Maven Central answers HTTP 429 under load (`docs/agents/build-pitfalls.md`), and one rate-limited download fails the
 # whole pre-fetch. Try up to 4 times, pausing 2, 4 and 8 seconds between failed attempts, and log each failure.
 # An attempt also fails when it had to delete rate-limit artifacts, because the next attempt must re-fetch them.
 prefetch_maven_dependencies() {
