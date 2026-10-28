@@ -38,6 +38,15 @@ paths and the rendering of its findings live in the package-private `PathWalk` a
 check of another one is flattened into property paths; it is public because generated code lives in the user's
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.
 
+| `assertj-assertion-generator`
+| The AssertJ backend: it turns a `TypeModel` into two classes with JavaPoet, `AbstractXAssert<SELF, ACTUAL>` on
+`AbstractObjectAssert` and a concrete, non-final `XAssert` with a public constructor and a static `assertThat`. The
+abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(requirements)` for every property; both
+check first that there is an asserted object. Failures use AssertJ's own `Expecting ...` wording and name the property
+path from the root type. The runtime class `AssertionPath` carries that path into assertions created inside a
+`hasFooSatisfying` requirement. The backend depends only on the core; the generated code needs AssertJ on the
+test class path.
+
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
 | Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see ADR 0002).
 
