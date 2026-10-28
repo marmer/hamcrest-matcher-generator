@@ -50,4 +50,13 @@ class GenerationContextTest {
 
         assertThrows(IllegalStateException.class, () -> context.reportNote("some note"));
     }
+
+    @Test
+    @DisplayName("A context without a warning reporter refuses to drop a warning silently")
+    void aContextWithoutAWarningReporterRefusesToDropAWarningSilently() {
+        final GenerationContext context =
+                new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0), false);
+
+        assertThrows(IllegalStateException.class, () -> context.reportWarning("some warning"));
+    }
 }

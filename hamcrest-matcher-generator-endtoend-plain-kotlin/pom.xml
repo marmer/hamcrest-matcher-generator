@@ -13,6 +13,11 @@
 
     <artifactId>hamcrest-matcher-generator-endtoend-plain-kotlin</artifactId>
 
+    <properties>
+        <!-- -DskipTests=true on the build skips the consumer builds of src/it, like the Surefire tests. -->
+        <skipTests>false</skipTests>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -135,6 +140,51 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <!--
+                    The compile-failure checks of src/it: each project is a consumer build of the DSL that the Kotlin
+                    compiler must reject (or accept, as the control). The build runs the kotlin-maven-plugin, so the Kotlin
+                    compiler stays in the plugin class path and out of this module's test dependencies. install copies the
+                    test-scope reactor artifacts into target/local-repo, so the consumers resolve them there. Consumers must
+                    work on a fresh local repository, as on CI, which runs a plain verify without a prior install. An
+                    earlier copy in target/local-repo is not replaced, so run with clean.
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <version>3.9.1</version>
+                <configuration>
+                    <projectsDirectory>${project.basedir}/src/it</projectsDirectory>
+                    <pomIncludes>
+                        <pomInclude>*/pom.xml</pomInclude>
+                    </pomIncludes>
+                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+                    <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+                    <!-- The consumer builds are this module's compile-failure tests: -DskipTests skips them, as it skips the
+                        Surefire tests, and install does not copy the artifacts for them. -->
+                    <skipInstallation>${skipTests}</skipInstallation>
+                    <skipInvocation>${skipTests}</skipInvocation>
+                    <streamLogsOnFailures>true</streamLogsOnFailures>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-reactor-artifacts</id>
+                        <goals>
+                            <goal>install</goal>
+                        </goals>
+                        <configuration>
+                            <!-- The consumers depend on hamcrest-matcher-generator and -kotlin in test scope, which the default runtime scope leaves out. -->
+                            <scope>test</scope>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>run-compile-failure-checks</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -22,6 +22,8 @@ public class ProbingBackend implements GeneratorBackend {
     static final String ERROR = "Probe reports an error";
     static final String NOTED = "Noted";
     static final String NOTE = "Probe reports a note";
+    static final String WARNED = "Warned";
+    static final String WARNING = "Probe reports a warning";
     private static final List<Set<String>> INHERITED = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> MISSING = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> OWN = new CopyOnWriteArrayList<>();
@@ -53,6 +55,10 @@ public class ProbingBackend implements GeneratorBackend {
     public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
         if (model.simpleName().equals(NOTED)) {
             context.reportNote(NOTE);
+            return List.of();
+        }
+        if (model.simpleName().equals(WARNED)) {
+            context.reportWarning(WARNING);
             return List.of();
         }
         if (!model.simpleName().equals(PROBED)) {

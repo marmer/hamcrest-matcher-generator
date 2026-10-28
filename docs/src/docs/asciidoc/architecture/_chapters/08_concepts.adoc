@@ -68,3 +68,8 @@ type reports it the same way through `GenerationContext.reportError(message)`: t
 error at the `@GenerateMatchers` annotation. The backend leaves the offending member out of its generated code, so the
 error is the only one the user sees. The AssertJ backend does this for a generated method whose name an inherited
 AssertJ method already has: one error per property, naming the property and the clashing methods.
+
+A backend that leaves something out of its generated code without failing the build reports it through
+`GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The
+Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out of
+the DSL and the Java matcher keeps it.

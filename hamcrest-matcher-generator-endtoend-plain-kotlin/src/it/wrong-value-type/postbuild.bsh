@@ -1,0 +1,7 @@
+// The build must fail with a type mismatch in Check.kt, not for something else. The wording of the mismatch differs
+// between Kotlin versions: a single candidate says "Type mismatch", overloads say "None of the following".
+// BeanShell, not Groovy: the Groovy the invoker bundles cannot read the class files of the newest JDKs.
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!(log.contains("Check.kt") && (log.contains("Type mismatch") || log.contains("None of the following")))) {
+    throw new RuntimeException("Another failure: " + log);
+}

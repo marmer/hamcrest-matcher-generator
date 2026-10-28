@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -38,7 +39,36 @@ import org.jspecify.annotations.Nullable;
  */
 final class KotlinDslGenerator {
 
+    /** The private property of a scope that holds the Java matcher it delegates to. */
     private static final String DELEGATE = "delegate";
+
+    /** The parameter of the nested scope lambda, of the entry function and of a nested property. */
+    private static final String BLOCK = "block";
+
+    /** The parameter of the overload that takes a Hamcrest matcher. */
+    private static final String MATCHER_PARAMETER = "matcher";
+
+    /** The members of {@code Any} that a scope's functions would hide or be hidden by. */
+    private static final String EQUALS = "equals";
+
+    private static final String HASH_CODE = "hashCode";
+    private static final String TO_STRING = "toString";
+
+    /**
+     * The names a DSL scope uses for its own members and parameters, and the members of {@code
+     * Any}. A property of one of these names gets no DSL functions, which would hide or be hidden
+     * by those members. The Java matcher keeps the property.
+     */
+    private static final Set<String> RESERVED_NAMES =
+            Set.of(
+                    MatcherNaming.CHECKING_ALL_PROPERTIES,
+                    DELEGATE,
+                    BLOCK,
+                    MATCHER_PARAMETER,
+                    EQUALS,
+                    HASH_CODE,
+                    TO_STRING);
+
     private static final ClassName MATCHER = new ClassName("org.hamcrest", "Matcher");
     private static final ClassName MATCHER_DSL =
             new ClassName(MatcherDsl.class.getPackageName(), MatcherDsl.class.getSimpleName());
@@ -126,7 +156,7 @@ final class KotlinDslGenerator {
     private FunSpec entryFunction(final TypeModel type, final ClassName matcher) {
         final ClassName spec = new ClassName(type.targetPackage(), specName(type));
         return FunSpec.builder(MatcherNaming.initializerName(type))
-                .addParameter("block", blockType(spec))
+                .addParameter(BLOCK, blockType(spec))
                 .returns(matcher)
                 .addStatement(
                         "return %T.%L().also { %T(it).block() }",
@@ -163,6 +193,16 @@ final class KotlinDslGenerator {
 
     private void addProperty(
             final TypeSpec.Builder scope, final TypeModel type, final PropertyModel property) {
+        if (RESERVED_NAMES.contains(property.name())) {
+            context.reportWarning(
+                    "The Kotlin DSL of "
+                            + type.qualifiedName()
+                            + " leaves out the property "
+                            + property.name()
+                            + ", whose name clashes with a member of the DSL scope; the Java"
+                            + " matcher keeps it");
+            return;
+        }
         final boolean conflicting =
                 type.properties().stream()
                                 .filter(other -> other.name().equals(property.name()))
@@ -211,7 +251,7 @@ final class KotlinDslGenerator {
                                     : type);
         }
         return FunSpec.builder(property.name())
-                .addParameter("matcher", ParameterizedTypeName.get(MATCHER, matched))
+                .addParameter(MATCHER_PARAMETER, ParameterizedTypeName.get(MATCHER, matched))
                 .addStatement(
                         "%L.%L(matcher)", DELEGATE, MatcherNaming.withMethodName(property.name()))
                 .build();
@@ -219,7 +259,7 @@ final class KotlinDslGenerator {
 
     private static FunSpec nestedFunction(final PropertyModel property, final Scope nested) {
         return FunSpec.builder(property.name())
-                .addParameter("block", blockType(nested.spec()))
+                .addParameter(BLOCK, blockType(nested.spec()))
                 .addStatement(
                         "%L.%L(%M(block))",
                         DELEGATE, MatcherNaming.withMethodName(property.name()), nested.entry())

@@ -18,12 +18,12 @@ public class ConflictingSpec(
     delegate.checkingAllProperties()
   }
 
-  public fun matcher(`value`: Matcher<out String>?) {
-    delegate.withMatcher(value)
+  public fun needle(`value`: Matcher<out String>?) {
+    delegate.withNeedle(value)
   }
 
-  public fun ignoringMatcher() {
-    delegate.ignoringMatcher()
+  public fun ignoringNeedle() {
+    delegate.ignoringNeedle()
   }
 
   public fun `value`(`value`: String?) {

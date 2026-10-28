@@ -235,7 +235,8 @@ public class MatcherGenerationProcessorWorker {
                                     this::inheritedMethodNames,
                                     message -> printBackendError(type, message),
                                     processingEnv.getOptions().containsKey(KAPT_KOTLIN_GENERATED),
-                                    this::printBackendNote);
+                                    this::printBackendNote,
+                                    message -> printBackendWarning(type, message));
                     backends.forEach(
                             backend ->
                                     backend.generate(type.model(), context)
@@ -258,6 +259,20 @@ public class MatcherGenerationProcessorWorker {
                 .getMessager()
                 .printMessage(
                         Diagnostic.Kind.ERROR,
+                        message,
+                        type.configurationElement(),
+                        type.configurationMirror());
+    }
+
+    /**
+     * A backend reports something it left out of the code it generates, such as a property the DSL
+     * cannot name. It is reported at the annotation that configured the type, like an error.
+     */
+    private void printBackendWarning(final PlannedType type, final String message) {
+        processingEnv
+                .getMessager()
+                .printMessage(
+                        Diagnostic.Kind.WARNING,
                         message,
                         type.configurationElement(),
                         type.configurationMirror());
