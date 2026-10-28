@@ -145,9 +145,10 @@
                 <!--
                     The compile-failure checks of src/it: each project is a consumer build of the DSL that the Kotlin
                     compiler must reject (or accept, as the control). The build runs the kotlin-maven-plugin, so the Kotlin
-                    compiler stays in the plugin class path and out of this module's test dependencies. install puts the
-                    reactor artifacts into target/local-repo: run it after a full install, and with clean, because an
-                    earlier copy in target/local-repo is not replaced.
+                    compiler stays in the plugin class path and out of this module's test dependencies. install copies the
+                    test-scope reactor artifacts into target/local-repo, so the consumers resolve them there. Consumers must
+                    work on a fresh local repository, as on CI, which runs a plain verify without a prior install. An
+                    earlier copy in target/local-repo is not replaced, so run with clean.
                 -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
@@ -172,6 +173,10 @@
                         <goals>
                             <goal>install</goal>
                         </goals>
+                        <configuration>
+                            <!-- The consumers depend on hamcrest-matcher-generator and -kotlin in test scope, which the default runtime scope leaves out. -->
+                            <scope>test</scope>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>run-compile-failure-checks</id>
