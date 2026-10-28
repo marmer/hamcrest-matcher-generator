@@ -1,0 +1,33 @@
+name: Dependency review
+
+# Blocks a pull request that adds a dependency with a known vulnerability (any severity) or with a license outside the
+# allow-list. The allow-list mirrors the license-maven-plugin gates in the root pom: runtime and unknown scopes take
+# Apache-2.0, MIT, BSD-2-Clause and BSD-3-Clause; test scope also takes EPL-1.0 and EPL-2.0. Needs the dependency graph
+# enabled in the repository settings. Not a required check: the owner decides whether to add it to the main ruleset.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Runtime and unknown scopes
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: low
+          fail-on-scopes: runtime, unknown
+          allow-licenses: Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause
+
+      - name: Test scope
+        # Runs even when the runtime step found a violation, so a pull request that breaks both scopes reports both.
+        # Still blocking: a violation fails this step and therefore the job.
+        if: success() || failure()
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: low
+          fail-on-scopes: development
+          allow-licenses: Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0
