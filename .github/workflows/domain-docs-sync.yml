@@ -23,6 +23,9 @@ jobs:
       - name: Test the CI check scripts
         run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
 
+      - name: Test the agent scripts
+        run: python3 -m unittest discover -s scripts/agents -p 'test_*.py'
+
       - name: Check the default branch ruleset requires only existing CI job names
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
