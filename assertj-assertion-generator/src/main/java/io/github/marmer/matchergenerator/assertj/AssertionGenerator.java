@@ -88,6 +88,11 @@ class AssertionGenerator {
         return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
+    /** The properties the assertions check, in declaration order, without {@code getClass()}. */
+    List<PropertyModel> properties() {
+        return properties;
+    }
+
     String abstractName() {
         return "Abstract" + model.simpleName() + "Assert";
     }
@@ -618,12 +623,12 @@ class AssertionGenerator {
     }
 
     /** Marks the type as nullable when JSpecify is available. Primitives cannot be annotated. */
-    private TypeName nullable(final TypeName type) {
+    TypeName nullable(final TypeName type) {
         return context.jspecifyAvailable() && !type.isPrimitive() ? type.annotated(NULLABLE) : type;
     }
 
     /** The asserted type, with wildcards for the type parameters of a generic type. */
-    private TypeName assertedType() {
+    TypeName assertedType() {
         if (model.typeParameters().isEmpty()) {
             return TypeName.get(model.type());
         }

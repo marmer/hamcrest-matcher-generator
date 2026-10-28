@@ -40,8 +40,9 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
                                         model,
                                         generator.concreteName(),
                                         generator.concreteTypeSpec())));
-        // Only the first model of the package writes the mixin. The list holds the types generated
-        // in this round, so a type from another round or compilation is not in the mixin.
+        // Only the first model of the package writes the mixin and the representation. The list
+        // holds the types generated in this round, so a type from another round or compilation is
+        // in neither.
         final List<TypeModel> packageModels = packageModels(model, context);
         if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
             sources.add(
@@ -50,13 +51,19 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
                             SoftAssertionsProviderGenerator.NAME,
                             new SoftAssertionsProviderGenerator(packageModels, context)
                                     .typeSpec()));
+            sources.add(
+                    sourceOf(
+                            model,
+                            RepresentationGenerator.NAME,
+                            new RepresentationGenerator(packageModels, context).typeSpec()));
         }
         return sources;
     }
 
     /**
      * The types of the model's target package generated in this round, the model itself included,
-     * one per qualified name and sorted by it. The first one writes the mixin.
+     * one per qualified name and sorted by it. The first one writes the mixin and the
+     * representation.
      */
     private static List<TypeModel> packageModels(
             final TypeModel model, final GenerationContext context) {

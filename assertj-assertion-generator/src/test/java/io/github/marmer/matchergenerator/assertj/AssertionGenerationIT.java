@@ -375,10 +375,12 @@ class AssertionGenerationIT {
                                 """));
 
         CompilationSubject.assertThat(compilation).succeeded();
-        assertEquals(5, compilation.generatedSourceFiles().size());
+        assertEquals(6, compilation.generatedSourceFiles().size());
         for (final JavaFileObject source : compilation.generatedSourceFiles()) {
             final String content = source.getCharContent(true).toString();
             final boolean mixin = source.getName().endsWith("/SoftAssertionsProvider.java");
+            final boolean representation =
+                    source.getName().endsWith("/PropertyRepresentation.java");
             final Matcher declaration = TYPE_DECLARATION.matcher(content);
             assertTrue(declaration.find(), content);
             assertFalse(
@@ -394,7 +396,14 @@ class AssertionGenerationIT {
                                         + " extends org.assertj.core.api.SoftAssertionsProvider"),
                         content);
             }
-            if (!mixin) {
+            if (representation) {
+                assertTrue(
+                        content.contains(
+                                "public class PropertyRepresentation"
+                                        + " extends StandardRepresentation"),
+                        content);
+            }
+            if (!mixin && !representation) {
                 final Matcher classDeclaration = CLASS_DECLARATION.matcher(content);
                 assertTrue(classDeclaration.find(), content);
                 assertTrue(
@@ -763,6 +772,187 @@ class AssertionGenerationIT {
                 compilation,
                 "soft-assertions-provider-without-jspecify",
                 "some.other.pck.SoftAssertionsProvider");
+    }
+
+    @Test
+    @DisplayName(
+            "A generated Representation prints configured types by their properties, nested types"
+                    + " included, and is written once per package")
+    void aGeneratedRepresentationPrintsConfiguredTypesByTheirProperties() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Line", "some.other.pck.Order"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Line",
+                                """
+                                package some.other.pck;
+
+                                public class Line {
+                                    public String getSku() {
+                                        return null;
+                                    }
+
+                                    public int getQuantity() {
+                                        return 0;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                import org.jspecify.annotations.Nullable;
+
+                                public class Order {
+                                    public @Nullable Customer getCustomer() {
+                                        return null;
+                                    }
+
+                                    public static class Customer {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                compilation.generatedSourceFiles().stream()
+                        .filter(source -> source.getName().endsWith("/PropertyRepresentation.java"))
+                        .count());
+        assertGolden(compilation, "representation", "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
+    @DisplayName("Without JSpecify on the class path the Representation carries no annotations")
+    void withoutJSpecifyTheRepresentationCarriesNoAnnotations() throws IOException {
+        final Compilation compilation =
+                compileWithoutJSpecify(
+                        configuration("some.other.pck.Order"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                public class Order {
+                                    public String getId() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(
+                compilation,
+                "representation-without-jspecify",
+                "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
+    @DisplayName("A type without properties has no branch in the Representation")
+    void aTypeWithoutPropertiesHasNoBranchInTheRepresentation() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Empty", "some.other.pck.Order"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Empty",
+                                """
+                                package some.other.pck;
+
+                                public class Empty {
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                public class Order {
+                                    public String getId() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.PropertyRepresentation");
+        assertFalse(content.contains("instanceof Empty"), content);
+        assertTrue(content.contains("instanceof Order"), content);
+    }
+
+    @Test
+    @DisplayName("A subtype is tested before its supertype, so the subtype's branch is reachable")
+    void aSubtypeIsTestedBeforeItsSupertype() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Animal", "some.other.pck.Dog"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Animal",
+                                """
+                                package some.other.pck;
+
+                                public class Animal {
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Dog",
+                                """
+                                package some.other.pck;
+
+                                public class Dog extends Animal {
+                                    public String getBreed() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.PropertyRepresentation");
+        assertTrue(content.indexOf("instanceof Dog ") >= 0, content);
+        assertTrue(
+                content.indexOf("instanceof Dog ") < content.indexOf("instanceof Animal "),
+                content);
+        assertGolden(compilation, "subtype-order", "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
+    @DisplayName("A generic configured type is tested with a wildcard, like its assertions")
+    void aGenericConfiguredTypeIsTestedWithAWildcard() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Box"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Box",
+                                """
+                                package some.other.pck;
+
+                                import java.util.List;
+
+                                public class Box<T> {
+                                    public T getContent() {
+                                        return null;
+                                    }
+
+                                    public List<T> getContents() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content =
+                generatedContent(compilation, "some.other.pck.PropertyRepresentation");
+        assertTrue(content.contains("instanceof Box<?> actual"), content);
+        assertGolden(
+                compilation, "representation-generic", "some.other.pck.PropertyRepresentation");
     }
 
     @Test

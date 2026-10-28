@@ -31,6 +31,9 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Soft assertions mixin
 |The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin covers only types generated in the same processing round; a type from another round or compilation is not in it.
 
+|Generated representation
+|The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it covers only types generated in the same processing round.
+
 |Bridge jar
 |The code-free jar that a 5.x artifact (`hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`) is published as in 6.0.0. It depends on `hamcrest-matcher-generator`, so old coordinates still resolve to a jar and the Hamcrest backend arrives transitively. A relocation POM is not used because older compiler plugins do not follow it in a processor path.
 
