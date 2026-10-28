@@ -14,20 +14,31 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 logdir="${VERIFY_LOG_DIR:-$(mktemp -d)}"
 mkdir -p "$logdir"
 
+usage() { sed -n '2,/^[^#]/{/^#/s/^# \{0,1\}//p}' "$0"; }
+
 latest=false release=false only=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --latest) latest=true ;;
     --release) release=true ;;
     --only) only="${2:?--only needs a step}"; shift ;;
-    *) sed -n '2,9p' "$0"; exit 2 ;;
+    *) usage; exit 2 ;;
   esac
   shift
 done
 
+if [ -n "$only" ] && { "$latest" || "$release"; }; then
+  echo "--only cannot be combined with --latest or --release" >&2
+  exit 2
+fi
+
 step_spotless() {
   local version
   version=$(sed -n 's|.*<spotless.version>\(.*\)</spotless.version>.*|\1|p' pom.xml | head -1)
+  if [ -z "$version" ]; then
+    echo "spotless.version not found in pom.xml" >&2
+    return 1
+  fi
   ./mvnw -o -B "com.diffplug.spotless:spotless-maven-plugin:${version}:apply"
 }
 step_install() { ./mvnw -o -B clean install -DskipTests; }
@@ -44,9 +55,9 @@ steps=(spotless install verify verify-jdk17)
 if [ -n "$only" ]; then
   steps=("$only")
 else
-  $latest && steps+=(verify-latest)
+  if "$latest"; then steps+=(verify-latest); fi
   steps+=(domain-docs)
-  $release && steps+=(release)
+  if "$release"; then steps+=(release); fi
 fi
 
 for step in "${steps[@]}"; do
