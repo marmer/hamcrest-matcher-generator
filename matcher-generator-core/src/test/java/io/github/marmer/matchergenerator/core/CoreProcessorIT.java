@@ -471,6 +471,44 @@ class CoreProcessorIT {
         assertFalse(own.contains("hiddenFromSubclasses"), () -> "Names: " + own);
     }
 
+    @Test
+    @DisplayName("A backend learns that Kotlin output is available when KAPT names the directory")
+    void aBackendLearnsThatKotlinOutputIsAvailableWhenKaptNamesTheDirectory() {
+        final JavaFileObject bean =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.SomePojo",
+                        "package some.other.pck;",
+                        "public class SomePojo {",
+                        "}");
+
+        compile(configuration("\"some.other.pck.SomePojo\""), bean);
+        final boolean withKapt = RecordingBackend.contexts().get(0).kotlinOutputAvailable();
+        RecordingBackend.reset();
+        compile(Compiler.javac(), configuration("\"some.other.pck.SomePojo\""), bean);
+        final boolean withoutKapt = RecordingBackend.contexts().get(0).kotlinOutputAvailable();
+
+        assertTrue(withKapt, "with the KAPT directory");
+        assertFalse(withoutKapt, "without the KAPT directory");
+    }
+
+    @Test
+    @DisplayName("A backend note is a compiler note without a verbose option")
+    void aBackendNoteIsACompilerNoteWithoutAVerboseOption() {
+        final JavaFileObject noted =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Noted",
+                        "package some.other.pck;",
+                        "public class Noted {",
+                        "}");
+
+        final Compilation compilation =
+                compile(generateMatchersConfiguration("\"some.other.pck.Noted\""), noted);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadNoteCount(1);
+        CompilationSubject.assertThat(compilation).hadNoteContaining(ProbingBackend.NOTE);
+    }
+
     private static List<File> classPathWithout(final String fragment) {
         return Arrays.stream(System.getProperty("java.class.path").split(File.pathSeparator))
                 .filter(entry -> !entry.contains(fragment))

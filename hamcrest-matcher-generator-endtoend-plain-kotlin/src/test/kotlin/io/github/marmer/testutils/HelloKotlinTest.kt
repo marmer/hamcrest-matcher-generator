@@ -15,6 +15,9 @@ import org.hamcrest.Matchers
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
+// This module compiles with -language-version 1.9 (see pom.xml): Kotlin 1.9 does not read the JSpecify
+// annotations, so a bare null is ambiguous between the value and the matcher overload and needs the cast.
+// The mixed module compiles with the default language version and uses the bare null.
 internal class HelloKotlinTest {
     @Test
     @DisplayName("Usage of generated matchers")
@@ -36,7 +39,7 @@ internal class HelloKotlinTest {
     fun test_NullablePropertiesAcceptNull() {
         MatcherAssert.assertThat(
             NullabilityProbe("name", null, 1),
-            NullabilityProbeMatcher.isNullabilityProbe().withNickname(null).withName("name").withCount(1)
+            NullabilityProbeMatcher.isNullabilityProbe().withNickname(null as String?).withName("name").withCount(1)
         )
         MatcherAssert.assertThat(
             NullabilityProbe("name", null, 1),
@@ -49,7 +52,7 @@ internal class HelloKotlinTest {
     fun test_EqualityValuesAcceptNull() {
         MatcherAssert.assertThat(
             NullabilityProbe("name", "nick", 1),
-            Matchers.not(NullabilityProbeMatcher.isNullabilityProbe().withName(null))
+            Matchers.not(NullabilityProbeMatcher.isNullabilityProbe().withName(null as String?))
         )
     }
 

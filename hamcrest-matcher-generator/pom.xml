@@ -120,6 +120,32 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>hamcrest-backend-depends-on-core-only</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <searchTransitive>true</searchTransitive>
+                                    <excludes>
+                                        <exclude>org.assertj:*:*:*:compile</exclude>
+                                        <exclude>org.assertj:*:*:*:runtime</exclude>
+                                        <exclude>io.github.marmer.testutils:assertj-assertion-generator</exclude>
+                                        <exclude>io.github.marmer.testutils:hamcrest-matcher-generator-kotlin</exclude>
+                                    </excludes>
+                                    <message>The Hamcrest backend depends only on the core, not on AssertJ or another backend.</message>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
             <plugin>

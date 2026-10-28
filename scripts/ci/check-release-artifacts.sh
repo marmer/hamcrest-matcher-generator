@@ -20,7 +20,7 @@ fail() {
   status=1
 }
 
-for module in matcher-generator-annotations matcher-generator-core hamcrest-matcher-generator assertj-assertion-generator hamcrest-matcher-generator-dependencies hamcrest-matcher-generator-annotationprocessor; do
+for module in matcher-generator-annotations matcher-generator-core hamcrest-matcher-generator assertj-assertion-generator hamcrest-matcher-generator-kotlin hamcrest-matcher-generator-dependencies hamcrest-matcher-generator-annotationprocessor; do
   for suffix in "" -sources -javadoc; do
     file="$module/target/$module-$version$suffix.jar"
     [ -f "$file" ] || fail "missing $file"

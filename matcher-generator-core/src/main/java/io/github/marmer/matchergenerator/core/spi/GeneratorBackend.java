@@ -21,7 +21,8 @@ public interface GeneratorBackend {
      *
      * @param model the configured type
      * @param context information about the current generation run
-     * @return the generated source files, Java or Kotlin, at least one
+     * @return the generated source files, Java or Kotlin, usually at least one; none when the
+     *     backend has nothing to generate in this run, e.g. a Kotlin backend without Kotlin output
      */
     List<GeneratedSource> generate(TypeModel model, GenerationContext context);
 }

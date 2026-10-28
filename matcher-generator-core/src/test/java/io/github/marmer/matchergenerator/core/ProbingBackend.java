@@ -14,11 +14,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * A backend that acts only on a type named {@code Probed}: it reports one compiler error for it and
- * records what the context tells about inherited methods. Other types get nothing.
+ * records what the context tells about inherited methods. A type named {@code Noted} gets one
+ * compiler note. Other types get nothing.
  */
 public class ProbingBackend implements GeneratorBackend {
     static final String PROBED = "Probed";
     static final String ERROR = "Probe reports an error";
+    static final String NOTED = "Noted";
+    static final String NOTE = "Probe reports a note";
     private static final List<Set<String>> INHERITED = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> MISSING = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> OWN = new CopyOnWriteArrayList<>();
@@ -48,6 +51,10 @@ public class ProbingBackend implements GeneratorBackend {
 
     @Override
     public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
+        if (model.simpleName().equals(NOTED)) {
+            context.reportNote(NOTE);
+            return List.of();
+        }
         if (!model.simpleName().equals(PROBED)) {
             return List.of();
         }
