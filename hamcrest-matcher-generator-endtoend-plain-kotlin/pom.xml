@@ -13,6 +13,11 @@
 
     <artifactId>hamcrest-matcher-generator-endtoend-plain-kotlin</artifactId>
 
+    <properties>
+        <!-- -DskipTests=true on the build skips the consumer builds of src/it, like the Surefire tests. -->
+        <skipTests>false</skipTests>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -155,6 +160,10 @@
                     <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <settingsFile>${project.basedir}/src/it/settings.xml</settingsFile>
+                    <!-- The consumer builds are this module's compile-failure tests: -DskipTests skips them, as it skips the
+                        Surefire tests, and install does not copy the artifacts for them. -->
+                    <skipInstallation>${skipTests}</skipInstallation>
+                    <skipInvocation>${skipTests}</skipInvocation>
                     <streamLogsOnFailures>true</streamLogsOnFailures>
                 </configuration>
                 <executions>

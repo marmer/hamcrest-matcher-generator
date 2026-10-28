@@ -11,8 +11,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>2.1.20</kotlin.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <kotlin.version>@kotlin.version@</kotlin.version>
+        <maven.compiler.release>@kotlin.compiler.jvmTarget@</maven.compiler.release>
     </properties>
 
     <dependencies>
@@ -85,7 +85,7 @@
                 <!-- Kotlin first, then Java: the generated matchers refer to the Kotlin model. The project's own compiler version. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>@maven-compiler-plugin.version@</version>
                 <executions>
                     <execution>
                         <id>default-compile</id>
