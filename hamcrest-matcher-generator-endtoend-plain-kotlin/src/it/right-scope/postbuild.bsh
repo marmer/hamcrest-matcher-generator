@@ -1,0 +1,5 @@
+// The control must really compile the check, not succeed because it found no sources. BeanShell, not Groovy: the
+// Groovy the invoker bundles cannot read the class files of the newest JDKs.
+if (!new File(basedir, "target/classes/CheckKt.class").exists()) {
+    throw new RuntimeException("The check was not compiled");
+}
