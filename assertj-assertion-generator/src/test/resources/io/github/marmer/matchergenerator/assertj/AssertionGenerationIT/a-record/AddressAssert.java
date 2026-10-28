@@ -1,6 +1,7 @@
 package some.other.pck;
 
 import javax.annotation.processing.Generated;
+import org.assertj.core.api.InstanceOfAssertFactory;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -10,6 +11,8 @@ import org.jspecify.annotations.Nullable;
 )
 @NullMarked
 public class AddressAssert extends AbstractAddressAssert<AddressAssert, Address> {
+  public static final InstanceOfAssertFactory<Address, AddressAssert> ADDRESS = new InstanceOfAssertFactory<>(Address.class, AddressAssert::new);
+
   public AddressAssert(final @Nullable Address actual) {
     super(actual, AddressAssert.class);
   }

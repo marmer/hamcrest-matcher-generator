@@ -10,20 +10,59 @@ import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GeneratedSource;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Generates AssertJ assertions: per configured type an {@code AbstractXAssert} with the generated
- * assertions and a concrete {@code XAssert} to use.
+ * assertions and a concrete {@code XAssert} to use. Per target package one {@code
+ * SoftAssertionsProvider} mixin, written by the type that sorts first in the package.
  */
 public class AssertjGeneratorBackend implements GeneratorBackend {
 
     @Override
     public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
         final AssertionGenerator generator = new AssertionGenerator(model, context);
-        return List.of(
-                sourceOf(model, generator.abstractName(), generator.abstractTypeSpec()),
-                sourceOf(model, generator.concreteName(), generator.concreteTypeSpec()));
+        final List<GeneratedSource> sources =
+                new ArrayList<>(
+                        List.of(
+                                sourceOf(
+                                        model,
+                                        generator.abstractName(),
+                                        generator.abstractTypeSpec()),
+                                sourceOf(
+                                        model,
+                                        generator.concreteName(),
+                                        generator.concreteTypeSpec())));
+        final List<TypeModel> packageModels = packageModels(model, context);
+        if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
+            sources.add(
+                    sourceOf(
+                            model,
+                            SoftAssertionsProviderGenerator.NAME,
+                            new SoftAssertionsProviderGenerator(packageModels, context)
+                                    .typeSpec()));
+        }
+        return sources;
+    }
+
+    /** The types of the target package of the model in this run, sorted by name. */
+    private static List<TypeModel> packageModels(
+            final TypeModel model, final GenerationContext context) {
+        final Map<String, TypeModel> byName =
+                Stream.concat(context.generatedTypes().stream(), Stream.of(model))
+                        .filter(other -> other.targetPackage().equals(model.targetPackage()))
+                        .collect(
+                                Collectors.toMap(
+                                        TypeModel::qualifiedName,
+                                        other -> other,
+                                        (first, second) -> first,
+                                        TreeMap::new));
+        return List.copyOf(byName.values());
     }
 
     private static GeneratedSource sourceOf(
