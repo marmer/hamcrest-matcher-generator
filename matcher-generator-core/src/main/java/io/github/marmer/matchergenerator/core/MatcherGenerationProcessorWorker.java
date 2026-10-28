@@ -225,11 +225,15 @@ public class MatcherGenerationProcessorWorker {
                 type ->
                         backends.forEach(
                                 backend ->
-                                        write(
-                                                backend,
-                                                backend.generate(type.model(), context),
-                                                type.typeElement(),
-                                                type.configurationElement())));
+                                        backend.generate(type.model(), context)
+                                                .forEach(
+                                                        source ->
+                                                                write(
+                                                                        backend,
+                                                                        source,
+                                                                        type.typeElement(),
+                                                                        type
+                                                                                .configurationElement()))));
     }
 
     /**

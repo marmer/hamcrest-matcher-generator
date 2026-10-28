@@ -1,0 +1,87 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.github.marmer.matchergenerator.assertj;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+class AssertionPathTest {
+
+    @Test
+    @DisplayName("Outside of any requirement an assertion starts at its own type")
+    void outsideOfAnyRequirementAnAssertionStartsAtItsOwnType() {
+        assertEquals("Order", AssertionPath.rootedAt("Order"));
+    }
+
+    @Test
+    @DisplayName("Inside a requirement an assertion starts at the path of the property")
+    void insideARequirementAnAssertionStartsAtThePathOfTheProperty() {
+        final AtomicReference<String> started = new AtomicReference<>();
+
+        AssertionPath.within(
+                "Order.customer",
+                "value",
+                value -> started.set(AssertionPath.rootedAt("Customer")));
+
+        assertEquals("Order.customer", started.get());
+    }
+
+    @Test
+    @DisplayName("The requirement gets the property value, also when it is null")
+    void theRequirementGetsThePropertyValueAlsoWhenItIsNull() {
+        final List<String> values = new ArrayList<>();
+        final AtomicReference<String> nullValue = new AtomicReference<>("not called");
+
+        AssertionPath.within("Order.id", "42", values::add);
+        AssertionPath.<@Nullable String>within("Order.id", null, nullValue::set);
+
+        assertEquals(List.of("42"), values);
+        assertNull(nullValue.get());
+    }
+
+    @Test
+    @DisplayName("The innermost requirement decides the path and the outer one is restored")
+    void theInnermostRequirementDecidesThePathAndTheOuterOneIsRestored() {
+        final List<String> started = new ArrayList<>();
+
+        AssertionPath.within(
+                "Order.customer",
+                "outer",
+                outer -> {
+                    AssertionPath.within(
+                            "Order.customer.address",
+                            "inner",
+                            inner -> started.add(AssertionPath.rootedAt("Address")));
+                    started.add(AssertionPath.rootedAt("Customer"));
+                });
+        started.add(AssertionPath.rootedAt("Order"));
+
+        assertEquals(List.of("Order.customer.address", "Order.customer", "Order"), started);
+    }
+
+    @Test
+    @DisplayName("The path is restored when the requirement fails")
+    void thePathIsRestoredWhenTheRequirementFails() {
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AssertionPath.within(
+                                "Order.customer",
+                                "value",
+                                value -> {
+                                    throw new IllegalStateException("failed");
+                                }));
+
+        assertEquals("Order", AssertionPath.rootedAt("Order"));
+    }
+}

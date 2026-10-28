@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>hamcrest-matcher-generator-endtoend</artifactId>
+        <version>5.1.0</version>
+        <relativePath>../hamcrest-matcher-generator-endtoend/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>hamcrest-matcher-generator-endtoend-assertj</artifactId>
+    <version>5.1.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>assertj-assertion-generator</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- The processing lint stays off: javac warns that no processor claims the test sources' own
+                        annotations (JUnit), which is not about generated code. Every other lint category stays fatal.
+                        Appended, so the group's settings and the static-analysis profile's Error Prone arguments stay. -->
+                    <compilerArgs combine.children="append">
+                        <arg>-Xlint:all,-processing</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths combine.children="append">
+                        <path>
+                            <groupId>io.github.marmer.testutils</groupId>
+                            <artifactId>assertj-assertion-generator</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

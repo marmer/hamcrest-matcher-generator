@@ -103,6 +103,7 @@
                                         <exclude>org.assertj:*:*:*:compile</exclude>
                                         <exclude>org.assertj:*:*:*:runtime</exclude>
                                         <exclude>io.github.marmer.testutils:hamcrest-matcher-generator</exclude>
+                                        <exclude>io.github.marmer.testutils:assertj-assertion-generator</exclude>
                                     </excludes>
                                     <message>The core must not depend on Hamcrest, AssertJ or any backend (test dependencies may).</message>
                                 </bannedDependencies>

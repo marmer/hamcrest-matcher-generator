@@ -37,6 +37,7 @@
         <module>matcher-generator-annotations</module>
         <module>matcher-generator-core</module>
         <module>hamcrest-matcher-generator</module>
+        <module>assertj-assertion-generator</module>
         <module>hamcrest-matcher-generator-dependencies</module>
         <module>hamcrest-matcher-generator-annotationprocessor</module>
     </modules>
@@ -156,6 +157,11 @@
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest</artifactId>
                 <version>2.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.27.3</version>
             </dependency>
             <dependency>
                 <groupId>com.google.testing.compile</groupId>
@@ -750,6 +756,7 @@
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-plain-kotlin</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-java-records</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-lombok</excludeArtifact>
+                                <excludeArtifact>hamcrest-matcher-generator-endtoend-assertj</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-endtoend-5x-compatibility-runner</excludeArtifact>
                                 <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                             </excludeArtifacts>

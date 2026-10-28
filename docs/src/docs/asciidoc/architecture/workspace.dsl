@@ -21,6 +21,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 matcherGenerator = component "MatcherGenerator" "Builds the source of a <Type>Matcher class." "JavaPoet"
                 runtimeLibrary = component "BeanPropertyMatcher" "Runtime library that generated matchers call at test time." "Java"
             }
+            assertjBackend = container "assertj-assertion-generator" "The AssertJ backend: an AbstractXAssert and an XAssert per configured type, and the small AssertionPath runtime." "Java, Maven module"
             bridge = container "Bridge jars" "hamcrest-matcher-generator-dependencies and -annotationprocessor are code-free jars that bring 5.x users to the new coordinates." "Java, Maven modules"
             endtoend = container "End-to-end modules" "Apply the processor to real beans and records and exercise the generated matchers." "Java, Kotlin, Maven modules"
             docs = container "docs" "Renders this documentation and checks it. Needs JDK 21 or later." "Asciidoctor, Structurizr, Maven module"
@@ -28,6 +29,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
 
         javac = softwareSystem "Java compiler" "javac, or KAPT for Kotlin." "External"
         hamcrest = softwareSystem "Hamcrest" "Assertion library that the generated matchers extend." "External"
+        assertj = softwareSystem "AssertJ" "Assertion library that the generated assertions extend." "External"
         central = softwareSystem "Maven Central" "Artifact repository." "External"
         github = softwareSystem "GitHub Actions" "Builds, releases and deploys the documentation." "External"
         pages = softwareSystem "GitHub Pages" "Hosts the documentation." "External"
@@ -38,6 +40,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         javac -> hmg "Runs as annotation processor in every round"
         hmg -> javac "Writes generated sources through"
         hmg -> hamcrest "Generates matchers for"
+        hmg -> assertj "Generates assertions for"
         github -> hmg "Builds and releases"
         github -> central "Publishes the signed bundle to"
         github -> pages "Deploys the documentation to"
@@ -47,7 +50,11 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         javac -> processor "Invokes"
         core -> annotations "Reads the configuration from"
         worker -> hamcrestBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
+        worker -> assertjBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
         hamcrestBackend -> core "Implements GeneratorBackend of"
+        assertjBackend -> core "Implements GeneratorBackend of"
+        assertjBackend -> assertj "Generates classes that extend AbstractObjectAssert of"
+        endtoend -> assertjBackend "Apply the processor to beans and records"
         hamcrestBackend -> hamcrest "Uses"
         bridge -> hamcrestBackend "Depends on"
         endtoend -> hamcrestBackend "Apply the processor to beans and records"
@@ -78,6 +85,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 containerInstance annotations
                 containerInstance core
                 containerInstance hamcrestBackend
+                containerInstance assertjBackend
                 containerInstance bridge
             }
             releaseWorkflow -> centralNode "Uploads one bundle to" "central-publishing-maven-plugin"

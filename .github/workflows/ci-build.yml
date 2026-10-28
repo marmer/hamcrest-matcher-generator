@@ -41,6 +41,7 @@ jobs:
           mkdir -p hamcrest-matcher-generator/src/{main,test}/{java,kotlin}
           mkdir -p matcher-generator-annotations/src/{main,test}/{java,kotlin}
           mkdir -p matcher-generator-core/src/{main,test}/{java,kotlin}
+          mkdir -p assertj-assertion-generator/src/{main,test}/{java,kotlin}
         if: success()
 
       - name: Build
@@ -59,7 +60,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator,matcher-generator-core,matcher-generator-annotations"
+        run: ./mvnw -B sonar:sonar -am --projects "hamcrest-matcher-generator,assertj-assertion-generator,matcher-generator-core,matcher-generator-annotations"
         if: success()
 
   verify-matrix:
