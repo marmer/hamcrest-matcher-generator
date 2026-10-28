@@ -62,6 +62,7 @@ isSomePojo()
     .resetFoo()               // remove this property check (v5.1.0)
     .ignoringFoo()            // count this property as addressed by the completeness check
     .checkingAllProperties()  // opt this matcher into the completeness check (off by default)
+isSomePojoLike(reference)     // presets every property deeply from a reference object, turns the completeness check on; withFoo/resetFoo/ignoringFoo override it
 ```
 
 **Generated AssertJ API** (per property `foo`, package `io.github.marmer.matchergenerator.assertj`):
@@ -69,6 +70,12 @@ isSomePojo()
 XAssert.assertThat(x)
     .hasFoo("value")                       // deep equality, "Expecting X.foo to be: ... but was: ..."
     .hasFooSatisfying(foo -> FooAssert.assertThat(foo).hasBar(1))   // path X.foo.bar
+    .isFoo() / .isNotFoo()                 // boolean properties only
+    .ignoringFoo()                         // count foo as addressed by the completeness check
+    .hasAllPropertiesChecked()             // every property of the chain checked or ignored
+    .satisfiesCheckingAllProperties(a -> a.hasFoo(1).ignoringBar())   // same check, scoped to the lambda
+assertThat(x).extracting(X::getFoo, as(FOO))   // FOO: public static InstanceOfAssertFactory<Foo, FooAssert> on every XAssert
+// per target package one generated mixin `SoftAssertionsProvider` (extends AssertJ's) with default assertThat(X)/then(X) per type; a SoftAssertions subclass implements it
 ```
 The backend's golden ITs are `AssertionGenerationIT` (`-Dit.test=AssertionGenerationIT`, goldens under `assertj-assertion-generator/src/test/resources/.../AssertionGenerationIT/<scenario>/`); the end-to-end module is `hamcrest-matcher-generator-endtoend-assertj`.
 
