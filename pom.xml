@@ -84,6 +84,8 @@
              Javadoc-carrying files, cause hidden by Spotless). Recheck on every Renovate bump of google-java-format or
              Spotless: try the new version with spotless:apply and remove this pin only when that run is clean. -->
         <google-java-format.version>1.36.0</google-java-format.version>
+        <!-- Sonar scanner (#130), pinned to an exact 5.8.x release: the CI Sonar job runs it with sonar.qualitygate.wait. -->
+        <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
     </properties>
 
     <repositories>
@@ -403,7 +405,7 @@
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
                     <artifactId>sonar-maven-plugin</artifactId>
-                    <version>3.9.0.2155</version>
+                    <version>${sonar-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
