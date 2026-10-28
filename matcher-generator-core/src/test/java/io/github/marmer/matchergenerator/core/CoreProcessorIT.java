@@ -980,6 +980,24 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("A backend can write several source files for one type")
+    void aBackendCanWriteSeveralSourceFilesForOneType() {
+        final JavaFileObject bean =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.SomePojo",
+                        "package some.other.pck;",
+                        "public class SomePojo {",
+                        "}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.SomePojo\""), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertTrue(compilation.generatedSourceFile("some.other.pck.SomePojoSecond").isPresent());
+        assertTrue(
+                compilation.generatedSourceFile("some.other.pck.SomePojoSecondExtra").isPresent());
+    }
+
+    @Test
     @DisplayName("Kotlin sources go to the directory KAPT names")
     void kotlinSourcesGoToTheDirectoryKaptNames() throws IOException {
         final JavaFileObject bean =

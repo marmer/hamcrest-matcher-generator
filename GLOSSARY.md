@@ -19,6 +19,10 @@ _Avoid_: field, attribute
 A generator that turns the property model into assertion code for one assertion library (Hamcrest or AssertJ).
 _Avoid_: plugin, flavour, target
 
+**Assertion class**:
+The pair of classes the AssertJ backend generates per configured type: `AbstractXAssert<SELF, ACTUAL>` on `AbstractObjectAssert`, which holds the generated assertions, and the concrete, non-final `XAssert` with a public `XAssert(X)` constructor and a static `assertThat(X)`. Neither is named `Assertions` or `SoftAssertions`, and none extends `org.assertj.core.api.Assertions`, so `assertThat(String)` stays unambiguous.
+_Avoid_: assert class, assertion wrapper
+
 **Bridge jar**:
 The code-free jar that a 5.x artifact (`hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`) is published as in 6.0.0. It depends on `hamcrest-matcher-generator`, so old coordinates still resolve to a jar and the Hamcrest backend arrives transitively. A relocation POM is not used because older compiler plugins do not follow it in a processor path.
 _Avoid_: relocation POM, shim
@@ -32,8 +36,12 @@ An instance of a configured type whose property values serve as the expected val
 _Avoid_: template, prototype object
 
 **Property path**:
-The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
+The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in Hamcrest mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
 _Avoid_: property chain, field path
+
+**Assertion path**:
+The AssertJ counterpart of the **Property path**: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). An assertion created inside a `hasFooSatisfying` requirement continues the path of the enclosing property, carried by the runtime class `AssertionPath`. A missing asserted object reads `Expecting Order.customer not to be null`.
+_Avoid_: AssertJ path, nested path
 
 **Generated bean matcher**:
 A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.
