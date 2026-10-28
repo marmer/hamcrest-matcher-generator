@@ -28,8 +28,11 @@ jobs:
       - name: Scan the sources
         id: scan
         # Non-blocking: an unreachable API or a failed scan leaves the job green; the summary says the scan produced nothing.
+        # Skips build output (target/, also docs/target) and agent tooling (.agents, .claude); .git is hidden and skipped
+        # by the CLI anyway. The CLI skips directories by basename (--skip-folder) and hidden paths by default; scanoss==1.54.3
+        # has no .scanossignore file. The absolute workspace path keeps the root files: a "." scan skips them as hidden.
         continue-on-error: true
-        run: "$RUNNER_TEMP/scanoss/bin/scanoss-py scan --output scanoss-results.json ."
+        run: '"$RUNNER_TEMP/scanoss/bin/scanoss-py" scan --output scanoss-results.json --skip-folder target --skip-folder .agents --skip-folder .claude --skip-folder .git "$GITHUB_WORKSPACE"'
 
       - name: Summarise the scan in the job summary
         if: always()

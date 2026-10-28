@@ -148,6 +148,28 @@ class JavaCacheTest(unittest.TestCase):
         """)
         self.assertEqual(["line 4: setup-java without `cache: maven`"], check.java_cache_problems(text))
 
+    def test_a_setup_java_step_without_maven_cache_is_reported_in_a_multi_step_job(self):
+        text = workflow(f"""
+            jobs:
+              publish:
+                steps:
+                  - uses: actions/checkout@{SHA} # v4.4.0
+                  - name: Set up JDK 21
+                    uses: actions/setup-java@{SHA} # v4.9.1
+                    with:
+                      java-version: 21
+                      distribution: temurin
+                      cache: maven
+                  - name: Set up JDK 25
+                    uses: actions/setup-java@{SHA} # v4.9.1
+                    with:
+                      java-version: 25
+                      distribution: temurin
+                  - name: Deploy
+                    run: ./mvnw -B -P release deploy
+        """)
+        self.assertEqual(["line 12: setup-java without `cache: maven`"], check.java_cache_problems(text))
+
     def test_manual_m2_cache_is_reported(self):
         text = workflow(f"""
             jobs:
@@ -232,6 +254,19 @@ class RepositoryWorkflowsTest(unittest.TestCase):
         self.assertIn("schedule:", text)
         self.assertIn("continue-on-error: true", text)
         self.assertIn("GITHUB_STEP_SUMMARY", text)
+
+    def test_scanoss_skips_build_output_and_agent_tooling_and_scans_the_absolute_workspace(self):
+        text = (HERE.parents[1] / ".github" / "workflows" / "scanoss.yml").read_text(encoding="utf-8")
+        for folder in ("target", ".agents", ".claude", ".git"):
+            self.assertIn(f"--skip-folder {folder}", text)
+        self.assertIn('scan --output scanoss-results.json --skip-folder target', text)
+        self.assertIn('"$GITHUB_WORKSPACE"', text)
+
+    def test_dependency_review_runs_the_test_scope_step_even_when_the_first_failed_and_still_blocks(self):
+        text = (HERE.parents[1] / ".github" / "workflows" / "dependency-review.yml").read_text(encoding="utf-8")
+        test_step = text.index("name: Test scope")
+        self.assertIn("if: success() || failure()", text[test_step:])
+        self.assertNotIn("continue-on-error", text)
 
 
 if __name__ == "__main__":

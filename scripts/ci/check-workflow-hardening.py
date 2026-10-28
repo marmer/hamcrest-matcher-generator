@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Fail when a workflow in .github/workflows/ breaks the pipeline hardening rules (stdlib only, line based like workflow_jobs.py).
+"""Fail when a workflow in .github/workflows/ breaks the pipeline hardening rules.
+
+Stdlib only and line based, like scripts/agents/workflow_jobs.py.
 
 Rules:
-- every `uses:` is pinned to a full commit SHA (local `./` actions are exempt; Renovate keeps the version as a trailing comment);
+- every `uses:` is pinned to a full commit SHA (local `./` actions are exempt; Renovate keeps the version
+  as a trailing comment);
 - the top-level `permissions:` is exactly `contents: read`, per-job additions belong to the job that needs them;
-- every `setup-java` step has `cache: maven`, and no step caches ~/.m2 by hand (the Sonar and PIT caches are not Maven caches);
+- every `setup-java` step has `cache: maven`, and no step caches ~/.m2 by hand
+  (the Sonar and PIT caches are not Maven caches);
 - CI (`ci-build.yml`) runs on `pull_request` and on `push` to main.
 
 Usage:

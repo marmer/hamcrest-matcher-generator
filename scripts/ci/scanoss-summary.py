@@ -23,11 +23,13 @@ def summarize(results):
                 continue
             matched_files.add(file_name)
             component = entry.get("component", "unknown")
-            licenses = sorted({license_.get("name", "unknown") for license_ in entry.get("licenses", [])}) or ["undeclared"]
+            names = {license_.get("name", "unknown") for license_ in entry.get("licenses", [])}
+            licenses = sorted(names) or ["undeclared"]
             for license_name in licenses:
                 matches.setdefault((component, license_name), set()).add(entry.get("file", file_name))
     lines = ["## SCANOSS", "",
-             f"Matched {len(matched_files)} of {len(results)} scanned files. Non-blocking: nothing here fails the build.", ""]
+             f"Matched {len(matched_files)} of {len(results)} scanned files. "
+             "Non-blocking: nothing here fails the build.", ""]
     if matches:
         lines += ["| Component | License | Files |", "|---|---|---|"]
         lines += [f"| {component} | {license_name} | {len(files)} |"
