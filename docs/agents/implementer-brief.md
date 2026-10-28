@@ -21,4 +21,4 @@ The orchestrator hands this file, by path, to every implementer subagent, togeth
 - Worktree-isolated agents get Bash refusals for heredocs, `$VAR`-computed paths and some `&&`/pipe chains (also around `git`): use the Write tool and literal paths, and run git commands one at a time.
 - End with no background monitors or loops running: one implementer re-sent its report four times. Stop every command you started in the background before your final answer.
 
-Shared notes from other agents may be in the orchestrator's scratchpad `notes/` directory; add a short `ticket-<n>.md` there if you learn something future tickets need (build pitfalls, where things live).
+Shared notes from other agents may be in the orchestrator's scratchpad `notes/` directory; add a short `ticket-<n>.md` there if you learn something future tickets need (build pitfalls, where things live). The scratchpad path changes after `/clear` or a restart; the orchestrator copies the notes over (see `docs/agents/implementation.md`).
