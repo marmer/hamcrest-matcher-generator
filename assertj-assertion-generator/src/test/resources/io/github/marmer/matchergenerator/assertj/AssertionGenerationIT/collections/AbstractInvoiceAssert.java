@@ -6,10 +6,13 @@ import java.lang.Object;
 import java.lang.Override;
 import java.lang.Runnable;
 import java.lang.String;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.presentation.Representation;
@@ -22,7 +25,11 @@ import org.jspecify.annotations.Nullable;
 )
 @NullMarked
 public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<SELF, ACTUAL>, ACTUAL extends Invoice> extends AbstractObjectAssert<SELF, ACTUAL> {
+  private static final List<String> PROPERTY_NAMES = List.of("number", "lines", "linesByCode", "array", "tags", "task");
+
   private final String path;
+
+  private final Set<String> addressed = new HashSet<>();
 
   protected AbstractInvoiceAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
@@ -36,7 +43,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   public SELF hasNumberSatisfying(final Consumer<? super String> requirements) {
     isNotNull();
+    addressed.add("number");
     AssertionPath.within(path + ".number", actual.getNumber(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringNumber() {
+    addressed.add("number");
     return myself;
   }
 
@@ -47,7 +60,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   public SELF hasLinesSatisfying(final Consumer<? super List<? extends Line>> requirements) {
     isNotNull();
+    addressed.add("lines");
     AssertionPath.restartingWithin(actual.getLines(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringLines() {
+    addressed.add("lines");
     return myself;
   }
 
@@ -59,7 +78,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
   public SELF hasLinesByCodeSatisfying(
       final Consumer<? super Map<? extends String, ? extends Line>> requirements) {
     isNotNull();
+    addressed.add("linesByCode");
     AssertionPath.restartingWithin(actual.getLinesByCode(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringLinesByCode() {
+    addressed.add("linesByCode");
     return myself;
   }
 
@@ -70,7 +95,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   public SELF hasArraySatisfying(final Consumer<? super Line[]> requirements) {
     isNotNull();
+    addressed.add("array");
     AssertionPath.restartingWithin(actual.getArray(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringArray() {
+    addressed.add("array");
     return myself;
   }
 
@@ -81,7 +112,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   public SELF hasTagsSatisfying(final Consumer<? super Tags> requirements) {
     isNotNull();
+    addressed.add("tags");
     AssertionPath.restartingWithin(actual.getTags(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringTags() {
+    addressed.add("tags");
     return myself;
   }
 
@@ -92,7 +129,13 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   public SELF hasTaskSatisfying(final Consumer<? super Runnable> requirements) {
     isNotNull();
+    addressed.add("task");
     AssertionPath.within(path + ".task", actual.getTask(), requirements);
+    return myself;
+  }
+
+  public SELF ignoringTask() {
+    addressed.add("task");
     return myself;
   }
 
@@ -106,9 +149,25 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   private SELF checkProperty(final String property, final @Nullable Object actualValue,
       final @Nullable Object expectedValue) {
+    addressed.add(property);
     if (!Objects.deepEquals(actualValue, expectedValue)) {
       final Representation representation = getWritableAssertionInfo().representation();
       throw failureWithActualExpected(actualValue, expectedValue, "%nExpecting %s.%s to be:%n  %s%nbut was:%n  %s", path, property, representation.toStringOf(expectedValue), representation.toStringOf(actualValue));
+    }
+    return myself;
+  }
+
+  public SELF satisfiesCheckingAllProperties(final Consumer<? super SELF> requirements) {
+    isNotNull();
+    requirements.accept(myself);
+    return hasAllPropertiesChecked();
+  }
+
+  public SELF hasAllPropertiesChecked() {
+    isNotNull();
+    final List<String> neither = PROPERTY_NAMES.stream().filter(property -> !addressed.contains(property)).collect(Collectors.toList());
+    if (!neither.isEmpty()) {
+      failWithMessage("%nExpecting every property of %s to be checked or ignored, but these were neither: %s", path, String.join(", ", neither));
     }
     return myself;
   }

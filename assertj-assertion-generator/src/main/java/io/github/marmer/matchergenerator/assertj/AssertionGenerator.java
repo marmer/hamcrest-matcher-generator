@@ -19,6 +19,7 @@ import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -46,6 +47,8 @@ class AssertionGenerator {
     private static final String OBJECT_CLASS_ACCESSOR = "getClass";
     private static final String ACTUAL_FIELD = "actual";
     private static final String PATH = "path";
+    private static final String ADDRESSED = "addressed";
+    private static final String PROPERTY_NAMES = "PROPERTY_NAMES";
     private static final String RETURN_MYSELF = "return myself";
     private static final String IS_NOT_NULL = "isNotNull";
     private static final String CHECK_PROPERTY = "checkProperty";
@@ -131,9 +134,11 @@ class AssertionGenerator {
                                         ABSTRACT_OBJECT_ASSERT, SELF, ACTUAL_TYPE))
                         .addMethod(abstractConstructor());
         if (!properties.isEmpty()) {
-            builder.addField(
-                    FieldSpec.builder(String.class, PATH, Modifier.PRIVATE, Modifier.FINAL)
-                            .build());
+            builder.addField(propertyNamesField())
+                    .addField(
+                            FieldSpec.builder(String.class, PATH, Modifier.PRIVATE, Modifier.FINAL)
+                                    .build())
+                    .addField(addressedField());
         }
         final Set<String> inherited =
                 context.inheritedMethodNames(ABSTRACT_OBJECT_ASSERT.toString());
@@ -153,7 +158,10 @@ class AssertionGenerator {
                             .forEach(builder::addMethod);
                 });
         if (!properties.isEmpty()) {
-            builder.addMethod(isNotNullMethod()).addMethod(checkPropertyMethod());
+            builder.addMethod(isNotNullMethod())
+                    .addMethod(checkPropertyMethod())
+                    .addMethod(satisfiesCheckingAllPropertiesMethod())
+                    .addMethod(hasAllPropertiesCheckedMethod());
         }
         model.nestedTypes()
                 .forEach(
@@ -331,6 +339,7 @@ class AssertionGenerator {
             methods.add(booleanMethod("is" + capitalized(property.name()), property, true));
             methods.add(booleanMethod("isNot" + capitalized(property.name()), property, false));
         }
+        methods.add(ignoringMethod(property));
         return methods;
     }
 
@@ -373,7 +382,8 @@ class AssertionGenerator {
                 MethodSpec.methodBuilder("has" + capitalized(property.name()) + "Satisfying")
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(requirementsType(property), "requirements", Modifier.FINAL)
-                        .addStatement("$L()", IS_NOT_NULL);
+                        .addStatement("$L()", IS_NOT_NULL)
+                        .addStatement("$L.add($S)", ADDRESSED, property.name());
         if (isIterableOrMap(property.type())) {
             method.addStatement(
                     "$T.restartingWithin($L.$L(), requirements)",
@@ -405,6 +415,19 @@ class AssertionGenerator {
                         ACTUAL_FIELD,
                         property.accessor(),
                         expected)
+                .returns(SELF)
+                .build();
+    }
+
+    /**
+     * {@code ignoringFoo()}: the property counts as addressed by the completeness check without any
+     * value check.
+     */
+    private MethodSpec ignoringMethod(final PropertyModel property) {
+        return MethodSpec.methodBuilder("ignoring" + capitalized(property.name()))
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("$L.add($S)", ADDRESSED, property.name())
+                .addStatement(RETURN_MYSELF)
                 .returns(SELF)
                 .build();
     }
@@ -450,12 +473,93 @@ class AssertionGenerator {
                 .build();
     }
 
+    /**
+     * The names of the properties, in declaration order. The completeness check reports the ones
+     * that are neither addressed nor ignored in this order.
+     */
+    private FieldSpec propertyNamesField() {
+        return FieldSpec.builder(
+                        ParameterizedTypeName.get(List.class, String.class),
+                        PROPERTY_NAMES,
+                        Modifier.PRIVATE,
+                        Modifier.STATIC,
+                        Modifier.FINAL)
+                .initializer(
+                        "$T.of($L)",
+                        List.class,
+                        properties.stream()
+                                .map(property -> CodeBlock.of("$S", property.name()))
+                                .collect(CodeBlock.joining(", ")))
+                .build();
+    }
+
+    /** The names of the properties that are checked or ignored, one set per assertion object. */
+    private FieldSpec addressedField() {
+        return FieldSpec.builder(
+                        ParameterizedTypeName.get(Set.class, String.class),
+                        ADDRESSED,
+                        Modifier.PRIVATE,
+                        Modifier.FINAL)
+                .initializer("new $T<>()", HashSet.class)
+                .build();
+    }
+
+    /**
+     * {@code satisfiesCheckingAllProperties(requirements)}: the scope form of the completeness
+     * check. The requirements run on this assertion, then every property has to be addressed.
+     */
+    private MethodSpec satisfiesCheckingAllPropertiesMethod() {
+        return MethodSpec.methodBuilder("satisfiesCheckingAllProperties")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(Consumer.class), WildcardTypeName.supertypeOf(SELF)),
+                        "requirements",
+                        Modifier.FINAL)
+                .addStatement("$L()", IS_NOT_NULL)
+                .addStatement("requirements.accept(myself)")
+                .addStatement("return hasAllPropertiesChecked()")
+                .returns(SELF)
+                .build();
+    }
+
+    /**
+     * {@code hasAllPropertiesChecked()}: the short form of the completeness check, at the end of a
+     * chain. It fails with the names of the properties that are neither checked nor ignored.
+     */
+    private MethodSpec hasAllPropertiesCheckedMethod() {
+        return MethodSpec.methodBuilder("hasAllPropertiesChecked")
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("$L()", IS_NOT_NULL)
+                .addStatement(
+                        "final $T<$T> neither = $L.stream().filter(property -> !$L.contains(property))"
+                                + ".collect($T.toList())",
+                        List.class,
+                        String.class,
+                        PROPERTY_NAMES,
+                        ADDRESSED,
+                        Collectors.class)
+                .beginControlFlow("if (!neither.isEmpty())")
+                .addStatement(
+                        "failWithMessage($S, $L, $T.join($S, neither))",
+                        "%nExpecting every property of %s to be checked or ignored, but these were"
+                                + " neither: %s",
+                        PATH,
+                        String.class,
+                        ", ")
+                .endControlFlow()
+                .addStatement(RETURN_MYSELF)
+                .returns(SELF)
+                .build();
+    }
+
     private MethodSpec checkPropertyMethod() {
         return MethodSpec.methodBuilder(CHECK_PROPERTY)
                 .addModifiers(Modifier.PRIVATE)
                 .addParameter(String.class, "property", Modifier.FINAL)
                 .addParameter(nullable(TypeName.OBJECT), "actualValue", Modifier.FINAL)
                 .addParameter(nullable(TypeName.OBJECT), "expectedValue", Modifier.FINAL)
+                .addStatement("$L.add(property)", ADDRESSED)
                 .beginControlFlow("if (!$T.deepEquals(actualValue, expectedValue))", Objects.class)
                 .addStatement(
                         "final $T representation = getWritableAssertionInfo().representation()",

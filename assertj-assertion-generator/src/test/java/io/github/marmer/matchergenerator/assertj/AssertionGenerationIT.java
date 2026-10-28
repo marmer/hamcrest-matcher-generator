@@ -198,6 +198,63 @@ class AssertionGenerationIT {
         assertFalse(content.contains("requireActual"), content);
         assertFalse(content.contains("checkProperty"), content);
         assertFalse(content.contains("path"), content);
+        assertFalse(content.contains("hasAllPropertiesChecked"), content);
+        assertFalse(content.contains("satisfiesCheckingAllProperties"), content);
+        assertFalse(content.contains("addressed"), content);
+    }
+
+    @Test
+    @DisplayName("A type with properties gets ignoringFoo and the completeness check in both forms")
+    void aTypeWithPropertiesGetsIgnoringAndTheCompletenessCheck() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Person"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Person",
+                                """
+                                package some.other.pck;
+
+                                public class Person {
+                                    public String getName() {
+                                        return null;
+                                    }
+
+                                    public String getPhone() {
+                                        return null;
+                                    }
+
+                                    public boolean isActive() {
+                                        return true;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(compilation, "completeness-check", "some.other.pck.AbstractPersonAssert");
+    }
+
+    @Test
+    @DisplayName("The completeness check does not count class, the property of getClass()")
+    void theCompletenessCheckDoesNotCountClass() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Person"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Person",
+                                """
+                                package some.other.pck;
+
+                                public class Person {
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String content = generatedContent(compilation, "some.other.pck.AbstractPersonAssert");
+        assertFalse(content.contains("ignoringClass"), content);
+        assertFalse(content.contains("\"class\""), content);
     }
 
     @Test
