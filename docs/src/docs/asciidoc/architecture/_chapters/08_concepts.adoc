@@ -67,7 +67,9 @@ problem and naming the offending value (the unresolvable names of #113). A backe
 type reports it the same way through `GenerationContext.reportError(message)`: the core prints the message as a compiler
 error at the `@GenerateMatchers` annotation. The backend leaves the offending member out of its generated code, so the
 error is the only one the user sees. The AssertJ backend does this for a generated method whose name an inherited
-AssertJ method already has: one error per property, naming the property and the clashing methods.
+AssertJ method already has: one error per property, naming the property and the clashing methods. It also reports two
+properties that generate the same method name (such as a boolean `foo` and `notFoo`, both `isNotFoo()`) and two nested
+types whose factory constants share a name (such as `FooBar` and `Foo_Bar`, both `FOO_BAR`), one error per name.
 
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The

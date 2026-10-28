@@ -681,6 +681,139 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("Two boolean properties foo and notFoo both generate isNotFoo, a compile error")
+    void twoBooleanPropertiesGeneratingTheSameNameAreACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public boolean isFoo() {
+                                        return true;
+                                    }
+
+                                    public boolean isNotFoo() {
+                                        return true;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'foo' and 'notFoo'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'isNotFoo'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("Properties foo and fooSatisfying both generate hasFooSatisfying, a compile error")
+    void twoPropertiesGeneratingTheSameSatisfyingNameAreACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Pojo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public String getFoo() {
+                                        return null;
+                                    }
+
+                                    public String getFooSatisfying() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'foo' and 'fooSatisfying'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'hasFooSatisfying'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("Nested types whose factory constants share a name are a compile error")
+    void nestedTypesWithTheSameFactoryConstantAreACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.Order");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Order",
+                                """
+                                package some.other.pck;
+
+                                public class Order {
+                                    public String getName() {
+                                        return null;
+                                    }
+
+                                    public static class FooBar {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+
+                                    public static class Foo_Bar {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+
+                                    public static class FOO_BAR {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'FOO_BAR'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("FooBar");
+        CompilationSubject.assertThat(compilation).hadErrorContaining("Foo_Bar");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A boolean foo and a non boolean notFoo generate no clash")
+    void aBooleanAndANonBooleanNameThatResemblesItAreNoClash() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Pojo"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Pojo",
+                                """
+                                package some.other.pck;
+
+                                public class Pojo {
+                                    public boolean isFoo() {
+                                        return true;
+                                    }
+
+                                    public String getNotFoo() {
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    @Test
     @DisplayName("A name that only resembles an inherited AssertJ method is no clash")
     void aNameThatOnlyResemblesAnInheritedMethodIsNoClash() {
         final Compilation compilation =
