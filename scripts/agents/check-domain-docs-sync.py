@@ -49,7 +49,7 @@ REQUIRED_CHECKS = re.compile(r"required checks of the `main` ruleset pass \(([^)
 BACKTICKED = re.compile(r"`([^`\n]+)`")
 FILE_NAME = re.compile(r"[\w.-]+\.(?:java|kt|adoc|yml|xml)")
 PUBLIC_TYPE = re.compile(
-    r"^public\s+(?:(?:abstract|final|sealed|static)\s+)*(?:@?interface|class|record|enum)\s+(\w+)", re.MULTILINE)
+    r"^public\s+(?:(?:abstract|final|sealed|non-sealed|static)\s+)*(?:@?interface|class|record|enum)\s+(\w+)", re.MULTILINE)
 PACKAGE = re.compile(r"io\.github\.marmer(?:\.\w+)*")
 
 
@@ -162,7 +162,7 @@ def check_claude_md_references(root, violations):
 def check_spi_types_named(root, violations):
     chapter = read(root / BUILDING_BLOCKS_ADOC)
     for spi_dir in sorted((root / CORE_MAIN_SOURCES).glob("**/spi")):
-        for source in sorted(spi_dir.glob("*.java")):
+        for source in sorted(spi_dir.rglob("*.java")):
             for name in PUBLIC_TYPE.findall(read(source)):
                 if not re.search(rf"\b{name}\b", chapter):
                     violations.append(
