@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ class AssertionPathTest {
         final AtomicReference<String> nullValue = new AtomicReference<>("not called");
 
         AssertionPath.within("Order.id", "42", values::add);
-        AssertionPath.<String>within("Order.id", null, nullValue::set);
+        AssertionPath.<@Nullable String>within("Order.id", null, nullValue::set);
 
         assertEquals(List.of("42"), values);
         assertNull(nullValue.get());

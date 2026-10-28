@@ -155,6 +155,14 @@ class AssertionGenerationIT {
                                     public Map<String, ? extends U> getNumbers() {
                                         return null;
                                     }
+
+                                    public List<? super Integer> getSupers() {
+                                        return null;
+                                    }
+
+                                    public List<?> getAnything() {
+                                        return null;
+                                    }
                                 }
                                 """));
 

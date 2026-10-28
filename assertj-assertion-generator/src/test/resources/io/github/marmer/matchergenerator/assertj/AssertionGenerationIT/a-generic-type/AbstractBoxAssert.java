@@ -2,6 +2,7 @@ package some.other.pck;
 
 import io.github.marmer.matchergenerator.assertj.AssertionPath;
 import java.lang.Class;
+import java.lang.Integer;
 import java.lang.Object;
 import java.lang.String;
 import java.util.List;
@@ -57,6 +58,28 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
   public SELF hasNumbersSatisfying(final Consumer<? super Map<? extends String, ?>> requirements) {
     requireActual();
     AssertionPath.within(path + ".numbers", actual.getNumbers(), requirements);
+    return myself;
+  }
+
+  public SELF hasSupers(final @Nullable List<? super Integer> value) {
+    requireActual();
+    return checkProperty("supers", actual.getSupers(), value);
+  }
+
+  public SELF hasSupersSatisfying(final Consumer<? super List<? super Integer>> requirements) {
+    requireActual();
+    AssertionPath.within(path + ".supers", actual.getSupers(), requirements);
+    return myself;
+  }
+
+  public SELF hasAnything(final @Nullable List<?> value) {
+    requireActual();
+    return checkProperty("anything", actual.getAnything(), value);
+  }
+
+  public SELF hasAnythingSatisfying(final Consumer<? super List<?>> requirements) {
+    requireActual();
+    AssertionPath.within(path + ".anything", actual.getAnything(), requirements);
     return myself;
   }
 
