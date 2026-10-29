@@ -10,8 +10,8 @@ Typical usage: add the generator to the test classpath and the annotation proces
 
 - [Getting started](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html): Maven dependencies, the processor path, the configuration annotation and a first test.
 - [Configuration](https://marmer.github.io/hamcrest-matcher-generator/guide/configuration.html): selecting and excluding types with packages and class names, the package of the generated types.
-- [Hamcrest backend](https://marmer.github.io/hamcrest-matcher-generator/guide/hamcrest-backend.html): the generated matcher API (`withX`, `resetX`, `ignoringX`, `checkingAllProperties()`, `isXLike(reference)`).
-- [AssertJ backend](https://marmer.github.io/hamcrest-matcher-generator/guide/assertj-backend.html): the generated assertion API (`hasX`, `hasXSatisfying`, `isX`, `hasAllPropertiesChecked()`) and `usingRecursiveComparison()` for the whole object.
+- [Hamcrest backend](https://marmer.github.io/hamcrest-matcher-generator/guide/hamcrest-backend.html): the generated matcher API (`withX`, `resetX`, `ignoringX`, `checkingAllProperties()`, `isXLike(reference)` and its `equals` fallback for types outside the round).
+- [AssertJ backend](https://marmer.github.io/hamcrest-matcher-generator/guide/assertj-backend.html): the generated assertion API (`hasX`, `hasXSatisfying`, `isX`, `hasAllPropertiesChecked()`), the assertion path, files written once per package, clashing class names and `usingRecursiveComparison()` for the whole object.
 - [IDE setup](https://marmer.github.io/hamcrest-matcher-generator/guide/ide-setup.html): making Eclipse, IntelliJ IDEA and other IDEs see the generated sources.
 - [Architecture](https://marmer.github.io/hamcrest-matcher-generator/guide/architecture.html): where the architecture documentation is.
 

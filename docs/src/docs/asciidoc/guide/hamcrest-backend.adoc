@@ -56,6 +56,8 @@ The `isCustomerLike(reference)` method takes a reference object and compares eve
 include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=reference-object,indent=0]
 ----
 
+A deep comparison applies only to properties whose type has a matcher generated in the same processing round. A property whose type is a class of yours without a generated matcher in the round, for example because it is configured in another round or compilation, is compared with `equals` instead. Run the compiler with `-Amatchergenerator.verbose` to get one note per such property that names the property and the type.
+
 == Next steps
 
 * link:assertj-backend.html[AssertJ backend] for the same model as assertions.
