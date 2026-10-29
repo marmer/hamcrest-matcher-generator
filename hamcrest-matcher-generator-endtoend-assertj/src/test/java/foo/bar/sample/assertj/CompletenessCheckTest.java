@@ -5,9 +5,12 @@
 package foo.bar.sample.assertj;
 
 import static foo.bar.sample.assertj.model.AddressAssert.assertThat;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import foo.bar.sample.assertj.lines.Line;
+import foo.bar.sample.assertj.lines.LineAssert;
 import foo.bar.sample.assertj.model.Address;
 import foo.bar.sample.assertj.model.Customer;
 import foo.bar.sample.assertj.model.CustomerAssert;
@@ -207,6 +210,51 @@ class CompletenessCheckTest {
                 .hasMessageContaining(
                         "Expecting every property of Order to be checked or ignored,"
                                 + " but these were neither: customer, total, tags");
+    }
+
+    @Test
+    @DisplayName("After extracting with as the navigated assertion has its own set of checked properties")
+    void afterExtractingWithAsTheNavigatedAssertionHasItsOwnSet() {
+        assertThatThrownBy(
+                        () ->
+                                OrderAssert.assertThat(ORDER)
+                                        .ignoringCustomer()
+                                        .extracting(Order::getCustomer, as(CustomerAssert.CUSTOMER))
+                                        .hasName("Ada")
+                                        .hasAllPropertiesChecked())
+                .hasMessage(
+                        String.format(
+                                "%nExpecting every property of Customer to be checked or"
+                                        + " ignored, but these were neither: phone, address"));
+    }
+
+    @Test
+    @DisplayName("After first with as the navigated assertion has its own set of checked properties")
+    void afterFirstWithAsTheNavigatedAssertionHasItsOwnSet() {
+        assertThatThrownBy(
+                        () ->
+                                org.assertj.core.api.Assertions.assertThat(List.of(new Line("A-1", 2)))
+                                        .first(as(LineAssert.LINE))
+                                        .hasSku("A-1")
+                                        .hasAllPropertiesChecked())
+                .hasMessageEndingWith(
+                        String.format(
+                                "%nExpecting every property of Line to be checked or ignored,"
+                                        + " but these were neither: quantity"));
+    }
+
+    @Test
+    @DisplayName("The navigated assertion passes when it addresses all its own properties")
+    void theNavigatedAssertionPassesWhenItAddressesAllItsOwnProperties() {
+        assertThatCode(
+                        () ->
+                                OrderAssert.assertThat(ORDER)
+                                        .extracting(Order::getCustomer, as(CustomerAssert.CUSTOMER))
+                                        .hasName("Ada")
+                                        .ignoringPhone()
+                                        .ignoringAddress()
+                                        .hasAllPropertiesChecked())
+                .doesNotThrowAnyException();
     }
 
     /** The soft assertions of the orders, as an entry point of the test. */

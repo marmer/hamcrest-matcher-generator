@@ -99,4 +99,35 @@ class NestedAssertionTest {
         assertThatThrownBy(() -> CustomerAssert.assertThat(ORDER.getCustomer()).hasName("Bob"))
                 .hasMessageContaining("Expecting Customer.name to be:");
     }
+
+    @Test
+    @DisplayName("An assertion for an unrelated object inside a requirement reports its own root path")
+    void anAssertionForAnUnrelatedObjectInsideARequirementReportsItsOwnRootPath() {
+        assertThatThrownBy(
+                        () ->
+                                OrderAssert.assertThat(ORDER)
+                                        .hasCustomerSatisfying(
+                                                customer ->
+                                                        OrderAssert.assertThat(
+                                                                        ORDER_WITHOUT_CUSTOMER)
+                                                                .hasId(1)))
+                .hasMessage(
+                        String.format("%nExpecting Order.id to be:%n  1L%nbut was:%n  43L"));
+    }
+
+    @Test
+    @DisplayName("An unrelated assertion inside a requirement does not stop the path of the value")
+    void anUnrelatedAssertionInsideARequirementDoesNotStopThePathOfTheValue() {
+        assertThatThrownBy(
+                        () ->
+                                OrderAssert.assertThat(ORDER)
+                                        .hasCustomerSatisfying(
+                                                customer -> {
+                                                    OrderAssert.assertThat(ORDER_WITHOUT_CUSTOMER)
+                                                            .hasId(43);
+                                                    CustomerAssert.assertThat(customer)
+                                                            .hasName("Bob");
+                                                }))
+                .hasMessageContaining("Expecting Order.customer.name to be:");
+    }
 }
