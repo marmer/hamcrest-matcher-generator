@@ -51,6 +51,21 @@ class MaintainingRunbookTest(unittest.TestCase):
                 self.assertTrue(any(cells[3].strip() for cells in matching),
                                 f"the table row for `{name}` has no storage location")
 
+    def test_sonar_token_row_states_the_decided_validity(self):
+        # Decision of 2026-10-29: no fixed validity period; the token dies only after 60 days without use.
+        rows = [line.split("|") for line in self.text.splitlines() if line.startswith("|")]
+        sonar = [cells for cells in rows if len(cells) > 6 and "`SONAR_TOKEN`" in cells[1]]
+        self.assertEqual(1, len(sonar))
+        expiry = sonar[0][4]
+        self.assertIn("60 days", expiry)
+        self.assertIn("no fixed validity period", expiry)
+        self.assertNotIn("expires", expiry.lower())
+        self.assertNotIn("one-year", sonar[0][5])
+
+    def test_runbook_names_no_one_year_sonar_token(self):
+        self.assertNotIn("one-year", self.text.lower())
+        self.assertNotIn("one year", self.text.lower())
+
     def test_readme_links_the_runbook(self):
         readme = (REPO / "README.md").read_text(encoding="utf-8")
         self.assertIn("(MAINTAINING.md)", readme)
