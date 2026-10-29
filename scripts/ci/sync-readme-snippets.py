@@ -76,7 +76,7 @@ def snippet_lines(root, path, tag):
 
 
 def process(root):
-    """Return (the README text with every block regenerated, drift problems, other problems) as lines of text."""
+    """Return (the README text with every block regenerated, the out-of-sync lines, the other error lines)."""
     text = (root / README).read_text(encoding="utf-8")
     lines = text.split("\n")
     out, drift, errors = [], [], []
