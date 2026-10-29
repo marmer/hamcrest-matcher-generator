@@ -219,7 +219,7 @@
                                 <project-version>${project.version}</project-version>
                                 <!-- Versions the guide names in prose. GuideVersionsTest fails when they differ from the
                                     root pom's dependencyManagement. -->
-                                <hamcrest-version>2.2</hamcrest-version>
+                                <hamcrest-version>3.0</hamcrest-version>
                                 <assertj-version>3.27.7</assertj-version>
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
