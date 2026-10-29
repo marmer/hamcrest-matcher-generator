@@ -101,7 +101,8 @@ class NestedAssertionTest {
     }
 
     @Test
-    @DisplayName("An assertion for an unrelated object inside a requirement reports its own root path")
+    @DisplayName(
+            "An assertion for an unrelated object inside a requirement reports its own root path")
     void anAssertionForAnUnrelatedObjectInsideARequirementReportsItsOwnRootPath() {
         assertThatThrownBy(
                         () ->
@@ -111,8 +112,7 @@ class NestedAssertionTest {
                                                         OrderAssert.assertThat(
                                                                         ORDER_WITHOUT_CUSTOMER)
                                                                 .hasId(1)))
-                .hasMessage(
-                        String.format("%nExpecting Order.id to be:%n  1L%nbut was:%n  43L"));
+                .hasMessage(String.format("%nExpecting Order.id to be:%n  1L%nbut was:%n  43L"));
     }
 
     @Test

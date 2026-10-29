@@ -213,7 +213,8 @@ class CompletenessCheckTest {
     }
 
     @Test
-    @DisplayName("After extracting with as the navigated assertion has its own set of checked properties")
+    @DisplayName(
+            "After extracting with as the navigated assertion has its own set of checked properties")
     void afterExtractingWithAsTheNavigatedAssertionHasItsOwnSet() {
         assertThatThrownBy(
                         () ->
@@ -229,11 +230,13 @@ class CompletenessCheckTest {
     }
 
     @Test
-    @DisplayName("After first with as the navigated assertion has its own set of checked properties")
+    @DisplayName(
+            "After first with as the navigated assertion has its own set of checked properties")
     void afterFirstWithAsTheNavigatedAssertionHasItsOwnSet() {
         assertThatThrownBy(
                         () ->
-                                org.assertj.core.api.Assertions.assertThat(List.of(new Line("A-1", 2)))
+                                org.assertj.core.api.Assertions.assertThat(
+                                                List.of(new Line("A-1", 2)))
                                         .first(as(LineAssert.LINE))
                                         .hasSku("A-1")
                                         .hasAllPropertiesChecked())

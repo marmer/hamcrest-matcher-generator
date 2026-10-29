@@ -12,16 +12,20 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Carries the property path from the root type into generated assertions that are created inside a
- * {@code hasFooSatisfying(..)} requirement, so that their failure messages name the whole path,
- * such as {@code Order.customer.address.city}. Inside a collection or map the path restarts at the
- * element type, as in {@code OrderLine.sku}. Called by generated code only.
+ * Carries the property path from the root type into the generated assertion of the value a {@code
+ * hasFooSatisfying(..)} requirement is run for, so that its failure messages name the whole path,
+ * such as {@code Order.customer.address.city}. An assertion for any other object created inside the
+ * requirement starts at its own type. Inside a collection or map the path restarts at the element
+ * type, as in {@code OrderLine.sku}. Called by generated code only.
  */
 @NullMarked
 public final class AssertionPath {
 
-    /** The paths of the enclosing requirements; an empty entry restarts the path at the type. */
-    private static final ThreadLocal<Deque<Optional<String>>> ENCLOSING =
+    /**
+     * The enclosing requirements, innermost first: the value a requirement is run for and the path
+     * its assertion starts at; an empty path restarts at the type.
+     */
+    private static final ThreadLocal<Deque<Requirement>> ENCLOSING =
             ThreadLocal.withInitial(ArrayDeque::new);
 
     private AssertionPath() {}
@@ -30,12 +34,17 @@ public final class AssertionPath {
      * The path a generated assertion starts at.
      *
      * @param typeName the simple name of the asserted type
-     * @return the path of the enclosing requirement, or the type name when there is none or it
-     *     restarts
+     * @param actual the asserted object
+     * @return the path of the innermost enclosing requirement when {@code actual} is the very value
+     *     that requirement runs for, otherwise the type name, as it is when there is no requirement
+     *     or it restarts
      */
-    public static String rootedAt(final String typeName) {
-        final @Nullable Optional<String> enclosing = ENCLOSING.get().peek();
-        return enclosing == null ? typeName : enclosing.orElse(typeName);
+    public static String rootedAt(final String typeName, final @Nullable Object actual) {
+        final @Nullable Requirement enclosing = ENCLOSING.get().peek();
+        if (enclosing == null || enclosing.value != actual) {
+            return typeName;
+        }
+        return enclosing.path.orElse(typeName);
     }
 
     /**
@@ -67,12 +76,22 @@ public final class AssertionPath {
 
     private static <T extends @Nullable Object> void run(
             final Optional<String> path, final T value, final Consumer<? super T> requirements) {
-        final Deque<Optional<String>> enclosing = ENCLOSING.get();
-        enclosing.push(path);
+        final Deque<Requirement> enclosing = ENCLOSING.get();
+        enclosing.push(new Requirement(path, value));
         try {
             requirements.accept(value);
         } finally {
             enclosing.pop();
+        }
+    }
+
+    private static final class Requirement {
+        private final Optional<String> path;
+        private final @Nullable Object value;
+
+        private Requirement(final Optional<String> path, final @Nullable Object value) {
+            this.path = path;
+            this.value = value;
         }
     }
 }
