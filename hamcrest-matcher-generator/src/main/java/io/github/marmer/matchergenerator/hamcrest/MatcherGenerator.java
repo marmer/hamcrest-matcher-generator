@@ -48,6 +48,7 @@ class MatcherGenerator {
     private static final String COLLECTION = "java.util.Collection";
     private static final String LIST = "java.util.List";
     private static final String MAP = "java.util.Map";
+    private static final List<String> LIBRARY_PREFIXES = List.of("java.", "javax.", "kotlin.");
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
     private static final AnnotationSpec NULL_MARKED =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
@@ -345,9 +346,9 @@ class MatcherGenerator {
     }
 
     /**
-     * The property is compared with {@code equals}, for want of a matcher for the type its value
-     * is made of. The type might be configured in another processing round or compilation, which
-     * this one cannot know, so the user is told in verbose mode.
+     * The property is compared with {@code equals}, for want of a matcher for the type its value is
+     * made of. The type might be configured in another processing round or compilation, which this
+     * one cannot know, so the user is told in verbose mode.
      */
     private CodeBlock equalsPreset(
             final PropertyModel property, final TypeMirror compared, final CodeBlock value) {
@@ -376,8 +377,7 @@ class MatcherGenerator {
         }
         final TypeElement element = asTypeElement(bound);
         final String name = element.getQualifiedName().toString();
-        final boolean library =
-                name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("kotlin.");
+        final boolean library = LIBRARY_PREFIXES.stream().anyMatch(name::startsWith);
         return library || element.getKind() == ElementKind.ENUM || isGenerated(name)
                 ? null
                 : element;

@@ -1862,6 +1862,33 @@ class MatcherGenerationProcessorIT {
                         return null;
                     }
 
+                    public Customer[] getAllCustomers() {
+                        return null;
+                    }
+
+                    public List<? extends Line> getMoreLines() {
+                        return null;
+                    }
+
+                    public List<?> getAnything() {
+                        return null;
+                    }
+
+                    public List<String> getTags() {
+                        return null;
+                    }
+
+                    public int getCount() {
+                        return 0;
+                    }
+
+                    public Empty getEmpty() {
+                        return null;
+                    }
+
+                    public static class Empty {
+                    }
+
                     public enum Kind {
                         EXPRESS
                     }
@@ -1963,11 +1990,21 @@ class MatcherGenerationProcessorIT {
                         "isOrderLike compares the property 'marker' with equals: no matcher"
                                 + " for some.other.pck.Marker is generated in this"
                                 + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'allCustomers' with equals: no matcher"
+                                + " for some.other.pck.Customer is generated in this"
+                                + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'moreLines' with equals: no matcher"
+                                + " for some.other.pck.Line is generated in this"
+                                + " processing round");
         final long equalsNotes =
                 compilation.notes().stream()
                         .filter(note -> note.getMessage(null).contains("with equals"))
                         .count();
-        assertEquals(3, equalsNotes, () -> "Notes: " + compilation.notes());
+        assertEquals(5, equalsNotes, () -> "Notes: " + compilation.notes());
     }
 
     @Test

@@ -82,8 +82,8 @@ public class MatcherGenerationProcessorWorker {
 
     /**
      * The names of the sources written so far, per round. The Filer refuses a second source of the
-     * same name, which for a file a backend writes once per package happens when a later round
-     * adds a type to that package.
+     * same name, which for a file a backend writes once per package happens when a later round adds
+     * a type to that package.
      */
     private final Set<String> writtenInEarlierRounds = new HashSet<>();
 
@@ -255,11 +255,7 @@ public class MatcherGenerationProcessorWorker {
                                     backend.generate(type.model(), context)
                                             .forEach(
                                                     source ->
-                                                            write(
-                                                                    backend,
-                                                                    source,
-                                                                    type,
-                                                                    models)));
+                                                            write(backend, source, type, models)));
                 });
     }
 

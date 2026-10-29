@@ -544,8 +544,7 @@ class CoreProcessorIT {
     @Test
     @DisplayName(
             "Two configurations of one round share the files a backend writes once per package")
-    void twoConfigurationsOfOneRoundShareTheFilesABackendWritesOncePerPackage()
-            throws IOException {
+    void twoConfigurationsOfOneRoundShareTheFilesABackendWritesOncePerPackage() throws IOException {
         final JavaFileObject other =
                 JavaFileObjects.forSourceLines(
                         "some.pck.OtherConfiguration",

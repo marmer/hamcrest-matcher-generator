@@ -32,9 +32,9 @@ import java.util.function.Function;
  *     whatever the verbose option says
  * @param warnings receives the message of every compiler warning a backend reports for the
  *     configured type; the core reports it at the annotation element that configured the type
- * @param verboseNotes receives the message of every compiler note a backend reports that is only
- *     of interest when the processor option {@code matchergenerator.verbose} is set; the core
- *     prints it only then
+ * @param verboseNotes receives the message of every compiler note a backend reports that is only of
+ *     interest when the processor option {@code matchergenerator.verbose} is set; the core prints
+ *     it only then
  */
 public record GenerationContext(
         String generatorName,

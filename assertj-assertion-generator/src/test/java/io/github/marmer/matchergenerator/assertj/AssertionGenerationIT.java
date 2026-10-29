@@ -930,9 +930,13 @@ class AssertionGenerationIT {
                         .filter(source -> source.getName().endsWith("/PropertyRepresentation.java"))
                         .count());
         final String mixin = generatedContent(compilation, "some.other.pck.SoftAssertionsProvider");
-        assertTrue(mixin.contains("default LineAssert assertThat(final @Nullable Line actual)"), mixin);
+        assertTrue(
+                mixin.contains("default LineAssert assertThat(final @Nullable Line actual)"),
+                mixin);
         assertTrue(mixin.contains("default LineAssert then(final @Nullable Line actual)"), mixin);
-        assertTrue(mixin.contains("default OrderAssert assertThat(final @Nullable Order actual)"), mixin);
+        assertTrue(
+                mixin.contains("default OrderAssert assertThat(final @Nullable Order actual)"),
+                mixin);
         assertTrue(mixin.contains("default OrderAssert then(final @Nullable Order actual)"), mixin);
     }
 
@@ -947,7 +951,8 @@ class AssertionGenerationIT {
         CompilationSubject.assertThat(main).succeeded();
         for (final JavaFileObject file : main.generatedFiles()) {
             if (file.getKind() == JavaFileObject.Kind.CLASS) {
-                final Path target = classes.resolve(file.getName().replaceFirst("^/CLASS_OUTPUT/", ""));
+                final Path target =
+                        classes.resolve(file.getName().replaceFirst("^/CLASS_OUTPUT/", ""));
                 Files.createDirectories(target.getParent());
                 try (InputStream in = file.openInputStream()) {
                     Files.write(target, in.readAllBytes());
@@ -974,7 +979,10 @@ class AssertionGenerationIT {
         assertEquals(
                 0,
                 main.notes().stream()
-                        .filter(note -> note.getMessage(null).contains("also exists on the class path"))
+                        .filter(
+                                note ->
+                                        note.getMessage(null)
+                                                .contains("also exists on the class path"))
                         .count(),
                 () -> "Notes: " + main.notes());
     }

@@ -63,9 +63,7 @@ final class FileOnlyBackends {
                 return List.of();
             }
             final String first =
-                    Stream.concat(
-                                    context.generatedTypes().stream(),
-                                    Stream.of(model))
+                    Stream.concat(context.generatedTypes().stream(), Stream.of(model))
                             .filter(other -> other.targetPackage().equals(PACKAGE))
                             .map(TypeModel::qualifiedName)
                             .min(String::compareTo)
