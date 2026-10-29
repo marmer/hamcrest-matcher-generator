@@ -63,6 +63,7 @@
                     <apiVersion>1.9</apiVersion>
                 </configuration>
                 <executions>
+                    <!-- tag::test-kapt[] -->
                     <execution>
                         <id>test-kapt</id>
                         <goals>
@@ -88,6 +89,7 @@
                             </annotationProcessorPaths>
                         </configuration>
                     </execution>
+                    <!-- end::test-kapt[] -->
                     <execution>
                         <id>compile</id>
                         <goals>
@@ -100,11 +102,13 @@
                             <goal>test-compile</goal>
                         </goals>
                         <configuration>
+                            <!-- tag::test-compile-source-dirs[] -->
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
                             </sourceDirs>
+                            <!-- end::test-compile-source-dirs[] -->
                         </configuration>
                     </execution>
                 </executions>
@@ -115,6 +119,7 @@
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
+                    <!-- tag::add-kapt-test-source[] -->
                     <execution>
                         <id>add-kapt-test-sources</id>
                         <phase>generate-test-sources</phase>
@@ -127,6 +132,7 @@
                             </sources>
                         </configuration>
                     </execution>
+                    <!-- end::add-kapt-test-source[] -->
                 </executions>
             </plugin>
             <plugin>
@@ -187,4 +193,38 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Not active by default. Run it with -Pintellij-kotlin-tests when the IDE does not see the kapt test sources. -->
+        <!-- tag::intellij-antrun[] -->
+        <profile>
+            <id>intellij-kotlin-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <phase>process-test-sources</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <move todir="${project.basedir}/target/generated-test-sources/test-annotations"
+                                            force="true">
+                                            <fileset dir="${project.basedir}/target/generated-sources/kapt/test/"/>
+                                        </move>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- end::intellij-antrun[] -->
+    </profiles>
 </project>

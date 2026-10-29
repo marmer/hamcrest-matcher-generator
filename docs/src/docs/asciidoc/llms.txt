@@ -12,7 +12,11 @@ Typical usage: add the generator to the test classpath and the annotation proces
 - [Configuration](https://marmer.github.io/hamcrest-matcher-generator/guide/configuration.html): selecting and excluding types with packages and class names, the package of the generated types.
 - [Hamcrest backend](https://marmer.github.io/hamcrest-matcher-generator/guide/hamcrest-backend.html): the generated matcher API (`withX`, `resetX`, `ignoringX`, `checkingAllProperties()`, `isXLike(reference)` and its `equals` fallback for types outside the round).
 - [AssertJ backend](https://marmer.github.io/hamcrest-matcher-generator/guide/assertj-backend.html): the generated assertion API (`hasX`, `hasXSatisfying`, `isX`, `hasAllPropertiesChecked()`), the assertion path, files written once per package, clashing class names and `usingRecursiveComparison()` for the whole object.
+- [Completeness check](https://marmer.github.io/hamcrest-matcher-generator/guide/completeness-check.html): the opt-in check that fails when a property was neither checked nor ignored, with `checkingAllProperties()`, `hasAllPropertiesChecked()`, `ignoringX()` and the Kotlin DSL.
+- [Mismatch messages](https://marmer.github.io/hamcrest-matcher-generator/guide/mismatch-messages.html): how a failed matcher or assertion names the property path, nested, in collections and in the completeness check, with real golden messages.
+- [Kotlin](https://marmer.github.io/hamcrest-matcher-generator/guide/kotlin.html): KAPT setup and its source directories, Kotlin property names and nullability, the generated Kotlin DSL with its Kotlin 1.9 language level, and IntelliJ with Kotlin tests.
 - [IDE setup](https://marmer.github.io/hamcrest-matcher-generator/guide/ide-setup.html): making Eclipse, IntelliJ IDEA and other IDEs see the generated sources.
+- [Migrating from 5.x](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html): Java 11 users stay on 5.x, the new coordinates and bridge jars, `@GenerateMatchers` with the deprecated `@MatcherConfiguration` alias, the new package of `BeanPropertyMatcher`, `javax.annotation` and the opt-in features.
 - [Architecture](https://marmer.github.io/hamcrest-matcher-generator/guide/architecture.html): where the architecture documentation is.
 
 ## Architecture

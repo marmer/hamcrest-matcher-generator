@@ -1,0 +1,64 @@
+= Mismatch messages
+:description: How a failed generated Hamcrest matcher or AssertJ assertion reports the property, its nested path, collection items and the completeness check, with real messages from the golden tests.
+:page-order: 6
+
+A failing assertion should say which property differs, where it sits in the model and what was expected. The generated code does that for both backends. The examples in this chapter are the golden outputs of the project's own tests, included from the files they are compared with, so they show the messages as the generator produces them.
+
+== Hamcrest
+
+A Hamcrest mismatch starts with the matcher's description. Below it, every failing check is one line, with the property path of the value that differs. A nested property is named by its path, so `customer.address.city` says which city was wrong:
+
+[source,text]
+----
+include::../../../../../hamcrest-matcher-generator/src/test/resources/io/github/marmer/matchergenerator/hamcrest/BeanPropertyMatcherTest/nested.txt[lines=2..-1]
+----
+
+The first line gives the matcher's type and how many property checks it holds. The `email` check in the example takes a Hamcrest matcher, and its line is that matcher's own description of what it expected.
+
+== Collections
+
+A property with a list or map is checked item by item, and the message names the position or the key of each failing item. A list checked with `itemsInOrder` reports the size first and then each item by its index, so `lines[0].sku` is the first line:
+
+[source,text]
+----
+include::../../../../../hamcrest-matcher-generator/src/test/resources/io/github/marmer/matchergenerator/hamcrest/CollectionMatchersTest/items-in-order-fewer-items.txt[lines=2..-1]
+----
+
+For `itemsInAnyOrder`, the message names the items that are missing, the closest item that differs and the items that are unexpected. The one-line form `Contact {name "Ada", ...}` describes a generated matcher inside a collection matcher. The example below is the message of the completeness check with a contact that differs:
+
+[source,text]
+----
+include::../../../../../hamcrest-matcher-generator/src/test/resources/io/github/marmer/matchergenerator/hamcrest/BeanPropertyMatcherCompletenessTest/items-in-any-order-closest.txt[lines=2..-1]
+----
+
+Map properties are checked with `entries(...)` and report the path with the key in brackets, such as `bySku["B-2"].quantity`.
+
+== Reference objects
+
+A matcher made with `isCustomerLike(reference)` reports each property that differs from the reference, with the same paths. A difference deep in a child list shows the index on the way down, as `children[0].children[0].name`:
+
+[source,text]
+----
+include::../../../../../hamcrest-matcher-generator/src/test/resources/io/github/marmer/matchergenerator/hamcrest/ReferenceMatchingTest/nested-difference.txt[lines=2..-1]
+----
+
+== The completeness check
+
+When the completeness check is on, the message ends with the properties that were neither checked nor ignored, as in the example of the link:completeness-check.html[completeness check chapter]. The check runs after the value checks, so a wrong value is reported as a wrong value.
+
+== AssertJ
+
+An AssertJ failure comes from AssertJ's own `Expecting ... to be ... but was ...` form, and the subject is named with the assertion path. The path starts at the asserted type and follows every `hasXSatisfying` into the nested assertion. The `customer.address.city` check of an `Order` therefore reads `Order.customer.address.city`: the message is `Expecting Order.customer.address.city to be:`, then the expected value `"Berlin"` on its own line, then `but was:` and the actual value `"Paris"`. The AssertJ end-to-end test `NestedAssertionTest` asserts this exact message. A missing nested object reads `Expecting Order.customer not to be null`, which the same test asserts too.
+
+The path is bound to the value that a `hasXSatisfying` lambda receives. An assertion for another object created inside the lambda starts at its own type, so it does not carry the path of the enclosing property. Navigation with `extracting(..., as(X))` or `first(as(X))` starts a new path at the navigated type, so the path of `Customer.name` after such a navigation has no `Order` in front.
+
+== Reading the messages
+
+* Read the path first. It tells you which property of which type differs, and for lists the position or the key.
+* In a Hamcrest message, the count on the first line is the number of property checks in the matcher, not the number of properties of the type.
+* In an AssertJ message, the path ends with the property, and the expected and the actual value follow on their own lines.
+
+== Next steps
+
+* link:completeness-check.html[Completeness check] for the sentence that names unchecked properties.
+* link:hamcrest-backend.html[Hamcrest backend] and link:assertj-backend.html[AssertJ backend] for the calls that produce these checks.

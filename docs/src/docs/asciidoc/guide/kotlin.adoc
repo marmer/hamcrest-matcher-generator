@@ -1,0 +1,154 @@
+= Kotlin
+:description: Kotlin projects with KAPT: the processor path, the source directories that KAPT output needs, Kotlin properties and their matcher names, the generated Kotlin DSL and its Kotlin 1.9 language level.
+:page-order: 7
+
+The generators work with Kotlin classes as they work with Java beans. Java tests need nothing else. Kotlin tests need the processors run by KAPT, the annotation processing tool of Kotlin, and the generated Kotlin DSL is written by KAPT only. The examples here come from `example-maven-kotlin`, which runs KAPT for its main sources, and from the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin`, which runs KAPT for its test sources.
+
+== Requirements
+
+* Java 17 or newer, as for every other project.
+* `kotlin-stdlib` on the classpath of the Kotlin compilation. The generator artifacts do not bring it in.
+* A Kotlin compiler that runs KAPT. The generated DSL uses only Kotlin 1.9 language features. The project builds its examples with Kotlin 2.1 and pins the language level to 1.9; older compilers are not tested.
+
+== Dependencies and processor path
+
+Add the generator artifacts for the backends you use and the Kotlin DSL artifact. The DSL artifact generates the Kotlin files, so it belongs on the KAPT processor path as well:
+
+[source,xml]
+----
+include::../../../../../example-maven-kotlin/pom.xml[tag=maven-dependencies,indent=0]
+----
+
+KAPT runs the three processors over the Kotlin sources. It writes the Java matchers below `target/generated-sources/kapt/compile` and the Kotlin DSL files below `target/generated-sources/kaptKotlin/compile`:
+
+[source,xml]
+----
+include::../../../../../example-maven-kotlin/pom.xml[tag=maven-kapt,indent=0]
+----
+
+== Configure the types
+
+The configuration is the same annotation as in Java. It goes on any class, here in the main sources:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/main/kotlin/example/kotlin/configuration/KotlinConfiguration.kt[tag=configuration,indent=0]
+----
+
+== Source directories of the compilation
+
+The `kotlin-maven-plugin` compiles the Kotlin sources and the KAPT output together. Two gotchas follow from that:
+
+* The `sourceDirs` of an execution replace the default source directories. The example lists the KAPT output of the Java matchers (`kapt/compile`) and of the Kotlin DSL (`kaptKotlin/compile`) next to the Kotlin sources, so nothing depends on the defaults. The plugin registers the two directories itself, so a build passes without them too, and a "Duplicate source root" warning shows either way.
+* Javac runs after kotlinc and gets no processors, because KAPT has generated everything already. The example therefore switches javac's annotation processing off and keeps every other lint category fatal.
+
+[source,xml]
+----
+include::../../../../../example-maven-kotlin/pom.xml[tag=compile-source-dirs,indent=0]
+----
+
+== Kotlin test sources
+
+Kotlin tests run KAPT over the test sources with the `test-kapt` goal. The test output has to be a test source root, too. Otherwise javac compiles only the matchers that Java test sources reference, not every generated matcher. The end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` shows the three pieces:
+
+* the `test-kapt` execution, with the processor path of the Hamcrest backend and the Kotlin DSL:
++
+[source,xml]
+----
+include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-kapt,indent=0]
+----
+
+* the `test-compile` execution, whose source directories include the KAPT output of the tests (`kapt/test` and `kaptKotlin/test`):
++
+[source,xml]
+----
+include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-compile-source-dirs,indent=0]
+----
+
+* A configuration class in your test sources writes its generated Java to `target/generated-test-sources/test-annotations`, as in Java. A Kotlin test compilation that should see that directory lists it among the `test-compile` source directories, next to the KAPT output. The end-to-end module keeps its configuration in `src/test/kotlin`, and its `test-compile` execution above lists the Kotlin test sources and the KAPT output, not that directory.
+* the `build-helper-maven-plugin`, which registers the KAPT test output as a test source root, so javac compiles every generated matcher:
++
+[source,xml]
+----
+include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=add-kapt-test-source,indent=0]
+----
+
+== IntelliJ IDEA with Kotlin tests
+
+IntelliJ IDEA does not know where KAPT puts the generated test sources, and KAPT cannot be told another output path. The workaround moves the generated test sources to a location the IDE knows, right after KAPT has written them. The drawback is that the project must be built with Maven before the IDE sees fresh generated code. Java tests need none of this, see the link:ide-setup.html[IDE setup chapter].
+
+The move is the profile `intellij-kotlin-tests` of the end-to-end module. It is not active by default; run Maven in the end-to-end module with `-Pintellij-kotlin-tests` to get the move there. In your own project, copy the profile into the build that holds your Kotlin tests and activate it there:
+
+[source,xml]
+----
+include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=intellij-antrun,indent=0]
+----
+
+== Your first Kotlin test
+
+The Hamcrest matchers, the AssertJ assertions and the Kotlin DSL are used from Kotlin like from Java. A basic assertion checks one property by equality, in the DSL inside a scope:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt[tag=basic-assertion,indent=0]
+----
+
+The AssertJ assertion is the same as in Java, with Kotlin's lambda syntax:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerAssertTest.kt[tag=assertj-assertion,indent=0]
+----
+
+== The Kotlin DSL
+
+The DSL is a Kotlin layer on the Hamcrest matchers. For every configured type it writes a file `<Type>MatcherDsl.kt` in the package of the Java matcher. The file has an entry function `isCustomer { }` and a scope class `CustomerSpec`. The scope class carries the `@MatcherDsl` marker of the DSL, so inside a nested scope you cannot call the functions of an outer scope without naming its receiver.
+
+A scope has these calls:
+
+* `name(value)` and `name(matcher)` for every property, as the Hamcrest `withName` takes them;
+* `ignoringName()` for every property, the same as the Hamcrest `ignoringName()`;
+* `checkingAllProperties()`, which turns the link:completeness-check.html[completeness check] on;
+* `address { }` for a property whose type is a configured type that is compared deeply, that is neither an enum nor a type without properties. The nested scope has its own calls.
+
+A nested scope for `address` checks the nested properties, as in this example:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt[tag=nested-property,indent=0]
+----
+
+The completeness check reads the same in the DSL. `ignoringActive()` counts `active` as addressed:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt[tag=completeness-check,indent=0]
+----
+
+Every scope delegates to the generated Java matcher, so the DSL and the Hamcrest matcher print the same mismatch messages, described in the link:mismatch-messages.html[mismatch messages chapter].
+
+The DSL follows these naming rules:
+
+* Kotlin keywords as property names are escaped with backticks, so a property `in` is checked by `` `in`("inside") ``.
+* A property whose name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with a member of `Any` (`equals`, `hashCode`, `toString`) gets no DSL function. The compiler reports a warning, and the Java matcher keeps the property.
+* A nested type whose simple name another type of its package shares gets its enclosing type names in front, so `Outer.Inner` becomes `OuterInnerSpec` and `isOuterInner`. If that still collides, the processor reports an error at the annotation and writes no scope for the colliding types.
+* Collection and map properties use the runtime collection matchers, `itemsInOrder`, `itemsInAnyOrder` and `entries`, with the DSL entry functions as their items. The DSL has no collection syntax of its own.
+* A type without properties gets no DSL file, although its Java matcher exists.
+
+Without KAPT the DSL is not written. Under plain javac the processor prints one note and skips it, so a build without KAPT still compiles the Java matchers.
+
+== Property names and getters
+
+The processors read Kotlin properties through their JVM getters, in the same way as Java bean getters. The matcher methods are named after the Kotlin property, with a capital letter in front, so the `is` prefix of a property is kept. For the model `data class KotlinProbe(val enabled: Boolean, val isX: Boolean?, val isLabel: String)`, the matcher has `withEnabled`, `withIsX` and `withIsLabel`, as the end-to-end test `HelloKotlinTest` in `hamcrest-matcher-generator-endtoend-plain-kotlin` asserts. A `Boolean` property named `enabled` compiles to `getEnabled()`, and a `String` property named `isLabel` gets an `isLabel()` getter. Getters whose names are not valid Java identifiers are skipped, for example the accessors of value classes.
+
+== Nullability
+
+When the JSpecify annotations are on the classpath, the generated matchers carry `@NullMarked` and `@Nullable` on equality values and on nullable properties. Kotlin then sees the real nullable and non-null types, so `withNickname(null as String?)` compiles. Kotlin reports a mismatch with these annotations as an error by default. If that gets in your way, the compiler option `-Xjspecify-annotations=warn` lowers it to a warning.
+
+The processor reads the nullability of a Kotlin property from the JetBrains annotations that kotlinc writes, so a `String?` property is nullable, and a `String` property is not.
+
+== Next steps
+
+* link:ide-setup.html[IDE setup] for IntelliJ IDEA and Kotlin test sources.
+* link:completeness-check.html[Completeness check] for the rule that the DSL shares with the Java matchers.
+* link:migration.html[Migrating from 5.x] for the Kotlin users of 5.x.

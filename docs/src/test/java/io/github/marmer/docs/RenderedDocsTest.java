@@ -195,6 +195,108 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The guide lists its chapters in the outline order of the spec")
+    void theGuideListsItsChaptersInTheOutlineOrder() {
+        final List<String> titles =
+                parse(OUTPUT.resolve("guide/getting-started.html"))
+                        .select("nav.site-side-guide ol:not(.site-side-plain) li a")
+                        .eachText();
+        assertEquals(
+                List.of(
+                        "Getting started",
+                        "Configuration",
+                        "Hamcrest backend",
+                        "AssertJ backend",
+                        "Completeness check",
+                        "Mismatch messages",
+                        "Kotlin",
+                        "IDE setup",
+                        "Migrating from 5.x",
+                        "Architecture"),
+                titles);
+    }
+
+    @Test
+    @DisplayName("The migration page has a stable anchor for every kind of change")
+    void theMigrationPageHasAStableAnchorForEveryKindOfChange() {
+        final Document migration = parse(OUTPUT.resolve("guide/migration.html"));
+        final List<String> missing = new ArrayList<>();
+        for (final String anchor :
+                List.of(
+                        "stay-on-5x",
+                        "coordinates",
+                        "annotations",
+                        "bean-property-matcher",
+                        "transitive-javax-annotation",
+                        "opt-in-features")) {
+            if (migration.getElementById(anchor) == null) {
+                missing.add(anchor);
+            }
+        }
+        assertTrue(missing.isEmpty(), "migration anchors missing: " + missing);
+    }
+
+    @Test
+    @DisplayName("Every code block of the guide is an include of a tagged source or a golden file")
+    void everyCodeBlockOfTheGuideIsAnInclude() throws IOException {
+        final Path sourceDirectory =
+                Paths.get(System.getProperty("docs.source.directory", "src/docs/asciidoc"));
+        final List<Path> guidePages;
+        try (Stream<Path> files = Files.list(sourceDirectory.resolve("guide"))) {
+            guidePages =
+                    files.filter(file -> file.toString().endsWith(".adoc"))
+                            .sorted()
+                            .collect(Collectors.toList());
+        }
+        final List<String> problems = new ArrayList<>();
+        for (final Path guidePage : guidePages) {
+            final List<String> lines = Files.readAllLines(guidePage, StandardCharsets.UTF_8);
+            boolean inBlock = false;
+            for (int index = 0; index < lines.size(); index++) {
+                if (!"----".equals(lines.get(index))) {
+                    continue;
+                }
+                inBlock = !inBlock;
+                if (!inBlock) {
+                    continue;
+                }
+                final String where = guidePage.getFileName() + ":" + (index + 1);
+                final String include = index + 1 < lines.size() ? lines.get(index + 1) : "";
+                if (!include.startsWith("include::")) {
+                    problems.add(where + ": code block is not an include");
+                    continue;
+                }
+                final String target = include.substring("include::".length(), include.indexOf('['));
+                final Path source = directoryOf(guidePage).resolve(target).normalize();
+                if (!Files.isRegularFile(source)) {
+                    problems.add(where + ": include '" + target + "' is missing");
+                } else if (include.contains("[tag=")) {
+                    final String tag = include.replaceAll(".*\\[tag=([^,\\]]+).*", "$1");
+                    if (!Files.readString(source).contains("tag::" + tag + "[]")) {
+                        problems.add(where + ": include '" + target + "' lacks tag " + tag);
+                    }
+                } else if (!target.endsWith(".txt") || !target.contains("src/test/resources")) {
+                    problems.add(
+                            where + ": untagged include '" + target + "' is not a golden file");
+                }
+            }
+        }
+        assertTrue(
+                problems.isEmpty(),
+                "code blocks that are not includes:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    @DisplayName("The IDE chapter points to the Kotlin chapter for Kotlin test sources")
+    void theIdeChapterPointsToTheKotlinChapterForKotlinTestSources() {
+        assertFalse(
+                parse(OUTPUT.resolve("guide/ide-setup.html"))
+                        .select("a[href=kotlin.html]")
+                        .isEmpty(),
+                "ide-setup.html links kotlin.html");
+    }
+
+    @Test
     @DisplayName("The landing page has the hero with its calls to action")
     void landingPageHasTheHeroWithItsCallsToAction() {
         final Document landing = parse(OUTPUT.resolve("index.html"));

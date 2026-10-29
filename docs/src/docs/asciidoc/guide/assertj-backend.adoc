@@ -55,7 +55,7 @@ Sometimes an assertion should cover the whole object, not single properties. Ass
 include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=whole-object,indent=0]
 ----
 
-Use the generated `hasX` methods when a test should name the properties it checks, with a message for each. Use `usingRecursiveComparison()` when the expected object is at hand and every field should match. The completeness check gives the same guarantee for properties that are checked one by one.
+Use the generated `hasX` methods when a test should name the properties it checks, with a message for each. Use `usingRecursiveComparison()` when the expected object is at hand and every field should match. The completeness check gives the same guarantee for properties that are checked one by one, and the link:completeness-check.html[completeness check chapter] describes it for both backends.
 
 == Files written once per package
 

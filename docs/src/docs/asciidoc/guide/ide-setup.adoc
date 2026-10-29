@@ -19,7 +19,7 @@ In plain Java projects you do not need to change anything. In mixed Java and Kot
 
 If your tests are written in Kotlin, IntelliJ IDEA does not know where kapt puts the generated test sources, and kapt cannot be told another output path. The workaround is to move the generated test sources into a well-known location right after generation. The drawback is that the project must be compiled with the build tool before the IDE sees fresh generated code.
 
-The antrun configuration that does the move is in the README's IDE section until the Kotlin chapter of this guide takes it over.
+The link:kotlin.html[Kotlin chapter] has the workaround, as a Maven profile of the end-to-end module that moves the generated test sources.
 
 == Other IDEs
 

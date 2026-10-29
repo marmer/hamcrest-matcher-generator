@@ -1,0 +1,99 @@
+= Migrating from 5.x
+:description: What changes when a 5.x project moves to hamcrest-matcher-generator 6.0.0: Java 17, the bridge jars under the 5.x coordinates, @GenerateMatchers with the deprecated @MatcherConfiguration alias, the new package of BeanPropertyMatcher, javax.annotation, and the opt-in features.
+:page-order: 9
+
+This page lists everything that changes for a project that uses the 5.x generator. Link to it by its path, `guide/migration.html`; each section has a fixed anchor, so a link to `migration.html#coordinates` keeps working.
+
+The goal of 6.0.0 is that a project on Java 17 or newer moves by a version bump alone. Each change below is either covered by the bridge jars or is one you make when you choose to.
+
+[#stay-on-5x]
+== Java 11 users stay on 5.x
+
+The processor, the runtime and the generated code of 6.0.0 need Java 17: the classes are compiled for Java 17 and need a Java 17 runtime. A project that runs on Java 11 stays on 5.x. 5.x receives no further releases, so a Java 11 project does not get the features of this guide.
+
+[#coordinates]
+== New coordinates and bridge jars
+
+The group ID stays `io.github.marmer.testutils`. 6.0.0 has neutral artifact names for the parts that are not Hamcrest specific, and the Hamcrest artifact keeps its name:
+
+[cols="1,2"]
+|===
+| Artifact | Role in 6.0.0
+
+| `hamcrest-matcher-generator`
+| The Hamcrest backend and the `BeanPropertyMatcher` runtime. The name is unchanged.
+
+| `matcher-generator-annotations`
+| The configuration annotation `@GenerateMatchers`.
+
+| `matcher-generator-core`
+| The shared property model and the processor entry point. The backends pull it in; you do not declare it.
+
+| `assertj-assertion-generator`
+| The AssertJ backend. New in 6.0.0, opt-in.
+
+| `hamcrest-matcher-generator-kotlin`
+| The Kotlin DSL, used with KAPT. New in 6.0.0, opt-in.
+
+| `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
+| The 5.x artifacts, now bridge jars. They contain no code and depend on `hamcrest-matcher-generator` at the same version.
+|===
+
+The bridge jars let a 5.x build resolve without a change of coordinates. Keep the scope you declared for a 5.x artifact, as the scope advice in the link:getting-started.html[getting started chapter] describes: the Hamcrest backend arrives transitively with the scope of the bridge jar. The reason is the compiler plugin: `maven-compiler-plugin` before 3.12 does not follow a relocation POM in its processor path, so the 5.x artifacts are jars and not relocations. A project that keeps the 5.x coordinates gets the Hamcrest backend through them, and the processor arrives with it.
+
+The Maven dependencies name the artifacts as follows, in the snippet of the Hamcrest example:
+
+[source,xml]
+----
+include::../../../../../example-maven-java-hamcrest/pom.xml[tag=maven-dependencies,indent=0]
+----
+
+[#annotations]
+== @GenerateMatchers instead of @MatcherConfiguration
+
+The configuration annotation is `@GenerateMatchers`, in the package `io.github.marmer.matchergenerator.annotations`. It has the attributes of the 5.x annotation, `value` and `generation`, and a new attribute `exclude` that leaves out types of the selection:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+----
+
+The 5.x `@MatcherConfiguration` stays as a deprecated alias in its old package, `io.github.marmer.testutils.generators.beanmatcher.dependencies`. It is a full alias: it has the same attributes, including `exclude`, so you can use the new feature before you rename the annotation. Its retention is source only, so it leaves no trace in the compiled classes, as in 5.x.
+
+Two behaviours differ between the two annotations. A value that matches no type is a compiler error for `@GenerateMatchers` and a warning for the alias, which keeps 5.x configurations compiling. Renaming the annotation therefore makes a misspelled type name stop the build.
+
+[#bean-property-matcher]
+== BeanPropertyMatcher has a new package
+
+The runtime class `BeanPropertyMatcher` moved to the package `io.github.marmer.matchergenerator.hamcrest`, in the artifact `hamcrest-matcher-generator`. In 5.x it was in `io.github.marmer.testutils.generators.beanmatcher.dependencies`.
+
+Generated matchers use the class, so a recompile of the project brings the generated code to the new package. A project changes its own code only if it imports `BeanPropertyMatcher` directly, which the generated API does not require. Such an import needs the new package name.
+
+[#transitive-javax-annotation]
+== javax.annotation is no longer transitive
+
+6.0.0 no longer depends on `javax.annotation:javax.annotation-api`. The processor uses only `javax.annotation.processing.Generated`, which the JDK provides, so the generator needs nothing more. The 5.x artifact `hamcrest-matcher-generator-annotationprocessor` did bring the API in.
+
+If your code uses `javax.annotation` types that reached your classpath through the generator, declare `javax.annotation:javax.annotation-api` in your own build with the version you choose. The generated code does not need it.
+
+[#opt-in-features]
+== Opt-in features
+
+Everything in this list is off unless you use it. Your existing tests keep compiling and passing without any of them:
+
+* *Completeness check.* `checkingAllProperties()` on a matcher, and `ignoringX()` for a property you leave out. Chapter link:completeness-check.html[Completeness check] describes the rule for both backends.
+* *Reference objects.* `isXLike(reference)` compares every property with a reference object, as the link:hamcrest-backend.html[Hamcrest backend chapter] describes.
+* *Exclusions.* The `exclude` attribute of `@GenerateMatchers`, and of the alias, as described above.
+* *AssertJ.* The `assertj-assertion-generator` artifact generates an assertion per type, as the link:assertj-backend.html[AssertJ backend chapter] describes. It runs next to the Hamcrest backend.
+* *Kotlin DSL.* The `hamcrest-matcher-generator-kotlin` artifact generates the DSL under KAPT, as the link:kotlin.html[Kotlin chapter] describes.
+
+Mismatch messages have the 6.0.0 form, with one line per failing check and its property path, as the link:mismatch-messages.html[mismatch messages chapter] describes. A test that compares the exact text of a message must be checked after the upgrade.
+
+== What does not change
+
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump. The repository's 5.x compatibility suite runs against the bridge jars in the build, to check this for the 5.x coordinates.
+
+== Next steps
+
+* link:getting-started.html[Getting started] for the setup of a new project.
+* link:configuration.html[Configuration] for the attributes of `@GenerateMatchers`.

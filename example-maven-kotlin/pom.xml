@@ -116,11 +116,13 @@
                                 Kotlin DSL to kaptKotlin/compile; both are listed here. The plugin registers the same two
                                 directories itself, so the build passes without them too, and a "Duplicate source root"
                                 warning shows either way. -->
+                            <!-- tag::compile-source-dirs[] -->
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/compile</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/compile</sourceDir>
                             </sourceDirs>
+                            <!-- end::compile-source-dirs[] -->
                         </configuration>
                     </execution>
                     <execution>
