@@ -9,7 +9,7 @@ Usage:
   scripts/agents/issue-status.py <parent-number>           # update the parent's body
   scripts/agents/issue-status.py <parent-number> --print   # print the section only
   scripts/agents/issue-status.py <parent-number> --json    # print the raw status data
-  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets (no map write)
+  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets, those labelled needs-info or ready-for-human on a "waiting for the owner" line (no map write)
 
 Besides --json and --frontier, every run warns on stderr about open tickets that do not lead to the
 final ticket (see loose_tickets), so a ticket added after the blocking edges were set cannot go unnoticed.
@@ -108,6 +108,19 @@ def frontier_line(ticket):
     return f"#{ticket['number']} {ticket['title']}{suffix}"
 
 
+OWNER_LABELS = ("needs-info", "ready-for-human")
+
+
+def frontier_lines(tickets):
+    """The ready tickets an agent can start; those labelled for the owner wait on a separate line."""
+    ready = [t for t in tickets if t["status"] == "ready"]
+    waiting = [t for t in ready if any(name in OWNER_LABELS for name in t["labels"])]
+    lines = [frontier_line(t) for t in ready if t not in waiting]
+    if waiting:
+        lines.append("waiting for the owner: " + ", ".join(frontier_line(t) for t in waiting))
+    return lines
+
+
 def label(ticket, width=48):
     title = ticket["title"] if len(ticket["title"]) <= width else ticket["title"][: width - 1] + "…"
     typed = kind(ticket)
@@ -154,9 +167,8 @@ def main():
         print(json.dumps(tickets, indent=2))
         return
     if "--frontier" in sys.argv:
-        for ticket in tickets:
-            if ticket["status"] == "ready":
-                print(frontier_line(ticket))
+        for line in frontier_lines(tickets):
+            print(line)
         return
     final, loose = loose_tickets(tickets)
     if loose:

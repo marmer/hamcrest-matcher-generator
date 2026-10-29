@@ -33,6 +33,7 @@ Redundant documentation for agents is welcome, **as long as the human-facing arc
 - **Writing a glossary term** to `GLOSSARY.md`: also add or update the matching row in the table in `docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc`.
 - **Writing an ADR** to `docs/adr/`: also add a human-readable summary to `docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc`: title, status, a short rationale, and a link to the ADR file.
 - **Changing architecture** (new module, changed generation flow, changed build setup): update the affected arc42 chapter in the same change, not in a follow-up.
+- **A rule lives in exactly one arc42 chapter.** `GLOSSARY.md` and the glossary chapter hold the term's definition only, in the same words, pointing to that chapter; other chapters point to it instead of restating it (the Kotlin DSL naming rule once stood in four places with drifting wording).
 - Write the arc42 entries for a human reader: full sentences, context first, and none of the terse agent-only shorthand.
 - Remove any template placeholder rows (e.g. `<Term-1>`) from a chapter when you add its first real entry.
 - `scripts/agents/check-domain-docs-sync.py` checks these rules in CI, plus that the required checks named in `docs/agents/wayfinding.md` are CI job names and that every backticked file name and `io.github.marmer` package in `CLAUDE.md` exists. Run it locally with `python3 scripts/agents/check-domain-docs-sync.py`.
