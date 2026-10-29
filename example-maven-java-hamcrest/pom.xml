@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>matcher-generator-parent</artifactId>
+        <version>5.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <!-- Documentation example: the guide and README take their snippets from the tagged regions of this module.
+        Never published. -->
+    <artifactId>example-maven-java-hamcrest</artifactId>
+    <version>5.1.0</version>
+    <name>example-maven-java-hamcrest</name>
+    <description>Maven Java example for the Hamcrest backend. Never published.</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <dependencies>
+        <!-- tag::maven-dependencies[] -->
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- end::maven-dependencies[] -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- The processing lint stays off: javac warns that no processor claims the test sources' own
+                        annotations (JUnit), which is not about generated code. Every other lint category stays fatal. -->
+                    <compilerArgs combine.children="append">
+                        <arg>-Xlint:all,-processing</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                    <!-- tag::maven-processor[] -->
+                    <annotationProcessorPaths combine.children="append">
+                        <path>
+                            <groupId>io.github.marmer.testutils</groupId>
+                            <artifactId>hamcrest-matcher-generator</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <!-- end::maven-processor[] -->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
