@@ -50,5 +50,28 @@ class LooseTicketsTest(unittest.TestCase):
         self.assertIn("issue.py block 3 --by", warning)
 
 
+class LooseWarningForTest(unittest.TestCase):
+
+    def test_warning_for_tickets_with_a_loose_one_and_none_otherwise(self):
+        self.assertIn("#3", status.loose_warning_for([ticket(1), ticket(2, [1]), ticket(3)]))
+        self.assertIsNone(status.loose_warning_for([ticket(1), ticket(2, [1])]))
+
+
+def ready(number, labels=(), state="ready"):
+    return {"number": number, "title": f"t{number}", "labels": list(labels), "status": state}
+
+
+class FrontierLinesTest(unittest.TestCase):
+
+    def test_owner_labelled_tickets_wait_on_a_separate_line(self):
+        tickets = [ready(1), ready(2, ["needs-info"]), ready(3, ["ready-for-human"]), ready(4, state="blocked")]
+
+        self.assertEqual(["#1 t1", "waiting for the owner: #2 t2 (needs-info), #3 t3 (ready-for-human)"],
+                         status.frontier_lines(tickets))
+
+    def test_no_waiting_line_without_owner_labelled_tickets(self):
+        self.assertEqual(["#1 t1 (ready-for-agent)"], status.frontier_lines([ready(1, ["ready-for-agent"])]))
+
+
 if __name__ == "__main__":
     unittest.main()
