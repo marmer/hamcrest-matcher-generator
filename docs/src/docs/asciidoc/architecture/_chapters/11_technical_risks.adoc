@@ -80,7 +80,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Risk: strict quality gates stop the autopilot
 |medium
 |tolerable
-|Merges require at least 99 % line and branch coverage. The CI jobs `Mutation testing` (a mutation score of at least 90 % per module) and `Sonar` (the quality gate) are blocking jobs of the CI; they become required merge checks once the owner adds them to the `main` ruleset (setup checklist #147). An update of PIT or JaCoCo (new mutators, different branch counting) or a change of SonarCloud's rules can turn a pull request or the main branch red although no project code changed.
+|Merges require at least 99 % line and branch coverage. The CI jobs `Mutation testing` (a mutation score of at least 90 % per module) and `Sonar` (the quality gate) are required merge checks of the `main` ruleset, so a red one blocks the merge. An update of PIT or JaCoCo (new mutators, different branch counting) or a change of SonarCloud's rules can turn a pull request or the main branch red although no project code changed.
 |PIT, JaCoCo and the Sonar scanner are updated in their own Renovate pull requests, so the cause of a red build is unambiguous. The Sonar quality gate judges new code only, so new rules do not fail old code. Thresholds are never lowered silently; a change goes to the maintainer.
 
 |Risk: a major update of a runtime dependency ships as a patch release
