@@ -9,6 +9,7 @@ import io.github.marmer.matchergenerator.core.spi.GeneratedSource;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -39,6 +40,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 
 public class MatcherGenerationProcessorWorker {
     /** The processor option KAPT passes with the directory Kotlin sources have to be written to. */
@@ -249,7 +251,8 @@ public class MatcherGenerationProcessorWorker {
                                     processingEnv.getOptions().containsKey(KAPT_KOTLIN_GENERATED),
                                     this::printBackendNote,
                                     message -> printBackendWarning(type, message),
-                                    this::printBackendVerboseNote);
+                                    this::printBackendVerboseNote,
+                                    this::classExistsOutsideOwnOutput);
                     backends.forEach(
                             backend ->
                                     backend.generate(type.model(), context)
@@ -290,6 +293,29 @@ public class MatcherGenerationProcessorWorker {
     /** A backend has something to tell that is no problem. It is a note without an element. */
     private void printBackendNote(final String message) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
+    }
+
+    /**
+     * Whether a class of that name is on the compile class path or source path, without being part
+     * of the output directory of this compilation. What a previous, non clean build of this module
+     * left in its own output is not counted, since it is replaced by this build.
+     */
+    private boolean classExistsOutsideOwnOutput(final String qualifiedClassName) {
+        if (processingEnv.getElementUtils().getTypeElement(qualifiedClassName) == null) {
+            return false;
+        }
+        try (InputStream ignored =
+                processingEnv
+                        .getFiler()
+                        .getResource(
+                                StandardLocation.CLASS_OUTPUT,
+                                "",
+                                qualifiedClassName.replace('.', '/') + ".class")
+                        .openInputStream()) {
+            return false;
+        } catch (final IOException e) {
+            return true;
+        }
     }
 
     /** A backend has something to tell that only matters in verbose mode. */
@@ -384,7 +410,7 @@ public class MatcherGenerationProcessorWorker {
             final GeneratedSource source,
             final PlannedType type,
             final List<TypeModel> roundModels) {
-        final String name = qualifiedNameOf(source);
+        final String name = source.qualifiedName();
         if (writtenInEarlierRounds.contains(name)) {
             printNotWrittenAgain(type, name, source.packageName(), roundModels);
             return;
@@ -400,12 +426,6 @@ public class MatcherGenerationProcessorWorker {
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private static String qualifiedNameOf(final GeneratedSource source) {
-        return source.packageName().isEmpty()
-                ? source.simpleName()
-                : source.packageName() + "." + source.simpleName();
     }
 
     /**

@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Information about the current generation run that is not part of the model of a type.
@@ -35,6 +36,10 @@ import java.util.function.Function;
  * @param verboseNotes receives the message of every compiler note a backend reports that is only of
  *     interest when the processor option {@code matchergenerator.verbose} is set; the core prints
  *     it only then
+ * @param classExistsOutsideOwnOutput whether a class of the given qualified name is on the compile
+ *     class path or source path without being in the output directory of this compilation, e.g. the
+ *     class of a module the current one depends on or of the main compilation when the test sources
+ *     are compiled
  */
 public record GenerationContext(
         String generatorName,
@@ -46,7 +51,8 @@ public record GenerationContext(
         boolean kotlinOutputAvailable,
         Consumer<String> notes,
         Consumer<String> warnings,
-        Consumer<String> verboseNotes) {
+        Consumer<String> verboseNotes,
+        Predicate<String> classExistsOutsideOwnOutput) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
@@ -57,12 +63,13 @@ public record GenerationContext(
         Objects.requireNonNull(notes, "notes");
         Objects.requireNonNull(warnings, "warnings");
         Objects.requireNonNull(verboseNotes, "verboseNotes");
+        Objects.requireNonNull(classExistsOutsideOwnOutput, "classExistsOutsideOwnOutput");
     }
 
     /**
      * A context that knows no other generated types and no inherited methods, that offers no Kotlin
      * output, and that cannot report errors, notes or warnings. It drops verbose notes, which only
-     * ever are an extra.
+     * ever are an extra, and knows no class outside its own output.
      */
     public GenerationContext(
             final String generatorName,
@@ -85,7 +92,8 @@ public record GenerationContext(
                     throw new IllegalStateException(
                             "The context cannot report warnings: " + message);
                 },
-                message -> {});
+                message -> {},
+                name -> false);
     }
 
     /**
@@ -96,6 +104,15 @@ public record GenerationContext(
      */
     public Set<String> inheritedMethodNames(final String qualifiedClassName) {
         return inheritedMethods.apply(qualifiedClassName);
+    }
+
+    /**
+     * @param qualifiedClassName the qualified name of a class
+     * @return whether the class is on the compile class path or source path without being in the
+     *     output directory of this compilation, so it was not written by this very build
+     */
+    public boolean classExistsOutsideOwnOutput(final String qualifiedClassName) {
+        return classExistsOutsideOwnOutput.test(qualifiedClassName);
     }
 
     /**

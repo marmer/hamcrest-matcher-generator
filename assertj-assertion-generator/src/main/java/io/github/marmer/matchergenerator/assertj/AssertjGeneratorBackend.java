@@ -46,13 +46,13 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
         // in neither.
         final List<TypeModel> packageModels = packageModels(model, context);
         if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
-            noteMixinOnClassPath(model.targetPackage(), packageModels, context);
-            sources.add(
+            final GeneratedSource mixin =
                     sourceOf(
                             model,
                             SoftAssertionsProviderGenerator.NAME,
-                            new SoftAssertionsProviderGenerator(packageModels, context)
-                                    .typeSpec()));
+                            new SoftAssertionsProviderGenerator(packageModels, context).typeSpec());
+            noteMixinOnClassPath(mixin, packageModels, context);
+            sources.add(mixin);
             sources.add(
                     sourceOf(
                             model,
@@ -87,16 +87,12 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
      * user is told.
      */
     private static void noteMixinOnClassPath(
-            final String targetPackage,
+            final GeneratedSource mixin,
             final List<TypeModel> packageModels,
             final GenerationContext context) {
-        final String mixinName =
-                targetPackage.isEmpty()
-                        ? SoftAssertionsProviderGenerator.NAME
-                        : targetPackage + "." + SoftAssertionsProviderGenerator.NAME;
-        if (!context.inheritedMethodNames(mixinName).isEmpty()) {
+        if (context.classExistsOutsideOwnOutput(mixin.qualifiedName())) {
             context.reportNote(
-                    mixinName
+                    mixin.qualifiedName()
                             + " also exists on the class path, written by another compilation."
                             + " The one written now only knows the types generated in this"
                             + " compilation: "

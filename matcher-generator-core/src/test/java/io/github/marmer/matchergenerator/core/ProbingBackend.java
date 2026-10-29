@@ -15,7 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * A backend that acts only on a type named {@code Probed}: it reports one compiler error for it and
  * records what the context tells about inherited methods. A type named {@code Noted} gets one
- * compiler note, a type named {@code Chatty} one verbose note. Other types get nothing.
+ * compiler note, a type named {@code Chatty} one verbose note. A type named {@code Located} records
+ * which classes exist outside the own output. Other types get nothing.
  */
 public class ProbingBackend implements GeneratorBackend {
     static final String PROBED = "Probed";
@@ -24,10 +25,12 @@ public class ProbingBackend implements GeneratorBackend {
     static final String NOTE = "Probe reports a note";
     static final String WARNED = "Warned";
     static final String WARNING = "Probe reports a warning";
+    static final String LOCATED = "Located";
     static final String CHATTY = "Chatty";
     static final String VERBOSE_NOTE = "Probe reports a verbose note";
     private static final List<Set<String>> INHERITED = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> MISSING = new CopyOnWriteArrayList<>();
+    private static final List<String> LOCATIONS = new CopyOnWriteArrayList<>();
     private static final List<Set<String>> OWN = new CopyOnWriteArrayList<>();
 
     static List<Set<String>> inheritedOfObject() {
@@ -42,7 +45,13 @@ public class ProbingBackend implements GeneratorBackend {
         return List.copyOf(OWN);
     }
 
+    /** For each name asked about: {@code name=true} if it exists outside the own output. */
+    static List<String> locations() {
+        return List.copyOf(LOCATIONS);
+    }
+
     static void reset() {
+        LOCATIONS.clear();
         INHERITED.clear();
         MISSING.clear();
         OWN.clear();
@@ -57,6 +66,13 @@ public class ProbingBackend implements GeneratorBackend {
     public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
         if (model.simpleName().equals(NOTED)) {
             context.reportNote(NOTE);
+            return List.of();
+        }
+        if (model.simpleName().equals(LOCATED)) {
+            for (final String name :
+                    List.of("java.lang.Object", "no.such.Class", model.qualifiedName())) {
+                LOCATIONS.add(name + "=" + context.classExistsOutsideOwnOutput(name));
+            }
             return List.of();
         }
         if (model.simpleName().equals(CHATTY)) {

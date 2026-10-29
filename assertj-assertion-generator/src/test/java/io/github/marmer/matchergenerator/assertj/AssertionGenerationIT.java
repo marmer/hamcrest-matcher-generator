@@ -16,6 +16,7 @@ import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -25,7 +26,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -985,6 +992,108 @@ class AssertionGenerationIT {
                                                 .contains("also exists on the class path"))
                         .count(),
                 () -> "Notes: " + main.notes());
+    }
+
+    /**
+     * Compiles like a build tool: the classes go to the output directory, which is also on the
+     * class path, together with whatever the other directories hold.
+     *
+     * @return the compiler notes
+     */
+    private static List<String> compileInto(
+            final Path output, final List<Path> otherClasses, final JavaFileObject... sources) {
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+        final List<String> classPath = new ArrayList<>();
+        classPathWithJSpecify().forEach(entry -> classPath.add(entry.getPath()));
+        classPath.add(output.toString());
+        otherClasses.forEach(entry -> classPath.add(entry.toString()));
+        try (StandardJavaFileManager fileManager =
+                compiler.getStandardFileManager(diagnostics, null, null)) {
+            final CompilationTask task =
+                    compiler.getTask(
+                            null,
+                            fileManager,
+                            diagnostics,
+                            List.of(
+                                    "-d",
+                                    output.toString(),
+                                    "-classpath",
+                                    String.join(File.pathSeparator, classPath)),
+                            null,
+                            Arrays.asList(sources));
+            task.setProcessors(List.of(new MatcherGenerationProcessor(() -> NOW)));
+            assertTrue(task.call(), () -> "Diagnostics: " + diagnostics.getDiagnostics());
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return diagnostics.getDiagnostics().stream()
+                .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.NOTE)
+                .map(diagnostic -> diagnostic.getMessage(null))
+                .collect(Collectors.toList());
+    }
+
+    @Test
+    @DisplayName("A mixin in the own output of a non clean rebuild is not a note")
+    void aMixinInTheOwnOutputOfANonCleanRebuildIsNotANote(
+            @TempDir final Path target, @TempDir final Path testTarget) {
+        final JavaFileObject[] sources = {
+            configurationNamed("FirstConfiguration", "some.other.pck.Line"), beanWithAName("Line")
+        };
+
+        final List<String> firstBuild = compileInto(target, List.of(), sources);
+        final List<String> rebuild = compileInto(target, List.of(), sources);
+        final List<String> testBuild =
+                compileInto(
+                        testTarget,
+                        List.of(target),
+                        configurationNamed("SecondConfiguration", "some.other.pck.Order"),
+                        beanWithAName("Order"));
+
+        assertFalse(
+                firstBuild.stream()
+                        .anyMatch(note -> note.contains("also exists on the class path")),
+                () -> "Notes: " + firstBuild);
+        assertFalse(
+                rebuild.stream().anyMatch(note -> note.contains("also exists on the class path")),
+                () -> "Notes: " + rebuild);
+        assertTrue(
+                testBuild.stream().anyMatch(note -> note.contains("also exists on the class path")),
+                () -> "Notes: " + testBuild);
+    }
+
+    @Test
+    @DisplayName("A later round does not write the mixin and the representation again but warns")
+    void aLaterRoundDoesNotWriteTheMixinAndTheRepresentationAgainButWarns() {
+        final Compilation compilation =
+                Compiler.javac()
+                        .withProcessors(
+                                new MatcherGenerationProcessor(() -> NOW),
+                                new LateConfigurationProcessor(
+                                        "some.pck.LateConfiguration", "some.other.pck.Order"))
+                        .compile(
+                                configurationNamed("FirstConfiguration", "some.other.pck.Line"),
+                                beanWithAName("Line"),
+                                beanWithAName("Order"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                compilation.generatedSourceFiles().stream()
+                        .filter(source -> source.getName().endsWith("/SoftAssertionsProvider.java"))
+                        .count());
+        assertEquals(
+                1, compilation.generatedSourceFile("some.other.pck.OrderAssert").stream().count());
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.other.pck.SoftAssertionsProvider was already written in an earlier"
+                                + " processing round and is not written again. It does not know"
+                                + " the types generated in this round: some.other.pck.Order");
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.other.pck.PropertyRepresentation was already written in an earlier"
+                                + " processing round and is not written again.");
+        CompilationSubject.assertThat(compilation).hadWarningCount(2);
     }
 
     @Test

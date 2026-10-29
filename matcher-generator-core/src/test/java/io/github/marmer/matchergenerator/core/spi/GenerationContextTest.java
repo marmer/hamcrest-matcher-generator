@@ -69,4 +69,13 @@ class GenerationContextTest {
 
         assertDoesNotThrow(() -> context.reportVerboseNote("some note"));
     }
+
+    @Test
+    @DisplayName("A context without a processing environment knows no class outside its own output")
+    void aContextWithoutAProcessingEnvironmentKnowsNoClassOutsideItsOwnOutput() {
+        final GenerationContext context =
+                new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0), false);
+
+        assertFalse(context.classExistsOutsideOwnOutput("java.lang.Object"));
+    }
 }

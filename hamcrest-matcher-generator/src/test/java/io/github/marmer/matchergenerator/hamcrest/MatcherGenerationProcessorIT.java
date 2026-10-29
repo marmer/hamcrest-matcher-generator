@@ -1888,10 +1888,6 @@ class MatcherGenerationProcessorIT {
 
                     public static class Empty {
                     }
-
-                    public enum Kind {
-                        EXPRESS
-                    }
                 }
                 """);
     }
@@ -1906,6 +1902,18 @@ class MatcherGenerationProcessorIT {
                     public String getName() {
                         return null;
                     }
+                }
+                """);
+    }
+
+    private static JavaFileObject kind() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Kind",
+                """
+                package some.other.pck;
+
+                public enum Kind {
+                    EXPRESS
                 }
                 """);
     }
@@ -1960,7 +1968,8 @@ class MatcherGenerationProcessorIT {
                         orderWithPropertiesOfUnconfiguredTypes(),
                         customer(),
                         line(),
-                        marker());
+                        marker(),
+                        kind());
 
         CompilationSubject.assertThat(compilation).succeeded();
         final String matcher = generatedSource(compilation, "some.other.pck.OrderMatcher");
@@ -2016,7 +2025,8 @@ class MatcherGenerationProcessorIT {
                         orderWithPropertiesOfUnconfiguredTypes(),
                         customer(),
                         line(),
-                        marker());
+                        marker(),
+                        kind());
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(
@@ -2041,7 +2051,8 @@ class MatcherGenerationProcessorIT {
                         orderWithPropertiesOfUnconfiguredTypes(),
                         customer(),
                         line(),
-                        marker());
+                        marker(),
+                        kind());
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(
