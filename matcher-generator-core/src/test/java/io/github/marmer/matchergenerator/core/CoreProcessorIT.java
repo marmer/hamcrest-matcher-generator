@@ -510,6 +510,27 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("A backend verbose note is a compiler note only with the verbose option")
+    void aBackendVerboseNoteIsACompilerNoteOnlyWithTheVerboseOption() {
+        final JavaFileObject chatty =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Chatty",
+                        "package some.other.pck;",
+                        "public class Chatty {",
+                        "}");
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("\"some.other.pck.Chatty\"");
+
+        final Compilation quiet = compile(configuration, chatty);
+        final Compilation verbose = compileVerbose(configuration, chatty);
+
+        CompilationSubject.assertThat(quiet).succeeded();
+        CompilationSubject.assertThat(quiet).hadNoteCount(0);
+        CompilationSubject.assertThat(verbose).succeeded();
+        CompilationSubject.assertThat(verbose).hadNoteContaining(ProbingBackend.VERBOSE_NOTE);
+    }
+
+    @Test
     @DisplayName(
             "A backend warning is a compiler warning at the annotation, and the compilation succeeds")
     void aBackendWarningIsACompilerWarningAtTheAnnotationAndTheCompilationSucceeds() {

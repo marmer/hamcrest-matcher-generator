@@ -236,7 +236,8 @@ public class MatcherGenerationProcessorWorker {
                                     message -> printBackendError(type, message),
                                     processingEnv.getOptions().containsKey(KAPT_KOTLIN_GENERATED),
                                     this::printBackendNote,
-                                    message -> printBackendWarning(type, message));
+                                    message -> printBackendWarning(type, message),
+                                    this::printBackendVerboseNote);
                     backends.forEach(
                             backend ->
                                     backend.generate(type.model(), context)
@@ -281,6 +282,11 @@ public class MatcherGenerationProcessorWorker {
     /** A backend has something to tell that is no problem. It is a note without an element. */
     private void printBackendNote(final String message) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
+    }
+
+    /** A backend has something to tell that only matters in verbose mode. */
+    private void printBackendVerboseNote(final String message) {
+        ElementSupport.logNote(processingEnv, message, null);
     }
 
     /**

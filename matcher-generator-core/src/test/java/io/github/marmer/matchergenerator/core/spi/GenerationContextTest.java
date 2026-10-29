@@ -5,6 +5,7 @@
 package io.github.marmer.matchergenerator.core.spi;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -58,5 +59,14 @@ class GenerationContextTest {
                 new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0), false);
 
         assertThrows(IllegalStateException.class, () -> context.reportWarning("some warning"));
+    }
+
+    @Test
+    @DisplayName("A context without a verbose note reporter drops a verbose note")
+    void aContextWithoutAVerboseNoteReporterDropsAVerboseNote() {
+        final GenerationContext context =
+                new GenerationContext("generator", LocalDateTime.of(2020, 1, 1, 0, 0), false);
+
+        assertDoesNotThrow(() -> context.reportVerboseNote("some note"));
     }
 }

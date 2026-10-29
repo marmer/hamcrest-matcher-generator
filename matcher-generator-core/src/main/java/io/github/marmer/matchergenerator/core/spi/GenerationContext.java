@@ -32,6 +32,9 @@ import java.util.function.Function;
  *     whatever the verbose option says
  * @param warnings receives the message of every compiler warning a backend reports for the
  *     configured type; the core reports it at the annotation element that configured the type
+ * @param verboseNotes receives the message of every compiler note a backend reports that is only
+ *     of interest when the processor option {@code matchergenerator.verbose} is set; the core
+ *     prints it only then
  */
 public record GenerationContext(
         String generatorName,
@@ -42,7 +45,8 @@ public record GenerationContext(
         Consumer<String> errors,
         boolean kotlinOutputAvailable,
         Consumer<String> notes,
-        Consumer<String> warnings) {
+        Consumer<String> warnings,
+        Consumer<String> verboseNotes) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
@@ -52,11 +56,13 @@ public record GenerationContext(
         Objects.requireNonNull(errors, "errors");
         Objects.requireNonNull(notes, "notes");
         Objects.requireNonNull(warnings, "warnings");
+        Objects.requireNonNull(verboseNotes, "verboseNotes");
     }
 
     /**
      * A context that knows no other generated types and no inherited methods, that offers no Kotlin
-     * output, and that cannot report errors, notes or warnings.
+     * output, and that cannot report errors, notes or warnings. It drops verbose notes, which only
+     * ever are an extra.
      */
     public GenerationContext(
             final String generatorName,
@@ -78,7 +84,8 @@ public record GenerationContext(
                 message -> {
                     throw new IllegalStateException(
                             "The context cannot report warnings: " + message);
-                });
+                },
+                message -> {});
     }
 
     /**
@@ -118,5 +125,15 @@ public record GenerationContext(
      */
     public void reportWarning(final String message) {
         warnings.accept(message);
+    }
+
+    /**
+     * Reports a compiler note that is printed only when the verbose option is set, such as a
+     * decision the backend took that the user might wonder about.
+     *
+     * @param message the note
+     */
+    public void reportVerboseNote(final String message) {
+        verboseNotes.accept(message);
     }
 }
