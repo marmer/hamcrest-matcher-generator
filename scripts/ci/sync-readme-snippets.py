@@ -10,29 +10,67 @@ A snippet is a directive in README.md followed by the code block the script writ
     <!-- end snippet -->
 
 The region is the text between `tag::NAME[]` and `end::NAME[]` (either marker in any comment syntax), without the two
-marker lines, dedented by its least indented line. The fence language follows the extension of the file (xml, java,
-kotlin for .kt and .kts). Text outside the directives is never touched.
+marker lines. Tabs are expanded to 4 columns, then the region is dedented by its least indented line. The fence language
+follows the extension of the file (xml, java, kotlin for .kt and .kts). Text outside the directives is never touched.
+A directive path must stay inside the repository. README.md keeps its line endings (LF or CRLF).
+
+Markdown has no include of tagged regions as Asciidoctor has, so the region rule is repeated here; that duplication is
+unavoidable for the README.
 
 Modes:
   scripts/ci/sync-readme-snippets.py [<root-dir>]           rewrite the stale blocks of README.md
   scripts/ci/sync-readme-snippets.py --check [<root-dir>]   print one line per stale block or broken directive, exit 1
 
-Exits 1 when a directive names a missing file or region, a directive has no end line, or (with --check) a block is
-out of sync. Stdlib only, like the other scripts of scripts/ci.
+Exits 1 with one line when README.md or a directive cannot be used (a missing or unreadable file, no directive at all,
+a path outside the repository). Stdlib only, like the other scripts of scripts/ci.
 """
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[2]
 README = "README.md"
 DIRECTIVE = re.compile(r"^<!-- snippet: (\S+)#(\S+) -->$")
 END = "<!-- end snippet -->"
 LANGUAGES = {".xml": "xml", ".java": "java", ".kt": "kotlin", ".kts": "kotlin"}
+TAB_WIDTH = 4
+
+
+class CheckError(Exception):
+    """A file the script needs cannot be used; the message starts with the file's name."""
 
 
 class SnippetError(Exception):
     """A directive or region that cannot be used; the message names the file or the region."""
+
+
+class Sync(NamedTuple):
+    """The result of processing README.md: its text with the blocks regenerated, and the problems found."""
+    text: str
+    drift: list
+    errors: list
+
+    @property
+    def problems(self):
+        return self.drift + self.errors
+
+
+def read_raw(root, name):
+    """The text of a file as written (CRLF kept), or a CheckError that names the file."""
+    try:
+        raw = (root / name).read_bytes()
+    except OSError as error:
+        raise CheckError(f"{name}: cannot be read ({error.strerror})") from error
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise CheckError(f"{name}: not UTF-8 text") from error
+
+
+def read_text(root, name):
+    """The text of a file with LF line endings."""
+    return read_raw(root, name).replace("\r\n", "\n")
 
 
 def fence_language(path):
@@ -43,7 +81,8 @@ def fence_language(path):
 
 
 def extract_region(text, tag):
-    """The lines between the tag and end markers of region `tag`, dedented; a missing or doubled region is an error."""
+    """The lines between the tag and end markers of region `tag`, tabs expanded and dedented; a missing or doubled
+    region is an error."""
     opening = re.compile(rf"tag::{re.escape(tag)}\[\]")
     closing = re.compile(rf"end::{re.escape(tag)}\[\]")
     lines = text.split("\n")
@@ -55,7 +94,7 @@ def extract_region(text, tag):
     ends = [i for i in range(starts[0] + 1, len(lines)) if closing.search(lines[i])]
     if not ends:
         raise SnippetError(f"region {tag} has no end::{tag}[] marker")
-    body = lines[starts[0] + 1:ends[0]]
+    body = [line.expandtabs(TAB_WIDTH) for line in lines[starts[0] + 1:ends[0]]]
     indents = [len(line) - len(line.lstrip()) for line in body if line.strip()]
     least = min(indents) if indents else 0
     body = [line[least:].rstrip() for line in body]
@@ -68,17 +107,26 @@ def extract_region(text, tag):
 
 def snippet_lines(root, path, tag):
     """The lines the directive must carry: the fence, the region and the closing fence."""
+    pure = PurePosixPath(path)
+    if pure.is_absolute() or ".." in pure.parts:
+        raise SnippetError(f"{path} must stay inside the repository")
     try:
-        text = (root / path).read_text(encoding="utf-8")
-    except OSError as error:
-        raise SnippetError(f"{path} cannot be read ({error.strerror})") from error
+        text = read_text(root, path)
+    except CheckError as error:
+        raise SnippetError(str(error)) from error
     return [f"```{fence_language(path)}"] + extract_region(text, tag) + ["```"]
 
 
+def directive_pairs(root):
+    """The (example file, tag) pairs of the directives in README.md, in document order."""
+    return [match.groups() for match in (DIRECTIVE.match(line) for line in read_text(root, README).split("\n")) if match]
+
+
 def process(root):
-    """Return (the README text with every block regenerated, the out-of-sync lines, the other error lines)."""
-    text = (root / README).read_text(encoding="utf-8")
-    lines = text.split("\n")
+    """Process README.md: its blocks regenerated with its own line endings, the out-of-sync lines and the errors."""
+    raw = read_raw(root, README)
+    newline = "\r\n" if "\r\n" in raw else "\n"
+    lines = raw.replace("\r\n", "\n").split("\n")
     out, drift, errors = [], [], []
     i = 0
     while i < len(lines):
@@ -112,24 +160,21 @@ def process(root):
                                  "run scripts/ci/sync-readme-snippets.py")
         out.extend(expected)
         i = end + 1
-    return "\n".join(out), drift, errors
+    if not any(DIRECTIVE.match(line) for line in lines):
+        errors.append(f"{README}: no snippet directive found")
+    return Sync("\n".join(out).replace("\n", newline), drift, errors)
 
 
 def problems(root):
     """Every line that makes the check fail; empty when the README is in sync."""
-    _, drift, errors = process(root)
-    return drift + errors
+    return process(root).problems
 
 
 def write(root):
-    """Rewrite README.md with the regenerated blocks; returns the problems that a rewrite cannot repair."""
-    new_text, _, errors = process(root)
-    (root / README).write_text(new_text, encoding="utf-8")
-    return errors
-
-
-def directive_count(root):
-    return sum(1 for line in (root / README).read_text(encoding="utf-8").split("\n") if DIRECTIVE.match(line))
+    """Rewrite README.md with the regenerated blocks; returns the errors that a rewrite cannot repair."""
+    result = process(root)
+    (root / README).write_bytes(result.text.encode("utf-8"))
+    return result.errors
 
 
 def main(argv):
@@ -138,15 +183,18 @@ def main(argv):
     if len(arguments) > 1:
         sys.exit(__doc__)
     root = Path(arguments[0]).resolve() if arguments else ROOT
-    if check_only:
-        found = problems(root)
-        for line in found:
-            print(line)
-        if found:
-            sys.exit(1)
-        print("the README snippets are in sync with the example regions")
-        return
-    errors = write(root)
+    try:
+        if check_only:
+            found = problems(root)
+            for line in found:
+                print(line)
+            if found:
+                sys.exit(1)
+            print("the README snippets are in sync with the example regions")
+            return
+        errors = write(root)
+    except CheckError as error:
+        sys.exit(str(error))
     for line in errors:
         print(line)
     if errors:
