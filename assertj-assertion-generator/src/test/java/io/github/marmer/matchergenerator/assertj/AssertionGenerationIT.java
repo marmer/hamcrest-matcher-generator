@@ -15,7 +15,11 @@ import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class AssertionGenerationIT {
 
@@ -879,6 +884,99 @@ class AssertionGenerationIT {
                         .count());
         assertGolden(
                 compilation, "soft-assertions-provider", "some.other.pck.SoftAssertionsProvider");
+    }
+
+    private static JavaFileObject configurationNamed(
+            final String simpleName, final String configuredType) {
+        return JavaFileObjects.forSourceLines(
+                "some.pck." + simpleName,
+                "package some.pck;",
+                "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                "@GenerateMatchers(\"" + configuredType + "\")",
+                "public final class " + simpleName + " {",
+                "}");
+    }
+
+    private static JavaFileObject beanWithAName(final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck." + simpleName,
+                "package some.other.pck;",
+                "public class " + simpleName + " {",
+                "    public String getName() { return null; }",
+                "}");
+    }
+
+    @Test
+    @DisplayName(
+            "Two configurations of one package processed in one round write one mixin with the types of both")
+    void twoConfigurationsOfOnePackageProcessedInOneRoundWriteOneMixinWithTheTypesOfBoth()
+            throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configurationNamed("FirstConfiguration", "some.other.pck.Line"),
+                        configurationNamed("SecondConfiguration", "some.other.pck.Order"),
+                        beanWithAName("Line"),
+                        beanWithAName("Order"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                compilation.generatedSourceFiles().stream()
+                        .filter(source -> source.getName().endsWith("/SoftAssertionsProvider.java"))
+                        .count());
+        assertEquals(
+                1,
+                compilation.generatedSourceFiles().stream()
+                        .filter(source -> source.getName().endsWith("/PropertyRepresentation.java"))
+                        .count());
+        final String mixin = generatedContent(compilation, "some.other.pck.SoftAssertionsProvider");
+        assertTrue(mixin.contains("default LineAssert assertThat(final @Nullable Line actual)"), mixin);
+        assertTrue(mixin.contains("default LineAssert then(final @Nullable Line actual)"), mixin);
+        assertTrue(mixin.contains("default OrderAssert assertThat(final @Nullable Order actual)"), mixin);
+        assertTrue(mixin.contains("default OrderAssert then(final @Nullable Order actual)"), mixin);
+    }
+
+    @Test
+    @DisplayName("A mixin of the same package on the class path is a note naming its origin")
+    void aMixinOfTheSamePackageOnTheClassPathIsANoteNamingItsOrigin(@TempDir final Path classes)
+            throws IOException {
+        final Compilation main =
+                compileWithJSpecify(
+                        configurationNamed("FirstConfiguration", "some.other.pck.Line"),
+                        beanWithAName("Line"));
+        CompilationSubject.assertThat(main).succeeded();
+        for (final JavaFileObject file : main.generatedFiles()) {
+            if (file.getKind() == JavaFileObject.Kind.CLASS) {
+                final Path target = classes.resolve(file.getName().replaceFirst("^/CLASS_OUTPUT/", ""));
+                Files.createDirectories(target.getParent());
+                try (InputStream in = file.openInputStream()) {
+                    Files.write(target, in.readAllBytes());
+                }
+            }
+        }
+        final List<File> classPath = new ArrayList<>(classPathWithJSpecify());
+        classPath.add(classes.toFile());
+
+        final Compilation test =
+                Compiler.javac()
+                        .withClasspath(classPath)
+                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .compile(
+                                configurationNamed("SecondConfiguration", "some.other.pck.Order"),
+                                beanWithAName("Order"));
+
+        CompilationSubject.assertThat(test).succeeded();
+        CompilationSubject.assertThat(test)
+                .hadNoteContaining(
+                        "some.other.pck.SoftAssertionsProvider also exists on the class path,"
+                                + " written by another compilation. The one written now only knows"
+                                + " the types generated in this compilation: some.other.pck.Order");
+        assertEquals(
+                0,
+                main.notes().stream()
+                        .filter(note -> note.getMessage(null).contains("also exists on the class path"))
+                        .count(),
+                () -> "Notes: " + main.notes());
     }
 
     @Test

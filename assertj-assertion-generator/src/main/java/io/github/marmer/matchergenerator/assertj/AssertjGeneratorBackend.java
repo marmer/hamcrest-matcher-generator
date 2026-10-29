@@ -22,7 +22,8 @@ import java.util.stream.Stream;
  * assertions and a concrete {@code XAssert} to use. Per target package one {@code
  * SoftAssertionsProvider} mixin: the model that sorts first by qualified name among the types of
  * that package in this round writes it, so it is written once. Types of another round or
- * compilation are not in the mixin.
+ * compilation are not in the mixin: the core does not write the mixin again in a later round and
+ * warns, and a mixin of another compilation on the class path is reported as a note.
  */
 public class AssertjGeneratorBackend implements GeneratorBackend {
 
@@ -45,6 +46,7 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
         // in neither.
         final List<TypeModel> packageModels = packageModels(model, context);
         if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
+            noteMixinOnClassPath(model.targetPackage(), packageModels, context);
             sources.add(
                     sourceOf(
                             model,
@@ -77,6 +79,31 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
                                         (first, second) -> first,
                                         TreeMap::new));
         return List.copyOf(byName.values());
+    }
+
+    /**
+     * A mixin on the class path was written by another compilation, e.g. the main one when this is
+     * the test compilation. The one written now shadows it and does not know its types, which the
+     * user is told.
+     */
+    private static void noteMixinOnClassPath(
+            final String targetPackage,
+            final List<TypeModel> packageModels,
+            final GenerationContext context) {
+        final String mixinName =
+                targetPackage.isEmpty()
+                        ? SoftAssertionsProviderGenerator.NAME
+                        : targetPackage + "." + SoftAssertionsProviderGenerator.NAME;
+        if (!context.inheritedMethodNames(mixinName).isEmpty()) {
+            context.reportNote(
+                    mixinName
+                            + " also exists on the class path, written by another compilation."
+                            + " The one written now only knows the types generated in this"
+                            + " compilation: "
+                            + packageModels.stream()
+                                    .map(TypeModel::qualifiedName)
+                                    .collect(Collectors.joining(", ")));
+        }
     }
 
     private static GeneratedSource sourceOf(
