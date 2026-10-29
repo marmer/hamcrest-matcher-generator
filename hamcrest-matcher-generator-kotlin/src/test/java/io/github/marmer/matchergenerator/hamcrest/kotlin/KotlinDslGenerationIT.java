@@ -284,6 +284,67 @@ class KotlinDslGenerationIT {
     }
 
     @Test
+    @DisplayName(
+            "Nested types of different outer types and a top level type with one simple name each get their own names")
+    void nestedTypesOfDifferentOuterTypesWithOneSimpleNameGetTheirOwnNames() throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.Customer", "some.other.pck.A", "some.other.pck.B"),
+                        customerWithNested(),
+                        outerWithNestedCustomer("A"),
+                        outerWithNestedCustomer("B"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden("clashing-nested-types-of-two-outers", "some/other/pck/CustomerMatcherDsl.kt");
+        assertGolden("clashing-nested-types-of-two-outers", "some/other/pck/AMatcherDsl.kt");
+        assertGolden("clashing-nested-types-of-two-outers", "some/other/pck/BMatcherDsl.kt");
+    }
+
+    @Test
+    @DisplayName("The names of the scopes do not depend on the order of the types")
+    void theNamesOfTheScopesDoNotDependOnTheOrderOfTheTypes() throws IOException {
+        compileWithKapt(
+                configuration("some.other.pck.Customer", "some.other.pck.A", "some.other.pck.B"),
+                customerWithNested(),
+                outerWithNestedCustomer("A"),
+                outerWithNestedCustomer("B"));
+        final Path reordered = kotlinOutput.resolve("reordered");
+        Files.createDirectory(reordered);
+        Compiler.javac()
+                .withOptions("-Akapt.kotlin.generated=" + reordered)
+                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .compile(
+                        configuration("some.other.pck.B", "some.other.pck.A", "some.other.pck.Customer"),
+                        outerWithNestedCustomer("B"),
+                        outerWithNestedCustomer("A"),
+                        customerWithNested());
+
+        for (final String file : List.of("Customer", "A", "B")) {
+            final String relative = "some/other/pck/" + file + "MatcherDsl.kt";
+            assertEquals(
+                    Files.readString(kotlinOutput.resolve(relative)),
+                    Files.readString(reordered.resolve(relative)),
+                    relative);
+        }
+    }
+
+    private static JavaFileObject customerWithNested() {
+        return simpleBean("Customer");
+    }
+
+    private static JavaFileObject outerWithNestedCustomer(final String outer) {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck." + outer,
+                "package some.other.pck;",
+                "public class " + outer + " {",
+                "    public Customer getCustomer() { return null; }",
+                "    public static class Customer {",
+                "        public String getName() { return null; }",
+                "    }",
+                "}");
+    }
+
+    @Test
     @DisplayName("A generic type is described with star projections and Any for its type variables")
     void aGenericTypeIsDescribedWithStarProjections() throws IOException {
         final Compilation compilation =

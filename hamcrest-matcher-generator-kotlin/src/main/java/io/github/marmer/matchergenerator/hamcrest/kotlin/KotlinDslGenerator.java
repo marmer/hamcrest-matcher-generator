@@ -133,13 +133,13 @@ final class KotlinDslGenerator {
                 placed.stream()
                         .collect(
                                 Collectors.groupingBy(
-                                        entry -> inPackage(entry.type()), Collectors.counting()));
+                                        entry -> clashKey(entry.type()), Collectors.counting()));
         final Map<String, String> names = new HashMap<>();
         placed.forEach(
                 entry -> {
                     final String simpleName = entry.type().simpleName();
                     final boolean clashing =
-                            countBySimpleName.getOrDefault(inPackage(entry.type()), 0L) > 1;
+                            countBySimpleName.getOrDefault(clashKey(entry.type()), 0L) > 1;
                     names.put(
                             entry.type().qualifiedName(),
                             clashing
@@ -149,7 +149,7 @@ final class KotlinDslGenerator {
         return names;
     }
 
-    private static String inPackage(final TypeModel type) {
+    private static String clashKey(final TypeModel type) {
         return type.targetPackage() + "/" + type.simpleName();
     }
 
