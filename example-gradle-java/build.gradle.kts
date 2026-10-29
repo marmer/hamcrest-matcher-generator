@@ -32,7 +32,7 @@ dependencies {
     implementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
     implementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
     // end::gradle-dependencies[]
-    implementation("org.hamcrest:hamcrest:2.2")
+    implementation("org.hamcrest:hamcrest:3.0")
     implementation("org.assertj:assertj-core:3.27.7")
 
     // tag::gradle-processor[]
