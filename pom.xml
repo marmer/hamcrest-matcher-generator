@@ -6,8 +6,8 @@
     <version>5.1.0</version>
     <packaging>pom</packaging>
     <name>Matcher Generator</name>
-    <description>A tool to generate hamcrest matchers based on any model classes (or other classes with property
-        getters)
+    <description>Generates Hamcrest matchers and AssertJ assertions for model classes (or other classes with property
+        getters), at compile time through an annotation processor
     </description>
 
     <url>https://github.com/marmer/hamcrest-matcher-generator</url>
