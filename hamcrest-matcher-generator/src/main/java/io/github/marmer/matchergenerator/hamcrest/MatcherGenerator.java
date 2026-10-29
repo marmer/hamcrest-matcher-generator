@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -314,13 +315,19 @@ class MatcherGenerator {
         if (direct != null) {
             return referencePreset("nested", value, direct);
         }
+        TypeMirror compared = type;
         if (type.getKind() == TypeKind.ARRAY) {
-            final MatcherType item = matcherTypeOf(((ArrayType) type).getComponentType());
-            return item == null ? valuePreset(value) : referencePreset("array", value, item);
+            compared = ((ArrayType) type).getComponentType();
+            final MatcherType item = matcherTypeOf(compared);
+            if (item != null) {
+                return referencePreset("array", value, item);
+            }
+            return equalsPreset(property, compared, value);
         }
         final @Nullable List<TypeMirror> collectionItem = argumentsAs(type, COLLECTION);
         if (collectionItem != null && collectionItem.size() == 1) {
-            final MatcherType item = matcherTypeOf(collectionItem.get(0));
+            compared = collectionItem.get(0);
+            final MatcherType item = matcherTypeOf(compared);
             if (item != null) {
                 return referencePreset(
                         argumentsAs(type, LIST) != null ? "list" : "collection", value, item);
@@ -328,12 +335,63 @@ class MatcherGenerator {
         }
         final @Nullable List<TypeMirror> mapTypes = argumentsAs(type, MAP);
         if (mapTypes != null && mapTypes.size() == 2) {
-            final MatcherType item = matcherTypeOf(mapTypes.get(1));
+            compared = mapTypes.get(1);
+            final MatcherType item = matcherTypeOf(compared);
             if (item != null) {
                 return referencePreset("map", value, item);
             }
         }
+        return equalsPreset(property, compared, value);
+    }
+
+    /**
+     * The property is compared with {@code equals}, for want of a matcher for the type its value
+     * is made of. The type might be configured in another processing round or compilation, which
+     * this one cannot know, so the user is told in verbose mode.
+     */
+    private CodeBlock equalsPreset(
+            final PropertyModel property, final TypeMirror compared, final CodeBlock value) {
+        final @Nullable TypeElement unmatched = unmatchedUserType(compared);
+        if (unmatched != null) {
+            context.reportVerboseNote(
+                    MatcherNaming.referenceInitializerName(model)
+                            + " compares the property '"
+                            + property.name()
+                            + "' with equals: no matcher for "
+                            + unmatched.getQualifiedName()
+                            + " is generated in this processing round");
+        }
         return valuePreset(value);
+    }
+
+    /**
+     * @return the type if it is a class of the user that no generated type of this round stands
+     *     for. Enums, JDK and Kotlin library types are compared with {@code equals} on purpose.
+     */
+    private @Nullable TypeElement unmatchedUserType(final TypeMirror type) {
+        final TypeMirror bound =
+                type instanceof WildcardType ? ((WildcardType) type).getExtendsBound() : type;
+        if (bound == null || bound.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        final TypeElement element = asTypeElement(bound);
+        final String name = element.getQualifiedName().toString();
+        final boolean library =
+                name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("kotlin.");
+        return library || element.getKind() == ElementKind.ENUM || isGenerated(name)
+                ? null
+                : element;
+    }
+
+    private boolean isGenerated(final String qualifiedName) {
+        return context.generatedTypes().stream()
+                .anyMatch(generated -> isOrContains(generated, qualifiedName));
+    }
+
+    private static boolean isOrContains(final TypeModel type, final String qualifiedName) {
+        return type.qualifiedName().equals(qualifiedName)
+                || type.nestedTypes().stream()
+                        .anyMatch(nested -> isOrContains(nested, qualifiedName));
     }
 
     private CodeBlock valuePreset(final CodeBlock value) {
