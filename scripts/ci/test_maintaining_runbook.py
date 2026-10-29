@@ -36,8 +36,9 @@ class MaintainingRunbookTest(unittest.TestCase):
         self.text = RUNBOOK_FILE.read_text(encoding="utf-8")
 
     def test_required_headings_are_present(self):
+        lines = self.text.splitlines()
         for heading in REQUIRED_HEADINGS:
-            self.assertIn(heading, self.text)
+            self.assertIn(heading, lines)
 
     def test_credentials_table_names_every_credential_and_its_storage(self):
         for name in CREDENTIALS:
