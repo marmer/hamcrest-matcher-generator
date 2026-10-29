@@ -17,9 +17,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * The guide names the Hamcrest and AssertJ versions in prose through the attributes of
- * {@code docs/pom.xml}. Those attributes must match the versions the root pom manages, so the
- * guide never names a version the project does not use.
+ * The guide names the Hamcrest and AssertJ versions in prose through the attributes of {@code
+ * docs/pom.xml}. Those attributes must match the versions the root pom manages, so the guide never
+ * names a version the project does not use.
  */
 class GuideVersionsTest {
 
