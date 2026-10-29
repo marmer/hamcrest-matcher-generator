@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Runtime and unknown scopes
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: low
           fail-on-scopes: runtime, unknown
@@ -26,7 +26,7 @@ jobs:
         # Runs even when the runtime step found a violation, so a pull request that breaks both scopes reports both.
         # Still blocking: a violation fails this step and therefore the job.
         if: success() || failure()
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: low
           fail-on-scopes: development
