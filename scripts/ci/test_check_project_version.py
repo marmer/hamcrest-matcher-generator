@@ -2,6 +2,8 @@
 import importlib.util
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import textwrap
 import unittest
@@ -13,6 +15,10 @@ check = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check)
 
 GROUP = "io.github.marmer.testutils"
+SCRIPT = HERE / "check-project-version.py"
+# The repository this test file belongs to, derived from its location and never from the working directory,
+# so the test checks the same tree from the main checkout, from a worktree and from any cwd.
+REPO_ROOT = HERE.parents[1]
 
 
 def pom(own=None, parent=None, dependencies=()):
@@ -148,15 +154,92 @@ class ProblemsTest(unittest.TestCase):
         with Repo(extra_files=extra, other_files=other) as repo:
             self.assertEqual([], repo.problems())
 
+    def test_poms_below_claude_and_git_directories_are_ignored(self):
+        stale = pom(own="5.1.0", parent="5.1.0")
+        others = {".claude/worktrees/x/pom.xml": stale, ".git/pom.xml": stale}
+        with Repo(other_files=others) as repo:
+            self.assertEqual([], repo.problems())
+
     def test_poms_below_build_output_are_ignored(self):
         with Repo(other_files={"a/target/pom.xml": pom(own="1.0", parent="1.0")}) as repo:
             self.assertEqual([], repo.problems())
 
 
+class ErrorTest(unittest.TestCase):
+
+    def test_unparseable_pom_is_reported_with_its_name(self):
+        with Repo(other_files={"a/pom.xml": "<project>"}) as repo:
+            with self.assertRaisesRegex(check.CheckError, r"^a/pom\.xml: not well-formed XML"):
+                repo.problems()
+
+    def test_manifest_without_the_root_package_is_reported_with_its_name(self):
+        with Repo() as repo:
+            repo.write(".release-please-manifest.json", json.dumps({"other": "1.0.0"}))
+            with self.assertRaisesRegex(check.CheckError, r"^\.release-please-manifest\.json: no version for the root package"):
+                repo.problems()
+
+    def test_manifest_that_is_not_json_is_reported_with_its_name(self):
+        with Repo() as repo:
+            repo.write(".release-please-manifest.json", "{")
+            with self.assertRaisesRegex(check.CheckError, r"^\.release-please-manifest\.json: not valid JSON"):
+                repo.problems()
+
+    def test_missing_config_is_reported_with_its_name(self):
+        with Repo() as repo:
+            (repo.root / "release-please-config.json").unlink()
+            with self.assertRaisesRegex(check.CheckError, r"^release-please-config\.json: cannot be read"):
+                repo.problems()
+
+    def test_config_without_the_root_package_is_reported_with_its_name(self):
+        with Repo() as repo:
+            repo.write("release-please-config.json", json.dumps({"packages": {}}))
+            with self.assertRaisesRegex(check.CheckError, r"^release-please-config\.json: no root package"):
+                repo.problems()
+
+    def test_pom_without_the_maven_namespace_is_a_problem_not_a_skip(self):
+        bare = "<project><parent><groupId>%s</groupId><version>5.1.0</version></parent></project>" % GROUP
+        with Repo(other_files={"a/pom.xml": bare}) as repo:
+            self.assertEqual(["a/pom.xml: root element is not <project> in the namespace "
+                              "http://maven.apache.org/POM/4.0.0, so it cannot be checked"], repo.problems())
+
+
+class MainTest(unittest.TestCase):
+
+    @staticmethod
+    def run_script(*args):
+        return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True)
+
+    def test_consistent_repository_exits_zero(self):
+        with Repo() as repo:
+            result = self.run_script(str(repo.root))
+        self.assertEqual((0, ""), (result.returncode, result.stderr))
+        self.assertIn("every module pom follows the version", result.stdout)
+
+    def test_drift_exits_one_and_prints_the_problem(self):
+        with Repo(manifest="6.0.1") as repo:
+            result = self.run_script(str(repo.root))
+        self.assertEqual(1, result.returncode)
+        self.assertIn("pom.xml: <version> is 6.0.0, the manifest says 6.0.1", result.stdout)
+
+    def test_too_many_arguments_print_the_usage_and_exit_nonzero(self):
+        result = self.run_script("a", "b")
+        self.assertEqual(1, result.returncode)
+        self.assertIn("Usage: scripts/ci/check-project-version.py", result.stderr)
+
+    def test_unparseable_pom_exits_one_with_one_line_and_no_traceback(self):
+        with Repo(other_files={"a/pom.xml": "<project>"}) as repo:
+            result = self.run_script(str(repo.root))
+        self.assertEqual(1, result.returncode)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(1, len(result.stderr.strip().splitlines()))
+        self.assertIn("a/pom.xml", result.stderr)
+
+
 class RepositoryTest(unittest.TestCase):
 
     def test_every_pom_of_this_repository_follows_the_manifest_version(self):
-        self.assertEqual([], check.problems(HERE.parents[1]))
+        self.assertTrue((REPO_ROOT / ".release-please-manifest.json").is_file(), f"{REPO_ROOT} is not the repository root")
+        self.assertEqual([], check.problems(REPO_ROOT))
 
 
 if __name__ == "__main__":
