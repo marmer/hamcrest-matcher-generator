@@ -43,6 +43,7 @@
         <module>hamcrest-matcher-generator-annotationprocessor</module>
         <module>example-maven-java-hamcrest</module>
         <module>example-maven-java-assertj</module>
+        <module>example-maven-kotlin</module>
     </modules>
 
     <properties>
@@ -787,6 +788,7 @@
                                 <excludeArtifact>hamcrest-matcher-generator-docs</excludeArtifact>
                                 <excludeArtifact>example-maven-java-hamcrest</excludeArtifact>
                                 <excludeArtifact>example-maven-java-assertj</excludeArtifact>
+                                <excludeArtifact>example-maven-kotlin</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>
