@@ -55,6 +55,8 @@ The published modules are listed in the root pom's `<modules>`. Their roles: `ma
 - It resolves the project's own artifacts from `mavenLocal()` only, so a missing install fails the build.
 - release-please bumps its version through `release-please-config.json` (`extra-files`, marker `x-release-please-version`).
 
+A new module pom needs its own xml entry in `extra-files` of `release-please-config.json` (own and parent version are raised together); dependencies on project artifacts use `${project.version}`. `scripts/ci/check-project-version.py` fails otherwise. The release type is `simple`: `maven` would rewrite the frozen 5.x suite's `@project.version@`.
+
 ## Architecture: Generation Flow
 
 The round-by-round flow (annotation, processor, worker, `TypeModel`, backends, written sources) is arc42 chapter 06, `docs/src/docs/asciidoc/architecture/_chapters/06_runtime_view.adoc`; read it there. The Hamcrest backend lives in package `io.github.marmer.matchergenerator.hamcrest`; its generated `<TypeName>Matcher` extends `TypeSafeMatcher<T>` and wraps a `BeanPropertyMatcher<T>`. The AssertJ backend (`io.github.marmer.matchergenerator.assertj`) generates an `AbstractXAssert<SELF, ACTUAL>` and a concrete `XAssert` per type.
