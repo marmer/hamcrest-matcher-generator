@@ -129,6 +129,9 @@ release-please (arc42 ch. 11).
 2. Check the service's status page. Wait for recovery, then re-run the failed jobs.
 3. The Sonar job is a required check, so a SonarQube Cloud outage blocks every merge. During an outage a person with
    admin rights may merge past the ruleset. Record the reason in the pull request.
+   `Example Gradle` is a required check too and downloads the Gradle distribution and its wrapper checksums from
+   `services.gradle.org` and the example's dependencies from Maven Central; an outage or HTTP 429 there is handled the
+   same way: re-run, and only if it persists merge past the ruleset with the reason noted.
 4. Known fallbacks (arc42 ch. 11, decisions for the maintainer): Renovate can run self-hosted in GitHub Actions, and
    the Sonar job can be made non-blocking. Both change the workflows or the ruleset, so they are not done in an
    incident without a pull request.

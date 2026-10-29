@@ -9,8 +9,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
 blocked it. The `main` branch ruleset requires the build, the verify matrix, `Domain docs in sync`, the release dry run, the
-Sonar quality gate and the mutation testing job to pass before GitHub merges a pull request. The `Example Gradle`
-job is blocking in the same CI but not in the ruleset; adding it is an owner action.
+Sonar quality gate, the mutation testing job and `Example Gradle` to pass before GitHub merges a pull request.
 
 [options="header",cols="2,5"]
 |===
