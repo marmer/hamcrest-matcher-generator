@@ -359,9 +359,10 @@ class KotlinDslGenerationIT {
 
         CompilationSubject.assertThat(compilation)
                 .hadErrorContaining(
-                        "The Kotlin DSL cannot tell some.other.pck.NestedClash.Customer and"
-                                + " some.other.pck.NestedClashCustomer apart: both would be named"
-                                + " NestedClashCustomer")
+                        "The Kotlin DSL name 'NestedClashCustomer' is needed by"
+                                + " 'some.other.pck.NestedClash.Customer' and"
+                                + " 'some.other.pck.NestedClashCustomer', which clashes;"
+                                + " rename one of the types")
                 .inFile(configuration)
                 .onLine(3);
         CompilationSubject.assertThat(compilation).hadErrorCount(1);
@@ -391,9 +392,10 @@ class KotlinDslGenerationIT {
         CompilationSubject.assertThat(reversed).hadErrorCount(1);
         CompilationSubject.assertThat(reversed)
                 .hadErrorContaining(
-                        "The Kotlin DSL cannot tell some.other.pck.NestedClash.Customer and"
-                                + " some.other.pck.NestedClashCustomer apart: both would be named"
-                                + " NestedClashCustomer")
+                        "The Kotlin DSL name 'NestedClashCustomer' is needed by"
+                                + " 'some.other.pck.NestedClash.Customer' and"
+                                + " 'some.other.pck.NestedClashCustomer', which clashes;"
+                                + " rename one of the types")
                 .inFile(configuration)
                 .onLine(3);
         assertGolden("clashing-after-prefix", "some/other/pck/NestedClashMatcherDsl.kt");
@@ -428,8 +430,9 @@ class KotlinDslGenerationIT {
         CompilationSubject.assertThat(compilation).hadErrorCount(1);
         CompilationSubject.assertThat(compilation)
                 .hadErrorContaining(
-                        "The Kotlin DSL cannot tell some.other.pck.A.BCD, some.other.pck.AB.CD and"
-                                + " some.other.pck.ABCD apart: all would be named ABCD")
+                        "The Kotlin DSL name 'ABCD' is needed by 'some.other.pck.A.BCD',"
+                                + " 'some.other.pck.AB.CD' and 'some.other.pck.ABCD',"
+                                + " which clashes; rename all but one of the types")
                 .inFile(first)
                 .onLine(3);
     }
@@ -442,9 +445,9 @@ class KotlinDslGenerationIT {
 
         CompilationSubject.assertThat(compilation)
                 .hadErrorContaining(
-                        "The Kotlin DSL cannot tell some.other.pck.A.BCD,"
-                                + " some.other.pck.AB.CD and some.other.pck.ABCD apart: all would"
-                                + " be named ABCD")
+                        "The Kotlin DSL name 'ABCD' is needed by 'some.other.pck.A.BCD',"
+                                + " 'some.other.pck.AB.CD' and 'some.other.pck.ABCD',"
+                                + " which clashes; rename all but one of the types")
                 .inFile(configuration)
                 .onLine(3);
         CompilationSubject.assertThat(compilation).hadErrorCount(1);
