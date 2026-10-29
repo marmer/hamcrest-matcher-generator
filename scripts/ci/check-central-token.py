@@ -16,8 +16,7 @@ import urllib.error
 import urllib.request
 
 PROBE_URL = "https://central.sonatype.com/api/v1/publisher/status?id=00000000-0000-0000-0000-000000000000"
-# The setup checklist (#147) until MAINTAINING.md (#137) exists; then point this at that file.
-RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/issues/147"
+RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/blob/main/MAINTAINING.md"
 MISSING_OR_INVALID = "CENTRAL_TOKEN missing or invalid"
 
 
