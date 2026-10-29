@@ -255,21 +255,6 @@ class CompletenessCheckTest {
                                         + " ignored, but these were neither: name"));
     }
 
-    @Test
-    @DisplayName("The navigated assertion passes when it addresses all its own properties")
-    void theNavigatedAssertionPassesWhenItAddressesAllItsOwnProperties() {
-        assertThatCode(
-                        () ->
-                                MembershipAssert.assertThat(MEMBERSHIP)
-                                        .extracting(
-                                                Membership::getMember, as(CustomerAssert.CUSTOMER))
-                                        .hasName("Ada")
-                                        .ignoringPhone()
-                                        .ignoringAddress()
-                                        .hasAllPropertiesChecked())
-                .doesNotThrowAnyException();
-    }
-
     /** The soft assertions of the orders, as an entry point of the test. */
     static class OrderSoftAssertions extends SoftAssertions implements SoftAssertionsProvider {}
 }

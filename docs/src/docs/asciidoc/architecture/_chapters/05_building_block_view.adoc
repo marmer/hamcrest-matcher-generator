@@ -49,7 +49,7 @@ that are neither addressed nor ignored. The scope form counts only the calls its
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
 Each target package gets one `SoftAssertionsProvider` mixin with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
-that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity; inside an array, collection or map the path
+that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
 restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and
 the core reports one compiler error at the annotation, naming the property and the methods; the same goes for a method
 name that two properties generate and a factory constant that two nested types share. The core hands the backend
