@@ -4,7 +4,6 @@
  */
 package example.assertj;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import example.assertj.model.Address;
@@ -52,21 +51,17 @@ class CustomerAssertTest {
     @Test
     @DisplayName("The scope form runs the completeness check only inside its lambda")
     void theScopeFormRunsTheCompletenessCheckOnlyInsideItsLambda() {
-        assertThatCode(
-                        () ->
-                                CustomerAssert.assertThat(ADA)
-                                        .satisfiesCheckingAllProperties(
-                                                customer ->
-                                                        customer.hasName("Ada")
-                                                                .hasAddressSatisfying(
-                                                                        address ->
-                                                                                AddressAssert
-                                                                                        .assertThat(
-                                                                                                address)
-                                                                                        .hasCity(
-                                                                                                "Paris"))
-                                                                .isActive()))
-                .doesNotThrowAnyException();
+        // tag::completeness-check-scope[]
+        CustomerAssert.assertThat(ADA)
+                .satisfiesCheckingAllProperties(
+                        customer ->
+                                customer.hasName("Ada")
+                                        .hasAddressSatisfying(
+                                                address ->
+                                                        AddressAssert.assertThat(address)
+                                                                .hasCity("Paris"))
+                                        .isActive());
+        // end::completeness-check-scope[]
     }
 
     @Test
