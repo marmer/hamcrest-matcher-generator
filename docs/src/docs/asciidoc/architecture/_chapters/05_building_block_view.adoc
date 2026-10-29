@@ -68,7 +68,7 @@ If the names that include the enclosing types still collide (a top level `Nested
 build would change when one of them is added. It reports one compiler error per group of colliding types at the
 `@GenerateMatchers` annotation, naming all of them, and gives none of them a scope or an entry function; the rest of the
 DSL is still written. The error is reported by the generation of the type that contains the first colliding type in
-qualified name order, so it appears once, in whatever order the types are processed in.
+qualified name order, so it appears once, in whatever order the types are processed in. The types of all `@GenerateMatchers` configurations of one processing round are compared together; types generated in different rounds are never seen together, so a clash between them is not found.
 The scope class is marked with `@MatcherDsl`, a Java annotation in this artifact that carries Kotlin's `@DslMarker`,
 and delegates every call to the generated Java matcher, so mismatch messages are identical. A scope has
 `name(value)`, `name(matcher)` and `ignoringName()` for every property, `checkingAllProperties()`, and `customer { }` for a

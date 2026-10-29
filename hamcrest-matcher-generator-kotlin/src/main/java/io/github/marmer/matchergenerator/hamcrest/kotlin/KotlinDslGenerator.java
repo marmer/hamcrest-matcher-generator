@@ -140,21 +140,22 @@ final class KotlinDslGenerator {
                         .collect(Collectors.toSet());
         clashes.stream()
                 .filter(clash -> own.contains(clash.qualifiedNames().get(0)))
-                .forEach(
-                        clash ->
-                                context.reportError(
-                                        "The Kotlin DSL cannot tell "
-                                                + joined(clash.qualifiedNames())
-                                                + " apart: "
-                                                + (clash.qualifiedNames().size() == 2
-                                                        ? "both"
-                                                        : "all")
-                                                + " would be named "
-                                                + clash.name()
-                                                + ". Rename one of the types."));
+                .forEach(this::reportClash);
     }
 
-    private static String joined(final List<String> names) {
+    private void reportClash(final Clash clash) {
+        final String quantifier = clash.qualifiedNames().size() == 2 ? "both" : "all";
+        context.reportError(
+                "The Kotlin DSL cannot tell "
+                        + enumerated(clash.qualifiedNames())
+                        + " apart: "
+                        + quantifier
+                        + " would be named "
+                        + clash.name()
+                        + ". Rename one of the types.");
+    }
+
+    private static String enumerated(final List<String> names) {
         return String.join(", ", names.subList(0, names.size() - 1))
                 + " and "
                 + names.get(names.size() - 1);

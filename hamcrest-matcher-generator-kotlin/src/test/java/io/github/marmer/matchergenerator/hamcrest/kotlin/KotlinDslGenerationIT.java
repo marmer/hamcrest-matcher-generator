@@ -374,6 +374,67 @@ class KotlinDslGenerationIT {
     }
 
     @Test
+    @DisplayName("The report of two clashing types and the other output do not depend on the order")
+    void theReportOfTwoClashingTypesAndTheOtherOutputDoNotDependOnTheOrder() throws IOException {
+        final JavaFileObject configuration =
+                configuration(
+                        "some.other.pck.NestedClashCustomer",
+                        "some.other.pck.NestedClash",
+                        "some.other.pck.Customer");
+        final Compilation reversed =
+                compileWithKapt(
+                        configuration,
+                        simpleBean("NestedClashCustomer"),
+                        nestedClash(),
+                        customerWithNested());
+
+        CompilationSubject.assertThat(reversed).hadErrorCount(1);
+        CompilationSubject.assertThat(reversed)
+                .hadErrorContaining(
+                        "The Kotlin DSL cannot tell some.other.pck.NestedClash.Customer and"
+                                + " some.other.pck.NestedClashCustomer apart: both would be named"
+                                + " NestedClashCustomer")
+                .inFile(configuration)
+                .onLine(3);
+        assertGolden("clashing-after-prefix", "some/other/pck/NestedClashMatcherDsl.kt");
+        assertGolden("clashing-after-prefix", "some/other/pck/CustomerMatcherDsl.kt");
+        assertFalse(
+                Files.exists(
+                        kotlinOutput.resolve("some/other/pck/NestedClashCustomerMatcherDsl.kt")),
+                "A type without a name for its scope gets no DSL file");
+    }
+
+    @Test
+    @DisplayName("Clashing types of two configurations of one round are reported once")
+    void clashingTypesOfTwoConfigurationsOfOneRoundAreReportedOnce() {
+        final JavaFileObject first = namedConfiguration("FirstConfiguration", "some.other.pck.A");
+        final JavaFileObject second =
+                namedConfiguration(
+                        "SecondConfiguration", "some.other.pck.AB", "some.other.pck.ABCD");
+        final JavaFileObject third =
+                namedConfiguration("ThirdConfiguration", "some.other.pck.BCD", "some.other.pck.CD");
+
+        final Compilation compilation =
+                compileWithKapt(
+                        first,
+                        second,
+                        third,
+                        outerWithNested("A", "BCD"),
+                        outerWithNested("AB", "CD"),
+                        simpleBean("ABCD"),
+                        simpleBean("BCD"),
+                        simpleBean("CD"));
+
+        CompilationSubject.assertThat(compilation).hadErrorCount(1);
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(
+                        "The Kotlin DSL cannot tell some.other.pck.A.BCD, some.other.pck.AB.CD and"
+                                + " some.other.pck.ABCD apart: all would be named ABCD")
+                .inFile(first)
+                .onLine(3);
+    }
+
+    @Test
     @DisplayName("Three types whose names with enclosing types are equal are reported once")
     void threeTypesWhoseNamesWithEnclosingTypesAreEqualAreReportedOnce() {
         final JavaFileObject configuration = threeWayConfiguration(false);
@@ -490,7 +551,6 @@ class KotlinDslGenerationIT {
                                 package some.other.pck;
 
                                 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
                                 public class Box<T extends Number> {
@@ -925,8 +985,13 @@ import java.util.Set;
     }
 
     private static JavaFileObject configuration(final String... configuredTypes) {
+        return namedConfiguration("SomeConfiguration", configuredTypes);
+    }
+
+    private static JavaFileObject namedConfiguration(
+            final String name, final String... configuredTypes) {
         return JavaFileObjects.forSourceLines(
-                "some.pck.SomeConfiguration",
+                "some.pck." + name,
                 "package some.pck;",
                 "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
                 "@GenerateMatchers({"
@@ -934,7 +999,7 @@ import java.util.Set;
                                 .map(type -> "\"" + type + "\"")
                                 .collect(Collectors.joining(", "))
                         + "})",
-                "public final class SomeConfiguration {",
+                "public final class " + name + " {",
                 "}");
     }
 
