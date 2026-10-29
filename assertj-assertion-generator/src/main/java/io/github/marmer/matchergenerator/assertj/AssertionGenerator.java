@@ -98,11 +98,19 @@ class AssertionGenerator {
     }
 
     String abstractName() {
-        return "Abstract" + model.simpleName() + "Assert";
+        return abstractNameOf(model.simpleName());
     }
 
     String concreteName() {
-        return model.simpleName() + "Assert";
+        return concreteNameOf(model.simpleName());
+    }
+
+    static String abstractNameOf(final String simpleName) {
+        return "Abstract" + simpleName + "Assert";
+    }
+
+    static String concreteNameOf(final String simpleName) {
+        return simpleName + "Assert";
     }
 
     /** The abstract assertion class of the configured type, which is the null marked scope. */

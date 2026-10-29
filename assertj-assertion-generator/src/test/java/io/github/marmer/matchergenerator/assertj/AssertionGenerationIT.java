@@ -801,6 +801,93 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName(
+            "Top level types Foo and AbstractFoo both generate AbstractFooAssert, a compile error")
+    void topLevelTypesGeneratingTheSameClassNameAreACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.AbstractFoo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("AbstractFoo"));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'some.other.pck.AbstractFoo'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'some.other.pck.Foo'");
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'AbstractFooAssert'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A generated class named like another configured type is a compile error")
+    void aGeneratedClassNamedLikeAnotherConfiguredTypeIsACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.FooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("FooAssert"));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'some.other.pck.FooAssert'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'some.other.pck.Foo'");
+        CompilationSubject.assertThat(compilation).hadErrorContaining("'FooAssert'");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A configured type named SoftAssertionsProvider clashes with the mixin")
+    void aConfiguredTypeNamedLikeTheMixinIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.SoftAssertionsProvider");
+        final Compilation compilation =
+                compileWithJSpecify(configuration, beanWithAName("SoftAssertionsProvider"));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'some.other.pck.SoftAssertionsProvider'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("mixin");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("A configured type named PropertyRepresentation clashes with the representation")
+    void aConfiguredTypeNamedLikeTheRepresentationIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.PropertyRepresentation");
+        final Compilation compilation =
+                compileWithJSpecify(configuration, beanWithAName("PropertyRepresentation"));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("'some.other.pck.PropertyRepresentation'")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorContaining("representation");
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+    }
+
+    @Test
+    @DisplayName("Top level types whose names only resemble each other are no clash")
+    void topLevelTypesWithResemblingNamesAreNoClash() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration(
+                                "some.other.pck.FooBar",
+                                "some.other.pck.Foo_Bar",
+                                "some.other.pck.FOO_BAR",
+                                "some.other.pck.FOOBAR",
+                                "some.other.pck.Foobar"),
+                        beanWithAName("FooBar"),
+                        beanWithAName("Foo_Bar"),
+                        beanWithAName("FOO_BAR"),
+                        beanWithAName("FOOBAR"),
+                        beanWithAName("Foobar"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    @Test
     @DisplayName("A boolean foo and a non boolean notFoo generate no clash")
     void aBooleanAndANonBooleanNameThatResemblesItAreNoClash() {
         final Compilation compilation =

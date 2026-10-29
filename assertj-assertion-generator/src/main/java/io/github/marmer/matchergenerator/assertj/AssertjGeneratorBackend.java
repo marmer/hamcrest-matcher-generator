@@ -29,6 +29,17 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
 
     @Override
     public List<GeneratedSource> generate(final TypeModel model, final GenerationContext context) {
+        // Two claimants of one class name make the compiler refuse the second class. Only the first
+        // model of the package reports, and nothing of the package is written.
+        final List<TypeModel> packageModels = packageModels(model, context);
+        final List<String> clashes =
+                new GeneratedNameClashes(packageModels).messages(model.targetPackage());
+        if (!clashes.isEmpty()) {
+            if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
+                clashes.forEach(context::reportError);
+            }
+            return List.of();
+        }
         final AssertionGenerator generator = new AssertionGenerator(model, context);
         final List<GeneratedSource> sources =
                 new ArrayList<>(
@@ -44,7 +55,6 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
         // Only the first model of the package writes the mixin and the representation. The list
         // holds the types generated in this round, so a type from another round or compilation is
         // in neither.
-        final List<TypeModel> packageModels = packageModels(model, context);
         if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
             final GeneratedSource mixin =
                     sourceOf(
