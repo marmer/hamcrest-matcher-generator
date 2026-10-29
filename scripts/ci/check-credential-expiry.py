@@ -31,8 +31,7 @@ SONAR_TOKENS_URL = "https://sonarcloud.io/api/user_tokens/search"
 REMINDER_DAYS = 30
 ISSUE_TITLE = "Credential renewal due"
 OWNER = "marmer"
-# The setup checklist (#147) until MAINTAINING.md (#137) exists; then point this at that file.
-RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/issues/147"
+RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/blob/main/MAINTAINING.md"
 # Field index 6 of a `gpg --with-colons` pub or sub record is the expiry as epoch seconds (empty: no expiry).
 GPG_EXPIRY_FIELD = 6
 # Field 2 (validity) values of keys that need no renewal: revoked, invalid, disabled.
