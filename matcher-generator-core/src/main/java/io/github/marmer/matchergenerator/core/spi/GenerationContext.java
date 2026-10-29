@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Information about the current generation run that is not part of the model of a type.
@@ -32,6 +33,13 @@ import java.util.function.Function;
  *     whatever the verbose option says
  * @param warnings receives the message of every compiler warning a backend reports for the
  *     configured type; the core reports it at the annotation element that configured the type
+ * @param verboseNotes receives the message of every compiler note a backend reports that is only of
+ *     interest when the processor option {@code matchergenerator.verbose} is set; the core prints
+ *     it only then
+ * @param classExistsOutsideOwnOutput whether a class of the given qualified name is on the compile
+ *     class path or source path without being in the output directory of this compilation, e.g. the
+ *     class of a module the current one depends on or of the main compilation when the test sources
+ *     are compiled
  */
 public record GenerationContext(
         String generatorName,
@@ -42,7 +50,9 @@ public record GenerationContext(
         Consumer<String> errors,
         boolean kotlinOutputAvailable,
         Consumer<String> notes,
-        Consumer<String> warnings) {
+        Consumer<String> warnings,
+        Consumer<String> verboseNotes,
+        Predicate<String> classExistsOutsideOwnOutput) {
 
     public GenerationContext {
         Objects.requireNonNull(generatorName, "generatorName");
@@ -52,11 +62,14 @@ public record GenerationContext(
         Objects.requireNonNull(errors, "errors");
         Objects.requireNonNull(notes, "notes");
         Objects.requireNonNull(warnings, "warnings");
+        Objects.requireNonNull(verboseNotes, "verboseNotes");
+        Objects.requireNonNull(classExistsOutsideOwnOutput, "classExistsOutsideOwnOutput");
     }
 
     /**
      * A context that knows no other generated types and no inherited methods, that offers no Kotlin
-     * output, and that cannot report errors, notes or warnings.
+     * output, and that cannot report errors, notes or warnings. It drops verbose notes, which only
+     * ever are an extra, and knows no class outside its own output.
      */
     public GenerationContext(
             final String generatorName,
@@ -78,7 +91,9 @@ public record GenerationContext(
                 message -> {
                     throw new IllegalStateException(
                             "The context cannot report warnings: " + message);
-                });
+                },
+                message -> {},
+                name -> false);
     }
 
     /**
@@ -89,6 +104,15 @@ public record GenerationContext(
      */
     public Set<String> inheritedMethodNames(final String qualifiedClassName) {
         return inheritedMethods.apply(qualifiedClassName);
+    }
+
+    /**
+     * @param qualifiedClassName the qualified name of a class
+     * @return whether the class is on the compile class path or source path without being in the
+     *     output directory of this compilation, so it was not written by this very build
+     */
+    public boolean classExistsOutsideOwnOutput(final String qualifiedClassName) {
+        return classExistsOutsideOwnOutput.test(qualifiedClassName);
     }
 
     /**
@@ -118,5 +142,15 @@ public record GenerationContext(
      */
     public void reportWarning(final String message) {
         warnings.accept(message);
+    }
+
+    /**
+     * Reports a compiler note that is printed only when the verbose option is set, such as a
+     * decision the backend took that the user might wonder about.
+     *
+     * @param message the note
+     */
+    public void reportVerboseNote(final String message) {
+        verboseNotes.accept(message);
     }
 }

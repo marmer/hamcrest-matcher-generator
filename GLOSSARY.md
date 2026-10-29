@@ -24,7 +24,7 @@ The pair of classes the AssertJ backend generates per configured type: `Abstract
 _Avoid_: assert class, assertion wrapper
 
 **Soft assertions mixin**:
-The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin covers only types generated in the same processing round; a type from another round or compilation is not in it.
+The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see arc42 chapter 6, "Files written once per package").
 _Avoid_: soft provider, BDD mixin
 
 **Generated representation**:
@@ -40,7 +40,7 @@ The single annotation-based declaration of which types assertions are generated 
 _Avoid_: backend settings
 
 **Reference object**:
-An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison, `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and by `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`. A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
+An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison, `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and by `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`, and `-Amatchergenerator.verbose` prints a note per property that names the type (see arc42 chapter 6, "Files written once per package"). A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
 _Avoid_: template, prototype object
 
 **Property path**:
