@@ -144,15 +144,17 @@ final class KotlinDslGenerator {
     }
 
     private void reportClash(final Clash clash) {
-        final String quantifier = clash.qualifiedNames().size() == 2 ? "both" : "all";
+        final List<String> quoted =
+                clash.qualifiedNames().stream().map(name -> "'" + name + "'").toList();
+        final String advice =
+                quoted.size() == 2 ? "rename one of the types" : "rename all but one of the types";
         context.reportError(
-                "The Kotlin DSL cannot tell "
-                        + enumerated(clash.qualifiedNames())
-                        + " apart: "
-                        + quantifier
-                        + " would be named "
+                "The Kotlin DSL name '"
                         + clash.name()
-                        + ". Rename one of the types.");
+                        + "' is needed by "
+                        + enumerated(quoted)
+                        + ", which clashes; "
+                        + advice);
     }
 
     private static String enumerated(final List<String> names) {

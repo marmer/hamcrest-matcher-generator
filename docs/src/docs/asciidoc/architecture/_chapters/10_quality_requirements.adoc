@@ -102,7 +102,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-u1]]QS-U1
 | Interaction capability / User error protection
-| *A misconfiguration is reported where it happens.* When a test developer configures a name that cannot be resolved, or a type whose generated method names clash with inherited ones, while compiling with javac or KAPT, the annotation processor reports exactly one compiler error at the annotation element and names the offending value; there is no stack trace and no follow-up error in generated code.
+| *A misconfiguration is reported where it happens.* When a test developer configures a name that cannot be resolved, or a type whose generated names clash (method names with inherited ones, AssertJ top level class names in one package, Kotlin DSL scope names), while compiling with javac or KAPT, the annotation processor reports one compiler error per problem at the annotation element and names the offending value; there is no stack trace, and a backend writes nothing for a clashing name, so no follow-up error appears in generated code.
 | Annotation processor integration tests
 
 | [[qs-u2]]QS-U2
