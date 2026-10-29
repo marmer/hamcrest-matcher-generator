@@ -19,8 +19,11 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
@@ -339,6 +342,126 @@ class KotlinDslGenerationIT {
         }
     }
 
+    @Test
+    @DisplayName("Two types whose names with enclosing types are equal are reported once")
+    void twoTypesWhoseNamesWithEnclosingTypesAreEqualAreReportedOnce() throws IOException {
+        final JavaFileObject configuration =
+                configuration(
+                        "some.other.pck.Customer",
+                        "some.other.pck.NestedClash",
+                        "some.other.pck.NestedClashCustomer");
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration,
+                        customerWithNested(),
+                        nestedClash(),
+                        simpleBean("NestedClashCustomer"));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(
+                        "The Kotlin DSL cannot tell some.other.pck.NestedClash.Customer and"
+                                + " some.other.pck.NestedClashCustomer apart: both would be named"
+                                + " NestedClashCustomer")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorCount(1);
+        assertGolden("clashing-after-prefix", "some/other/pck/NestedClashMatcherDsl.kt");
+        assertGolden("clashing-after-prefix", "some/other/pck/CustomerMatcherDsl.kt");
+        assertFalse(
+                Files.exists(
+                        kotlinOutput.resolve("some/other/pck/NestedClashCustomerMatcherDsl.kt")),
+                "A type without a name for its scope gets no DSL file");
+    }
+
+    @Test
+    @DisplayName("Three types whose names with enclosing types are equal are reported once")
+    void threeTypesWhoseNamesWithEnclosingTypesAreEqualAreReportedOnce() {
+        final JavaFileObject configuration = threeWayConfiguration(false);
+        final Compilation compilation = compileWithKapt(threeWayClashSources(configuration, false));
+
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(
+                        "The Kotlin DSL cannot tell some.other.pck.A.BCD,"
+                                + " some.other.pck.AB.CD and some.other.pck.ABCD apart: all would"
+                                + " be named ABCD")
+                .inFile(configuration)
+                .onLine(3);
+        CompilationSubject.assertThat(compilation).hadErrorCount(1);
+    }
+
+    @Test
+    @DisplayName("The report of a name clash does not depend on the order of the types")
+    void theReportOfANameClashDoesNotDependOnTheOrderOfTheTypes() {
+        final Compilation inOrder =
+                compileWithKapt(threeWayClashSources(threeWayConfiguration(false), false));
+        final Compilation reversed =
+                compileWithKapt(threeWayClashSources(threeWayConfiguration(true), true));
+
+        CompilationSubject.assertThat(reversed).hadErrorCount(1);
+        assertEquals(
+                inOrder.errors().get(0).getMessage(Locale.ROOT),
+                reversed.errors().get(0).getMessage(Locale.ROOT));
+    }
+
+    private static JavaFileObject threeWayConfiguration(final boolean reversed) {
+        return configuration(
+                threeWayTypes(reversed).stream()
+                        .map(type -> "some.other.pck." + type)
+                        .toArray(String[]::new));
+    }
+
+    private static List<String> threeWayTypes(final boolean reversed) {
+        final List<String> types = new ArrayList<>(List.of("A", "AB", "ABCD", "BCD", "CD"));
+        if (reversed) {
+            Collections.reverse(types);
+        }
+        return types;
+    }
+
+    private static JavaFileObject[] threeWayClashSources(
+            final JavaFileObject configuration, final boolean reversed) {
+        final List<String> types = threeWayTypes(reversed);
+        final List<JavaFileObject> sources = new ArrayList<>();
+        sources.add(configuration);
+        types.forEach(
+                type ->
+                        sources.add(
+                                switch (type) {
+                                    case "A" -> outerWithNested("A", "BCD");
+                                    case "AB" -> outerWithNested("AB", "CD");
+                                    default -> simpleBean(type);
+                                }));
+        if (reversed) {
+            Collections.reverse(sources);
+        }
+        return sources.toArray(JavaFileObject[]::new);
+    }
+
+    private static JavaFileObject outerWithNested(final String outer, final String nested) {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck." + outer,
+                "package some.other.pck;",
+                "public class " + outer + " {",
+                "    public " + nested + " getNested() { return null; }",
+                "    public static class " + nested + " {",
+                "        public String getName() { return null; }",
+                "    }",
+                "}");
+    }
+
+    private static JavaFileObject nestedClash() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.NestedClash",
+                "package some.other.pck;",
+                "public class NestedClash {",
+                "    public some.other.pck.Customer getCustomer() { return null; }",
+                "    public NestedClash.Customer getInner() { return null; }",
+                "    public static class Customer {",
+                "        public String getName() { return null; }",
+                "    }",
+                "}");
+    }
+
     private static JavaFileObject customerWithNested() {
         return simpleBean("Customer");
     }
@@ -367,6 +490,7 @@ class KotlinDslGenerationIT {
                                 package some.other.pck;
 
                                 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
                                 public class Box<T extends Number> {

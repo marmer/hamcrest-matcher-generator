@@ -81,14 +81,83 @@ final class KotlinDslGenerator {
     private final GenerationContext context;
     private final Map<String, String> dslNames;
     private final Map<String, Scope> scopes;
+    private final List<Clash> clashes;
 
     KotlinDslGenerator(final TypeModel model, final GenerationContext context) {
         this.model = model;
         this.context = context;
         final List<TypeModel> all =
                 Stream.concat(context.generatedTypes().stream(), Stream.of(model)).toList();
-        this.dslNames = dslNamesOf(all);
+        final Map<String, String> allNames = dslNamesOf(all);
+        this.clashes = clashesOf(all, allNames);
+        this.dslNames = withoutClashing(allNames, clashes);
         this.scopes = scopesOf(all, dslNames);
+    }
+
+    /** Types of one package that still share a name after the enclosing types were put in front. */
+    private record Clash(String name, List<String> qualifiedNames) {}
+
+    private static List<Clash> clashesOf(
+            final List<TypeModel> types, final Map<String, String> names) {
+        final Map<String, List<String>> byName = new HashMap<>();
+        placedTypesOf(types).stream()
+                .map(Placed::type)
+                .filter(type -> names.containsKey(type.qualifiedName()))
+                .forEach(
+                        type ->
+                                byName.computeIfAbsent(
+                                                type.targetPackage()
+                                                        + "/"
+                                                        + names.get(type.qualifiedName()),
+                                                key -> new ArrayList<>())
+                                        .add(type.qualifiedName()));
+        return byName.values().stream()
+                .filter(qualifiedNames -> qualifiedNames.size() > 1)
+                .map(
+                        qualifiedNames ->
+                                new Clash(
+                                        names.get(qualifiedNames.get(0)),
+                                        qualifiedNames.stream().sorted().toList()))
+                .toList();
+    }
+
+    private static Map<String, String> withoutClashing(
+            final Map<String, String> names, final List<Clash> clashes) {
+        final Map<String, String> unique = new HashMap<>(names);
+        clashes.forEach(clash -> unique.keySet().removeAll(clash.qualifiedNames()));
+        return unique;
+    }
+
+    /**
+     * Reports every {@link Clash} once: by the generator of the type that contains the first type
+     * of the clash in qualified name order, so the result does not depend on the order the types
+     * are processed in. The types of a clash get no scope, which keeps the rest of the DSL usable.
+     */
+    void reportClashes() {
+        final Set<String> own =
+                placedTypesOf(List.of(model)).stream()
+                        .map(placed -> placed.type().qualifiedName())
+                        .collect(Collectors.toSet());
+        clashes.stream()
+                .filter(clash -> own.contains(clash.qualifiedNames().get(0)))
+                .forEach(
+                        clash ->
+                                context.reportError(
+                                        "The Kotlin DSL cannot tell "
+                                                + joined(clash.qualifiedNames())
+                                                + " apart: "
+                                                + (clash.qualifiedNames().size() == 2
+                                                        ? "both"
+                                                        : "all")
+                                                + " would be named "
+                                                + clash.name()
+                                                + ". Rename one of the types."));
+    }
+
+    private static String joined(final List<String> names) {
+        return String.join(", ", names.subList(0, names.size() - 1))
+                + " and "
+                + names.get(names.size() - 1);
     }
 
     /** The name of the Kotlin file of a type, which is also the name of its Java matcher's DSL. */
@@ -167,7 +236,7 @@ final class KotlinDslGenerator {
             final Map<String, Scope> scopes) {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
-        if (MatcherNaming.isComparedDeeply(type)) {
+        if (MatcherNaming.isComparedDeeply(type) && dslNames.containsKey(type.qualifiedName())) {
             final String dslName = dslNameOf(dslNames, type);
             scopes.putIfAbsent(
                     type.qualifiedName(),
@@ -182,11 +251,12 @@ final class KotlinDslGenerator {
     /**
      * Whether the type or one of its nested types has a property to check. A type without
      * properties gets no DSL, which also spares the Kotlin compiler types it cannot see, such as
-     * the class Kotlin generates for top level functions.
+     * the class Kotlin generates for top level functions. The same goes for a type left without a
+     * name by a {@link Clash}.
      */
-    static boolean hasAnythingToGenerate(final TypeModel type) {
-        return MatcherNaming.hasProperties(type)
-                || type.nestedTypes().stream().anyMatch(KotlinDslGenerator::hasAnythingToGenerate);
+    boolean hasAnythingToGenerate() {
+        return placedTypesOf(List.of(model)).stream()
+                .anyMatch(placed -> dslNames.containsKey(placed.type().qualifiedName()));
     }
 
     private static String specName(final String dslName) {
@@ -215,7 +285,7 @@ final class KotlinDslGenerator {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
         final ClassName matcher = new ClassName(type.targetPackage(), matcherNames);
-        if (MatcherNaming.hasProperties(type)) {
+        if (dslNames.containsKey(type.qualifiedName())) {
             file.addFunction(entryFunction(type, matcher));
             file.addType(scopeClass(type, matcher));
         }
