@@ -245,4 +245,8 @@ jobs:
         working-directory: example-gradle-java
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
-        run: ./gradlew --no-daemon --console=plain clean build
+        run: |
+          # An empty JAVA_HOME would make Gradle fall back to JDK 21 and pass without testing 17.
+          test -n "$JAVA_HOME" || { echo "JAVA_HOME_17_X64 is empty: setup-java did not install JDK 17" >&2; exit 1; }
+          ./gradlew --no-daemon --console=plain -version
+          ./gradlew --no-daemon --console=plain clean build
