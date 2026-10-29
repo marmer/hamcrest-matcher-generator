@@ -173,6 +173,7 @@ Documentation
 * The [user guide](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html) starts with a first green test
   and covers the backends, the configuration and the IDE setup.
 * The architecture is documented with arc42 on the [same site](https://marmer.github.io/hamcrest-matcher-generator/).
+* Migrating from 5.x: the [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists what changes.
 
 Coming from 5.x
 ---------------
@@ -180,12 +181,12 @@ Coming from 5.x
 Java 11 users stay on 5.x: 6.0.0 needs JDK 17 or higher. The 5.x artifacts `hamcrest-matcher-generator-annotationprocessor`
 and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no code and bring in
 `hamcrest-matcher-generator` at the same version. `@MatcherConfiguration` remains as a deprecated alias of
-`@GenerateMatchers`. Further migration notes go into the [user guide](https://marmer.github.io/hamcrest-matcher-generator/).
+`@GenerateMatchers`. The [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists the rest, including the [new mismatch message form](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html#mismatch-format), which breaks tests that pin message text.
 
 Kotlin-JVM
 ----------
 
-The generation works with Kotlin Projekts as well. If you write your testcode in Java, you don't have to change anything
+The generation works with Kotlin projects as well. If you write your testcode in Java, you don't have to change anything
 else. If you write them in Kotlin, you have to configure kotlin test-kapt. It works
 like [kapt](https://kotlinlang.org/docs/kapt.html).
 
