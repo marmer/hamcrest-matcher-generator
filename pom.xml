@@ -97,21 +97,11 @@
             <id>mavenCentral</id>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
-        <repository>
-            <id>jcenter</id>
-            <name>JCenter</name>
-            <url>https://jcenter.bintray.com/</url>
-        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
             <id>mavenCentral</id>
             <url>https://repo1.maven.org/maven2/</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>jcenter</id>
-            <name>JCenter</name>
-            <url>https://jcenter.bintray.com/</url>
         </pluginRepository>
     </pluginRepositories>
 
@@ -168,11 +158,6 @@
                 <groupId>io.github.classgraph</groupId>
                 <artifactId>classgraph</artifactId>
                 <version>4.8.112</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.glytching</groupId>
-                <artifactId>junit-extensions</artifactId>
-                <version>2.3.0</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>

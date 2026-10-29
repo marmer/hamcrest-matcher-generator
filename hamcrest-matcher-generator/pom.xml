@@ -79,11 +79,6 @@
             <artifactId>archunit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.github.glytching</groupId>
-            <artifactId>junit-extensions</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
