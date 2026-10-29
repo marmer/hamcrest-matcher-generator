@@ -116,7 +116,7 @@ final class KotlinDslGenerator {
                 .map(
                         qualifiedNames ->
                                 new Clash(
-                                        names.get(qualifiedNames.get(0)),
+                                        Objects.requireNonNull(names.get(qualifiedNames.get(0))),
                                         qualifiedNames.stream().sorted().toList()))
                 .toList();
     }
