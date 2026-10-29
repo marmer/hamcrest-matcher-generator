@@ -8,6 +8,7 @@
       "release-as": "6.0.0",
       "extra-files": [
         "example-gradle-java/build.gradle.kts",
+        "README.md",
         {"type": "xml", "path": "assertj-assertion-generator/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
         {"type": "xml", "path": "docs/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
         {"type": "xml", "path": "example-maven-java-assertj/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},

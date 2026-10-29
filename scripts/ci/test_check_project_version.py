@@ -148,6 +148,13 @@ class ProblemsTest(unittest.TestCase):
             self.assertEqual(["example/build.gradle.kts:1: marked x-release-please-version, but carries 5.1.0, "
                               "the manifest says 6.0.0"], repo.problems())
 
+    def test_marked_line_of_the_readme_must_carry_the_manifest_version(self):
+        extra = [extra_file("pom.xml"), extra_file("a/pom.xml"), "README.md"]
+        other = {"README.md": '<version>5.1.0</version> <!-- x-release-please-version -->\n'}
+        with Repo(extra_files=extra, other_files=other) as repo:
+            self.assertEqual(["README.md:1: marked x-release-please-version, but carries 5.1.0, "
+                              "the manifest says 6.0.0"], repo.problems())
+
     def test_marked_line_with_the_manifest_version_is_fine(self):
         extra = [extra_file("pom.xml"), extra_file("a/pom.xml"), "example/build.gradle.kts"]
         other = {"example/build.gradle.kts": 'val v = "6.0.0" // x-release-please-version\n'}
@@ -240,6 +247,10 @@ class RepositoryTest(unittest.TestCase):
     def test_every_pom_of_this_repository_follows_the_manifest_version(self):
         self.assertTrue((REPO_ROOT / ".release-please-manifest.json").is_file(), f"{REPO_ROOT} is not the repository root")
         self.assertEqual([], check.problems(REPO_ROOT))
+
+    def test_the_readme_is_an_extra_file_so_its_marked_versions_are_raised_by_release_please(self):
+        config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+        self.assertIn("README.md", config["packages"]["."]["extra-files"])
 
 
 if __name__ == "__main__":

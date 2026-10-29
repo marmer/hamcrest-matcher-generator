@@ -24,6 +24,9 @@ jobs:
       - name: Check every module pom follows the version of the release-please manifest
         run: python3 scripts/ci/check-project-version.py
 
+      - name: Check the README snippets are copied from the current example regions
+        run: python3 scripts/ci/sync-readme-snippets.py --check
+
       - name: Check the workflows are SHA-pinned, have minimal permissions and cache Maven through setup-java
         run: python3 scripts/ci/check-workflow-hardening.py
 
