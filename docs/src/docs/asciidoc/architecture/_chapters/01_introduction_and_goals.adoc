@@ -49,7 +49,7 @@ Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are drive
 * *AssertJ messages* keep AssertJ's native `Expecting ... to be ... but was ...` style and name the property path from the asserted object, for example `Expecting Order.customer.address.city to be: "Berlin"`. Inside a collection or map, the path starts again at the element type, because AssertJ reports the element's index itself. An optional generated `Representation` shows generated types with their properties in AssertJ's own messages.
 * *Exclude configuration*: packages or classes can be excluded from generation, for every backend.
 * *Null-safety annotations* (JSpecify) in the generated code and the Hamcrest runtime, which mainly makes the API type-safe for Kotlin.
-* *Clear compiler diagnostics*: errors for unresolvable names and generated method names that clash with inherited ones, warnings for configured types without properties and for exclusions that match nothing.
+* *Clear compiler diagnostics*: errors for unresolvable names and for generated names that clash (method names with inherited ones, the top level class names the AssertJ backend generates into one package, the scope names of the Kotlin DSL), warnings for configured types without properties and for exclusions that match nothing.
 * *Kotlin support*: correct detection of Kotlin boolean and `is`-prefixed properties, and a Kotlin DSL.
 * *Java module names*: every published jar declares an `Automatic-Module-Name`.
 * *AssertJ assertions* with `hasFoo`, `hasFooSatisfying`, `isFoo`/`isNotFoo`, an `InstanceOfAssertFactory` per type and soft-assertion support.

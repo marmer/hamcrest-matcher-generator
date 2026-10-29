@@ -20,8 +20,8 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Risk: credentials expire
 |medium
 |disabling
-|The autopilot depends on four credentials: the SonarCloud token (a personal token without expiry date that SonarCloud removes after 60 days without use), the GPG signing key (three years), the Maven Central Portal token (from the legacy username/password account) and the private key of the GitHub App that creates release pull requests. When one expires or is revoked, either every merge stops (Sonar is a required check) or releases fail.
-|A weekly reminder workflow (`credential-reminder.yml`) validates the Sonar token and the Central token and reads the expiry of the Sonar token (the earliest `expirationDate` among the user's tokens, because the API does not tell which one is `SONAR_TOKEN`) and of the GPG key; the Central token and the App key have their expiry dates in repository variables. 30 days before an expiry it opens or updates an issue that mentions the maintainer; the issue itself carries the renewal steps. The validation also catches a removed or revoked Sonar token, and CI runs keep it in use. Invalid credentials fail with an explicit message instead of an unclear red build. The maintainer runbook (`MAINTAINING.md`, #137) will list every credential, where it is stored and how to renew it once #137 lands; it does not exist yet.
+|The autopilot depends on four credentials: the SonarCloud token (a personal token with no fixed validity period, which SonarCloud removes after 60 days without use), the GPG signing key (three years), the Maven Central Portal token (from the legacy username/password account) and the private key of the GitHub App that creates release pull requests. When one expires or is revoked, either every merge stops (Sonar is a required check) or releases fail.
+|A weekly reminder workflow (`credential-reminder.yml`) validates the Sonar token and the Central token and reads the expiry of the GPG key and the Sonar token's `expirationDate` (the earliest among the user's tokens, because the API does not tell which one is `SONAR_TOKEN`); the Sonar token has no expiry date, so it raises no Sonar reminder, and the 60-day limit is covered by the CI runs and the weekly check that keep it in use; the Central token and the App key have their expiry dates in repository variables. 30 days before an expiry it opens or updates an issue that mentions the maintainer; the issue itself carries the renewal steps. The validation also catches a removed or revoked Sonar token, and CI runs keep it in use. Invalid credentials fail with an explicit message instead of an unclear red build. The maintainer runbook (`MAINTAINING.md`) lists every credential, where it is stored and how to renew it.
 
 |Risk: free external services change or fail
 |medium
@@ -39,7 +39,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |medium
 |disabling
 |Every red pull request, credential renewal and baseline decision lands on one person. If the maintainer is unavailable, updates stop and users receive no fixes. Nothing broken gets merged, because red pull requests wait.
-|Accepted. The autopilot keeps routine work away from the maintainer. A maintainer runbook (`MAINTAINING.md`, #137) will describe what to do for a red Renovate pull request, a failed publish, an expiring credential and a dependency that needs a newer Java version, so that anyone with admin rights, or an AI agent session, can act; it does not exist yet, and it will describe these once #137 lands.
+|Accepted. The autopilot keeps routine work away from the maintainer. A maintainer runbook (`MAINTAINING.md`) gives the playbooks for these failures, so that anyone with admin rights, or an AI agent session, can act.
 
 |Risk: the Java baseline erodes again
 |medium
@@ -65,6 +65,12 @@ The list is ordered by priority, the product of both values, highest first; entr
 |The architecture keeps backends independent of each other: each one depends only on the core. The Kotlin DSL backend is a deliberate exception. It builds on the Hamcrest backend and reuses its naming of the generated matchers (`XMatcher`, `isX`, `withFoo`, `ignoringFoo`). A change to that naming therefore breaks the generated Kotlin code, and the two modules cannot evolve independently (link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]).
 |The exception is allowed for exactly this one dependency, and Maven Enforcer and an ArchUnit test reject any other dependency between backends. Golden-file tests of the generated Kotlin code and the Kotlin end-to-end modules fail as soon as the Hamcrest naming changes without the DSL following it.
 
+|Risk: a release builds with a wrong module version
+|low
+|disabling
+|The release type `simple` with one explicit `extra-files` entry per module pom (see <<section-deployment-view,chapter 7>>) was only verified by a simulation with the updaters of release-please 17.11.2, never by a real release-please run, because the development sandbox cannot call the GitHub API. The first real Release PR after this change is the first real test. A new module pom without an `extra-files` entry is caught by `scripts/ci/check-project-version.py` in the required job `Domain docs in sync`. It is assumed, not verified, that the checks also run on the Release PR, because the GitHub App token creates it.
+|`scripts/ci/check-project-version.py` runs on the Release PR and turns a wrong one red before the release. The maintainer looks at the first Release PR after the change before merging it: own and parent version 6.0.0 in every module pom, and the pom of the frozen 5.x suite still `@project.version@`. The playbook "Red Release pull request" in `MAINTAINING.md` applies.
+
 |Risk: the Kotlin DSL needs KAPT
 |low
 |disabling
@@ -74,7 +80,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Risk: strict quality gates stop the autopilot
 |medium
 |tolerable
-|Merges require at least 99 % line and branch coverage. The CI jobs `Mutation testing` (a mutation score of at least 90 % per module) and `Sonar` (the quality gate) are blocking jobs of the CI; they become required merge checks once the owner adds them to the `main` ruleset (setup checklist #147). An update of PIT or JaCoCo (new mutators, different branch counting) or a change of SonarCloud's rules can turn a pull request or the main branch red although no project code changed.
+|Merges require at least 99 % line and branch coverage. The CI jobs `Mutation testing` (a mutation score of at least 90 % per module) and `Sonar` (the quality gate) are required merge checks of the `main` ruleset, so a red one blocks the merge. An update of PIT or JaCoCo (new mutators, different branch counting) or a change of SonarCloud's rules can turn a pull request or the main branch red although no project code changed.
 |PIT, JaCoCo and the Sonar scanner are updated in their own Renovate pull requests, so the cause of a red build is unambiguous. The Sonar quality gate judges new code only, so new rules do not fail old code. Thresholds are never lowered silently; a change goes to the maintainer.
 
 |Risk: a major update of a runtime dependency ships as a patch release

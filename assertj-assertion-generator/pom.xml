@@ -28,7 +28,7 @@
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>matcher-generator-core</artifactId>
-            <version>5.1.0</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

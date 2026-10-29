@@ -32,13 +32,13 @@
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator</artifactId>
-            <version>5.1.0</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
-            <version>5.1.0</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -58,11 +58,14 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <configuration>
+                    <!-- tag::kotlin-language-level[] -->
                     <!-- The generated DSL promises Kotlin 1.9 language features only (spec 104). -->
                     <languageVersion>1.9</languageVersion>
                     <apiVersion>1.9</apiVersion>
+                    <!-- end::kotlin-language-level[] -->
                 </configuration>
                 <executions>
+                    <!-- tag::test-kapt[] -->
                     <execution>
                         <id>test-kapt</id>
                         <goals>
@@ -88,6 +91,7 @@
                             </annotationProcessorPaths>
                         </configuration>
                     </execution>
+                    <!-- end::test-kapt[] -->
                     <execution>
                         <id>compile</id>
                         <goals>
@@ -100,11 +104,13 @@
                             <goal>test-compile</goal>
                         </goals>
                         <configuration>
+                            <!-- tag::test-compile-source-dirs[] -->
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
                             </sourceDirs>
+                            <!-- end::test-compile-source-dirs[] -->
                         </configuration>
                     </execution>
                 </executions>
@@ -115,6 +121,7 @@
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
+                    <!-- tag::add-kapt-test-source[] -->
                     <execution>
                         <id>add-kapt-test-sources</id>
                         <phase>generate-test-sources</phase>
@@ -127,6 +134,7 @@
                             </sources>
                         </configuration>
                     </execution>
+                    <!-- end::add-kapt-test-source[] -->
                 </executions>
             </plugin>
             <plugin>

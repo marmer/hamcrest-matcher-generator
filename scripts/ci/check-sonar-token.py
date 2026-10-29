@@ -14,8 +14,7 @@ import urllib.error
 import urllib.request
 
 VALIDATE_URL = "https://sonarcloud.io/api/authentication/validate"
-# The setup checklist (#147) until MAINTAINING.md (#137) exists; then point this at that file.
-RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/issues/147"
+RUNBOOK = "https://github.com/marmer/hamcrest-matcher-generator/blob/main/MAINTAINING.md"
 MISSING_OR_INVALID = "SONAR_TOKEN missing or invalid"
 
 

@@ -9,9 +9,9 @@ Usage:
   scripts/agents/issue-status.py <parent-number>           # update the parent's body
   scripts/agents/issue-status.py <parent-number> --print   # print the section only
   scripts/agents/issue-status.py <parent-number> --json    # print the raw status data
-  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets (no map write)
+  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets, those labelled needs-info or ready-for-human on a "waiting for the owner" line (no map write)
 
-Besides --json and --frontier, every run warns on stderr about open tickets that do not lead to the
+Besides --json, every run warns on stderr about open tickets that do not lead to the
 final ticket (see loose_tickets), so a ticket added after the blocking edges were set cannot go unnoticed.
 """
 import json
@@ -97,6 +97,11 @@ def loose_warning(final, loose):
             f"or move it out of the parent.")
 
 
+def loose_warning_for(tickets):
+    final, loose = loose_tickets(tickets)
+    return loose_warning(final, loose) if loose else None
+
+
 def kind(ticket):
     """The wayfinder:<type> label suffix, else the first label, else None."""
     typed = next((name.split(":", 1)[1] for name in ticket["labels"] if name.startswith("wayfinder:")), None)
@@ -106,6 +111,19 @@ def kind(ticket):
 def frontier_line(ticket):
     suffix = f" ({kind(ticket)})" if kind(ticket) else ""
     return f"#{ticket['number']} {ticket['title']}{suffix}"
+
+
+OWNER_LABELS = ("needs-info", "ready-for-human")
+
+
+def frontier_lines(tickets):
+    """The ready tickets an agent can start; those labelled for the owner wait on a separate line."""
+    ready = [t for t in tickets if t["status"] == "ready"]
+    waiting = [t for t in ready if any(name in OWNER_LABELS for name in t["labels"])]
+    lines = [frontier_line(t) for t in ready if t not in waiting]
+    if waiting:
+        lines.append("waiting for the owner: " + ", ".join(frontier_line(t) for t in waiting))
+    return lines
 
 
 def label(ticket, width=48):
@@ -153,14 +171,15 @@ def main():
     if "--json" in sys.argv:
         print(json.dumps(tickets, indent=2))
         return
+    warning = loose_warning_for(tickets)
     if "--frontier" in sys.argv:
-        for ticket in tickets:
-            if ticket["status"] == "ready":
-                print(frontier_line(ticket))
+        for line in frontier_lines(tickets):
+            print(line)
+        if warning:
+            print(warning, file=sys.stderr)
         return
-    final, loose = loose_tickets(tickets)
-    if loose:
-        print(loose_warning(final, loose), file=sys.stderr)
+    if warning:
+        print(warning, file=sys.stderr)
     section = render(tickets)
     if "--print" in sys.argv:
         print(section)

@@ -53,6 +53,27 @@
       "groupName": "Structurizr"
     },
     {
+      "description": "JUnit Jupiter, the Platform launcher and the BOM share one version line; a lone bump leaves mismatched jars on the surefire classpath (#243, #255), so they move in one PR",
+      "matchPackageNames": ["org.junit.jupiter:*", "org.junit.platform:*", "org.junit:*"],
+      "groupName": "JUnit"
+    },
+    {
+      "description": "ClassGraph 6 is compiled for a Java newer than the 17 baseline (ADR 0005); the Enforcer bytecode check rejects it. Stay on 4.x/5.x until the baseline is raised by a new ADR (MAINTAINING.md, 'Dependency that needs a newer Java')",
+      "matchPackageNames": ["io.github.classgraph:classgraph"],
+      "allowedVersions": "<6"
+    },
+    {
+      "description": "The frozen 5.x compatibility suite keeps its own pom unchanged (tree hash guard, CLAUDE.md); Renovate must not touch it. The root dependencyManagement entry is still updated",
+      "matchFileNames": ["hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml"],
+      "enabled": false
+    },
+    {
+      "description": "The Gradle example's own artifacts follow the release (release-please bumps its version), not Renovate; its wrapper is a normal gradle-wrapper update",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["io.github.marmer.testutils:*"],
+      "enabled": false
+    },
+    {
       "description": "The latest CI leg follows the newest GA JDK, not only LTS releases; compare by major version only",
       "matchDatasources": ["java-version"],
       "allowedVersions": "/^\\d+/",

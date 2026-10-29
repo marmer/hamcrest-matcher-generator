@@ -33,7 +33,7 @@ mismatch messages, and the collection matchers: the factories in `CollectionMatc
 `entries`) return `ItemsInOrder`, `ItemsInAnyOrder` and `Entries`, which share the package-private base type
 `PathAwareMatcher`; `BeanPropertyMatcher` flattens them into indexed and keyed property paths. The walk along these
 paths and the rendering of its findings live in the package-private `PathWalk` and `MismatchReport`, which both
-`BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
+`BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. The opt-in completeness check (`checkingAllProperties()`) is also in `BeanPropertyMatcher`: a property is addressed when a check or `ignoringFoo()` names it, `resetFoo()` removes both, and the properties that are neither are reported after the failing checks. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
 `GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
 check of another one is flattened into property paths; it is public because generated code lives in the user's
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.
@@ -45,11 +45,11 @@ abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(req
 `isFoo()` and `isNotFoo()` for boolean ones; all check first that there is an asserted object.
 Every property also gets `ignoringFoo()`, and the abstract class has the opt-in completeness check: `satisfiesCheckingAllProperties(..)`
 and `hasAllPropertiesChecked()`. The assertion object keeps the names it has addressed, and the check fails with the properties
-that are neither addressed nor ignored. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
+that are neither addressed nor ignored, after the value checks have passed. The failure reads AssertJ's wording, `Expecting every property of Order to be checked or ignored, but these were neither: tags`, and a nested check names its path. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
-Each target package gets one `SoftAssertionsProvider` mixin with a default `assertThat` and `then` per type,
+Each target package gets one `SoftAssertionsProvider` mixin (written once per package, ADR 0006) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
-that path into assertions created inside a `hasFooSatisfying` requirement; inside an array, collection or map the path
+that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
 restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and
 the core reports one compiler error at the annotation, naming the property and the methods; the same goes for a method
 name that two properties generate and a factory constant that two nested types share. The core hands the backend
@@ -62,7 +62,13 @@ matcher, with KotlinPoet from Java: an entry function `isOrder { }` and a scope 
 included). A nested type whose simple name another type of the package shares gets the names of its enclosing types in
 front, such as `OuterInnerSpec` and `isOuterInner`; a top level type and every type without a clash keep their simple
 name. The names depend on the set of types of the package only, not on their order, so the backend names them from the
-models of all types generated in the run. Known limit: if the names that include the enclosing types still collide (a top level `NestedClashCustomer` next to `NestedClash.Customer`), the generated DSL does not compile and one of the types has to be renamed.
+models of all types generated in the run.
+If the names that include the enclosing types still collide (a top level `NestedClashCustomer` next to
+`NestedClash.Customer`), the backend does not pick a new name, since a name that depends on the other types of the
+build would change when one of them is added. It reports one compiler error per group of colliding types at the
+`@GenerateMatchers` annotation, naming all of them, and gives none of them a scope or an entry function; the rest of the
+DSL is still written. The error is reported by the generation of the type that contains the first colliding type in
+qualified name order, so it appears once, in whatever order the types are processed in. The types of all `@GenerateMatchers` configurations of one processing round are compared together; types generated in different rounds are never seen together, so a clash between them is not found.
 The scope class is marked with `@MatcherDsl`, a Java annotation in this artifact that carries Kotlin's `@DslMarker`,
 and delegates every call to the generated Java matcher, so mismatch messages are identical. A scope has
 `name(value)`, `name(matcher)` and `ignoringName()` for every property, `checkingAllProperties()`, and `customer { }` for a
@@ -84,6 +90,11 @@ The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path o
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
 matchers in ordinary tests.
 
+| `example-maven-java-hamcrest`, `example-maven-java-assertj`, `example-maven-kotlin`, `example-gradle-java`
+| Documentation examples for the guide and README: Maven Java for each backend, Maven Kotlin with KAPT and the Kotlin DSL,
+and a Gradle build outside the reactor with its own wrapper. They are never published; the Gradle build resolves the
+reactor's artifacts from `mavenLocal()`.
+
 | `docs`
 | Renders this documentation to HTML and checks its internal links. It is built only on JDK 21 or later and is not
 published to Maven Central.
@@ -98,7 +109,7 @@ include::../workspace.dsl[]
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, `reportVerboseNote` for a compiler note that is only printed with `matchergenerator.verbose`, `classExistsOutsideOwnOutput` for whether a class is on the class path without being in this compilation's own output, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.

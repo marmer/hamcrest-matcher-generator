@@ -1,136 +1,192 @@
-![CI-Build](https://github.com/marmer/hamcrest-matcher-generator/workflows/CI-Build/badge.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.marmer.testutils/hamcrest-matcher-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/hamcrest-matcher-generator)
-[![Documentation](https://img.shields.io/badge/docs-arc42-blue)](https://marmer.github.io/hamcrest-matcher-generator/)
+Matcher Generator
+=================
 
+[![Maven Central (Hamcrest)](https://img.shields.io/maven-central/v/io.github.marmer.testutils/hamcrest-matcher-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/hamcrest-matcher-generator)
+[![Maven Central (AssertJ)](https://img.shields.io/maven-central/v/io.github.marmer.testutils/assertj-assertion-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/assertj-assertion-generator)
+[![javadoc](https://javadoc.io/badge2/io.github.marmer.testutils/hamcrest-matcher-generator/javadoc.svg)](https://javadoc.io/doc/io.github.marmer.testutils/hamcrest-matcher-generator)
+[![CI](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml/badge.svg)](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/marmer/hamcrest-matcher-generator/badge)](https://securityscorecards.dev/viewer/?uri=github.com/marmer/hamcrest-matcher-generator)
+[![License](https://img.shields.io/github/license/marmer/hamcrest-matcher-generator)](LICENSE)
 
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
+Generate Hamcrest matchers and AssertJ assertions for your model classes. An annotation processor writes them at compile
+time, so your production code stays free of test code.
 
-hamcrest-matcher-generator
-==========================
-This library allows you to generate Hamcrest matchers without forcing you to pollute your production code. 
+What you get
+------------
 
-Bean Property Matcher
----------------------
+* **Hamcrest matchers**: `isCustomer().withName("Ada")`, with any Hamcrest matcher as the argument, a completeness check
+  that fails when a property is neither checked nor ignored, and `isCustomerLike(reference)` to compare every property.
+* **AssertJ assertions**: `CustomerAssert.assertThat(customer).hasName("Ada")`, with a `...Satisfying` form for nested
+  objects and a check that every property is checked or ignored.
+* **Java and Kotlin**: the processor runs with javac and, for Kotlin test sources, through KAPT. An opt-in Kotlin DSL wraps
+  the Hamcrest matchers.
+* **Records and Lombok**: getters of Java records and Lombok-generated properties are supported.
 
-Have you ever wished you could...
-
-* magically produce Hamcrest Matchers for all (or just some) of your model or service classes?
-    * produce such matchers without polluting your production code with test code annotations?
-    * generate types which are not part of the current source code?
-* test your models with hamcrest in an atomic way with informative error messages?
-* have a compile-safe alternative to Hamcrest's "hasProperty" or HasPropertyWithValue?
-
-Properties of Lombok annotated classes are supported as well (tested with version 1.18.4)
-
-How to use
-==========
-All you need to do is to add one or two dependencies and an Annotation for the configuration for those types the matchers have
-to be generated for.
-
-Dependencies
-----------
-
-If you wish to use the matchers in your test code only, simply add this dependency to your project:
-
-```xml
-
-<dependency>
-    <groupId>io.github.marmer.testutils</groupId>
-    <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-    <version>${hamcrest-matcher-generator.version}</version>
-    <scope>test</scope>
-</dependency>
-```
-
-If you wish to use it in your production code as well, you should declare the scope as "provided" to avoid unnecessary dependencies. In
-this case, you will have to add another dependency that will be used by the generated code.
-
-```xml
-
-<dependency>
-    <groupId>io.github.marmer.testutils</groupId>
-    <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
-    <version>${hamcrest-matcher-generator.version}</version>
-    <scope>provided</scope>
-    <optional>true</optional>
-</dependency>
-<dependency>
-<groupId>io.github.marmer.testutils</groupId>
-<artifactId>hamcrest-matcher-generator-dependencies</artifactId>
-<version>${hamcrest-matcher-generator.version}</version>
-<scope>test</scope>
-</dependency>
-```
-
-Configuration
--------------
-Simply create a Class or Interface with one or more `@MatcherConfiguration` and add either fully-qualified class names or
-packages for the types you wish to generate matchers for e.g.
-
-```java
-
-@MatcherConfiguration({
-    "foo.bar.sample.model.SomePojo",
-    "foo.bar.sample.model.ParentPojo",
-    "foo.bar.sample.model.SomePojoInterface",
-    "foo.bar.sample.model.SomeLombokPojo",
-})
-public class PackageConfiguration {
-
-}
-```
-
-Depending on where you place the configuration file, the generated matchers will be created either within generated-test-sources
-(if you place it inside your test sources directory) or in generated-sources (if you place it inside your production code source directory). In maven
- projects, this is the default behavior. It may be different with other build tools or with a non-default configuration, but it
-should work for other build tools in a similar way)
-
-Generated result
+Before and after
 ----------------
-Assuming you have a pojo like this one with the configuration above...
+
+Checking a nested property by hand with Hamcrest:
 
 ```java
-    package foo.bar.sample.model;
-
-public class SomePojo extends ParentPojo {
-
-    private String pojoField;
-
-    public String getPojoField() {
-        return pojoField;
-    }
-}
+assertThat(ada.getAddress().getCity(), is("Paris"));
 ```
 
-... a Matcher named SomePojoMatcher is generated within the same package which you can use in your test in the following way:
+The generated matcher checks the same property, next to the rest of the object:
 
+<!-- snippet: example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java#nested-property -->
 ```java
-    final SomePojo somePojo=new SomePojo();
-    somePojo.setPojoField("pojoFieldValue");
-    somePojo.setParentField("someParentFieldValue");
+assertThat(ADA, isCustomer().withAddress(isAddress().withCity("Paris")));
+```
+<!-- end snippet -->
 
-    // Assertion
-    assertThat(somePojo,isSomePojo()
-    .withClass(SomePojo.class)
-    .withParentField("someParentFieldValue")
-    .withParentField(is(equalTo("someParentFieldValue")))
-    .withPojoField("pojoFieldValue")
-    .withPojoField(is(equalTo("pojoFieldValue")))
-    );
+The generated AssertJ assertion and the Kotlin DSL read the same way:
+
+<!-- snippet: example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java#basic-assertion -->
+```java
+CustomerAssert.assertThat(ADA).hasName("Ada");
+```
+<!-- end snippet -->
+
+<!-- snippet: example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt#basic-assertion -->
+```kotlin
+assertThat(ada, isCustomer { name("Ada") })
+```
+<!-- end snippet -->
+
+Quick start
+-----------
+
+Generate the matchers or assertions for the packages of your model classes with `@GenerateMatchers`:
+
+<!-- snippet: example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java#configuration -->
+```java
+import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+/** Generates a matcher for every model class in {@code example.hamcrest.model}. */
+@GenerateMatchers("example.hamcrest.model")
+public final class HamcrestConfiguration {}
+```
+<!-- end snippet -->
+
+The generated code calls the library of its backend, so add `org.hamcrest:hamcrest` or `org.assertj:assertj-core` too, in the version you use.
+Set the versions of the project's artifacts with the properties below; the lines carry the release-please marker, so
+the release keeps them current.
+
+```xml
+<properties>
+    <hamcrest-matcher-generator.version>5.1.0</hamcrest-matcher-generator.version> <!-- x-release-please-version -->
+    <assertj-assertion-generator.version>5.1.0</assertj-assertion-generator.version> <!-- x-release-please-version -->
+</properties>
 ```
 
-This example shows a way to match the class, the values (equality) for the direct field as well as for parent fields and
-for matchers for each field.
+### Maven
+
+Hamcrest: the dependencies, then the annotation processor in the compiler plugin:
+
+<!-- snippet: example-maven-java-hamcrest/pom.xml#maven-dependencies -->
+```xml
+<dependency>
+    <groupId>io.github.marmer.testutils</groupId>
+    <artifactId>hamcrest-matcher-generator</artifactId>
+    <version>${hamcrest-matcher-generator.version}</version>
+</dependency>
+<dependency>
+    <groupId>org.hamcrest</groupId>
+    <artifactId>hamcrest</artifactId>
+</dependency>
+```
+<!-- end snippet -->
+
+<!-- snippet: example-maven-java-hamcrest/pom.xml#maven-processor -->
+```xml
+<annotationProcessorPaths combine.children="append">
+    <path>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>hamcrest-matcher-generator</artifactId>
+        <version>${hamcrest-matcher-generator.version}</version>
+    </path>
+</annotationProcessorPaths>
+```
+<!-- end snippet -->
+
+AssertJ, the same way:
+
+<!-- snippet: example-maven-java-assertj/pom.xml#maven-dependencies -->
+```xml
+<dependency>
+    <groupId>io.github.marmer.testutils</groupId>
+    <artifactId>assertj-assertion-generator</artifactId>
+    <version>${assertj-assertion-generator.version}</version>
+</dependency>
+<dependency>
+    <groupId>org.assertj</groupId>
+    <artifactId>assertj-core</artifactId>
+</dependency>
+```
+<!-- end snippet -->
+
+<!-- snippet: example-maven-java-assertj/pom.xml#maven-processor -->
+```xml
+<annotationProcessorPaths combine.children="append">
+    <path>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>assertj-assertion-generator</artifactId>
+        <version>${assertj-assertion-generator.version}</version>
+    </path>
+</annotationProcessorPaths>
+```
+<!-- end snippet -->
+
+### Gradle
+
+<!-- snippet: example-gradle-java/build.gradle.kts#gradle-version -->
+```kotlin
+val matcherGeneratorVersion = "5.1.0" // x-release-please-version
+```
+<!-- end snippet -->
+
+<!-- snippet: example-gradle-java/build.gradle.kts#gradle-dependencies -->
+```kotlin
+implementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+implementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+```
+<!-- end snippet -->
+
+<!-- snippet: example-gradle-java/build.gradle.kts#gradle-processor -->
+```kotlin
+// Both backends run as annotation processors; the Gradle annotationProcessor configuration puts them on the processor path.
+annotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+annotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+```
+<!-- end snippet -->
+
+Generated code
+--------------
+
+The matchers and assertions generated for your classes belong to you. The project's Apache-2.0 license covers the libraries,
+not the code the processor writes from your classes.
+
+Documentation
+-------------
+
+* The [user guide](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html) starts with a first green test
+  and covers the backends, the configuration and the IDE setup.
+* The architecture is documented with arc42 on the [same site](https://marmer.github.io/hamcrest-matcher-generator/).
+* Migrating from 5.x: the [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists what changes.
+
+Coming from 5.x
+---------------
+
+Java 11 users stay on 5.x: 6.0.0 needs JDK 17 or higher. The 5.x artifacts `hamcrest-matcher-generator-annotationprocessor`
+and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no code and bring in
+`hamcrest-matcher-generator` at the same version. `@MatcherConfiguration` remains as a deprecated alias of
+`@GenerateMatchers`. The [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists the rest, including the [new mismatch message form](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html#mismatch-format), which breaks tests that pin message text.
 
 Kotlin-JVM
 ----------
 
-The generation works with Kotlin Projekts as well. If you write your testcode in Java, you don't have to change anything
+The generation works with Kotlin projects as well. If you write your testcode in Java, you don't have to change anything
 else. If you write them in Kotlin, you have to configure kotlin test-kapt. It works
 like [kapt](https://kotlinlang.org/docs/kapt.html).
 
@@ -172,74 +228,7 @@ You can use this library with the build tool of your choice or even with javac. 
 
 IDE
 ---
-Use the IDE of your choice. Each IDE with annotation processing capabilities should be able to perform the generation automatically when the project builds. Some IDEs may need a little help, however. Eclipse, for example, may only be capable of annotation processing for Maven projects as long as you have already installed a maven plugin [m2e-apt](https://marketplace.eclipse.org/content/m2e-apt). With the support of the `build-helper-maven-plugin`, however, you can configure the IDE to tell it where to look for the sources generated by Maven. 
-
-### Eclipse
-
-Eclipse may be only capable of annotation processing in maven projects if you have installed a maven
-plugin [m2e-apt,](https://marketplace.eclipse.org/content/m2e-apt) but you don't have the IDO to perform the processing.
-With a little help of the `build-helper-maven-plugin` you can tell the IDE where to look for sources generated by Maven.
-
-```xml
-
-<plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>build-helper-maven-plugin</artifactId>
-    <executions>
-        <execution>
-            <id>add-test-source</id>
-            <phase>generate-test-sources</phase>
-            <goals>
-                <goal>add-test-source</goal>
-            </goals>
-            <configuration>
-                <sources>
-                    <source>${project.build.directory}/generated-sources/test-annotations/source>
-                    <source>${project.build.directory}/generated-test-sources/test-annotations/source>
-                </sources>
-            </configuration>
-        </execution>
-    </executions>
-</plugin> 
-``` 
-
-### Intellij
-
-In Plain Java projects, you don't have to do anything at all. In Mixed Java/Kotlin projects, you don't have to do anything
-if all of your tests are written in Java. If the tests are written in Kotlin, a little hack is needed because the IDE
-does not know about the default generation paths for test sources generated by kapt, and kapt currently does not allow
-generation output paths.
-
-You could simply move the generated test sources into a well-known location right after the moment of generation.
-
-#### Example for Maven:
-
-```xml
-
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-antrun-plugin</artifactId>
-    <version>3.0.0</version>
-    <executions>
-        <execution>
-            <phase>process-test-sources</phase>
-            <goals>
-                <goal>run</goal>
-            </goals>
-            <configuration>
-                <target>
-                    <move todir="${project.basedir}/target/generated-test-sources/test-annotations"
-                        force="true">
-                        <fileset dir="${project.basedir}/target/generated-sources/kapt/test/"/>
-                    </move>
-                </target>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
-```
-
-The drawback is, now you *have to* compile your project with your build tool for a fresh generation.
+Use the IDE of your choice. The user guide's [IDE setup chapter](https://marmer.github.io/hamcrest-matcher-generator/guide/ide-setup.html) covers Eclipse and IntelliJ IDEA, and its [Kotlin chapter](https://marmer.github.io/hamcrest-matcher-generator/guide/kotlin.html) covers the IntelliJ workaround for Kotlin tests.
 
 JDK
 ---
@@ -266,3 +255,13 @@ You may copy this dependency if you want.
 ### Changelog
 
 The release history is maintained in [CHANGELOG.md](CHANGELOG.md). This project uses semantic versioning. See https://semver.org/
+
+### Maintaining
+
+The maintainer runbook, with the credentials and the playbooks for failed checks and releases, is in [MAINTAINING.md](MAINTAINING.md).
+
+Maintainer
+----------
+
+Mariano Mertinat maintains the project. [GitHub](https://github.com/marmer) and
+[LinkedIn](https://de.linkedin.com/in/mariano-mertinat)

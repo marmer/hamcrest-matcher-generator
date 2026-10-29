@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.marmer.testutils</groupId>
+        <artifactId>matcher-generator-parent</artifactId>
+        <version>5.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <!-- Documentation example: the guide and README take their snippets from the tagged regions of this module.
+        Never published. Kotlin with KAPT, both libraries (Hamcrest and AssertJ) and the Kotlin DSL. -->
+    <artifactId>example-maven-kotlin</artifactId>
+    <version>5.1.0</version>
+    <name>example-maven-kotlin</name>
+    <description>Maven Kotlin example with KAPT for the Hamcrest and AssertJ backends and the Kotlin DSL. Never published.</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- The release profile's javadoc reads the Java sources only, here the KAPT output, which refers to the Kotlin
+            model classes it cannot resolve (Unresolved reference: Customer). Never published, so no javadoc jar is needed. -->
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <!-- The generated DSL promises Kotlin 1.9 language features only (spec 104). -->
+        <kotlin.language.version>1.9</kotlin.language.version>
+    </properties>
+
+    <dependencies>
+        <!-- tag::maven-dependencies[] -->
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>assertj-assertion-generator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.marmer.testutils</groupId>
+            <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- end::maven-dependencies[] -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <configuration>
+                    <languageVersion>${kotlin.language.version}</languageVersion>
+                    <apiVersion>${kotlin.language.version}</apiVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- tag::maven-kapt[] -->
+                        <!-- KAPT runs the processors over the Kotlin sources. The Java matchers, the assertions and the
+                            Kotlin DSL (*MatcherDsl.kt, written to kapt.kotlin.generated) all land in target/generated-sources. -->
+                        <id>kapt</id>
+                        <goals>
+                            <goal>kapt</goal>
+                        </goals>
+                        <configuration>
+                            <correctErrorTypes>true</correctErrorTypes>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                            </sourceDirs>
+                            <annotationProcessorPaths>
+                                <annotationProcessorPath>
+                                    <groupId>io.github.marmer.testutils</groupId>
+                                    <artifactId>hamcrest-matcher-generator</artifactId>
+                                    <version>${project.version}</version>
+                                </annotationProcessorPath>
+                                <annotationProcessorPath>
+                                    <groupId>io.github.marmer.testutils</groupId>
+                                    <artifactId>assertj-assertion-generator</artifactId>
+                                    <version>${project.version}</version>
+                                </annotationProcessorPath>
+                                <annotationProcessorPath>
+                                    <groupId>io.github.marmer.testutils</groupId>
+                                    <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
+                                    <version>${project.version}</version>
+                                </annotationProcessorPath>
+                            </annotationProcessorPaths>
+                        </configuration>
+                        <!-- end::maven-kapt[] -->
+                    </execution>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Explicit sourceDirs replace the defaults. KAPT writes the Java matchers to kapt/compile and the
+                                Kotlin DSL to kaptKotlin/compile; both are listed here. The plugin registers the same two
+                                directories itself, so the build passes without them too, and a "Duplicate source root"
+                                warning shows either way. -->
+                            <!-- tag::compile-source-dirs[] -->
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/kapt/compile</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/compile</sourceDir>
+                            </sourceDirs>
+                            <!-- end::compile-source-dirs[] -->
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- javac runs after kotlinc and gets no processors: KAPT has generated everything already. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- The processing lint stays off: javac warns that no processor claims the test sources' own
+                        annotations (JUnit), which is not about generated code. Every other lint category stays fatal. -->
+                    <proc>none</proc>
+                    <compilerArgs combine.children="append">
+                        <arg>-Xlint:all,-processing</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

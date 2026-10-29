@@ -6,6 +6,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.CompilationSubject;
@@ -1832,6 +1833,236 @@ class MatcherGenerationProcessorIT {
                 .generatedSourceFile("some.other.pck.HolderMatcher");
     }
 
+    private static JavaFileObject orderWithPropertiesOfUnconfiguredTypes() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Order",
+                """
+                package some.other.pck;
+
+                import java.util.List;
+
+                public class Order {
+                    public String getName() {
+                        return null;
+                    }
+
+                    public Kind getKind() {
+                        return null;
+                    }
+
+                    public Customer getCustomer() {
+                        return null;
+                    }
+
+                    public List<Line> getLines() {
+                        return null;
+                    }
+
+                    public Marker getMarker() {
+                        return null;
+                    }
+
+                    public Customer[] getAllCustomers() {
+                        return null;
+                    }
+
+                    public List<? extends Line> getMoreLines() {
+                        return null;
+                    }
+
+                    public List<?> getAnything() {
+                        return null;
+                    }
+
+                    public List<String> getTags() {
+                        return null;
+                    }
+
+                    public int getCount() {
+                        return 0;
+                    }
+
+                    public Empty getEmpty() {
+                        return null;
+                    }
+
+                    public static class Empty {
+                    }
+                }
+                """);
+    }
+
+    private static JavaFileObject customer() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Customer",
+                """
+                package some.other.pck;
+
+                public class Customer {
+                    public String getName() {
+                        return null;
+                    }
+                }
+                """);
+    }
+
+    private static JavaFileObject kind() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Kind",
+                """
+                package some.other.pck;
+
+                public enum Kind {
+                    EXPRESS
+                }
+                """);
+    }
+
+    private static JavaFileObject marker() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Marker",
+                """
+                package some.other.pck;
+
+                public class Marker {
+                }
+                """);
+    }
+
+    private static JavaFileObject line() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Line",
+                """
+                package some.other.pck;
+
+                public class Line {
+                    public String getSku() {
+                        return null;
+                    }
+                }
+                """);
+    }
+
+    private static JavaFileObject generateMatchersConfiguration(final String... types) {
+        return JavaFileObjects.forSourceLines(
+                "some.pck.SomeConfiguration",
+                "package some.pck;",
+                "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                "@GenerateMatchers({"
+                        + Arrays.stream(types)
+                                .map(type -> "\"" + type + "\"")
+                                .collect(Collectors.joining(", "))
+                        + "})",
+                "public final class SomeConfiguration {",
+                "}");
+    }
+
+    @Test
+    @DisplayName(
+            "isXLike compares a property of a type outside the round with equals and says so in verbose mode")
+    void isXLikeComparesAPropertyOfATypeOutsideTheRoundWithEqualsAndSaysSoInVerboseMode()
+            throws IOException {
+        final Compilation compilation =
+                compileVerbose(
+                        generateMatchersConfiguration("some.other.pck.Order"),
+                        orderWithPropertiesOfUnconfiguredTypes(),
+                        customer(),
+                        line(),
+                        marker(),
+                        kind());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final String matcher = generatedSource(compilation, "some.other.pck.OrderMatcher");
+        assertTrue(
+                matcher.contains("ReferenceMatching.value(reference.getName())"),
+                () -> "isOrderLike for name in: " + matcher);
+        assertTrue(
+                matcher.contains("ReferenceMatching.value(reference.getCustomer())"),
+                () -> "isOrderLike for customer in: " + matcher);
+        assertTrue(
+                matcher.contains("ReferenceMatching.collection(reference.getLines()")
+                        || matcher.contains("ReferenceMatching.list(reference.getLines()")
+                        || matcher.contains("ReferenceMatching.value(reference.getLines())"),
+                () -> "isOrderLike for lines in: " + matcher);
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'customer' with equals: no matcher"
+                                + " for some.other.pck.Customer is generated in this"
+                                + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'lines' with equals: no matcher"
+                                + " for some.other.pck.Line is generated in this"
+                                + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'marker' with equals: no matcher"
+                                + " for some.other.pck.Marker is generated in this"
+                                + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'allCustomers' with equals: no matcher"
+                                + " for some.other.pck.Customer is generated in this"
+                                + " processing round");
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "isOrderLike compares the property 'moreLines' with equals: no matcher"
+                                + " for some.other.pck.Line is generated in this"
+                                + " processing round");
+        final long equalsNotes =
+                compilation.notes().stream()
+                        .filter(note -> note.getMessage(null).contains("with equals"))
+                        .count();
+        assertEquals(5, equalsNotes, () -> "Notes: " + compilation.notes());
+    }
+
+    @Test
+    @DisplayName("Without the verbose option the equals fallback of isXLike is silent")
+    void withoutTheVerboseOptionTheEqualsFallbackOfIsXLikeIsSilent() {
+        final Compilation compilation =
+                compile(
+                        generateMatchersConfiguration("some.other.pck.Order"),
+                        orderWithPropertiesOfUnconfiguredTypes(),
+                        customer(),
+                        line(),
+                        marker(),
+                        kind());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                0,
+                compilation.notes().stream()
+                        .filter(note -> note.getMessage(null).contains("with equals"))
+                        .count(),
+                () -> "Notes: " + compilation.notes());
+    }
+
+    @Test
+    @DisplayName(
+            "A property of a type generated in the round, even one without properties, needs no note")
+    void aPropertyOfATypeGeneratedInTheRoundEvenOneWithoutPropertiesNeedsNoNote() {
+        final Compilation compilation =
+                compileVerbose(
+                        generateMatchersConfiguration(
+                                "some.other.pck.Order",
+                                "some.other.pck.Customer",
+                                "some.other.pck.Line",
+                                "some.other.pck.Marker"),
+                        orderWithPropertiesOfUnconfiguredTypes(),
+                        customer(),
+                        line(),
+                        marker(),
+                        kind());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                0,
+                compilation.notes().stream()
+                        .filter(note -> note.getMessage(null).contains("with equals"))
+                        .count(),
+                () -> "Notes: " + compilation.notes());
+    }
+
     @Test
     @DisplayName("Generated matchers produce no javac warning under -Xlint:all")
     void generatedMatchersProduceNoWarningUnderLintAll() {
@@ -1922,6 +2153,15 @@ class MatcherGenerationProcessorIT {
                 .withProcessors(new MatcherGenerationProcessor(() -> NOW))
                 .withOptions("-Amatchergenerator.verbose")
                 .compile(Arrays.asList(sources));
+    }
+
+    private static String generatedSource(final Compilation compilation, final String qualifiedName)
+            throws IOException {
+        return compilation
+                .generatedSourceFile(qualifiedName)
+                .orElseThrow(() -> new AssertionError("No source generated for " + qualifiedName))
+                .getCharContent(true)
+                .toString();
     }
 
     private static void assertGeneratedSource(

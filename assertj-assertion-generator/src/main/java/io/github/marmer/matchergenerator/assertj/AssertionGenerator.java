@@ -98,11 +98,19 @@ class AssertionGenerator {
     }
 
     String abstractName() {
-        return "Abstract" + model.simpleName() + "Assert";
+        return abstractNameOf(model.simpleName());
     }
 
     String concreteName() {
-        return model.simpleName() + "Assert";
+        return concreteNameOf(model.simpleName());
+    }
+
+    static String abstractNameOf(final String simpleName) {
+        return "Abstract" + simpleName + "Assert";
+    }
+
+    static String concreteNameOf(final String simpleName) {
+        return simpleName + "Assert";
     }
 
     /** The abstract assertion class of the configured type, which is the null marked scope. */
@@ -242,7 +250,11 @@ class AssertionGenerator {
                         .addStatement("super($L, selfType)", ACTUAL_FIELD);
         if (!properties.isEmpty()) {
             constructor.addStatement(
-                    "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName());
+                    "this.$L = $T.rootedAt($S, $L)",
+                    PATH,
+                    AssertionPath.class,
+                    model.simpleName(),
+                    ACTUAL_FIELD);
         }
         return constructor.build();
     }
@@ -444,7 +456,7 @@ class AssertionGenerator {
                 + "', which clashes; rename one of the types";
     }
 
-    private static String quotedAndJoined(final List<String> names) {
+    static String quotedAndJoined(final List<String> names) {
         return names.stream().map(name -> "'" + name + "'").collect(Collectors.joining(" and "));
     }
 

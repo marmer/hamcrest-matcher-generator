@@ -1,12 +1,35 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "release-type": "maven",
-  "skip-snapshot": true,
+  "release-type": "simple",
   "include-component-in-tag": false,
   "include-v-in-tag": false,
   "packages": {
     ".": {
-      "release-as": "6.0.0"
+      "release-as": "6.0.0",
+      "extra-files": [
+        "example-gradle-java/build.gradle.kts",
+        "README.md",
+        {"type": "xml", "path": "assertj-assertion-generator/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "docs/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "example-maven-java-assertj/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "example-maven-java-hamcrest/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "example-maven-kotlin/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-annotationprocessor/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-dependencies/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-5x-compatibility-runner/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-assertj/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-java-records/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-lombok/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-mixed-kotlin-java/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-plain-java-minimal/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-endtoend/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator-kotlin/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "hamcrest-matcher-generator/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "matcher-generator-annotations/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "matcher-generator-core/pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"},
+        {"type": "xml", "path": "pom.xml", "xpath": "/*[local-name()=\"project\"]/*[local-name()=\"version\"] | /*[local-name()=\"project\"]/*[local-name()=\"parent\"]/*[local-name()=\"version\"]"}
+      ]
     }
   }
 }

@@ -1,0 +1,26 @@
+= IDE setup
+:description: Make your IDE see the generated matchers and assertions, for Eclipse and IntelliJ IDEA.
+:page-order: 8
+
+Use the IDE of your choice. An IDE with annotation processing support generates the matchers when the project builds, in the same way as the compiler does. Some IDEs need a little help to see the sources that Maven generates.
+
+== Eclipse
+
+Eclipse runs annotation processing for Maven projects only with the m2e-apt plugin, and it needs to know where the generated test sources are. The `build-helper-maven-plugin` tells the IDE where to look. It adds the directory of the generated test sources as a test source root:
+
+[source,xml]
+----
+include::../../../../../example-maven-java-hamcrest/pom.xml[tag=ide-build-helper,indent=0]
+----
+
+== IntelliJ IDEA
+
+In plain Java projects you do not need to change anything. In mixed Java and Kotlin projects you need nothing either, as long as all your tests are written in Java.
+
+If your tests are written in Kotlin, IntelliJ IDEA does not know where kapt puts the generated test sources, and kapt cannot be told another output path. The workaround is to move the generated test sources into a well-known location right after generation. The drawback is that the project must be compiled with the build tool before the IDE sees fresh generated code.
+
+The link:kotlin.html[Kotlin chapter] has the workaround, as a Maven profile of the end-to-end module that moves the generated test sources.
+
+== Other IDEs
+
+Any IDE that reads the generated source directories works the same way. If the IDE reports that a matcher or an assertion does not exist, build the project once with Maven, then refresh the IDE's view of the project.

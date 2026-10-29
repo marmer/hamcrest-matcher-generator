@@ -1,0 +1,70 @@
+= Completeness check
+:description: The completeness check fails a test when a property of a generated matcher or assertion was neither checked nor ignored, with the Hamcrest and AssertJ calls and the Kotlin DSL.
+:page-order: 5
+
+A test that checks some properties of a model says nothing about the others. When a property is added to the model later, the existing test passes and the new property stays unasserted. The completeness check closes that gap: when you turn it on, the assertion fails unless every property of the type is either checked or ignored.
+
+A property counts as addressed when a check names it, or when you name it with `ignoringX()` to say that you decided not to check it. Ignoring is visible in the test, so the decision is reviewed with the test.
+
+The check is off by default. It is opt-in per assertion, so a test that does not ask for it keeps the behaviour of 5.x.
+
+== Hamcrest
+
+Call `checkingAllProperties()` on the matcher. Every property must be checked with `withX` or named with `ignoringX()`. A `resetX` call removes both, so a reset property counts as neither:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=completeness-check,indent=0]
+----
+
+When a property was neither checked nor ignored, the failure names it with its property path. The message below is the golden output of the runtime test `BeanPropertyMatcherTest` for a booking whose `customer.phone` and `customer.address` were neither checked nor ignored; `customer.phone` is a nested property:
+
+[source,text]
+----
+include::../../../../../hamcrest-matcher-generator/src/test/resources/io/github/marmer/matchergenerator/hamcrest/BeanPropertyMatcherTest/completeness-check.txt[lines=2..-1]
+----
+
+The message is the last thing that fails. Value mismatches come first, so a wrong value is reported as a wrong value, and the check names only the properties that remain.
+
+A matcher made with `isCustomerLike(reference)` turns the check on as well. The reference object sets every property, and `withX`, `resetX` and `ignoringX` override single properties of it.
+
+== AssertJ
+
+The AssertJ backend has two forms. The closing call `hasAllPropertiesChecked()` checks the whole chain of the assertion. Each `hasX`, `hasXSatisfying` and boolean `isX` or `isNotX` counts as a check, and `ignoringX()` counts as ignoring:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=completeness-check,indent=0]
+----
+
+The scope form `satisfiesCheckingAllProperties(..)` runs the check only inside its lambda. It counts what the lambda addresses and nothing that comes before it in the chain. Use it when only one part of a larger assertion should be complete:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=completeness-check-scope,indent=0]
+----
+
+A failure names the properties in a sentence of this form: `Expecting every property of Order to be checked or ignored, but these were neither: tags`. The check of a nested assertion names the path of the nested type, so the same sentence for the `customer` of an order starts with `Order.customer`. This sentence is the one the AssertJ end-to-end test `CompletenessCheckTest` asserts.
+
+Navigation with `extracting(..., as(X))` or `first(as(X))` starts a new assertion for a new subject. That assertion has its own set of addressed properties, so checks made before the navigation do not count for it.
+
+== Kotlin
+
+The Kotlin DSL has the same check. Inside a scope, `checkingAllProperties()` turns it on and `ignoringX()` names a property you leave out:
+
+[source,kotlin]
+----
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt[tag=completeness-check,indent=0]
+----
+
+The DSL delegates to the Java matcher, so the failure message is the one of the Hamcrest backend. The Kotlin chapter shows the complete setup.
+
+== Which properties count
+
+Every generated matcher also lists `class`, from `getClass()`, so `withClass(..)` and `ignoringClass()` exist. The completeness check does not count `class`: you never need to ignore it. Enum types also get `declaringClass`, and whether the check should count it is still open.
+
+== Next steps
+
+* link:hamcrest-backend.html[Hamcrest backend] and link:assertj-backend.html[AssertJ backend] for the rest of the generated API.
+* link:mismatch-messages.html[Mismatch messages] for the full shape of the messages.
+* link:kotlin.html[Kotlin] for the DSL in a Kotlin project.

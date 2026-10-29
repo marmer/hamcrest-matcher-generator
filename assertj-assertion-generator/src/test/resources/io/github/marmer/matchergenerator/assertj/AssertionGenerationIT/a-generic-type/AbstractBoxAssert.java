@@ -33,7 +33,7 @@ public abstract class AbstractBoxAssert<SELF extends AbstractBoxAssert<SELF, ACT
 
   protected AbstractBoxAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Box");
+    this.path = AssertionPath.rootedAt("Box", actual);
   }
 
   public SELF hasContent(final @Nullable Object value) {

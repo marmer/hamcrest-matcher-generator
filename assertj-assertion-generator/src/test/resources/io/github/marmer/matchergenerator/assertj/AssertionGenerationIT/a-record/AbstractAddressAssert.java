@@ -31,7 +31,7 @@ public abstract class AbstractAddressAssert<SELF extends AbstractAddressAssert<S
 
   protected AbstractAddressAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Address");
+    this.path = AssertionPath.rootedAt("Address", actual);
   }
 
   public SELF hasStreet(final @Nullable String value) {
