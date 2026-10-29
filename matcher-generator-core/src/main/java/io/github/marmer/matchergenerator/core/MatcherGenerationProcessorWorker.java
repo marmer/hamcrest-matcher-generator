@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,6 +79,15 @@ public class MatcherGenerationProcessorWorker {
     private final ProcessingEnvironment processingEnv;
     private final String generatorName;
     private final List<GeneratorBackend> backends;
+
+    /**
+     * The names of the sources written so far, per round. The Filer refuses a second source of the
+     * same name, which for a file a backend writes once per package happens when a later round
+     * adds a type to that package.
+     */
+    private final Set<String> writtenInEarlierRounds = new HashSet<>();
+
+    private final Set<String> writtenInThisRound = new HashSet<>();
 
     public MatcherGenerationProcessorWorker(
             final Supplier<LocalDateTime> timeProvider,
@@ -220,6 +230,8 @@ public class MatcherGenerationProcessorWorker {
      * refer to the code generated for another type, whichever configuration asked for it.
      */
     private void generate(final List<PlannedType> planned) {
+        writtenInEarlierRounds.addAll(writtenInThisRound);
+        writtenInThisRound.clear();
         final LocalDateTime generationTime = timeProvider.get();
         final boolean jspecifyAvailable = isJspecifyAvailable();
         final List<TypeModel> models =
@@ -246,8 +258,8 @@ public class MatcherGenerationProcessorWorker {
                                                             write(
                                                                     backend,
                                                                     source,
-                                                                    type.typeElement(),
-                                                                    type.configurationElement())));
+                                                                    type,
+                                                                    models)));
                 });
     }
 
@@ -374,26 +386,58 @@ public class MatcherGenerationProcessorWorker {
     private void write(
             final GeneratorBackend backend,
             final GeneratedSource source,
-            final TypeElement typeElement,
-            final Element configurationElement) {
-        final Element[] originatingElements = {typeElement, configurationElement};
+            final PlannedType type,
+            final List<TypeModel> roundModels) {
+        final String name = qualifiedNameOf(source);
+        if (writtenInEarlierRounds.contains(name)) {
+            printNotWrittenAgain(type, name, source.packageName(), roundModels);
+            return;
+        }
+        writtenInThisRound.add(name);
+        final Element[] originatingElements = {type.typeElement(), type.configurationElement()};
         try {
             if (source.language() == GeneratedSource.Language.JAVA) {
-                writeJava(source, originatingElements);
+                writeJava(name, source, originatingElements);
             } else {
-                writeKotlin(backend, source, typeElement);
+                writeKotlin(backend, source, type.typeElement());
             }
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    private void writeJava(final GeneratedSource source, final Element[] originatingElements)
+    private static String qualifiedNameOf(final GeneratedSource source) {
+        return source.packageName().isEmpty()
+                ? source.simpleName()
+                : source.packageName() + "." + source.simpleName();
+    }
+
+    /**
+     * A source an earlier round wrote is not written again, which the Filer would refuse. Whatever
+     * this round adds to the package is not part of it, which the user has to know.
+     */
+    private void printNotWrittenAgain(
+            final PlannedType type,
+            final String name,
+            final String packageName,
+            final List<TypeModel> roundModels) {
+        final String missing =
+                roundModels.stream()
+                        .filter(model -> model.targetPackage().equals(packageName))
+                        .map(TypeModel::qualifiedName)
+                        .sorted()
+                        .collect(Collectors.joining(", "));
+        printBackendWarning(
+                type,
+                name
+                        + " was already written in an earlier processing round and is not written"
+                        + " again. It does not know the types generated in this round: "
+                        + missing);
+    }
+
+    private void writeJava(
+            final String name, final GeneratedSource source, final Element[] originatingElements)
             throws IOException {
-        final String name =
-                source.packageName().isEmpty()
-                        ? source.simpleName()
-                        : source.packageName() + "." + source.simpleName();
         final FileObject file =
                 processingEnv.getFiler().createSourceFile(name, originatingElements);
         try (Writer writer = file.openWriter()) {

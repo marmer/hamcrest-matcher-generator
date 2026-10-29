@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import org.junit.jupiter.api.AfterEach;
@@ -115,6 +116,14 @@ class CoreProcessorIT {
 
     private static Compilation compile(final Compiler compiler, final JavaFileObject... sources) {
         return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .compile(Arrays.asList(sources));
+    }
+
+    private static Compilation compile(
+            final Compiler compiler,
+            final Processor otherProcessor,
+            final JavaFileObject... sources) {
+        return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW), otherProcessor)
                 .compile(Arrays.asList(sources));
     }
 
@@ -507,6 +516,82 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(compilation).succeeded();
         CompilationSubject.assertThat(compilation).hadNoteCount(1);
         CompilationSubject.assertThat(compilation).hadNoteContaining(ProbingBackend.NOTE);
+    }
+
+    private static JavaFileObject summarizedType(final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+                "some.summarized." + simpleName,
+                "package some.summarized;",
+                "public class " + simpleName + " {",
+                "    public String getName() { return null; }",
+                "}");
+    }
+
+    private static long countGenerated(final Compilation compilation, final String fileName) {
+        return compilation.generatedSourceFiles().stream()
+                .filter(source -> source.getName().endsWith("/" + fileName))
+                .count();
+    }
+
+    private static String summary(final Compilation compilation) throws IOException {
+        return compilation
+                .generatedSourceFile("some.summarized.PackageSummary")
+                .orElseThrow()
+                .getCharContent(true)
+                .toString();
+    }
+
+    @Test
+    @DisplayName(
+            "Two configurations of one round share the files a backend writes once per package")
+    void twoConfigurationsOfOneRoundShareTheFilesABackendWritesOncePerPackage()
+            throws IOException {
+        final JavaFileObject other =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.OtherConfiguration",
+                        "package some.pck;",
+                        "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                        "@GenerateMatchers(\"some.summarized.Second\")",
+                        "public final class OtherConfiguration {",
+                        "}");
+
+        final Compilation compilation =
+                compile(
+                        generateMatchersConfiguration("\"some.summarized.First\""),
+                        other,
+                        summarizedType("First"),
+                        summarizedType("Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(
+                summary.contains("[some.summarized.First, some.summarized.Second]"),
+                () -> "Summary: " + summary);
+    }
+
+    @Test
+    @DisplayName(
+            "A file a backend writes once per package is not written again by a later round, which is a warning")
+    void aFileABackendWritesOncePerPackageIsNotWrittenAgainByALaterRoundWhichIsAWarning() {
+        final Compilation compilation =
+                compile(
+                        javacWith(),
+                        new LateConfigurationProcessor(
+                                "some.summarized.LateConfiguration", "some.summarized.Second"),
+                        generateMatchersConfiguration("\"some.summarized.First\""),
+                        summarizedType("First"),
+                        summarizedType("Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        assertEquals(1, countGenerated(compilation, "SecondRecorded.java"));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.summarized.PackageSummary was already written in an earlier"
+                                + " processing round and is not written again. It does not know"
+                                + " the types generated in this round: some.summarized.Second");
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
     }
 
     @Test
