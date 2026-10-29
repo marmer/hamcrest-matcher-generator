@@ -28,7 +28,7 @@ The interface the AssertJ backend generates per target package, named `SoftAsser
 _Avoid_: soft provider, BDD mixin
 
 **Generated representation**:
-The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it covers only types generated in the same processing round.
+The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it is written once per package and covers only types generated in the same processing round; a later round gets the processor's "not written again" warning, but a second compilation gets no class-path note for it (only the mixin does).
 _Avoid_: representation class, property formatter
 
 **Bridge jar**:
