@@ -5,8 +5,10 @@
 package io.github.marmer.matchergenerator.assertj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -136,5 +138,29 @@ class AssertionPathTest {
                                 }));
 
         assertEquals("Order", AssertionPath.rootedAt("Order", "unrelated"));
+    }
+
+    @Test
+    @DisplayName("The thread holds no state outside of a requirement, also after a failed one")
+    void theThreadHoldsNoStateOutsideOfARequirement() {
+        AssertionPath.rootedAt("Order", "x");
+        assertFalse(AssertionPath.holdsStateInThisThread());
+
+        AssertionPath.within(
+                "Order.customer",
+                "value",
+                value -> assertTrue(AssertionPath.holdsStateInThisThread()));
+        assertFalse(AssertionPath.holdsStateInThisThread());
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AssertionPath.within(
+                                "Order.customer",
+                                "value",
+                                value -> {
+                                    throw new IllegalStateException("failed");
+                                }));
+        assertFalse(AssertionPath.holdsStateInThisThread());
     }
 }

@@ -9,11 +9,12 @@ import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import foo.bar.sample.assertj.lines.Line;
-import foo.bar.sample.assertj.lines.LineAssert;
 import foo.bar.sample.assertj.model.Address;
+import foo.bar.sample.assertj.model.Badge;
 import foo.bar.sample.assertj.model.Customer;
 import foo.bar.sample.assertj.model.CustomerAssert;
+import foo.bar.sample.assertj.model.Membership;
+import foo.bar.sample.assertj.model.MembershipAssert;
 import foo.bar.sample.assertj.model.Order;
 import foo.bar.sample.assertj.model.OrderAssert;
 import foo.bar.sample.assertj.model.SoftAssertionsProvider;
@@ -32,6 +33,11 @@ class CompletenessCheckTest {
                     new BigDecimal("9.99"),
                     List.of("books", "sale"),
                     false);
+
+    private static final Customer MEMBER =
+            new Customer("Ada", null, new Address("1 Rue de Rivoli", "Paris"));
+    private static final Membership MEMBERSHIP =
+            new Membership("gold", MEMBER, MEMBER, new Badge("g"));
 
     @Test
     @DisplayName("The short form passes when every property is checked, whatever the check kind")
@@ -213,37 +219,40 @@ class CompletenessCheckTest {
     }
 
     @Test
-    @DisplayName(
-            "After extracting with as the navigated assertion has its own set of checked properties")
-    void afterExtractingWithAsTheNavigatedAssertionHasItsOwnSet() {
+    @DisplayName("After extracting with as a property of the same name is not addressed yet")
+    void afterExtractingWithAsAPropertyOfTheSameNameIsNotAddressedYet() {
         assertThatThrownBy(
                         () ->
-                                OrderAssert.assertThat(ORDER)
-                                        .ignoringCustomer()
-                                        .extracting(Order::getCustomer, as(CustomerAssert.CUSTOMER))
-                                        .hasName("Ada")
+                                MembershipAssert.assertThat(MEMBERSHIP)
+                                        .hasName("gold")
+                                        .extracting(
+                                                Membership::getMember, as(CustomerAssert.CUSTOMER))
+                                        .hasPhone(null)
+                                        .ignoringAddress()
                                         .hasAllPropertiesChecked())
                 .hasMessage(
                         String.format(
                                 "%nExpecting every property of Customer to be checked or"
-                                        + " ignored, but these were neither: phone, address"));
+                                        + " ignored, but these were neither: name"));
     }
 
     @Test
-    @DisplayName(
-            "After first with as the navigated assertion has its own set of checked properties")
-    void afterFirstWithAsTheNavigatedAssertionHasItsOwnSet() {
+    @DisplayName("After first with as a property of the same name is not addressed yet")
+    void afterFirstWithAsAPropertyOfTheSameNameIsNotAddressedYet() {
+        MembershipAssert.assertThat(MEMBERSHIP).hasName("gold");
+
         assertThatThrownBy(
                         () ->
-                                org.assertj.core.api.Assertions.assertThat(
-                                                List.of(new Line("A-1", 2)))
-                                        .first(as(LineAssert.LINE))
-                                        .hasSku("A-1")
+                                org.assertj.core.api.Assertions.assertThat(List.of(MEMBERSHIP))
+                                        .first(as(MembershipAssert.MEMBERSHIP))
+                                        .ignoringMember()
+                                        .ignoringBillingMember()
+                                        .ignoringBadge()
                                         .hasAllPropertiesChecked())
                 .hasMessageEndingWith(
                         String.format(
-                                "%nExpecting every property of Line to be checked or ignored,"
-                                        + " but these were neither: quantity"));
+                                "%nExpecting every property of Membership to be checked or"
+                                        + " ignored, but these were neither: name"));
     }
 
     @Test
@@ -251,8 +260,9 @@ class CompletenessCheckTest {
     void theNavigatedAssertionPassesWhenItAddressesAllItsOwnProperties() {
         assertThatCode(
                         () ->
-                                OrderAssert.assertThat(ORDER)
-                                        .extracting(Order::getCustomer, as(CustomerAssert.CUSTOMER))
+                                MembershipAssert.assertThat(MEMBERSHIP)
+                                        .extracting(
+                                                Membership::getMember, as(CustomerAssert.CUSTOMER))
                                         .hasName("Ada")
                                         .ignoringPhone()
                                         .ignoringAddress()

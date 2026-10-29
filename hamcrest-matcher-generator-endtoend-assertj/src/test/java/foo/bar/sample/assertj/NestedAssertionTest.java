@@ -8,8 +8,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import foo.bar.sample.assertj.model.Address;
 import foo.bar.sample.assertj.model.AddressAssert;
+import foo.bar.sample.assertj.model.Badge;
+import foo.bar.sample.assertj.model.BadgeAssert;
 import foo.bar.sample.assertj.model.Customer;
 import foo.bar.sample.assertj.model.CustomerAssert;
+import foo.bar.sample.assertj.model.Membership;
+import foo.bar.sample.assertj.model.MembershipAssert;
 import foo.bar.sample.assertj.model.Order;
 import foo.bar.sample.assertj.model.OrderAssert;
 import java.math.BigDecimal;
@@ -129,5 +133,52 @@ class NestedAssertionTest {
                                                             .hasName("Bob");
                                                 }))
                 .hasMessageContaining("Expecting Order.customer.name to be:");
+    }
+
+    @Test
+    @DisplayName("An unrelated null inside a requirement for a null value inherits its path")
+    void anUnrelatedNullInsideARequirementForANullValueInheritsItsPath() {
+        assertThatThrownBy(
+                        () ->
+                                OrderAssert.assertThat(ORDER_WITHOUT_CUSTOMER)
+                                        .hasCustomerSatisfying(
+                                                customer ->
+                                                        AddressAssert.assertThat((Address) null)
+                                                                .hasCity("Paris")))
+                .hasMessage(String.format("%nExpecting Order.customer not to be null"));
+    }
+
+    @Test
+    @DisplayName("The same instance behind two properties reports the path of the requirement")
+    void theSameInstanceBehindTwoPropertiesReportsThePathOfTheRequirement() {
+        final Customer member = ORDER.getCustomer();
+        final Membership membership = new Membership("gold", member, member, new Badge("g"));
+
+        assertThatThrownBy(
+                        () ->
+                                MembershipAssert.assertThat(membership)
+                                        .hasMemberSatisfying(
+                                                ignored ->
+                                                        CustomerAssert.assertThat(
+                                                                        membership
+                                                                                .getBillingMember())
+                                                                .hasName("Bob")))
+                .hasMessageContaining("Expecting Membership.member.name to be:");
+    }
+
+    @Test
+    @DisplayName("An equal but not identical value inside a requirement starts at its own type")
+    void anEqualButNotIdenticalValueInsideARequirementStartsAtItsOwnType() {
+        final Membership membership =
+                new Membership("gold", ORDER.getCustomer(), null, new Badge("g"));
+
+        assertThatThrownBy(
+                        () ->
+                                MembershipAssert.assertThat(membership)
+                                        .hasBadgeSatisfying(
+                                                badge ->
+                                                        BadgeAssert.assertThat(new Badge("g"))
+                                                                .hasLabel("x")))
+                .hasMessageContaining("Expecting Badge.label to be:");
     }
 }

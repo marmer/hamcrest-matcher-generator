@@ -25,8 +25,7 @@ public final class AssertionPath {
      * The enclosing requirements, innermost first: the value a requirement is run for and the path
      * its assertion starts at; an empty path restarts at the type.
      */
-    private static final ThreadLocal<Deque<Requirement>> ENCLOSING =
-            ThreadLocal.withInitial(ArrayDeque::new);
+    private static final ThreadLocal<@Nullable Deque<Requirement>> ENCLOSING = new ThreadLocal<>();
 
     private AssertionPath() {}
 
@@ -40,7 +39,8 @@ public final class AssertionPath {
      *     or it restarts
      */
     public static String rootedAt(final String typeName, final @Nullable Object actual) {
-        final @Nullable Requirement enclosing = ENCLOSING.get().peek();
+        final @Nullable Deque<Requirement> requirements = ENCLOSING.get();
+        final @Nullable Requirement enclosing = requirements == null ? null : requirements.peek();
         if (enclosing == null || enclosing.value != actual) {
             return typeName;
         }
@@ -76,13 +76,30 @@ public final class AssertionPath {
 
     private static <T extends @Nullable Object> void run(
             final Optional<String> path, final T value, final Consumer<? super T> requirements) {
-        final Deque<Requirement> enclosing = ENCLOSING.get();
+        final Deque<Requirement> enclosing = enclosingOfThisThread();
         enclosing.push(new Requirement(path, value));
         try {
             requirements.accept(value);
         } finally {
             enclosing.pop();
+            if (enclosing.isEmpty()) {
+                ENCLOSING.remove();
+            }
         }
+    }
+
+    private static Deque<Requirement> enclosingOfThisThread() {
+        @Nullable Deque<Requirement> enclosing = ENCLOSING.get();
+        if (enclosing == null) {
+            enclosing = new ArrayDeque<>();
+            ENCLOSING.set(enclosing);
+        }
+        return enclosing;
+    }
+
+    /** Whether the current thread still holds state, which it must not outside of a requirement. */
+    static boolean holdsStateInThisThread() {
+        return ENCLOSING.get() != null;
     }
 
     private static final class Requirement {
