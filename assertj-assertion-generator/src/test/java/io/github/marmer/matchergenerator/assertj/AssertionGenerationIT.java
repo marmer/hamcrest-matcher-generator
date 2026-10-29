@@ -801,6 +801,175 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName(
+            "Top level types Foo and AbstractFoo both generate AbstractFooAssert, a compile error")
+    void topLevelTypesGeneratingTheSameClassNameAreACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.AbstractFoo");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("AbstractFoo"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFoo' and 'some.other.pck.Foo', which clashes;"
+                        + " rename one of the types");
+    }
+
+    @Test
+    @DisplayName("A generated class named like another configured type is a compile error")
+    void aGeneratedClassNamedLikeAnotherConfiguredTypeIsACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.FooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("FooAssert"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'FooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.Foo' and 'some.other.pck.FooAssert', which clashes;"
+                        + " rename one of the types");
+    }
+
+    @Test
+    @DisplayName("A generated abstract class named like another configured type is a compile error")
+    void anAbstractClassNamedLikeAnotherConfiguredTypeIsACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.AbstractFooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("AbstractFooAssert"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFooAssert' and 'some.other.pck.Foo', which"
+                        + " clashes; rename one of the types");
+    }
+
+    @Test
+    @DisplayName("Three claimants of one class name are one error naming all of them")
+    void threeClaimantsOfOneClassNameAreOneCompileError() {
+        final JavaFileObject configuration =
+                configuration(
+                        "some.other.pck.Foo",
+                        "some.other.pck.AbstractFoo",
+                        "some.other.pck.AbstractFooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        beanWithAName("Foo"),
+                        beanWithAName("AbstractFoo"),
+                        beanWithAName("AbstractFooAssert"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFoo' and 'some.other.pck.AbstractFooAssert'"
+                        + " and 'some.other.pck.Foo', which clashes;"
+                        + " rename all but one of the types");
+    }
+
+    @Test
+    @DisplayName("A configured type named SoftAssertionsProvider clashes with the mixin")
+    void aConfiguredTypeNamedLikeTheMixinIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.SoftAssertionsProvider");
+        final Compilation compilation =
+                compileWithJSpecify(configuration, beanWithAName("SoftAssertionsProvider"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'SoftAssertionsProvider' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.SoftAssertionsProvider' and the generated mixin"
+                        + " 'SoftAssertionsProvider', which clashes; rename the configured type");
+    }
+
+    @Test
+    @DisplayName("A configured type named PropertyRepresentation clashes with the representation")
+    void aConfiguredTypeNamedLikeTheRepresentationIsACompileError() {
+        final JavaFileObject configuration = configuration("some.other.pck.PropertyRepresentation");
+        final Compilation compilation =
+                compileWithJSpecify(configuration, beanWithAName("PropertyRepresentation"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'PropertyRepresentation' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.PropertyRepresentation' and the generated"
+                        + " representation 'PropertyRepresentation', which clashes;"
+                        + " rename the configured type");
+    }
+
+    @Test
+    @DisplayName("Top level types whose names only resemble each other are no clash")
+    void topLevelTypesWithResemblingNamesAreNoClash() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration(
+                                "some.other.pck.FooBar",
+                                "some.other.pck.Foo_Bar",
+                                "some.other.pck.FOO_BAR",
+                                "some.other.pck.FOOBAR",
+                                "some.other.pck.Foobar"),
+                        beanWithAName("FooBar"),
+                        beanWithAName("Foo_Bar"),
+                        beanWithAName("FOO_BAR"),
+                        beanWithAName("FOOBAR"),
+                        beanWithAName("Foobar"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    @Test
+    @DisplayName(
+            "A type named like a generated class is no clash when generated into a prefixed package")
+    void aTypeInAnotherPackageThanTheGeneratedOneOccupiesNoName() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        JavaFileObjects.forSourceLines(
+                                "some.pck.SomeConfiguration",
+                                """
+                                package some.pck;
+
+                                import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+                                @GenerateMatchers(
+                                    value = {"some.other.pck.Foo", "some.other.pck.FooAssert"},
+                                    generation = @GenerateMatchers.GenerationConfiguration(
+                                        packageConfig = @GenerateMatchers.GenerationConfiguration.PackageConfiguration("prefix.")))
+                                public final class SomeConfiguration {
+                                }
+                                """),
+                        beanWithAName("Foo"),
+                        beanWithAName("FooAssert"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    /**
+     * The one error of the compilation: exactly this message, at the annotation of the
+     * configuration, which sits on line 3.
+     */
+    private static void assertSingleErrorOnTheAnnotation(
+            final Compilation compilation,
+            final JavaFileObject configuration,
+            final String message) {
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(message)
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(message, compilation.errors().get(0).getMessage(null));
+    }
+
+    @Test
     @DisplayName("A boolean foo and a non boolean notFoo generate no clash")
     void aBooleanAndANonBooleanNameThatResemblesItAreNoClash() {
         final Compilation compilation =

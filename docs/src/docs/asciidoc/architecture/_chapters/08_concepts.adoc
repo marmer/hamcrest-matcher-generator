@@ -69,7 +69,11 @@ error at the `@GenerateMatchers` annotation. The backend leaves the offending me
 error is the only one the user sees. The AssertJ backend does this for a generated method whose name an inherited
 AssertJ method already has: one error per property, naming the property and the clashing methods. It also reports two
 properties that generate the same method name (such as a boolean `foo` and `notFoo`, both `isNotFoo()`) and two nested
-types whose factory constants share a name (such as `FooBar` and `Foo_Bar`, both `FOO_BAR`), one error per name.
+types whose factory constants share a name (such as `FooBar` and `Foo_Bar`, both `FOO_BAR`), one error per name. It
+also reports a top level class name that two types of one package need (`Foo` and `AbstractFoo` both generate
+`AbstractFooAssert`, or a type named like the package's mixin `SoftAssertionsProvider`) and then writes nothing for
+the package, while `FooBar`, `Foo_Bar` and `FOOBAR` are different classes and no clash; like the other per-package
+files it sees only the types of one processing round (ADR 0006).
 
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The
