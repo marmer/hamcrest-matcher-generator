@@ -20,6 +20,8 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- The guide's snippets name the property, so a reader sets it to the release they use. -->
+        <assertj-assertion-generator.version>${project.version}</assertj-assertion-generator.version>
     </properties>
 
     <dependencies>
@@ -27,13 +29,13 @@
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>assertj-assertion-generator</artifactId>
-            <version>${project.version}</version>
+            <version>${assertj-assertion-generator.version}</version>
         </dependency>
-        <!-- end::maven-dependencies[] -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
         </dependency>
+        <!-- end::maven-dependencies[] -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -58,7 +60,7 @@
                         <path>
                             <groupId>io.github.marmer.testutils</groupId>
                             <artifactId>assertj-assertion-generator</artifactId>
-                            <version>${project.version}</version>
+                            <version>${assertj-assertion-generator.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <!-- end::maven-processor[] -->

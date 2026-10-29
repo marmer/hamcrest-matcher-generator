@@ -1,0 +1,24 @@
+# hamcrest-matcher-generator
+
+> hamcrest-matcher-generator is a Java annotation processor (Java 17+, Kotlin supported). At compile time it generates, for the model classes you configure, a Hamcrest matcher (`XMatcher` with `isX()`) and an AssertJ assertion (`XAssert` with `assertThat(x)`). Generated code carries no license of this project, so it is yours to use.
+
+The library is published on Maven Central as `io.github.marmer.testutils:hamcrest-matcher-generator` (Hamcrest backend) and `io.github.marmer.testutils:assertj-assertion-generator` (AssertJ backend). Both are annotation processors that read one `@GenerateMatchers` configuration annotation, and both need Java 17 or newer to run.
+
+Typical usage: add the generator to the test classpath and the annotation processor path, put `@GenerateMatchers("your.model.package")` on any class, then write `assertThat(customer, isCustomer().withName("Ada"))` (Hamcrest) or `CustomerAssert.assertThat(customer).hasName("Ada")` (AssertJ). The completeness check (`checkingAllProperties()`, `hasAllPropertiesChecked()`) fails a test when a property was neither checked nor ignored.
+
+## User guide
+
+- [Getting started](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html): Maven dependencies, the processor path, the configuration annotation and a first test.
+- [Configuration](https://marmer.github.io/hamcrest-matcher-generator/guide/configuration.html): selecting and excluding types with packages and class names, the package of the generated types.
+- [Hamcrest backend](https://marmer.github.io/hamcrest-matcher-generator/guide/hamcrest-backend.html): the generated matcher API (`withX`, `resetX`, `ignoringX`, `checkingAllProperties()`, `isXLike(reference)`).
+- [AssertJ backend](https://marmer.github.io/hamcrest-matcher-generator/guide/assertj-backend.html): the generated assertion API (`hasX`, `hasXSatisfying`, `isX`, `hasAllPropertiesChecked()`) and `usingRecursiveComparison()` for the whole object.
+- [IDE setup](https://marmer.github.io/hamcrest-matcher-generator/guide/ide-setup.html): making Eclipse, IntelliJ IDEA and other IDEs see the generated sources.
+- [Architecture](https://marmer.github.io/hamcrest-matcher-generator/guide/architecture.html): where the architecture documentation is.
+
+## Architecture
+
+- [Architecture documentation (arc42)](https://marmer.github.io/hamcrest-matcher-generator/architecture/index.html): context, building blocks, runtime view of one generation round, deployment and architecture decisions, with C4 views.
+
+## Optional
+
+- [Repository](https://github.com/marmer/hamcrest-matcher-generator): source code, issues and releases.

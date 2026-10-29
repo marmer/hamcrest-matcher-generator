@@ -37,6 +37,16 @@ class CustomerAssertTest {
     }
 
     @Test
+    @DisplayName("usingRecursiveComparison compares the whole object in one step")
+    void usingRecursiveComparisonComparesTheWholeObjectInOneStep() {
+        // tag::whole-object[]
+        CustomerAssert.assertThat(ADA)
+                .usingRecursiveComparison()
+                .isEqualTo(new Customer("Ada", new Address("1 Rue de Rivoli", "Paris"), true));
+        // end::whole-object[]
+    }
+
+    @Test
     @DisplayName("The completeness check passes when every property is checked or ignored")
     void theCompletenessCheckPassesWhenEveryPropertyIsCheckedOrIgnored() {
         // tag::completeness-check[]

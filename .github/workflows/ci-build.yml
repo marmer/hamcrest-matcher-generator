@@ -204,3 +204,28 @@ jobs:
 
       - name: Check release artifacts
         run: scripts/ci/check-release-artifacts.sh release-dry-run.log
+
+  example-gradle:
+    # The Gradle example sits outside the reactor with its own wrapper; it resolves the reactor's artifacts from mavenLocal().
+    name: Example Gradle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Install the reactor artifacts into mavenLocal()
+        # -DskipEndtoend keeps the never-published end-to-end modules out; the libraries the example uses are installed.
+        run: ./mvnw -B -DskipEndtoend -DskipTests install
+
+      - name: Build the Gradle example
+        working-directory: example-gradle-java
+        run: ./gradlew --no-daemon --console=plain build

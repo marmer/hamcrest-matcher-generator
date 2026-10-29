@@ -53,6 +53,12 @@
       "groupName": "Structurizr"
     },
     {
+      "description": "The Gradle example's own artifacts follow the release (release-please bumps its version), not Renovate; its wrapper is a normal gradle-wrapper update",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["io.github.marmer.testutils:*"],
+      "enabled": false
+    },
+    {
       "description": "The latest CI leg follows the newest GA JDK, not only LTS releases; compare by major version only",
       "matchDatasources": ["java-version"],
       "allowedVersions": "/^\\d+/",

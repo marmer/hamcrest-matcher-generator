@@ -21,20 +21,35 @@ link:architecture/index.html[How it works,role=secondary]
 [.pair]
 --
 .Hamcrest
-[.placeholder]
-Snippet placeholder: the Hamcrest example follows with the user guide.
+[source,java]
+----
+include::../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=basic-assertion,indent=0]
+----
 
 .AssertJ
-[.placeholder]
-Snippet placeholder: the AssertJ example follows with the user guide.
+[source,java]
+----
+include::../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=basic-assertion,indent=0]
+----
 --
 
 [.features]
-* *Compile-safe.* Placeholder for the first feature.
-* *Readable failures.* Placeholder for the second feature.
-* *Completeness check.* Placeholder for the third feature.
+* *Compile-safe.* The matchers and assertions come from your model classes. Rename a property and the test code that uses it stops compiling, instead of failing at run time.
+* *Readable failures.* A mismatch names the property that differs, nested properties included, with the expected and the actual value.
+* *Completeness check.* Opt in and a test fails when a property was neither checked nor ignored, so a property added to a model cannot slip by unasserted.
 
 == Install
 
-[.placeholder]
-Install placeholder: the dependency snippet follows with the user guide.
+Add the generator for the backend you use, and Hamcrest or AssertJ next to it. The current release is {project-version}; the snippets read it from the property `hamcrest-matcher-generator.version` or `assertj-assertion-generator.version`, which you define once in your build.
+
+[source,xml]
+----
+include::../../../../example-maven-java-hamcrest/pom.xml[tag=maven-dependencies,indent=0]
+----
+
+[source,xml]
+----
+include::../../../../example-maven-java-assertj/pom.xml[tag=maven-dependencies,indent=0]
+----
+
+The link:guide/getting-started.html[user guide] covers the annotation processor path, the configuration and the first test.

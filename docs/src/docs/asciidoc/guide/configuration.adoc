@@ -1,0 +1,33 @@
+= Configuration
+:description: Choose the types to generate for with the configuration annotation, exclude types and set the package of the generated code.
+:page-order: 2
+
+One annotation, `GenerateMatchers`, tells the processor which types to generate for. Put it on a class of your choice. The backends on the processor path both read it, so a configuration selects the same types for the Hamcrest matchers and the AssertJ assertions.
+
+== Selecting types
+
+The annotation's value lists package names and fully qualified class names. A package entry selects every class in the package, and a class entry selects exactly that class:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+----
+
+This configuration generates a matcher for every model class in `example.hamcrest.model`. The model classes can be beans with getters, records or Kotlin classes: the processor reads bean getters, record component accessors and Kotlin getters.
+
+== Excluding types
+
+The annotation's `exclude` value takes the same kinds of entries and removes types from the selection. A package entry excludes every configured type in it, and a class entry excludes that one type. An entry that matches no configured type is reported as a warning, so a misspelled name does not pass silently.
+
+== Package of the generated types
+
+The generation setting `packageConfig` decides the package of the generated types. Its value is a prefix, so the generated code of a type can live in a package other than the one of the type. The javadoc of the annotation gives the rule with examples: the prefix `some.praefix.` turns the package `some.pck` of `some.pck.SomeType` into `some.praefix.some.pck`, and an empty value keeps the package of the type.
+
+== Where the generated code goes
+
+With Maven, the generated sources of a configuration in `src/main/java` go to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` go to `target/generated-test-sources/test-annotations`. The example module's own configuration is in `src/main/java`; the test-scope location was checked with a temporary test configuration in that module, not kept in the example. Because the example's matchers are generated into the main output, they are available to test code as well as to production code.
+
+== Next steps
+
+* link:hamcrest-backend.html[Hamcrest backend] for the matchers the configuration produces.
+* link:assertj-backend.html[AssertJ backend] for the assertions.

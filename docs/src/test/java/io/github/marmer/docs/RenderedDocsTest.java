@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -294,6 +296,76 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Every page sets a description for search engines and assistants")
+    void everyPageSetsADescription() {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final String description =
+                    parse(page).select("meta[name=description]").attr("content").trim();
+            if (description.isEmpty()) {
+                problems.add(OUTPUT.relativize(page) + ": no description");
+            }
+        }
+        assertTrue(
+                problems.isEmpty(), "pages without description:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    @DisplayName("No page still shows a placeholder")
+    void noPageStillShowsAPlaceholder() {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            if (parse(page).text().contains("Placeholder")
+                    || parse(page).text().contains("placeholder")) {
+                problems.add(OUTPUT.relativize(page) + ": placeholder text");
+            }
+        }
+        assertTrue(problems.isEmpty(), "placeholders left:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    @DisplayName("The getting started page says that generated code is not covered by the license")
+    void gettingStartedSaysThatGeneratedCodeIsNotCoveredByTheLicense() {
+        assertTrue(
+                parse(OUTPUT.resolve("guide/getting-started.html"))
+                        .text()
+                        .contains("not covered by the project"),
+                "license statement for generated code");
+    }
+
+    @Test
+    @DisplayName("llms.txt is published, lists every guide page and its links resolve")
+    void llmsTxtIsPublishedListsEveryGuidePageAndItsLinksResolve() throws IOException {
+        final Path llms = OUTPUT.resolve("llms.txt");
+        assertTrue(Files.isRegularFile(llms), "llms.txt is missing in " + OUTPUT);
+        final String content = Files.readString(llms, StandardCharsets.UTF_8);
+        final Matcher links = Pattern.compile("\\]\\(([^)\\s]+)\\)").matcher(content);
+        final List<String> problems = new ArrayList<>();
+        final Set<String> siteLinks = new TreeSet<>();
+        while (links.find()) {
+            final String href = links.group(1);
+            if (!href.startsWith(SITE_URL)) {
+                continue;
+            }
+            final String relative = href.substring(SITE_URL.length());
+            siteLinks.add(relative);
+            checkLink(llms, relative).ifPresent(problems::add);
+        }
+        for (final Path page : pages) {
+            final String relative = OUTPUT.relativize(page).toString().replace('\\', '/');
+            if (relative.startsWith("guide/") && !siteLinks.contains(relative)) {
+                problems.add("llms.txt does not link " + relative);
+            }
+        }
+        assertAll(
+                () -> assertFalse(siteLinks.isEmpty(), "llms.txt links the site"),
+                () ->
+                        assertTrue(
+                                problems.isEmpty(),
+                                "llms.txt problems:\n" + String.join("\n", problems)));
+    }
+
+    @Test
     @DisplayName("The link check detects broken links")
     void linkCheckDetectsBrokenLinks() throws IOException {
         final Path page = OUTPUT.resolve("architecture/index.html");
@@ -317,6 +389,8 @@ class RenderedDocsTest {
         assertTrue(checkImage(page, "images/does-not-exist.png").isPresent(), "missing image");
         assertTrue(checkImage(page, "").isPresent(), "empty image source");
     }
+
+    private static final String SITE_URL = "https://marmer.github.io/hamcrest-matcher-generator/";
 
     private static Optional<String> checkLink(final Path page, final String href) {
         if (href.isEmpty() || isExternal(href)) {

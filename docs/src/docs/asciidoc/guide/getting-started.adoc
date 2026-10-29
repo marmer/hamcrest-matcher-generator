@@ -2,5 +2,59 @@
 :description: Add the dependencies, configure the types and write a first test with generated matchers.
 :page-order: 1
 
-[.placeholder]
-Placeholder: the guide chapters follow with the user guide tickets.
+This chapter takes you from an empty Maven build to a first green test. The examples are Java. The Kotlin setup is documented in the README.
+
+== Requirements
+
+* Java 17 or newer. Since 6.0.0 the generated code needs Java 17; users who stay on Java 11 stay on 5.x.
+* A test dependency on Hamcrest for the Hamcrest backend, or on AssertJ for the AssertJ backend. The examples use Hamcrest {hamcrest-version} and AssertJ {assertj-version}. You can use both backends in one project.
+
+== Dependencies
+
+Add the generator for your backend. It is the annotation processor, so the matchers are generated while your sources compile. The snippet reads the version from a property, `hamcrest-matcher-generator.version`, which you define once in your build as the release you use, currently {project-version}:
+
+[source,xml]
+----
+include::../../../../../example-maven-java-hamcrest/pom.xml[tag=maven-dependencies,indent=0]
+----
+
+Declare the processor on the processor path of the compiler plugin, as the example does, so that the build finds it without relying on the classpath:
+
+[source,xml]
+----
+include::../../../../../example-maven-java-hamcrest/pom.xml[tag=maven-processor,indent=0]
+----
+
+For AssertJ, use the `assertj-assertion-generator` artifact with the same two steps and the property `assertj-assertion-generator.version`. The link:assertj-backend.html[AssertJ backend chapter] shows its snippets from `example-maven-java-assertj`.
+
+== Configure the types
+
+The processor generates for the types you configure. Put one annotation on a class of your choice and name the packages or classes of your model:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+----
+
+The link:configuration.html[configuration chapter] lists the options.
+
+== A first test
+
+With the configuration above, the processor generates `CustomerMatcher` for the `Customer` class in `example.hamcrest.model`. A basic assertion checks one property by equality:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=basic-assertion,indent=0]
+----
+
+== Generated code
+
+The processor writes the matchers and assertions as source files, and your build compiles them like code you wrote. The generated files carry `@Generated` and no license header.
+
+The generated code belongs to you. It is not covered by the project's Apache License 2.0, so you can use it, change it and ship it in your own projects.
+
+== Next steps
+
+* link:configuration.html[Configuration] for packages, classes and exclusions.
+* link:hamcrest-backend.html[Hamcrest backend] and link:assertj-backend.html[AssertJ backend] for the generated API.
+* link:ide-setup.html[IDE setup] when your IDE does not see the generated sources.

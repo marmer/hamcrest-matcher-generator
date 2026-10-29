@@ -1,0 +1,62 @@
+= Hamcrest backend
+:description: The generated Hamcrest matchers: equality and matcher checks per property, resetting and ignoring checks, the completeness check and reference objects.
+:page-order: 3
+
+For every configured type the Hamcrest backend generates a matcher, `CustomerMatcher` for `Customer`, with two factory methods: `isCustomer()` for a matcher that checks properties one by one, and `isCustomerLike(reference)` for a matcher that compares every property with a reference object. The matcher works with Hamcrest's own `assertThat`.
+
+== Checking one property
+
+A basic assertion checks one property by equality. Each property gets a `withX` method that takes the expected value:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=basic-assertion,indent=0]
+----
+
+The `withX` method also takes any Hamcrest matcher, so you can use the full range of Hamcrest matchers for a property:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=matcher-argument,indent=0]
+----
+
+A property whose type is itself a generated type takes that type's matcher, so nested properties are checked the same way:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=nested-property,indent=0]
+----
+
+== Removing a check
+
+The `resetX` method removes the check of a property again. The example sets the name check to `Bob`, which does not match `Ada`, and the reset removes that check, so the assertion passes:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=reset,indent=0]
+----
+
+== Completeness check
+
+The completeness check turns a matcher into a check of every property. It is off by default. When you call `checkingAllProperties()`, the assertion fails unless every property is either checked or ignored. An ignored property is one you name with `ignoringX()`, so the decision not to check it is visible in the test:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=completeness-check,indent=0]
+----
+
+When a property was neither checked nor ignored, the failure names it. A property added to the model later therefore fails the tests that opt in, until someone checks or ignores it.
+
+== Reference objects
+
+The `isCustomerLike(reference)` method takes a reference object and compares every property with it, nested properties included. The example passes because the actual customer equals the reference. A reference that differs in a nested property fails and names that property, as the `address.city` check in `CustomerMatcherTest` shows:
+
+[source,java]
+----
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=reference-object,indent=0]
+----
+
+== Next steps
+
+* link:assertj-backend.html[AssertJ backend] for the same model as assertions.
+* link:configuration.html[Configuration] for the types the matchers are generated for.
