@@ -228,6 +228,7 @@ class RenderedDocsTest {
                         "annotations",
                         "bean-property-matcher",
                         "transitive-javax-annotation",
+                        "mismatch-format",
                         "opt-in-features")) {
             if (migration.getElementById(anchor) == null) {
                 missing.add(anchor);
@@ -249,21 +250,37 @@ class RenderedDocsTest {
                             .collect(Collectors.toList());
         }
         final List<String> problems = new ArrayList<>();
+        final Set<String> goldenDirectoriesUsed = new TreeSet<>();
         for (final Path guidePage : guidePages) {
             final List<String> lines = Files.readAllLines(guidePage, StandardCharsets.UTF_8);
             boolean inBlock = false;
             for (int index = 0; index < lines.size(); index++) {
-                if (!"----".equals(lines.get(index))) {
+                final String line = lines.get(index);
+                final String where = guidePage.getFileName() + ":" + (index + 1);
+                if (NON_INCLUDE_DELIMITERS.contains(line.trim())) {
+                    problems.add(where + ": '" + line.trim() + "' block is not an include");
                     continue;
+                }
+                if (!"----".equals(line.trim())) {
+                    continue;
+                }
+                if (!"----".equals(line)) {
+                    problems.add(where + ": indented listing delimiter");
                 }
                 inBlock = !inBlock;
                 if (!inBlock) {
+                    if (!"----".equals(line)) {
+                        problems.add(where + ": indented closing delimiter");
+                    }
                     continue;
                 }
-                final String where = guidePage.getFileName() + ":" + (index + 1);
                 final String include = index + 1 < lines.size() ? lines.get(index + 1) : "";
-                if (!include.startsWith("include::")) {
-                    problems.add(where + ": code block is not an include");
+                final String closing = index + 2 < lines.size() ? lines.get(index + 2) : "";
+                if (!include.startsWith("include::") || !"----".equals(closing)) {
+                    problems.add(
+                            where
+                                    + ": code block is not exactly one include (hand-written"
+                                    + " lines or no include)");
                     continue;
                 }
                 final String target = include.substring("include::".length(), include.indexOf('['));
@@ -275,15 +292,59 @@ class RenderedDocsTest {
                     if (!Files.readString(source).contains("tag::" + tag + "[]")) {
                         problems.add(where + ": include '" + target + "' lacks tag " + tag);
                     }
-                } else if (!target.endsWith(".txt") || !target.contains("src/test/resources")) {
-                    problems.add(
-                            where + ": untagged include '" + target + "' is not a golden file");
+                } else {
+                    final Optional<String> golden = goldenDirectoryOf(source);
+                    if (golden.isPresent()) {
+                        goldenDirectoriesUsed.add(golden.get());
+                    } else {
+                        problems.add(
+                                where + ": untagged include '" + target + "' is not a golden file");
+                    }
                 }
             }
+            if (inBlock) {
+                problems.add(guidePage.getFileName() + ": unclosed code block");
+            }
         }
+        assertEquals(
+                new TreeSet<>(GOLDEN_DIRECTORIES),
+                goldenDirectoriesUsed,
+                "the golden directories the guide includes must be exactly the allowed ones");
         assertTrue(
                 problems.isEmpty(),
                 "code blocks that are not includes:\n" + String.join("\n", problems));
+    }
+
+    /** The golden directories of the runtime tests that the guide may include untagged. */
+    private static final List<String> GOLDEN_DIRECTORIES =
+            List.of(
+                    "BeanPropertyMatcherTest",
+                    "BeanPropertyMatcherCompletenessTest",
+                    "CollectionMatchersTest",
+                    "ReferenceMatchingTest");
+
+    /** Delimiters of blocks that are not listings: literal, passthrough, example, sidebar, open. */
+    private static final Set<String> NON_INCLUDE_DELIMITERS =
+            Set.of("....", "++++", "====", "____", "****", "--");
+
+    /**
+     * The golden directory name of a golden {@code .txt} file, or nothing when the file is not a
+     * golden file of an allowed directory.
+     */
+    private static Optional<String> goldenDirectoryOf(final Path source) {
+        final String path = source.toString().replace('\\', '/');
+        if (path.endsWith(".txt")) {
+            for (final String directory : GOLDEN_DIRECTORIES) {
+                if (path.contains(
+                        "/hamcrest-matcher-generator/src/test/resources/io/github/marmer/"
+                                + "matchergenerator/hamcrest/"
+                                + directory
+                                + "/")) {
+                    return Optional.of(directory);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     @Test

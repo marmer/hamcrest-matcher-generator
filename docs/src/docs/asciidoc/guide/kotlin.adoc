@@ -8,7 +8,14 @@ The generators work with Kotlin classes as they work with Java beans. Java tests
 
 * Java 17 or newer, as for every other project.
 * `kotlin-stdlib` on the classpath of the Kotlin compilation. The generator artifacts do not bring it in.
-* A Kotlin compiler that runs KAPT. The generated DSL uses only Kotlin 1.9 language features. The project builds its examples with Kotlin 2.1 and pins the language level to 1.9; older compilers are not tested.
+* A Kotlin compiler that runs KAPT. The generated DSL uses only Kotlin 1.9 language features. The project builds its examples with Kotlin 2.1; older compilers are not tested.
+
+If your project must keep the Kotlin 1.9 language level, set `languageVersion` and `apiVersion` to 1.9 on the `kotlin-maven-plugin`, as the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` does:
+
+[source,xml]
+----
+include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=kotlin-language-level,indent=0]
+----
 
 == Dependencies and processor path
 
@@ -49,7 +56,7 @@ include::../../../../../example-maven-kotlin/pom.xml[tag=compile-source-dirs,ind
 
 == Kotlin test sources
 
-Kotlin tests run KAPT over the test sources with the `test-kapt` goal. The test output has to be a test source root, too. Otherwise javac compiles only the matchers that Java test sources reference, not every generated matcher. The end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` shows the three pieces:
+Kotlin tests run KAPT over the test sources with the `test-kapt` goal. The KAPT output of the tests has to reach the Kotlin and the javac test compilation, and the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` shows the three pieces that do it:
 
 * the `test-kapt` execution, with the processor path of the Hamcrest backend and the Kotlin DSL:
 +
@@ -57,15 +64,12 @@ Kotlin tests run KAPT over the test sources with the `test-kapt` goal. The test 
 ----
 include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-kapt,indent=0]
 ----
-
 * the `test-compile` execution, whose source directories include the KAPT output of the tests (`kapt/test` and `kaptKotlin/test`):
 +
 [source,xml]
 ----
 include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-compile-source-dirs,indent=0]
 ----
-
-* A configuration class in your test sources writes its generated Java to `target/generated-test-sources/test-annotations`, as in Java. A Kotlin test compilation that should see that directory lists it among the `test-compile` source directories, next to the KAPT output. The end-to-end module keeps its configuration in `src/test/kotlin`, and its `test-compile` execution above lists the Kotlin test sources and the KAPT output, not that directory.
 * the `build-helper-maven-plugin`, which registers the KAPT test output as a test source root, so javac compiles every generated matcher:
 +
 [source,xml]
@@ -73,16 +77,13 @@ include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml
 include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=add-kapt-test-source,indent=0]
 ----
 
+A configuration class in your test sources writes its generated Java to `target/generated-test-sources/test-annotations`, as in Java. The end-to-end module keeps its configuration in `src/test/kotlin` and its `test-compile` execution lists the Kotlin test sources and the KAPT output, not that directory. A Kotlin test compilation that needs that directory has to list it as a source directory itself. This is an assumption: no build in the repository exercises that case.
+
 == IntelliJ IDEA with Kotlin tests
 
-IntelliJ IDEA does not know where KAPT puts the generated test sources, and KAPT cannot be told another output path. The workaround moves the generated test sources to a location the IDE knows, right after KAPT has written them. The drawback is that the project must be built with Maven before the IDE sees fresh generated code. Java tests need none of this, see the link:ide-setup.html[IDE setup chapter].
+IntelliJ IDEA does not know where KAPT puts the generated test sources, and KAPT cannot be told another output path. The known workaround moves the generated test sources to a location the IDE knows, right after KAPT has written them, with the `maven-antrun-plugin` (version 3.0.0 in the former README). The drawback is that the project must be built with Maven before the IDE sees fresh generated code. Java tests need none of this, see the link:ide-setup.html[IDE setup chapter].
 
-The move is the profile `intellij-kotlin-tests` of the end-to-end module. It is not active by default; run Maven in the end-to-end module with `-Pintellij-kotlin-tests` to get the move there. In your own project, copy the profile into the build that holds your Kotlin tests and activate it there:
-
-[source,xml]
-----
-include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=intellij-antrun,indent=0]
-----
+Assumption, not covered by a build: the workaround is carried over from the 5.x README. An attempt to run it in the end-to-end module showed that the moved matchers are not on the Kotlin test-compile source path, so the Kotlin tests then fail with unresolved references to the generated matchers. Adding the moved directory to the test-compile source directories was not tried, so do not assume it fixes the failure.
 
 == Your first Kotlin test
 
@@ -139,11 +140,19 @@ Without KAPT the DSL is not written. Under plain javac the processor prints one 
 
 == Property names and getters
 
-The processors read Kotlin properties through their JVM getters, in the same way as Java bean getters. The matcher methods are named after the Kotlin property, with a capital letter in front, so the `is` prefix of a property is kept. For the model `data class KotlinProbe(val enabled: Boolean, val isX: Boolean?, val isLabel: String)`, the matcher has `withEnabled`, `withIsX` and `withIsLabel`, as the end-to-end test `HelloKotlinTest` in `hamcrest-matcher-generator-endtoend-plain-kotlin` asserts. A `Boolean` property named `enabled` compiles to `getEnabled()`, and a `String` property named `isLabel` gets an `isLabel()` getter. Getters whose names are not valid Java identifiers are skipped, for example the accessors of value classes.
+The processor reads a Kotlin class through its getter methods, in the same way as a Java bean. The rules below are the ones the core's detection tests pin (`CoreProcessorIT`, the Kotlin cases) and the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` checks.
+
+* A getter of a Kotlin class counts with any return type. `getEnabled(): boolean`, which the Java bean rules skip, is the property `enabled`, with the matcher method `withEnabled`. Java types keep the Java bean rules.
+* An `is` getter that returns the boxed `Boolean` keeps its full name: `isX(): Boolean` gives the property `isX` and `withIsX`. A `String` getter `isLabel()` gives `isLabel` and `withIsLabel`. A primitive `isPrimitive(): boolean` gives `primitive`, because its prefix is dropped.
+* After `get` or `is` an upper case letter must follow: `getName()` and `isActive()` are properties, while `getaway()`, `isolate()` and `isolated()` are not.
+* Getters whose names are not Java identifiers are skipped. Kotlin emits such names for mangled accessors, for example of value classes.
+* Properties are read from getter methods only. A property that has no getter, because Kotlin exposes it as a field, gets no matcher method. The repository has no test for `@JvmField` or for `@get:` use-site targets, so that behaviour is not covered by this guide.
+
+For the model `data class KotlinProbe(val enabled: Boolean, val isX: Boolean?, val isLabel: String)` the matcher therefore has `withEnabled`, `withIsX` and `withIsLabel`, as the end-to-end test `HelloKotlinTest` asserts.
 
 == Nullability
 
-When the JSpecify annotations are on the classpath, the generated matchers carry `@NullMarked` and `@Nullable` on equality values and on nullable properties. Kotlin then sees the real nullable and non-null types, so `withNickname(null as String?)` compiles. Kotlin reports a mismatch with these annotations as an error by default. If that gets in your way, the compiler option `-Xjspecify-annotations=warn` lowers it to a warning.
+When the JSpecify annotations are on the classpath, the generated matchers carry `@NullMarked` and `@Nullable` on equality values and on nullable properties. Kotlin then sees the real nullable and non-null types, so `withNickname(null as String?)` compiles.
 
 The processor reads the nullability of a Kotlin property from the JetBrains annotations that kotlinc writes, so a `String?` property is nullable, and a `String` property is not.
 

@@ -6,10 +6,17 @@ This page lists everything that changes for a project that uses the 5.x generato
 
 The goal of 6.0.0 is that a project on Java 17 or newer moves by a version bump alone. Each change below is either covered by the bridge jars or is one you make when you choose to.
 
+== What to do
+
+. Check the JDK. A project on Java 17 or newer can move. A project that runs on Java 11 stays on 5.x, see <<stay-on-5x,Java 11 users>>.
+. Bump the version of the generator to 6.0.0. Your 5.x coordinates still resolve: the bridge jars `hamcrest-matcher-generator-annotationprocessor` and `hamcrest-matcher-generator-dependencies` depend on `hamcrest-matcher-generator`, see <<coordinates,New coordinates and bridge jars>>.
+. Compile and run the tests. A test that pins the exact text of a mismatch message needs an update, see <<mismatch-format,the new form of the messages>>.
+. Make the optional changes when you choose to: the annotation, see <<annotations,@GenerateMatchers>>; a direct import of `BeanPropertyMatcher`, see <<bean-property-matcher,its new package>>; the `javax.annotation` API, see <<transitive-javax-annotation,javax.annotation>>; and the opt-in features, see <<opt-in-features,opt-in features>>.
+
 [#stay-on-5x]
 == Java 11 users stay on 5.x
 
-The processor, the runtime and the generated code of 6.0.0 need Java 17: the classes are compiled for Java 17 and need a Java 17 runtime. A project that runs on Java 11 stays on 5.x. 5.x receives no further releases, so a Java 11 project does not get the features of this guide.
+The processor, the runtime and the generated code of 6.0.0 need Java 17: the classes are compiled for Java 17 and need a Java 17 runtime. A project that runs on Java 11 stays on 5.x.
 
 [#coordinates]
 == New coordinates and bridge jars
@@ -87,11 +94,14 @@ Everything in this list is off unless you use it. Your existing tests keep compi
 * *AssertJ.* The `assertj-assertion-generator` artifact generates an assertion per type, as the link:assertj-backend.html[AssertJ backend chapter] describes. It runs next to the Hamcrest backend.
 * *Kotlin DSL.* The `hamcrest-matcher-generator-kotlin` artifact generates the DSL under KAPT, as the link:kotlin.html[Kotlin chapter] describes.
 
-Mismatch messages have the 6.0.0 form, with one line per failing check and its property path, as the link:mismatch-messages.html[mismatch messages chapter] describes. A test that compares the exact text of a message must be checked after the upgrade.
+[#mismatch-format]
+== The new form of mismatch messages
+
+A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0 writes one line per failing check, each with its property path, nested paths included, as the link:mismatch-messages.html[mismatch messages chapter] shows. This is a breaking change for a test that parses a message or pins its exact text. Such a test must be updated to the new form. A test that only checks that an assertion fails is not affected.
 
 == What does not change
 
-The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump. The repository's 5.x compatibility suite runs against the bridge jars in the build, to check this for the 5.x coordinates.
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump.
 
 == Next steps
 

@@ -96,7 +96,7 @@ not to be null`. The path is carried by `AssertionPath` into the nested assertio
 
 The completeness check runs after the value checks. When properties are neither addressed nor ignored, the assertion fails
 with `Expecting every property of Order.customer to be checked or ignored, but these were neither: phone, address`. The
-type in the sentence is the type of the asserted object, so a nested check names the nested type. The test
+sentence names the path of the asserted object from the root type, so a nested check reads `Order.customer`, the path of the nested assertion, and not only the nested type. The test
 `CompletenessCheckTest` of the AssertJ end-to-end module pins these messages.
 
 === Release
