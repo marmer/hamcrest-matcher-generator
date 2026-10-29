@@ -39,7 +39,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |medium
 |disabling
 |Every red pull request, credential renewal and baseline decision lands on one person. If the maintainer is unavailable, updates stop and users receive no fixes. Nothing broken gets merged, because red pull requests wait.
-|Accepted. The autopilot keeps routine work away from the maintainer. A maintainer runbook (`MAINTAINING.md`) describes what to do for a red Renovate pull request, a failed publish, an expiring credential and a dependency that needs a newer Java version, so that anyone with admin rights, or an AI agent session, can act.
+|Accepted. The autopilot keeps routine work away from the maintainer. A maintainer runbook (`MAINTAINING.md`) gives the playbooks for these failures, so that anyone with admin rights, or an AI agent session, can act.
 
 |Risk: the Java baseline erodes again
 |medium

@@ -24,7 +24,7 @@ CREDENTIALS = ("SONAR_TOKEN", "MAVEN_GPG_KEY", "CENTRAL_USERNAME", "RELEASE_APP_
 
 
 def load_check(filename):
-    spec = importlib.util.spec_from_file_location(filename.replace("-", "_")[:-3], HERE / filename)
+    spec = importlib.util.spec_from_file_location(Path(filename).stem.replace("-", "_"), HERE / filename)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -40,10 +40,16 @@ class MaintainingRunbookTest(unittest.TestCase):
         for heading in REQUIRED_HEADINGS:
             self.assertIn(heading, lines)
 
-    def test_credentials_table_names_every_credential_and_its_storage(self):
+    def test_every_credential_has_a_table_row_with_a_storage_location(self):
+        # Table columns after split("|"): [before, Credential, Used by, Storage location, Expiry, Renewal, after]
+        rows = [line.split("|") for line in self.text.splitlines() if line.startswith("|")]
+        self.assertIn("Credential", [cells[1].strip() for cells in rows if len(cells) > 6])
         for name in CREDENTIALS:
-            self.assertIn(f"`{name}`", self.text)
-        self.assertIn("| Credential |", self.text)
+            with self.subTest(credential=name):
+                matching = [cells for cells in rows if len(cells) > 6 and f"`{name}`" in cells[1]]
+                self.assertTrue(matching, f"no credentials table row names `{name}`")
+                self.assertTrue(any(cells[3].strip() for cells in matching),
+                                f"the table row for `{name}` has no storage location")
 
     def test_readme_links_the_runbook(self):
         readme = (REPO / "README.md").read_text(encoding="utf-8")

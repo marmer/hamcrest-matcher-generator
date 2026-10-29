@@ -269,4 +269,4 @@ The release history is maintained in [CHANGELOG.md](CHANGELOG.md). This project 
 
 ### Maintaining
 
-The maintainer runbook, with the credentials table and the playbooks for a red pull request, a failed publish, an expiring credential and a dependency that needs a newer Java, is in [MAINTAINING.md](MAINTAINING.md).
+The maintainer runbook, with the credentials and the playbooks for failed checks and releases, is in [MAINTAINING.md](MAINTAINING.md).
