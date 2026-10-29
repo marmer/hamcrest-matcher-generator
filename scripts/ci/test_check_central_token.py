@@ -95,6 +95,16 @@ class CentralTokenCheckTest(unittest.TestCase):
         self.assertIn("CENTRAL_TOKEN accepted by the Central Portal", out)
         self.assertEqual("", err)
 
+    def test_internal_server_error_for_the_unknown_probe_id_passes(self):
+        # Observed 2026-10-29 with a valid token: the Portal checks the login first and answers 500 for the
+        # unknown probe id; a rejected token gets 401 from the same request.
+        code, out, err = run({"CENTRAL_USERNAME": USERNAME, "CENTRAL_PASSWORD": PASSWORD},
+                             Answer(error=http_error(500)))
+
+        self.assertEqual(0, code)
+        self.assertIn("CENTRAL_TOKEN accepted by the Central Portal", out)
+        self.assertEqual("", err)
+
     def test_successful_answer_passes(self):
         code, out, _ = run({"CENTRAL_USERNAME": USERNAME, "CENTRAL_PASSWORD": PASSWORD}, Answer())
 
