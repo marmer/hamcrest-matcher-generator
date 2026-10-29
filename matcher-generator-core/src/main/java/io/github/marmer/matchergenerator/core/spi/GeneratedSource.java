@@ -25,6 +25,14 @@ public record GeneratedSource(
         Objects.requireNonNull(content, "content");
     }
 
+    /**
+     * @return the qualified name of the generated type, which is its simple name in the default
+     *     package
+     */
+    public String qualifiedName() {
+        return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+    }
+
     /** The language of a generated source file. */
     public enum Language {
         JAVA("java"),

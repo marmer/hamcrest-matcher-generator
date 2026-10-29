@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import org.junit.jupiter.api.AfterEach;
@@ -115,6 +116,14 @@ class CoreProcessorIT {
 
     private static Compilation compile(final Compiler compiler, final JavaFileObject... sources) {
         return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .compile(Arrays.asList(sources));
+    }
+
+    private static Compilation compile(
+            final Compiler compiler,
+            final Processor otherProcessor,
+            final JavaFileObject... sources) {
+        return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW), otherProcessor)
                 .compile(Arrays.asList(sources));
     }
 
@@ -507,6 +516,154 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(compilation).succeeded();
         CompilationSubject.assertThat(compilation).hadNoteCount(1);
         CompilationSubject.assertThat(compilation).hadNoteContaining(ProbingBackend.NOTE);
+    }
+
+    private static JavaFileObject summarizedType(final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+                "some.summarized." + simpleName,
+                "package some.summarized;",
+                "public class " + simpleName + " {",
+                "    public String getName() { return null; }",
+                "}");
+    }
+
+    private static long countGenerated(final Compilation compilation, final String fileName) {
+        return compilation.generatedSourceFiles().stream()
+                .filter(source -> source.getName().endsWith("/" + fileName))
+                .count();
+    }
+
+    private static String summary(final Compilation compilation) throws IOException {
+        return compilation
+                .generatedSourceFile("some.summarized.PackageSummary")
+                .orElseThrow()
+                .getCharContent(true)
+                .toString();
+    }
+
+    @Test
+    @DisplayName(
+            "Two configurations of one round share the files a backend writes once per package")
+    void twoConfigurationsOfOneRoundShareTheFilesABackendWritesOncePerPackage() throws IOException {
+        final JavaFileObject other =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.OtherConfiguration",
+                        "package some.pck;",
+                        "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                        "@GenerateMatchers(\"some.summarized.Second\")",
+                        "public final class OtherConfiguration {",
+                        "}");
+
+        final Compilation compilation =
+                compile(
+                        generateMatchersConfiguration("\"some.summarized.First\""),
+                        other,
+                        summarizedType("First"),
+                        summarizedType("Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(
+                summary.contains("[some.summarized.First, some.summarized.Second]"),
+                () -> "Summary: " + summary);
+    }
+
+    @Test
+    @DisplayName(
+            "A file a backend writes once per package is not written again by a later round, which is a warning")
+    void aFileABackendWritesOncePerPackageIsNotWrittenAgainByALaterRoundWhichIsAWarning() {
+        final Compilation compilation =
+                compile(
+                        javacWith(),
+                        new LateConfigurationProcessor(
+                                "some.summarized.LateConfiguration", "some.summarized.Second"),
+                        generateMatchersConfiguration("\"some.summarized.First\""),
+                        summarizedType("First"),
+                        summarizedType("Second"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        assertEquals(1, countGenerated(compilation, "SecondRecorded.java"));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.summarized.PackageSummary was already written in an earlier"
+                                + " processing round and is not written again. It does not know"
+                                + " the types generated in this round: some.summarized.Second");
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
+    @Test
+    @DisplayName("A class in the own output of an earlier build does not count as outside of it")
+    void aClassInTheOwnOutputOfAnEarlierBuildDoesNotCountAsOutsideOfIt(@TempDir final Path output)
+            throws IOException {
+        final JavaFileObject located =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Located",
+                        "package some.other.pck;",
+                        "public class Located {",
+                        "}");
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("\"some.other.pck.Located\"");
+
+        buildInto(output, configuration, located);
+        ProbingBackend.reset();
+        buildInto(output, configuration, located);
+
+        assertEquals(
+                List.of(
+                        "java.lang.Object=true",
+                        "no.such.Class=false",
+                        "some.other.pck.Located=false"),
+                ProbingBackend.locations());
+    }
+
+    /** Compiles like a build tool, with the output directory on the class path as well. */
+    private void buildInto(final Path output, final JavaFileObject... sources) throws IOException {
+        final javax.tools.JavaCompiler compiler = javax.tools.ToolProvider.getSystemJavaCompiler();
+        final javax.tools.DiagnosticCollector<JavaFileObject> diagnostics =
+                new javax.tools.DiagnosticCollector<>();
+        try (javax.tools.StandardJavaFileManager fileManager =
+                compiler.getStandardFileManager(diagnostics, null, null)) {
+            final javax.tools.JavaCompiler.CompilationTask task =
+                    compiler.getTask(
+                            null,
+                            fileManager,
+                            diagnostics,
+                            List.of(
+                                    "-d",
+                                    output.toString(),
+                                    "-classpath",
+                                    System.getProperty("java.class.path")
+                                            + File.pathSeparator
+                                            + output,
+                                    "-Akapt.kotlin.generated=" + kotlinOutput),
+                            null,
+                            Arrays.asList(sources));
+            task.setProcessors(List.of(new MatcherGenerationProcessor(() -> NOW)));
+            assertTrue(task.call(), () -> "Diagnostics: " + diagnostics.getDiagnostics());
+        }
+    }
+
+    @Test
+    @DisplayName("A backend verbose note is a compiler note only with the verbose option")
+    void aBackendVerboseNoteIsACompilerNoteOnlyWithTheVerboseOption() {
+        final JavaFileObject chatty =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Chatty",
+                        "package some.other.pck;",
+                        "public class Chatty {",
+                        "}");
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("\"some.other.pck.Chatty\"");
+
+        final Compilation quiet = compile(configuration, chatty);
+        final Compilation verbose = compileVerbose(configuration, chatty);
+
+        CompilationSubject.assertThat(quiet).succeeded();
+        CompilationSubject.assertThat(quiet).hadNoteCount(0);
+        CompilationSubject.assertThat(verbose).succeeded();
+        CompilationSubject.assertThat(verbose).hadNoteContaining(ProbingBackend.VERBOSE_NOTE);
     }
 
     @Test
