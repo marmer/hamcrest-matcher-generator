@@ -6,7 +6,7 @@ package io.github.marmer.testutils.model
 
 /** A nested type with the simple name of the top level [Customer] of the same package. */
 data class NestedClash(
-    val customer: Customer,
+    val customer: io.github.marmer.testutils.model.Customer,
     val inner: Customer,
 ) {
     data class Customer(val label: String)

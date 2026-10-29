@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -137,7 +138,8 @@ final class KotlinDslGenerator {
         placed.forEach(
                 entry -> {
                     final String simpleName = entry.type().simpleName();
-                    final boolean clashing = countBySimpleName.get(inPackage(entry.type())) > 1;
+                    final boolean clashing =
+                            countBySimpleName.getOrDefault(inPackage(entry.type()), 0L) > 1;
                     names.put(
                             entry.type().qualifiedName(),
                             clashing
@@ -166,7 +168,7 @@ final class KotlinDslGenerator {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
         if (MatcherNaming.isComparedDeeply(type)) {
-            final String dslName = dslNames.get(type.qualifiedName());
+            final String dslName = dslNameOf(dslNames, type);
             scopes.putIfAbsent(
                     type.qualifiedName(),
                     new Scope(
@@ -189,6 +191,10 @@ final class KotlinDslGenerator {
 
     private static String specName(final String dslName) {
         return dslName + "Spec";
+    }
+
+    private static String dslNameOf(final Map<String, String> dslNames, final TypeModel type) {
+        return Objects.requireNonNull(dslNames.get(type.qualifiedName()), type.qualifiedName());
     }
 
     private static String entryName(final String dslName) {
@@ -217,7 +223,7 @@ final class KotlinDslGenerator {
     }
 
     private FunSpec entryFunction(final TypeModel type, final ClassName matcher) {
-        final String dslName = dslNames.get(type.qualifiedName());
+        final String dslName = dslNameOf(dslNames, type);
         final ClassName spec = new ClassName(type.targetPackage(), specName(dslName));
         return FunSpec.builder(entryName(dslName))
                 .addParameter(BLOCK, blockType(spec))
@@ -234,7 +240,7 @@ final class KotlinDslGenerator {
 
     private TypeSpec scopeClass(final TypeModel type, final ClassName matcher) {
         final TypeSpec.Builder scope =
-                TypeSpec.classBuilder(specName(dslNames.get(type.qualifiedName())))
+                TypeSpec.classBuilder(specName(dslNameOf(dslNames, type)))
                         .addAnnotation(MATCHER_DSL)
                         .primaryConstructor(
                                 FunSpec.constructorBuilder()
