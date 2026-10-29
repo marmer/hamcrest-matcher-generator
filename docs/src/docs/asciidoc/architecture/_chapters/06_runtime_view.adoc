@@ -29,7 +29,12 @@ in the same build.
 provides (see ADR 0004). The `GenerationContext` tells the backends whether that option is there. The Kotlin DSL backend
 generates nothing without it and reports one compiler note, once per compilation; a backend that returns Kotlin anyway
 makes the worker report one compile error that names the backend and the type, because the Kotlin file would otherwise
-never be compiled. A type without properties of its own gets no DSL file, although its Java matcher exists.
+never be compiled. A type without properties of its own gets no DSL file, although its Java matcher exists. The scope
+classes and entry functions of all types in a package are top level declarations of that package, so the backend names
+them from the models of all types generated in the run: `<SimpleName>Spec` and `is<SimpleName>`, except that a nested
+type whose simple name another type of the package also has gets the simple names of its enclosing types in front
+(`NestedClash.Customer` becomes `NestedClashCustomerSpec` and `isNestedClashCustomer`). The rule depends on the set of
+types only, not on their order.
 
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
 

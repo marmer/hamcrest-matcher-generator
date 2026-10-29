@@ -59,7 +59,10 @@ the generated code needs AssertJ on the test class path.
 | `hamcrest-matcher-generator-kotlin`
 | The opt-in Kotlin DSL backend (ADR 0004). It writes one `<Type>MatcherDsl.kt` per configured type next to the Java
 matcher, with KotlinPoet from Java: an entry function `isOrder { }` and a scope class `OrderSpec` per type (nested types
-included). The scope class is marked with `@MatcherDsl`, a Java annotation in this artifact that carries Kotlin's `@DslMarker`,
+included). A nested type whose simple name another type of the package shares gets the names of its enclosing types in
+front, such as `OuterInnerSpec` and `isOuterInner`; a top level type and every type without a clash keep their simple
+name. Known limit: if the names that include the enclosing types still collide (a top level `NestedClashCustomer` next to `NestedClash.Customer`, or `A.BC` next to `AB.C`), the generated DSL does not compile and one of the types has to be renamed.
+The scope class is marked with `@MatcherDsl`, a Java annotation in this artifact that carries Kotlin's `@DslMarker`,
 and delegates every call to the generated Java matcher, so mismatch messages are identical. A scope has
 `name(value)`, `name(matcher)` and `ignoringName()` for every property, `checkingAllProperties()`, and `customer { }` for a
 property whose type is a configured type that is compared deeply (neither an enum nor a type without properties). Java

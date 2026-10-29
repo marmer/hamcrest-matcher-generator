@@ -23,9 +23,12 @@ import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import io.github.marmer.matchergenerator.hamcrest.MatcherNaming;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -76,12 +79,16 @@ final class KotlinDslGenerator {
 
     private final TypeModel model;
     private final GenerationContext context;
+    private final Map<String, String> dslNames;
     private final Map<String, Scope> scopes;
 
     KotlinDslGenerator(final TypeModel model, final GenerationContext context) {
         this.model = model;
         this.context = context;
-        this.scopes = scopesOf(model, context);
+        final List<TypeModel> all =
+                Stream.concat(context.generatedTypes().stream(), Stream.of(model)).toList();
+        this.dslNames = dslNamesOf(all);
+        this.scopes = scopesOf(all, dslNames);
     }
 
     /** The name of the Kotlin file of a type, which is also the name of its Java matcher's DSL. */
@@ -92,30 +99,84 @@ final class KotlinDslGenerator {
     /** The matcher, the entry function and the scope class generated for one type. */
     private record Scope(ClassName matcher, MemberName entry, ClassName spec) {}
 
+    /** A type with the simple names of the types enclosing it, outermost first. */
+    private record Placed(TypeModel type, List<String> enclosing) {}
+
+    private static List<Placed> placedTypesOf(final List<TypeModel> types) {
+        final Map<String, Placed> placed = new LinkedHashMap<>();
+        types.forEach(type -> place(type, List.of(), placed));
+        return List.copyOf(placed.values());
+    }
+
+    private static void place(
+            final TypeModel type, final List<String> enclosing, final Map<String, Placed> placed) {
+        placed.putIfAbsent(type.qualifiedName(), new Placed(type, enclosing));
+        final List<String> inner = new ArrayList<>(enclosing);
+        inner.add(type.simpleName());
+        type.nestedTypes().forEach(nested -> place(nested, inner, placed));
+    }
+
+    /**
+     * The name each type with a DSL scope takes its scope class ({@code <name>Spec}) and entry
+     * function ({@code is<name>}) from, by qualified type name. That is the simple name of the
+     * type, unless another type with a scope in the same package has the same simple name: all
+     * scopes of a package are top level declarations of it. Then a nested type puts the simple
+     * names of its enclosing types before its own, outermost first; a top level type keeps its
+     * name.
+     */
+    private static Map<String, String> dslNamesOf(final List<TypeModel> types) {
+        final List<Placed> placed =
+                placedTypesOf(types).stream()
+                        .filter(entry -> MatcherNaming.hasProperties(entry.type()))
+                        .toList();
+        final Map<String, Long> countBySimpleName =
+                placed.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        entry -> clashKey(entry.type()), Collectors.counting()));
+        final Map<String, String> names = new HashMap<>();
+        placed.forEach(
+                entry -> {
+                    final String simpleName = entry.type().simpleName();
+                    final boolean clashing =
+                            countBySimpleName.getOrDefault(clashKey(entry.type()), 0L) > 1;
+                    names.put(
+                            entry.type().qualifiedName(),
+                            clashing
+                                    ? String.join("", entry.enclosing()) + simpleName
+                                    : simpleName);
+                });
+        return names;
+    }
+
+    private static String clashKey(final TypeModel type) {
+        return type.targetPackage() + "/" + type.simpleName();
+    }
+
     private static Map<String, Scope> scopesOf(
-            final TypeModel model, final GenerationContext context) {
+            final List<TypeModel> types, final Map<String, String> dslNames) {
         final Map<String, Scope> scopes = new HashMap<>();
-        Stream.concat(context.generatedTypes().stream(), Stream.of(model))
-                .forEach(type -> collect(type, List.of(), scopes));
+        types.forEach(type -> collect(type, List.of(), dslNames, scopes));
         return scopes;
     }
 
     private static void collect(
             final TypeModel type,
             final List<String> enclosingMatchers,
+            final Map<String, String> dslNames,
             final Map<String, Scope> scopes) {
         final List<String> matcherNames = new ArrayList<>(enclosingMatchers);
         matcherNames.add(MatcherNaming.matcherName(type));
         if (MatcherNaming.isComparedDeeply(type)) {
+            final String dslName = dslNameOf(dslNames, type);
             scopes.putIfAbsent(
                     type.qualifiedName(),
                     new Scope(
                             new ClassName(type.targetPackage(), matcherNames),
-                            new MemberName(
-                                    type.targetPackage(), MatcherNaming.initializerName(type)),
-                            new ClassName(type.targetPackage(), specName(type))));
+                            new MemberName(type.targetPackage(), entryName(dslName)),
+                            new ClassName(type.targetPackage(), specName(dslName))));
         }
-        type.nestedTypes().forEach(nested -> collect(nested, matcherNames, scopes));
+        type.nestedTypes().forEach(nested -> collect(nested, matcherNames, dslNames, scopes));
     }
 
     /**
@@ -128,8 +189,16 @@ final class KotlinDslGenerator {
                 || type.nestedTypes().stream().anyMatch(KotlinDslGenerator::hasAnythingToGenerate);
     }
 
-    private static String specName(final TypeModel type) {
-        return type.simpleName() + "Spec";
+    private static String specName(final String dslName) {
+        return dslName + "Spec";
+    }
+
+    private static String dslNameOf(final Map<String, String> dslNames, final TypeModel type) {
+        return Objects.requireNonNull(dslNames.get(type.qualifiedName()), type.qualifiedName());
+    }
+
+    private static String entryName(final String dslName) {
+        return "is" + dslName;
     }
 
     String generate() {
@@ -154,8 +223,9 @@ final class KotlinDslGenerator {
     }
 
     private FunSpec entryFunction(final TypeModel type, final ClassName matcher) {
-        final ClassName spec = new ClassName(type.targetPackage(), specName(type));
-        return FunSpec.builder(MatcherNaming.initializerName(type))
+        final String dslName = dslNameOf(dslNames, type);
+        final ClassName spec = new ClassName(type.targetPackage(), specName(dslName));
+        return FunSpec.builder(entryName(dslName))
                 .addParameter(BLOCK, blockType(spec))
                 .returns(matcher)
                 .addStatement(
@@ -170,7 +240,7 @@ final class KotlinDslGenerator {
 
     private TypeSpec scopeClass(final TypeModel type, final ClassName matcher) {
         final TypeSpec.Builder scope =
-                TypeSpec.classBuilder(specName(type))
+                TypeSpec.classBuilder(specName(dslNameOf(dslNames, type)))
                         .addAnnotation(MATCHER_DSL)
                         .primaryConstructor(
                                 FunSpec.constructorBuilder()
