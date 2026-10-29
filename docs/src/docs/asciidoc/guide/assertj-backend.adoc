@@ -1,5 +1,5 @@
 = AssertJ backend
-:description: The generated AssertJ assertions: per-property checks with readable messages, nested assertions, the completeness check, files written once per package, clashing names and the whole-object comparison with usingRecursiveComparison.
+:description: The generated AssertJ assertions: per-property checks with readable messages, nested assertions, the completeness check, the registered representation for collection failures, files written once per package, clashing names and the whole-object comparison with usingRecursiveComparison.
 :page-order: 4
 
 For every configured type the AssertJ backend generates an assertion class, `CustomerAssert` for `Customer`. Its static `assertThat` returns the assertion, and each property gets a `hasX` method that takes the expected value. The assertion class extends AssertJ's object assertion, so AssertJ's own assertions stay available next to the generated ones.
@@ -56,6 +56,21 @@ include::../../../../../example-maven-java-assertj/src/test/java/example/assertj
 ----
 
 Use the generated `hasX` methods when a test should name the properties it checks, with a message for each. Use `usingRecursiveComparison()` when the expected object is at hand and every field should match. The completeness check gives the same guarantee for properties that are checked one by one, and the link:completeness-check.html[completeness check chapter] describes it for both backends.
+
+== Printing elements in failures
+
+When a collection assertion fails, AssertJ prints the elements with `toString`, and a generated class shows as `Customer@1b2c3d`. The AssertJ backend writes one `PropertyRepresentation` per target package. It prints a configured type by its properties, as `Customer[name="Ada", ...]`. The class is never registered automatically: register it once in the test setup with `Assertions.useRepresentation`, and reset AssertJ's default with `Assertions.useDefaultRepresentation()`, as the example test does:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/RepresentationTest.java[tag=representation,indent=0]
+----
+
+Three limits apply to the representation:
+
+* It is one class per target package, and it knows only the types that the processing round writing it generated (see <<Files written once per package>>). A type generated in another compilation is not part of it and prints with `toString`.
+* A cyclic object graph ends: an object that is printed again while it is still being printed falls back to the default rendering.
+* Without the registration AssertJ keeps its default rendering, for example `Customer@1b2c3d`.
 
 == Files written once per package
 
