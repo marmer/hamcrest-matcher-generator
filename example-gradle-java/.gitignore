@@ -1,0 +1,3 @@
+.gradle/
+# The root .gitignore excludes *.jar; the wrapper jar is part of the example.
+!gradle/wrapper/gradle-wrapper.jar
