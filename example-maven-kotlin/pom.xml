@@ -112,12 +112,14 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <!-- Explicit sourceDirs replace the defaults, so the KAPT output directories are listed here too.
-                                Without them kotlinc cannot resolve the generated matchers (Unresolved reference). -->
+                            <!-- Explicit sourceDirs replace the defaults. KAPT writes the Java matchers to kapt/compile and the
+                                Kotlin DSL to kaptKotlin/compile; both are listed here. The plugin registers the same two
+                                directories itself, so the build passes without them too, and a "Duplicate source root"
+                                warning shows either way. -->
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
                                 <sourceDir>${project.build.directory}/generated-sources/kapt/compile</sourceDir>
-                                <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/main</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/compile</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>

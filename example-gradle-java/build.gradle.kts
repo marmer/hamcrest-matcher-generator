@@ -16,9 +16,14 @@ val matcherGeneratorVersion = "5.1.0" // x-release-please-version
 
 repositories {
     // tag::gradle-repositories[]
-    // mavenLocal() comes first: the reactor artifacts of the current build are installed there.
-    mavenLocal()
-    mavenCentral()
+    // The project's own artifacts come from mavenLocal() only, where `mvn install` puts the current reactor build.
+    // A missing install fails the build; Central's published 5.x jar is never picked up in its place.
+    mavenLocal {
+        content { includeGroup("io.github.marmer.testutils") }
+    }
+    mavenCentral {
+        content { excludeGroup("io.github.marmer.testutils") }
+    }
     // end::gradle-repositories[]
 }
 
