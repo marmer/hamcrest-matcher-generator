@@ -19,6 +19,9 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- The release profile's javadoc reads the Java sources only, here the KAPT output, which refers to the Kotlin
+            model classes it cannot resolve (Unresolved reference: Customer). Never published, so no javadoc jar is needed. -->
+        <maven.javadoc.skip>true</maven.javadoc.skip>
         <!-- The generated DSL promises Kotlin 1.9 language features only (spec 104). -->
         <kotlin.language.version>1.9</kotlin.language.version>
     </properties>
