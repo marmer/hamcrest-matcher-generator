@@ -193,6 +193,8 @@
                                     <includes>
                                         <include>**/images/**</include>
                                         <include>assets/**</include>
+                                        <!-- the hand-maintained index for AI assistants, published at the site root -->
+                                        <include>llms.txt</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -215,6 +217,10 @@
                                 <toc-title>On this page</toc-title>
                                 <site-source-dir>${project.basedir}/src/docs/asciidoc</site-source-dir>
                                 <project-version>${project.version}</project-version>
+                                <!-- Versions the guide names in prose. The parent's dependencyManagement holds the same
+                                    values; keep them in step. -->
+                                <hamcrest-version>2.2</hamcrest-version>
+                                <assertj-version>3.27.7</assertj-version>
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
                                 <revremark>Built with Maven</revremark>

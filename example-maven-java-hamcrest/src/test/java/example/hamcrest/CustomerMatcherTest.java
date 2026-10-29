@@ -9,6 +9,7 @@ import static example.hamcrest.model.CustomerMatcher.isCustomer;
 import static example.hamcrest.model.CustomerMatcher.isCustomerLike;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import example.hamcrest.model.Address;
@@ -35,6 +36,22 @@ class CustomerMatcherTest {
         // tag::nested-property[]
         assertThat(ADA, isCustomer().withAddress(isAddress().withCity("Paris")));
         // end::nested-property[]
+    }
+
+    @Test
+    @DisplayName("A property can be checked with any Hamcrest matcher")
+    void aPropertyCanBeCheckedWithAnyHamcrestMatcher() {
+        // tag::matcher-argument[]
+        assertThat(ADA, isCustomer().withName(startsWith("A")));
+        // end::matcher-argument[]
+    }
+
+    @Test
+    @DisplayName("resetName removes the check of the name")
+    void resetNameRemovesTheCheckOfTheName() {
+        // tag::reset[]
+        assertThat(ADA, isCustomer().withName("Bob").resetName());
+        // end::reset[]
     }
 
     @Test
