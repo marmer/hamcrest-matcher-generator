@@ -59,7 +59,7 @@ Use the generated `hasX` methods when a test should name the properties it check
 
 == Printing elements in failures
 
-When a collection assertion fails, AssertJ prints the elements with `toString`, and a generated class shows as `Customer@1b2c3d`. The AssertJ backend writes one `PropertyRepresentation` per target package. It prints a configured type by its properties, as `Customer[name="Ada", ...]`. The class is never registered automatically: register it once in the test setup with `Assertions.useRepresentation`, and reset AssertJ's default with `Assertions.useDefaultRepresentation()`, as the example test does:
+When a collection assertion fails, AssertJ prints the elements with `toString`, and a generated class shows as `Customer@1b2c3d`. The AssertJ backend writes one `PropertyRepresentation` per target package. It prints a configured type by its properties, as `Customer[name="Ada", ...]`. The class is never registered automatically: register it once in the test setup with `Assertions.useRepresentation`, and reset AssertJ's default with `Assertions.useDefaultRepresentation()`, as the example test does. The registration is global AssertJ state, shared by every test of the JVM, so a test that registers it should reset it with `Assertions.useDefaultRepresentation()` afterwards, as the example does in its setup:
 
 [source,java]
 ----
@@ -69,7 +69,7 @@ include::../../../../../example-maven-java-assertj/src/test/java/example/assertj
 Three limits apply to the representation:
 
 * It is one class per target package, and it knows only the types that the processing round writing it generated (see <<Files written once per package>>). A type generated in another compilation is not part of it and prints with `toString`.
-* A cyclic object graph ends: an object that is printed again while it is still being printed falls back to the default rendering.
+* A cyclic object graph is cut off: an object that the rendering reaches again while it is still being rendered falls back to the default rendering, so printing ends.
 * Without the registration AssertJ keeps its default rendering, for example `Customer@1b2c3d`.
 
 == Files written once per package

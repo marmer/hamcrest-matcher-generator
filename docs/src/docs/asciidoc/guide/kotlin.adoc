@@ -42,7 +42,6 @@ The gotchas of this setup:
 
 * With the DSL artifact on the processor path only, kotlinc fails on the generated DSL files with `Unresolved reference: MatcherDsl`, at the `@MatcherDsl` annotation and at the import of the marker. Add the artifact as a dependency, as above.
 * A dependency in test scope alone is not enough for the main sources. KAPT also finds processors on the test classpath, so the DSL can appear for the tests, but the main Kotlin sources still need the artifact on their compile classpath.
-* Under plain javac, without KAPT, the artifact prints one compiler note and writes no DSL; the Java matchers still compile, so a misplaced dependency is harmless for Java sources.
 
 == Configure the types
 
