@@ -33,7 +33,7 @@ public abstract class AbstractInvoiceAssert<SELF extends AbstractInvoiceAssert<S
 
   protected AbstractInvoiceAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Invoice");
+    this.path = AssertionPath.rootedAt("Invoice", actual);
   }
 
   public SELF hasNumber(final @Nullable String value) {

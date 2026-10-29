@@ -242,7 +242,11 @@ class AssertionGenerator {
                         .addStatement("super($L, selfType)", ACTUAL_FIELD);
         if (!properties.isEmpty()) {
             constructor.addStatement(
-                    "this.$L = $T.rootedAt($S)", PATH, AssertionPath.class, model.simpleName());
+                    "this.$L = $T.rootedAt($S, $L)",
+                    PATH,
+                    AssertionPath.class,
+                    model.simpleName(),
+                    ACTUAL_FIELD);
         }
         return constructor.build();
     }

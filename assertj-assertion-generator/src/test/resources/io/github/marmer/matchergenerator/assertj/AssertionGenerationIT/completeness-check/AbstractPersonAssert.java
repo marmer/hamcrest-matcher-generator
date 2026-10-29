@@ -32,7 +32,7 @@ public abstract class AbstractPersonAssert<SELF extends AbstractPersonAssert<SEL
 
   protected AbstractPersonAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Person");
+    this.path = AssertionPath.rootedAt("Person", actual);
   }
 
   public SELF hasName(final @Nullable String value) {

@@ -5,8 +5,10 @@
 package io.github.marmer.matchergenerator.assertj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ class AssertionPathTest {
     @Test
     @DisplayName("Outside of any requirement an assertion starts at its own type")
     void outsideOfAnyRequirementAnAssertionStartsAtItsOwnType() {
-        assertEquals("Order", AssertionPath.rootedAt("Order"));
+        assertEquals("Order", AssertionPath.rootedAt("Order", "unrelated"));
     }
 
     @Test
@@ -31,9 +33,22 @@ class AssertionPathTest {
         AssertionPath.within(
                 "Order.customer",
                 "value",
-                value -> started.set(AssertionPath.rootedAt("Customer")));
+                value -> started.set(AssertionPath.rootedAt("Customer", value)));
 
         assertEquals("Order.customer", started.get());
+    }
+
+    @Test
+    @DisplayName("Inside a requirement an assertion for another object starts at its own type")
+    void insideARequirementAnAssertionForAnotherObjectStartsAtItsOwnType() {
+        final AtomicReference<String> started = new AtomicReference<>();
+
+        AssertionPath.within(
+                "Order.customer",
+                "value",
+                value -> started.set(AssertionPath.rootedAt("Order", "other")));
+
+        assertEquals("Order", started.get());
     }
 
     @Test
@@ -61,10 +76,10 @@ class AssertionPathTest {
                     AssertionPath.within(
                             "Order.customer.address",
                             "inner",
-                            inner -> started.add(AssertionPath.rootedAt("Address")));
-                    started.add(AssertionPath.rootedAt("Customer"));
+                            inner -> started.add(AssertionPath.rootedAt("Address", inner)));
+                    started.add(AssertionPath.rootedAt("Customer", outer));
                 });
-        started.add(AssertionPath.rootedAt("Order"));
+        started.add(AssertionPath.rootedAt("Order", "unrelated"));
 
         assertEquals(List.of("Order.customer.address", "Order.customer", "Order"), started);
     }
@@ -84,8 +99,9 @@ class AssertionPathTest {
                                     lines.forEach(
                                             line ->
                                                     started.add(
-                                                            AssertionPath.rootedAt("OrderLine"))));
-                    started.add(AssertionPath.rootedAt("Lines"));
+                                                            AssertionPath.rootedAt(
+                                                                    "OrderLine", line))));
+                    started.add(AssertionPath.rootedAt("Lines", outer));
                 });
 
         assertEquals(List.of("OrderLine", "Order.lines"), started);
@@ -102,10 +118,10 @@ class AssertionPathTest {
                         AssertionPath.within(
                                 "OrderLine.parcel",
                                 "parcel",
-                                parcel -> started.add(AssertionPath.rootedAt("Parcel"))));
+                                parcel -> started.add(AssertionPath.rootedAt("Parcel", parcel))));
 
         assertEquals(List.of("OrderLine.parcel"), started);
-        assertEquals("Order", AssertionPath.rootedAt("Order"));
+        assertEquals("Order", AssertionPath.rootedAt("Order", "unrelated"));
     }
 
     @Test
@@ -121,6 +137,30 @@ class AssertionPathTest {
                                     throw new IllegalStateException("failed");
                                 }));
 
-        assertEquals("Order", AssertionPath.rootedAt("Order"));
+        assertEquals("Order", AssertionPath.rootedAt("Order", "unrelated"));
+    }
+
+    @Test
+    @DisplayName("The thread holds no state outside of a requirement, also after a failed one")
+    void theThreadHoldsNoStateOutsideOfARequirement() {
+        AssertionPath.rootedAt("Order", "x");
+        assertFalse(AssertionPath.holdsStateInThisThread());
+
+        AssertionPath.within(
+                "Order.customer",
+                "value",
+                value -> assertTrue(AssertionPath.holdsStateInThisThread()));
+        assertFalse(AssertionPath.holdsStateInThisThread());
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AssertionPath.within(
+                                "Order.customer",
+                                "value",
+                                value -> {
+                                    throw new IllegalStateException("failed");
+                                }));
+        assertFalse(AssertionPath.holdsStateInThisThread());
     }
 }

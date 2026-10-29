@@ -266,3 +266,7 @@ You may copy this dependency if you want.
 ### Changelog
 
 The release history is maintained in [CHANGELOG.md](CHANGELOG.md). This project uses semantic versioning. See https://semver.org/
+
+### Maintaining
+
+The maintainer runbook, with the credentials and the playbooks for failed checks and releases, is in [MAINTAINING.md](MAINTAINING.md).
