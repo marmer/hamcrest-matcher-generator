@@ -2,7 +2,7 @@
 :description: Add the dependencies, configure the types and write a first test with generated matchers.
 :page-order: 1
 
-This chapter takes you from an empty Maven build to a first green test. The examples are Java. The Kotlin setup is documented in the README.
+This chapter takes you from an empty Maven build to a first green test. The examples are Java. The link:kotlin.html[Kotlin chapter] covers the KAPT setup of Kotlin projects.
 
 == Requirements
 
@@ -24,6 +24,8 @@ Declare the processor on the processor path of the compiler plugin, as the examp
 ----
 include::../../../../../example-maven-java-hamcrest/pom.xml[tag=maven-processor,indent=0]
 ----
+
+The scope of the generator decides where the generated code can be compiled. The examples declare it with the test scope, because the matchers are generated for test code. When the configuration sits in your production sources, the generated code is compiled with production code too, so the generator must be on the compile classpath of production code: declare it with the `provided` scope and `<optional>true</optional>` then, so that it does not travel with your production artifact.
 
 For AssertJ, use the `assertj-assertion-generator` artifact with the same two steps and the property `assertj-assertion-generator.version`. The link:assertj-backend.html[AssertJ backend chapter] shows its snippets from `example-maven-java-assertj`.
 

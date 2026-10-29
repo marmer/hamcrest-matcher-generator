@@ -45,7 +45,7 @@ The completeness check turns a matcher into a check of every property. It is off
 include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java[tag=completeness-check,indent=0]
 ----
 
-When a property was neither checked nor ignored, the failure names it. A property added to the model later therefore fails the tests that opt in, until someone checks or ignores it.
+When a property was neither checked nor ignored, the failure names it. A property added to the model later therefore fails the tests that opt in, until someone checks or ignores it. The link:completeness-check.html[completeness check chapter] covers the rule for both backends and the Kotlin DSL.
 
 == Reference objects
 

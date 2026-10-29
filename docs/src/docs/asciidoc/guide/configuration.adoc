@@ -15,6 +15,8 @@ include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcre
 
 This configuration generates a matcher for every model class in `example.hamcrest.model`. The model classes can be beans with getters, records or Kotlin classes: the processor reads bean getters, record component accessors and Kotlin getters.
 
+Lombok-generated getters are read as well, provided the Lombok annotation processor runs before the generator. Put Lombok first on the processor path, as the Lombok end-to-end module `hamcrest-matcher-generator-endtoend-lombok` does, so that the generator sees the getters Lombok adds in the same compilation. That module is tested with the Lombok version of the project's root pom.
+
 == Excluding types
 
 The annotation's `exclude` value takes the same kinds of entries and removes types from the selection. A package entry excludes every configured type in it, and a class entry excludes that one type. An entry that matches no configured type is reported as a warning, so a misspelled name does not pass silently.

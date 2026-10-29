@@ -195,6 +195,169 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("The guide lists its chapters in the outline order of the spec")
+    void theGuideListsItsChaptersInTheOutlineOrder() {
+        final List<String> titles =
+                parse(OUTPUT.resolve("guide/getting-started.html"))
+                        .select("nav.site-side-guide ol:not(.site-side-plain) li a")
+                        .eachText();
+        assertEquals(
+                List.of(
+                        "Getting started",
+                        "Configuration",
+                        "Hamcrest backend",
+                        "AssertJ backend",
+                        "Completeness check",
+                        "Mismatch messages",
+                        "Kotlin",
+                        "IDE setup",
+                        "Migrating from 5.x",
+                        "Architecture"),
+                titles);
+    }
+
+    @Test
+    @DisplayName("The migration page has a stable anchor for every kind of change")
+    void theMigrationPageHasAStableAnchorForEveryKindOfChange() {
+        final Document migration = parse(OUTPUT.resolve("guide/migration.html"));
+        final List<String> missing = new ArrayList<>();
+        for (final String anchor :
+                List.of(
+                        "stay-on-5x",
+                        "coordinates",
+                        "annotations",
+                        "bean-property-matcher",
+                        "transitive-javax-annotation",
+                        "mismatch-format",
+                        "opt-in-features")) {
+            if (migration.getElementById(anchor) == null) {
+                missing.add(anchor);
+            }
+        }
+        assertTrue(missing.isEmpty(), "migration anchors missing: " + missing);
+    }
+
+    @Test
+    @DisplayName("Every code block of the guide is an include of a tagged source or a golden file")
+    void everyCodeBlockOfTheGuideIsAnInclude() throws IOException {
+        final Path sourceDirectory =
+                Paths.get(System.getProperty("docs.source.directory", "src/docs/asciidoc"));
+        final List<Path> guidePages;
+        try (Stream<Path> files = Files.list(sourceDirectory.resolve("guide"))) {
+            guidePages =
+                    files.filter(file -> file.toString().endsWith(".adoc"))
+                            .sorted()
+                            .collect(Collectors.toList());
+        }
+        final List<String> problems = new ArrayList<>();
+        final Set<String> goldenDirectoriesUsed = new TreeSet<>();
+        for (final Path guidePage : guidePages) {
+            final List<String> lines = Files.readAllLines(guidePage, StandardCharsets.UTF_8);
+            boolean inBlock = false;
+            for (int index = 0; index < lines.size(); index++) {
+                final String line = lines.get(index);
+                final String where = guidePage.getFileName() + ":" + (index + 1);
+                if (NON_INCLUDE_DELIMITERS.contains(line.trim())) {
+                    problems.add(where + ": '" + line.trim() + "' block is not an include");
+                    continue;
+                }
+                if (!"----".equals(line.trim())) {
+                    continue;
+                }
+                if (!"----".equals(line)) {
+                    problems.add(where + ": indented listing delimiter");
+                }
+                inBlock = !inBlock;
+                if (!inBlock) {
+                    if (!"----".equals(line)) {
+                        problems.add(where + ": indented closing delimiter");
+                    }
+                    continue;
+                }
+                final String include = index + 1 < lines.size() ? lines.get(index + 1) : "";
+                final String closing = index + 2 < lines.size() ? lines.get(index + 2) : "";
+                if (!include.startsWith("include::") || !"----".equals(closing)) {
+                    problems.add(
+                            where
+                                    + ": code block is not exactly one include (hand-written"
+                                    + " lines or no include)");
+                    continue;
+                }
+                final String target = include.substring("include::".length(), include.indexOf('['));
+                final Path source = directoryOf(guidePage).resolve(target).normalize();
+                if (!Files.isRegularFile(source)) {
+                    problems.add(where + ": include '" + target + "' is missing");
+                } else if (include.contains("[tag=")) {
+                    final String tag = include.replaceAll(".*\\[tag=([^,\\]]+).*", "$1");
+                    if (!Files.readString(source).contains("tag::" + tag + "[]")) {
+                        problems.add(where + ": include '" + target + "' lacks tag " + tag);
+                    }
+                } else {
+                    final Optional<String> golden = goldenDirectoryOf(source);
+                    if (golden.isPresent()) {
+                        goldenDirectoriesUsed.add(golden.get());
+                    } else {
+                        problems.add(
+                                where + ": untagged include '" + target + "' is not a golden file");
+                    }
+                }
+            }
+            if (inBlock) {
+                problems.add(guidePage.getFileName() + ": unclosed code block");
+            }
+        }
+        assertEquals(
+                new TreeSet<>(GOLDEN_DIRECTORIES),
+                goldenDirectoriesUsed,
+                "the golden directories the guide includes must be exactly the allowed ones");
+        assertTrue(
+                problems.isEmpty(),
+                "code blocks that are not includes:\n" + String.join("\n", problems));
+    }
+
+    /** The golden directories of the runtime tests that the guide may include untagged. */
+    private static final List<String> GOLDEN_DIRECTORIES =
+            List.of(
+                    "BeanPropertyMatcherTest",
+                    "BeanPropertyMatcherCompletenessTest",
+                    "CollectionMatchersTest",
+                    "ReferenceMatchingTest");
+
+    /** Delimiters of blocks that are not listings: literal, passthrough, example, sidebar, open. */
+    private static final Set<String> NON_INCLUDE_DELIMITERS =
+            Set.of("....", "++++", "====", "____", "****", "--");
+
+    /**
+     * The golden directory name of a golden {@code .txt} file, or nothing when the file is not a
+     * golden file of an allowed directory.
+     */
+    private static Optional<String> goldenDirectoryOf(final Path source) {
+        final String path = source.toString().replace('\\', '/');
+        if (path.endsWith(".txt")) {
+            for (final String directory : GOLDEN_DIRECTORIES) {
+                if (path.contains(
+                        "/hamcrest-matcher-generator/src/test/resources/io/github/marmer/"
+                                + "matchergenerator/hamcrest/"
+                                + directory
+                                + "/")) {
+                    return Optional.of(directory);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Test
+    @DisplayName("The IDE chapter points to the Kotlin chapter for Kotlin test sources")
+    void theIdeChapterPointsToTheKotlinChapterForKotlinTestSources() {
+        assertFalse(
+                parse(OUTPUT.resolve("guide/ide-setup.html"))
+                        .select("a[href=kotlin.html]")
+                        .isEmpty(),
+                "ide-setup.html links kotlin.html");
+    }
+
+    @Test
     @DisplayName("The landing page has the hero with its calls to action")
     void landingPageHasTheHeroWithItsCallsToAction() {
         final Document landing = parse(OUTPUT.resolve("index.html"));
