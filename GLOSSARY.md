@@ -68,7 +68,7 @@ The check that every property of a type is either checked or consciously ignored
 _Avoid_: strict mode, exhaustiveness
 
 **DSL scope**:
-The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`).
+The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). The scope of a type is named `<SimpleName>Spec` with the entry function `is<SimpleName>`; a nested type that shares its simple name with another type of the package is named after its enclosing types instead (`NestedClashCustomerSpec`, `isNestedClashCustomer`), so the generated DSL always compiles.
 _Avoid_: builder, spec block
 
 **Generated code**:
