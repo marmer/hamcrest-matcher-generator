@@ -31,7 +31,7 @@ generates nothing without it and reports one compiler note, once per compilation
 makes the worker report one compile error that names the backend and the type, because the Kotlin file would otherwise
 never be compiled. A type without properties of its own gets no DSL file, although its Java matcher exists. The scope
 classes and entry functions of all types in a package are top level declarations of that package, so the backend names
-them from the models of all types generated in the run; the naming rule and its known limit are in chapter 5.
+them from the models of all types generated in the run; the naming rule and the error for names that still collide are in chapter 5.
 
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
 
