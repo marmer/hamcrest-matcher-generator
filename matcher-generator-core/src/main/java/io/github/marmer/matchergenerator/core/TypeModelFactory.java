@@ -149,7 +149,12 @@ class TypeModelFactory {
         return packageOf(type).getQualifiedName().toString();
     }
 
+    /**
+     * The record components, detected by their accessor whatever its name, and the record style
+     * accessors, which are public methods without a property prefix.
+     */
     private List<PropertyModel> recordComponentProperties(final TypeElement type) {
+        final Set<ExecutableElement> componentAccessors = recordComponentAccessors(type);
         return type.getEnclosedElements().stream()
                 .filter(ExecutableElement.class::isInstance)
                 .map(ExecutableElement.class::cast)
@@ -159,7 +164,7 @@ class TypeModelFactory {
                                         && !ElementSupport.isStatic(element)
                                         && hasNoParameters(element)
                                         && hasReturnType(element)
-                                        && isRecordComponentAccessor(element))
+                                        && isRecordComponentAccessor(element, componentAccessors))
                 .map(
                         element ->
                                 new PropertyModel(
@@ -170,21 +175,31 @@ class TypeModelFactory {
                 .collect(Collectors.toList());
     }
 
-    private boolean isRecordComponentAccessor(final ExecutableElement element) {
+    private Set<ExecutableElement> recordComponentAccessors(final TypeElement type) {
+        return type.getRecordComponents().stream()
+                .map(component -> component.getAccessor())
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isRecordComponentAccessor(
+            final ExecutableElement element, final Set<ExecutableElement> componentAccessors) {
         final String name = element.getSimpleName().toString();
-        return !name.equals("hashCode")
-                && !name.equals("toString")
-                && !name.startsWith("get")
-                && !name.startsWith("is");
+        return componentAccessors.contains(element)
+                || (!name.equals("hashCode")
+                        && !name.equals("toString")
+                        && !name.startsWith("get")
+                        && !name.startsWith("is"));
     }
 
     private List<PropertyModel> properties(final TypeElement type) {
         final List<ExecutableElement> getters = new ArrayList<>();
         final Set<String> seenSimpleNames = new HashSet<>();
         final Map<String, SkippedCandidate> skipped = new LinkedHashMap<>();
+        final Set<ExecutableElement> componentAccessors = recordComponentAccessors(type);
         transitiveInheritedElements(type).stream()
                 .filter(this::isPropertyCandidate)
                 .map(ExecutableElement.class::cast)
+                .filter(element -> !componentAccessors.contains(element))
                 .forEach(
                         element -> {
                             final String name = element.getSimpleName().toString();

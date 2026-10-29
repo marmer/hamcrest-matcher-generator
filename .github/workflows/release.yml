@@ -138,7 +138,7 @@ jobs:
           find . -path '*/target/*.jar' -not -path '*endtoend*' -not -path './docs/*' -exec cp {} "$RUNNER_TEMP/dist/" \;
           ls -l "$RUNNER_TEMP/dist"
 
-      - uses: actions/attest@ce27ba3b4a9a139d9a20a4a07d69fabb52f1e5bc # v2.4.0
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: ${{ runner.temp }}/dist/*.jar
 
