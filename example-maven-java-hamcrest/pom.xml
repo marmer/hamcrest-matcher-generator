@@ -20,6 +20,8 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- The guide's snippets name the property, so a reader sets it to the release they use. -->
+        <hamcrest-matcher-generator.version>${project.version}</hamcrest-matcher-generator.version>
     </properties>
 
     <dependencies>
@@ -27,13 +29,13 @@
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator</artifactId>
-            <version>${project.version}</version>
+            <version>${hamcrest-matcher-generator.version}</version>
         </dependency>
-        <!-- end::maven-dependencies[] -->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
         </dependency>
+        <!-- end::maven-dependencies[] -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -58,7 +60,7 @@
                         <path>
                             <groupId>io.github.marmer.testutils</groupId>
                             <artifactId>hamcrest-matcher-generator</artifactId>
-                            <version>${project.version}</version>
+                            <version>${hamcrest-matcher-generator.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <!-- end::maven-processor[] -->
@@ -68,6 +70,27 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
+            <!-- tag::ide-build-helper[] -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-test-source</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-test-sources/test-annotations</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- end::ide-build-helper[] -->
         </plugins>
     </build>
 </project>

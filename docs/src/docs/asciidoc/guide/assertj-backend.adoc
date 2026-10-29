@@ -1,0 +1,59 @@
+= AssertJ backend
+:description: The generated AssertJ assertions: per-property checks with readable messages, nested assertions, the completeness check and the whole-object comparison with usingRecursiveComparison.
+:page-order: 4
+
+For every configured type the AssertJ backend generates an assertion class, `CustomerAssert` for `Customer`. Its static `assertThat` returns the assertion, and each property gets a `hasX` method that takes the expected value. The assertion class extends AssertJ's object assertion, so AssertJ's own assertions stay available next to the generated ones.
+
+The dependency is the `assertj-assertion-generator` artifact, which the link:getting-started.html[getting started chapter] declares next to the Hamcrest one.
+
+== Checking one property
+
+A basic assertion checks one property by equality. A failing check names the property with the expected and the actual value:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=basic-assertion,indent=0]
+----
+
+== Nested properties
+
+A property whose type is a generated type has a `hasXSatisfying` method. It takes a lambda that receives the nested assertion, so the path of the failing property is reported as `Customer.address.city`:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=nested-property,indent=0]
+----
+
+A boolean property also gets `isX` and `isNotX` methods. The scope example in the completeness check section calls `isActive()` on the `active` property.
+
+== Completeness check
+
+The completeness check fails when a property was neither checked nor ignored. Check the properties you care about, name the ones you deliberately leave out with `ignoringX()`, and finish with `hasAllPropertiesChecked()`:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=completeness-check,indent=0]
+----
+
+To run the check only inside one part of an assertion, use `satisfiesCheckingAllProperties`. The check covers the properties asserted in its lambda and nothing else:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=completeness-check-scope,indent=0]
+----
+
+== The whole object
+
+Sometimes an assertion should cover the whole object, not single properties. AssertJ's `usingRecursiveComparison()` does that in one step: it compares every field of the actual object with the expected one, nested objects included. Every generated assertion inherits it, so it works on `CustomerAssert` without any generated code:
+
+[source,java]
+----
+include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=whole-object,indent=0]
+----
+
+Use the generated `hasX` methods when a test should name the properties it checks, with a message for each. Use `usingRecursiveComparison()` when the expected object is at hand and every field should match. The completeness check gives the same guarantee for properties that are checked one by one.
+
+== Next steps
+
+* link:hamcrest-backend.html[Hamcrest backend] for the same model as matchers.
+* link:configuration.html[Configuration] for the types the assertions are generated for.

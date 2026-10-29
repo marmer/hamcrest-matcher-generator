@@ -1,0 +1,9 @@
+= Architecture
+:description: Where to read how hamcrest-matcher-generator works inside: the arc42 architecture documentation with its C4 views.
+:page-order: 10
+
+The architecture documentation describes how the processor works: the context it runs in, its building blocks, the runtime view of one generation round, the deployment and the decisions behind them. It is written in arc42 and its diagrams are C4 views from one model.
+
+link:../architecture/index.html[Read the architecture documentation]
+
+The user guide covers how to use the generated code. Read the architecture when you want to extend the generator, change a backend or understand why the generated code looks the way it does.

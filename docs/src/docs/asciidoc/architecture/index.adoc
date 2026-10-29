@@ -7,6 +7,7 @@
 include::_chapters/config.adoc[]
 
 = hamcrest-matcher-generator
+:description: Architecture of hamcrest-matcher-generator (arc42): context, building blocks, runtime view, deployment and decisions.
 :revnumber: {revnumber}
 :revdate: {revdate}
 :revremark: {revremark}
