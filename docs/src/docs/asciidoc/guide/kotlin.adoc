@@ -1,5 +1,5 @@
 = Kotlin
-:description: Kotlin projects with KAPT: the processor path, the source directories that KAPT output needs, Kotlin properties and their matcher names, the generated Kotlin DSL and its Kotlin 1.9 language level.
+:description: Kotlin projects with KAPT: the processor path and the classpath of the Kotlin DSL artifact with their gotchas, the source directories that KAPT output needs, Kotlin properties and their matcher names, the generated Kotlin DSL and its Kotlin 1.9 language level.
 :page-order: 7
 
 The generators work with Kotlin classes as they work with Java beans. Java tests need nothing else. Kotlin tests need the processors run by KAPT, the annotation processing tool of Kotlin, and the generated Kotlin DSL is written by KAPT only. The examples here come from `example-maven-kotlin`, which runs KAPT for its main sources, and from the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin`, which runs KAPT for its test sources.
@@ -19,7 +19,12 @@ include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml
 
 == Dependencies and processor path
 
-Add the generator artifacts for the backends you use and the Kotlin DSL artifact. The DSL artifact generates the Kotlin files, so it belongs on the KAPT processor path as well:
+Add the generator artifacts for the backends you use and the Kotlin DSL artifact. The DSL artifact belongs in two places, and both are needed:
+
+* On the classpath of the Kotlin sources, as a dependency. The generated DSL uses the `@MatcherDsl` marker and the runtime classes of that artifact, and kotlinc must resolve them.
+* On the KAPT processor path. The artifact writes the Kotlin DSL files, so KAPT must run it.
+
+The example declares the dependency once, in the compile scope, and lists the three processors on the processor path of the `kapt` execution:
 
 [source,xml]
 ----
@@ -32,6 +37,11 @@ KAPT runs the three processors over the Kotlin sources. It writes the Java match
 ----
 include::../../../../../example-maven-kotlin/pom.xml[tag=maven-kapt,indent=0]
 ----
+
+The gotchas of this setup:
+
+* With the DSL artifact on the processor path only, kotlinc fails on the generated DSL files with `Unresolved reference: MatcherDsl`, at the `@MatcherDsl` annotation and at the import of the marker. Add the artifact as a dependency, as above.
+* A dependency in test scope alone is not enough for the main sources. KAPT also finds processors on the test classpath, so the DSL can appear for the tests, but the main Kotlin sources still need the artifact on their compile classpath.
 
 == Configure the types
 
