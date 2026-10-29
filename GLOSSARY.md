@@ -68,7 +68,7 @@ The check that every property of a type is either checked or consciously ignored
 _Avoid_: strict mode, exhaustiveness
 
 **DSL scope**:
-The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in arc42 chapter 5 (building block view).
+The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in arc42 chapter 5 (building block view), which also says what happens when two names still collide.
 _Avoid_: builder, spec block
 
 **Generated code**:

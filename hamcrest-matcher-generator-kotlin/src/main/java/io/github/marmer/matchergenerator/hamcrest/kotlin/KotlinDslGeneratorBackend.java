@@ -30,7 +30,9 @@ public class KotlinDslGeneratorBackend implements GeneratorBackend {
             noteMissingKaptOnce(context);
             return List.of();
         }
-        if (!KotlinDslGenerator.hasAnythingToGenerate(model)) {
+        final KotlinDslGenerator generator = new KotlinDslGenerator(model, context);
+        generator.reportClashes();
+        if (!generator.hasAnythingToGenerate()) {
             return List.of();
         }
         return List.of(
@@ -38,7 +40,7 @@ public class KotlinDslGeneratorBackend implements GeneratorBackend {
                         model.targetPackage(),
                         KotlinDslGenerator.fileName(model),
                         GeneratedSource.Language.KOTLIN,
-                        new KotlinDslGenerator(model, context).generate()));
+                        generator.generate()));
     }
 
     private void noteMissingKaptOnce(final GenerationContext context) {
