@@ -29,7 +29,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
 
   protected AbstractOrderAssert(final ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Order");
+    this.path = AssertionPath.rootedAt("Order", actual);
   }
 
   public SELF hasId(final String value) {

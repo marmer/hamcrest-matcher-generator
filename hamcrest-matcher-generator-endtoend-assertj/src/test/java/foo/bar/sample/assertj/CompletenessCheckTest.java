@@ -5,12 +5,16 @@
 package foo.bar.sample.assertj;
 
 import static foo.bar.sample.assertj.model.AddressAssert.assertThat;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import foo.bar.sample.assertj.model.Address;
+import foo.bar.sample.assertj.model.Badge;
 import foo.bar.sample.assertj.model.Customer;
 import foo.bar.sample.assertj.model.CustomerAssert;
+import foo.bar.sample.assertj.model.Membership;
+import foo.bar.sample.assertj.model.MembershipAssert;
 import foo.bar.sample.assertj.model.Order;
 import foo.bar.sample.assertj.model.OrderAssert;
 import foo.bar.sample.assertj.model.SoftAssertionsProvider;
@@ -29,6 +33,11 @@ class CompletenessCheckTest {
                     new BigDecimal("9.99"),
                     List.of("books", "sale"),
                     false);
+
+    private static final Customer MEMBER =
+            new Customer("Ada", null, new Address("1 Rue de Rivoli", "Paris"));
+    private static final Membership MEMBERSHIP =
+            new Membership("gold", MEMBER, MEMBER, new Badge("g"));
 
     @Test
     @DisplayName("The short form passes when every property is checked, whatever the check kind")
@@ -207,6 +216,43 @@ class CompletenessCheckTest {
                 .hasMessageContaining(
                         "Expecting every property of Order to be checked or ignored,"
                                 + " but these were neither: customer, total, tags");
+    }
+
+    @Test
+    @DisplayName("After extracting with as a property of the same name is not addressed yet")
+    void afterExtractingWithAsAPropertyOfTheSameNameIsNotAddressedYet() {
+        assertThatThrownBy(
+                        () ->
+                                MembershipAssert.assertThat(MEMBERSHIP)
+                                        .hasName("gold")
+                                        .extracting(
+                                                Membership::getMember, as(CustomerAssert.CUSTOMER))
+                                        .hasPhone(null)
+                                        .ignoringAddress()
+                                        .hasAllPropertiesChecked())
+                .hasMessage(
+                        String.format(
+                                "%nExpecting every property of Customer to be checked or"
+                                        + " ignored, but these were neither: name"));
+    }
+
+    @Test
+    @DisplayName("After first with as a property of the same name is not addressed yet")
+    void afterFirstWithAsAPropertyOfTheSameNameIsNotAddressedYet() {
+        MembershipAssert.assertThat(MEMBERSHIP).hasName("gold");
+
+        assertThatThrownBy(
+                        () ->
+                                org.assertj.core.api.Assertions.assertThat(List.of(MEMBERSHIP))
+                                        .first(as(MembershipAssert.MEMBERSHIP))
+                                        .ignoringMember()
+                                        .ignoringBillingMember()
+                                        .ignoringBadge()
+                                        .hasAllPropertiesChecked())
+                .hasMessageEndingWith(
+                        String.format(
+                                "%nExpecting every property of Membership to be checked or"
+                                        + " ignored, but these were neither: name"));
     }
 
     /** The soft assertions of the orders, as an entry point of the test. */

@@ -31,7 +31,7 @@ public abstract class AbstractConflictingAssert<SELF extends AbstractConflicting
 
   protected AbstractConflictingAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Conflicting");
+    this.path = AssertionPath.rootedAt("Conflicting", actual);
   }
 
   public SELF hasConflictProperty(final @Nullable Object value) {

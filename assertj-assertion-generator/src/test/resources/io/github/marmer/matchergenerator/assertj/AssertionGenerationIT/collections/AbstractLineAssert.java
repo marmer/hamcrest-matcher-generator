@@ -31,7 +31,7 @@ public abstract class AbstractLineAssert<SELF extends AbstractLineAssert<SELF, A
 
   protected AbstractLineAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Line");
+    this.path = AssertionPath.rootedAt("Line", actual);
   }
 
   public SELF hasSku(final @Nullable String value) {

@@ -31,7 +31,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
 
   protected AbstractOrderAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("Order");
+    this.path = AssertionPath.rootedAt("Order", actual);
   }
 
   public SELF hasCustomer(final Order.@Nullable Customer value) {
@@ -104,7 +104,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
 
     protected AbstractCustomerAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
       super(actual, selfType);
-      this.path = AssertionPath.rootedAt("Customer");
+      this.path = AssertionPath.rootedAt("Customer", actual);
     }
 
     public SELF hasName(final @Nullable String value) {
@@ -176,7 +176,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
 
       protected AbstractAddressAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
         super(actual, selfType);
-        this.path = AssertionPath.rootedAt("Address");
+        this.path = AssertionPath.rootedAt("Address", actual);
       }
 
       public SELF hasCity(final @Nullable String value) {

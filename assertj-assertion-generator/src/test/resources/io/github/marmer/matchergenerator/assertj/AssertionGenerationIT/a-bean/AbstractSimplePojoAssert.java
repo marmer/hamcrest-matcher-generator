@@ -33,7 +33,7 @@ public abstract class AbstractSimplePojoAssert<SELF extends AbstractSimplePojoAs
 
   protected AbstractSimplePojoAssert(final @Nullable ACTUAL actual, final Class<?> selfType) {
     super(actual, selfType);
-    this.path = AssertionPath.rootedAt("SimplePojo");
+    this.path = AssertionPath.rootedAt("SimplePojo", actual);
   }
 
   public SELF hasName(final @Nullable String value) {
