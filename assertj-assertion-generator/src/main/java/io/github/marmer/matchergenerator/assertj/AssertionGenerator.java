@@ -20,12 +20,16 @@ import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
@@ -147,21 +151,30 @@ class AssertionGenerator {
         }
         final Set<String> inherited =
                 context.inheritedMethodNames(ABSTRACT_OBJECT_ASSERT.toString());
-        properties.forEach(
-                property -> {
-                    final List<MethodSpec> methods = generatedMethods(property);
-                    final List<String> clashing =
+        final List<List<MethodSpec>> methodsByProperty =
+                properties.stream().map(this::generatedMethods).collect(Collectors.toList());
+        final Set<String> sharedNames =
+                reportSharedNamesAmongProperties(methodsByProperty, inherited);
+        IntStream.range(0, properties.size())
+                .forEach(
+                        index -> {
+                            final PropertyModel property = properties.get(index);
+                            final List<MethodSpec> methods = methodsByProperty.get(index);
+                            final List<String> clashing =
+                                    methods.stream()
+                                            .map(method -> method.name)
+                                            .filter(inherited::contains)
+                                            .collect(Collectors.toList());
+                            if (!clashing.isEmpty()) {
+                                context.reportError(clashMessage(property, clashing));
+                            }
                             methods.stream()
-                                    .map(method -> method.name)
-                                    .filter(inherited::contains)
-                                    .collect(Collectors.toList());
-                    if (!clashing.isEmpty()) {
-                        context.reportError(clashMessage(property, clashing));
-                    }
-                    methods.stream()
-                            .filter(method -> !inherited.contains(method.name))
-                            .forEach(builder::addMethod);
-                });
+                                    .filter(
+                                            method ->
+                                                    !inherited.contains(method.name)
+                                                            && !sharedNames.contains(method.name))
+                                    .forEach(builder::addMethod);
+                        });
         if (!properties.isEmpty()) {
             builder.addMethod(isNotNullMethod())
                     .addMethod(checkPropertyMethod())
@@ -196,6 +209,7 @@ class AssertionGenerator {
                         .addField(instanceOfAssertFactoryField(concreteClass))
                         .addMethod(concreteConstructor(concreteClass))
                         .addMethod(assertThatMethod(concreteClass));
+        reportFactoryConstantClashes();
         model.nestedTypes()
                 .forEach(
                         nested -> {
@@ -245,7 +259,7 @@ class AssertionGenerator {
                 FieldSpec.builder(
                         ParameterizedTypeName.get(
                                 INSTANCE_OF_ASSERT_FACTORY, rawClass, concreteClass),
-                        factoryName(),
+                        factoryName(model.simpleName()),
                         Modifier.PUBLIC,
                         Modifier.STATIC,
                         Modifier.FINAL);
@@ -310,8 +324,8 @@ class AssertionGenerator {
         return TypeName.OBJECT;
     }
 
-    private String factoryName() {
-        return model.simpleName().replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase(Locale.ROOT);
+    private static String factoryName(final String simpleName) {
+        return simpleName.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase(Locale.ROOT);
     }
 
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
@@ -346,6 +360,92 @@ class AssertionGenerator {
         }
         methods.add(ignoringMethod(property));
         return methods;
+    }
+
+    /**
+     * Reports one error per generated method name that two or more properties generate, such as
+     * {@code isNotFoo()} for a boolean {@code foo} and a boolean {@code notFoo}. The names that are
+     * inherited are left to the per property check. Returns the reported names, whose methods are
+     * left out.
+     */
+    private Set<String> reportSharedNamesAmongProperties(
+            final List<List<MethodSpec>> methodsByProperty, final Set<String> inherited) {
+        final Map<String, List<String>> propertiesByName = new LinkedHashMap<>();
+        IntStream.range(0, properties.size())
+                .forEach(
+                        index ->
+                                methodsByProperty.get(index).stream()
+                                        .map(method -> method.name)
+                                        .filter(name -> !inherited.contains(name))
+                                        .forEach(
+                                                name ->
+                                                        propertiesByName
+                                                                .computeIfAbsent(
+                                                                        name,
+                                                                        key -> new ArrayList<>())
+                                                                .add(
+                                                                        properties
+                                                                                .get(index)
+                                                                                .name())));
+        final Set<String> shared = new HashSet<>();
+        propertiesByName.forEach(
+                (name, names) -> {
+                    if (names.size() > 1) {
+                        context.reportError(sharedNameMessage(name, names));
+                        shared.add(name);
+                    }
+                });
+        return shared;
+    }
+
+    private String sharedNameMessage(final String methodName, final List<String> propertyNames) {
+        return "Properties "
+                + quotedAndJoined(propertyNames)
+                + " of '"
+                + model.qualifiedName()
+                + "' generate '"
+                + methodName
+                + "', which clashes between the generated methods; rename one of the properties";
+    }
+
+    /**
+     * Reports one error per factory constant that two or more nested types of the type share, such
+     * as {@code FOO_BAR} for {@code FooBar} and {@code Foo_Bar}. The types are one scope, so the
+     * constants of their assertion classes clash for anyone who imports them by name.
+     */
+    private void reportFactoryConstantClashes() {
+        model.nestedTypes().stream()
+                .collect(
+                        Collectors.groupingBy(
+                                nested -> factoryName(nested.simpleName()),
+                                TreeMap::new,
+                                Collectors.toList()))
+                .forEach(
+                        (constant, nestedTypes) -> {
+                            if (nestedTypes.size() > 1) {
+                                context.reportError(
+                                        factoryConstantClashMessage(
+                                                constant,
+                                                nestedTypes.stream()
+                                                        .map(TypeModel::qualifiedName)
+                                                        .collect(Collectors.toList())));
+                            }
+                        });
+    }
+
+    private String factoryConstantClashMessage(
+            final String constant, final List<String> typeNames) {
+        return "Nested types "
+                + quotedAndJoined(typeNames)
+                + " of '"
+                + model.qualifiedName()
+                + "' get the factory constant '"
+                + constant
+                + "', which clashes; rename one of the types";
+    }
+
+    private static String quotedAndJoined(final List<String> names) {
+        return names.stream().map(name -> "'" + name + "'").collect(Collectors.joining(" and "));
     }
 
     private String clashMessage(final PropertyModel property, final List<String> methodNames) {
