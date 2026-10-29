@@ -36,6 +36,7 @@ The orchestrator usually runs on Sonnet. It starts each implementer subagent on 
 - **Usage limit**: an implementer that ends on a rate-limit error (HTTP 429, "hit your limit") resumes through `SendMessage` after the reset, with its original ticket and remaining steps; `/limit-loop` (`.claude/skills/limit-loop/SKILL.md`) schedules that check. If it died before its first commit, its worktree is gone: the resumed agent starts a fresh worktree on its ticket branch from `origin/main`.
 - **A ticket is done when its PR is squash-merged into `main`** (see below), not when the implementer reports: the PR's `Closes #<n>` closes the ticket. Workflow changes (`.github/workflows/`) cannot be verified locally at all, so for those the PR's CI run is the only proof.
 - **One hard-to-reverse step per tool call** (create PR, enable auto-merge, close, push), so a denied or failed step leaves the others intact.
+- **A follow-up ticket is created once `issue.py block` has run** (edges in `docs/agents/issue-tracker.md`, Blocking); `scripts/agents/issue-status.py <spec> --print >/dev/null` then prints no loose-ticket warning on stderr, so keep stderr visible.
 - **Keep the spec's status current**: pass `--map <spec>` to `issue.py claim`, and after each merged PR run `scripts/agents/issue-status.py <spec>` (see "Status view for maps and specs" in `docs/agents/issue-tracker.md`).
 
 ## One ticket, one review, one PR

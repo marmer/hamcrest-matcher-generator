@@ -50,6 +50,13 @@ class LooseTicketsTest(unittest.TestCase):
         self.assertIn("issue.py block 3 --by", warning)
 
 
+class LooseWarningForTest(unittest.TestCase):
+
+    def test_warning_for_tickets_with_a_loose_one_and_none_otherwise(self):
+        self.assertIn("#3", status.loose_warning_for([ticket(1), ticket(2, [1]), ticket(3)]))
+        self.assertIsNone(status.loose_warning_for([ticket(1), ticket(2, [1])]))
+
+
 def ready(number, labels=(), state="ready"):
     return {"number": number, "title": f"t{number}", "labels": list(labels), "status": state}
 
