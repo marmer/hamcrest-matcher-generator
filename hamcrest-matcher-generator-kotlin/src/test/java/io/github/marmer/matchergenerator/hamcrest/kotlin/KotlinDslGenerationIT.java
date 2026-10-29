@@ -238,6 +238,52 @@ class KotlinDslGenerationIT {
     }
 
     @Test
+    @DisplayName(
+            "A nested type with the simple name of another type of the package gets a name with its enclosing types")
+    void aNestedTypeWithTheSimpleNameOfAnotherTypeGetsANameWithItsEnclosingTypes()
+            throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.Customer", "some.other.pck.NestedClash"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Customer",
+                                """
+                                package some.other.pck;
+
+                                public class Customer {
+                                    public String getName() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.NestedClash",
+                                """
+                                package some.other.pck;
+
+                                public class NestedClash {
+                                    public some.other.pck.Customer getCustomer() {
+                                        return null;
+                                    }
+
+                                    public NestedClash.Customer getInner() {
+                                        return null;
+                                    }
+
+                                    public static class Customer {
+                                        public String getName() {
+                                            return null;
+                                        }
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden("clashing-nested-type", "some/other/pck/CustomerMatcherDsl.kt");
+        assertGolden("clashing-nested-type", "some/other/pck/NestedClashMatcherDsl.kt");
+    }
+
+    @Test
     @DisplayName("A generic type is described with star projections and Any for its type variables")
     void aGenericTypeIsDescribedWithStarProjections() throws IOException {
         final Compilation compilation =
