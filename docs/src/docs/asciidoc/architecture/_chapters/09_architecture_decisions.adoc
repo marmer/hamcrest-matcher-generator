@@ -42,3 +42,11 @@ Details: link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
 Version 6.0.0 needs Java 17 or newer, for the annotation processor, the runtime artifacts and the generated code. Earlier planning assumed Java 11, but the libraries and tools this project updates automatically have moved on: JUnit 6 and AssertJ 4 need Java 17, Maven 4 needs it to run, and some tools already need Java 21. With Java 11, every such update would stop and wait for the maintainer, which contradicts the goal of a project that maintains itself. A major release is the right moment for this break. Users who stay on Java 11 keep using 5.x; everyone on Java 17 or newer upgrades by changing the version number.
 
 Details: link:{adr-url}/0005-java-17-baseline.md[ADR 0005]
+
+=== ADR 0006: Files written once per package, and the backend SPI channels that report it
+
+*Status:* accepted (2026-10-29)
+
+Some generated files exist once per target package, such as the AssertJ soft assertions mixin, and they only know the types of the processing round that wrote them. Instead of failing with a Filer exception or leaving types out silently, the file is written once per package, the first round decides its content, and a later round or a second compilation (main and test, KAPT) gets a diagnostic. Naming the mixin per configuration was rejected: a test class that implements it would break when the configuration layout changes, and the types of earlier rounds would still be missing. To report this, the backend plug-in interface gained a verbose-only note and a question whether a class exists outside the compilation's own output; the rule that a source is not written again applies to every backend. Consequences are that builds with warnings as errors fail on the late-round warning and that the class path note cannot tell every case apart. A diagnostics interface instead of the growing list of channels is recorded as an open idea.
+
+Details: link:{adr-url}/0006-files-written-once-and-backend-spi-channels.md[ADR 0006]

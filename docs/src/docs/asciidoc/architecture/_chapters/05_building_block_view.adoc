@@ -47,7 +47,7 @@ Every property also gets `ignoringFoo()`, and the abstract class has the opt-in 
 and `hasAllPropertiesChecked()`. The assertion object keeps the names it has addressed, and the check fails with the properties
 that are neither addressed nor ignored. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
-Each target package gets one `SoftAssertionsProvider` mixin with a default `assertThat` and `then` per type,
+Each target package gets one `SoftAssertionsProvider` mixin (written once per package, ADR 0006) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
 that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
 restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and

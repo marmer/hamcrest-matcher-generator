@@ -24,7 +24,7 @@ The pair of classes the AssertJ backend generates per configured type: `Abstract
 _Avoid_: assert class, assertion wrapper
 
 **Soft assertions mixin**:
-The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see arc42 chapter 6, "Files written once per package").
+The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see arc42 chapter 6, "Files written once per package", and ADR 0006).
 _Avoid_: soft provider, BDD mixin
 
 **Generated representation**:

@@ -65,6 +65,12 @@ The list is ordered by priority, the product of both values, highest first; entr
 |The architecture keeps backends independent of each other: each one depends only on the core. The Kotlin DSL backend is a deliberate exception. It builds on the Hamcrest backend and reuses its naming of the generated matchers (`XMatcher`, `isX`, `withFoo`, `ignoringFoo`). A change to that naming therefore breaks the generated Kotlin code, and the two modules cannot evolve independently (link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]).
 |The exception is allowed for exactly this one dependency, and Maven Enforcer and an ArchUnit test reject any other dependency between backends. Golden-file tests of the generated Kotlin code and the Kotlin end-to-end modules fail as soon as the Hamcrest naming changes without the DSL following it.
 
+|Risk: a release builds with a wrong module version
+|low
+|disabling
+|The release type `simple` with one explicit `extra-files` entry per module pom (see <<section-deployment-view,chapter 7>>) was only verified by a simulation with the updaters of release-please 17.11.2, never by a real release-please run, because the development sandbox cannot call the GitHub API. The first real Release PR after this change is the first real test. A new module pom without an `extra-files` entry is caught by `scripts/ci/check-project-version.py` in the required job `Domain docs in sync`. It is assumed, not verified, that the checks also run on the Release PR, because the GitHub App token creates it.
+|`scripts/ci/check-project-version.py` runs on the Release PR and turns a wrong one red before the release. The maintainer looks at the first Release PR after the change before merging it: own and parent version 6.0.0 in every module pom, and the pom of the frozen 5.x suite still `@project.version@`. The playbook "Red Release pull request" in `MAINTAINING.md` applies.
+
 |Risk: the Kotlin DSL needs KAPT
 |low
 |disabling
