@@ -17,6 +17,11 @@ scripts/agents/verify.sh
 ./mvnw -pl docs verify
 # Same build as CI's Build job (no tests; run it after changing a pom or .github/workflows/)
 ./mvnw -B clean install -DskipTests
+# Gradle example (outside the reactor, own wrapper; resolves the reactor's artifacts from mavenLocal(); CI job Example Gradle)
+./mvnw -DskipEndtoend -DskipTests install
+(cd example-gradle-java && ./gradlew build)
+# Version consistency: every module pom's own and parent version equals .release-please-manifest.json, is an extra-files entry of release-please-config.json, project dependencies carry no literal version; run it after changing a pom or release-please-config.json
+python3 scripts/ci/check-project-version.py
 # Mutation testing (profile mutation, JDK 21+, about 10 min); scripts/ci/pit-scores.py prints the per-module score
 ./mvnw verify -Pmutation
 # Release profile: adds GPG signing with the BC signer, sources and javadoc jars via `maven-javadoc-plugin`, CycloneDX SBOM; publishes via the Central Portal on `deploy`, needs MAVEN_GPG_KEY/MAVEN_GPG_PASSPHRASE and the `central` server token
@@ -94,7 +99,7 @@ isOrder { id(42L); customer { name("Ada") }; checkingAllProperties() }   // igno
 
 ## KAPT Configuration (Kotlin end-to-end modules)
 
-`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor through the `kotlin-maven-plugin` `test-kapt` execution into `target/generated-sources/kapt/test/`. A `build-helper-maven-plugin` `add-test-source` registers that directory as a test source root, so javac compiles every generated matcher, not only the ones Java tests reference (#110). The poms are the source of truth.
+`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor through the `kotlin-maven-plugin` `test-kapt` execution into `target/generated-sources/kapt/test/`. A `build-helper-maven-plugin` `add-test-source` registers that directory as a test source root, so javac compiles every generated matcher, not only the ones Java tests reference (#110). The poms are the source of truth. The documentation example `example-maven-kotlin` is the main-code counterpart: it runs the same KAPT setup with the plain `kapt` execution (its tagged `maven-kapt` region feeds the docs).
 
 ## Testing Approach
 
