@@ -90,6 +90,11 @@ The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path o
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
 matchers in ordinary tests.
 
+| `example-maven-java-hamcrest`, `example-maven-java-assertj`, `example-maven-kotlin`, `example-gradle-java`
+| Documentation examples for the guide and README: Maven Java for each backend, Maven Kotlin with KAPT and the Kotlin DSL,
+and a Gradle build outside the reactor with its own wrapper. They are never published; the Gradle build resolves the
+reactor's artifacts from `mavenLocal()`.
+
 | `docs`
 | Renders this documentation to HTML and checks its internal links. It is built only on JDK 21 or later and is not
 published to Maven Central.
