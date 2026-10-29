@@ -9,8 +9,8 @@ plugins {
     java
 }
 
-// tag::gradle-version[]
 // The version of the project's artifacts; release-please bumps it with the release (see release-please-config.json).
+// tag::gradle-version[]
 val matcherGeneratorVersion = "5.1.0" // x-release-please-version
 // end::gradle-version[]
 
