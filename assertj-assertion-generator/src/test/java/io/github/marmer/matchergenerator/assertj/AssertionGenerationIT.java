@@ -810,13 +810,12 @@ class AssertionGenerationIT {
                 compileWithJSpecify(
                         configuration, beanWithAName("Foo"), beanWithAName("AbstractFoo"));
 
-        CompilationSubject.assertThat(compilation)
-                .hadErrorContaining("'some.other.pck.AbstractFoo'")
-                .inFile(configuration)
-                .onLine(3);
-        CompilationSubject.assertThat(compilation).hadErrorContaining("'some.other.pck.Foo'");
-        CompilationSubject.assertThat(compilation).hadErrorContaining("'AbstractFooAssert'");
-        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFoo' and 'some.other.pck.Foo', which clashes;"
+                        + " rename one of the types");
     }
 
     @Test
@@ -828,13 +827,53 @@ class AssertionGenerationIT {
                 compileWithJSpecify(
                         configuration, beanWithAName("Foo"), beanWithAName("FooAssert"));
 
-        CompilationSubject.assertThat(compilation)
-                .hadErrorContaining("'some.other.pck.FooAssert'")
-                .inFile(configuration)
-                .onLine(3);
-        CompilationSubject.assertThat(compilation).hadErrorContaining("'some.other.pck.Foo'");
-        CompilationSubject.assertThat(compilation).hadErrorContaining("'FooAssert'");
-        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'FooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.Foo' and 'some.other.pck.FooAssert', which clashes;"
+                        + " rename one of the types");
+    }
+
+    @Test
+    @DisplayName("A generated abstract class named like another configured type is a compile error")
+    void anAbstractClassNamedLikeAnotherConfiguredTypeIsACompileError() {
+        final JavaFileObject configuration =
+                configuration("some.other.pck.Foo", "some.other.pck.AbstractFooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration, beanWithAName("Foo"), beanWithAName("AbstractFooAssert"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFooAssert' and 'some.other.pck.Foo', which"
+                        + " clashes; rename one of the types");
+    }
+
+    @Test
+    @DisplayName("Three claimants of one class name are one error naming all of them")
+    void threeClaimantsOfOneClassNameAreOneCompileError() {
+        final JavaFileObject configuration =
+                configuration(
+                        "some.other.pck.Foo",
+                        "some.other.pck.AbstractFoo",
+                        "some.other.pck.AbstractFooAssert");
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration,
+                        beanWithAName("Foo"),
+                        beanWithAName("AbstractFoo"),
+                        beanWithAName("AbstractFooAssert"));
+
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'AbstractFooAssert' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.AbstractFoo' and 'some.other.pck.AbstractFooAssert'"
+                        + " and 'some.other.pck.Foo', which clashes;"
+                        + " rename all but one of the types");
     }
 
     @Test
@@ -844,12 +883,12 @@ class AssertionGenerationIT {
         final Compilation compilation =
                 compileWithJSpecify(configuration, beanWithAName("SoftAssertionsProvider"));
 
-        CompilationSubject.assertThat(compilation)
-                .hadErrorContaining("'some.other.pck.SoftAssertionsProvider'")
-                .inFile(configuration)
-                .onLine(3);
-        CompilationSubject.assertThat(compilation).hadErrorContaining("mixin");
-        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'SoftAssertionsProvider' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.SoftAssertionsProvider' and the generated mixin"
+                        + " 'SoftAssertionsProvider', which clashes; rename the configured type");
     }
 
     @Test
@@ -859,12 +898,13 @@ class AssertionGenerationIT {
         final Compilation compilation =
                 compileWithJSpecify(configuration, beanWithAName("PropertyRepresentation"));
 
-        CompilationSubject.assertThat(compilation)
-                .hadErrorContaining("'some.other.pck.PropertyRepresentation'")
-                .inFile(configuration)
-                .onLine(3);
-        CompilationSubject.assertThat(compilation).hadErrorContaining("representation");
-        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertSingleErrorOnTheAnnotation(
+                compilation,
+                configuration,
+                "The class name 'PropertyRepresentation' of package 'some.other.pck' is needed by"
+                        + " 'some.other.pck.PropertyRepresentation' and the generated"
+                        + " representation 'PropertyRepresentation', which clashes;"
+                        + " rename the configured type");
     }
 
     @Test
@@ -885,6 +925,48 @@ class AssertionGenerationIT {
                         beanWithAName("Foobar"));
 
         CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    @Test
+    @DisplayName(
+            "A type named like a generated class is no clash when generated into a prefixed package")
+    void aTypeInAnotherPackageThanTheGeneratedOneOccupiesNoName() {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        JavaFileObjects.forSourceLines(
+                                "some.pck.SomeConfiguration",
+                                """
+                                package some.pck;
+
+                                import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
+
+                                @GenerateMatchers(
+                                    value = {"some.other.pck.Foo", "some.other.pck.FooAssert"},
+                                    generation = @GenerateMatchers.GenerationConfiguration(
+                                        packageConfig = @GenerateMatchers.GenerationConfiguration.PackageConfiguration("prefix.")))
+                                public final class SomeConfiguration {
+                                }
+                                """),
+                        beanWithAName("Foo"),
+                        beanWithAName("FooAssert"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+    }
+
+    /**
+     * The one error of the compilation: exactly this message, at the annotation of the
+     * configuration, which sits on line 3.
+     */
+    private static void assertSingleErrorOnTheAnnotation(
+            final Compilation compilation,
+            final JavaFileObject configuration,
+            final String message) {
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(message)
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(message, compilation.errors().get(0).getMessage(null));
     }
 
     @Test

@@ -456,7 +456,7 @@ class AssertionGenerator {
                 + "', which clashes; rename one of the types";
     }
 
-    private static String quotedAndJoined(final List<String> names) {
+    static String quotedAndJoined(final List<String> names) {
         return names.stream().map(name -> "'" + name + "'").collect(Collectors.joining(" and "));
     }
 

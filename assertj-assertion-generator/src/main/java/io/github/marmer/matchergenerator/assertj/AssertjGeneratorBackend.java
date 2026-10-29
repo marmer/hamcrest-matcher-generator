@@ -35,7 +35,7 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
         final List<String> clashes =
                 new GeneratedNameClashes(packageModels).messages(model.targetPackage());
         if (!clashes.isEmpty()) {
-            if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
+            if (isFirstOf(packageModels, model)) {
                 clashes.forEach(context::reportError);
             }
             return List.of();
@@ -55,7 +55,7 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
         // Only the first model of the package writes the mixin and the representation. The list
         // holds the types generated in this round, so a type from another round or compilation is
         // in neither.
-        if (packageModels.get(0).qualifiedName().equals(model.qualifiedName())) {
+        if (isFirstOf(packageModels, model)) {
             final GeneratedSource mixin =
                     sourceOf(
                             model,
@@ -70,6 +70,10 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
                             new RepresentationGenerator(packageModels, context).typeSpec()));
         }
         return sources;
+    }
+
+    private static boolean isFirstOf(final List<TypeModel> packageModels, final TypeModel model) {
+        return packageModels.get(0).qualifiedName().equals(model.qualifiedName());
     }
 
     /**
