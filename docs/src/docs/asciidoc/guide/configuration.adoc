@@ -25,7 +25,7 @@ The generation setting `packageConfig` decides the package of the generated type
 
 == Where the generated code goes
 
-The Maven compiler writes the generated sources of a configuration in `src/main/java` to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` to `target/generated-test-sources/test-annotations`. The example modules keep their configuration in `src/main/java`, so their matchers and assertions are available to test code as well as to production code.
+With Maven, the generated sources of a configuration in `src/main/java` go to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` go to `target/generated-test-sources/test-annotations`. The example module's own configuration is in `src/main/java`; the test-scope location was checked with a temporary test configuration in that module, not kept in the example. Because the example's matchers are generated into the main output, they are available to test code as well as to production code.
 
 == Next steps
 

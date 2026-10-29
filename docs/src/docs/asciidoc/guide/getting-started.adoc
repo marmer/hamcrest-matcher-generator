@@ -2,7 +2,7 @@
 :description: Add the dependencies, configure the types and write a first test with generated matchers.
 :page-order: 1
 
-This chapter takes you from an empty Maven build to a first green test. The examples are Java; the Kotlin chapter covers the Kotlin setup.
+This chapter takes you from an empty Maven build to a first green test. The examples are Java. The Kotlin setup is documented in the README.
 
 == Requirements
 

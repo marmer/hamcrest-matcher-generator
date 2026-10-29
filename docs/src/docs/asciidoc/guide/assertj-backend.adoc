@@ -24,7 +24,7 @@ A property whose type is a generated type has a `hasXSatisfying` method. It take
 include::../../../../../example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java[tag=nested-property,indent=0]
 ----
 
-A boolean property also gets `isX` and `isNotX` methods, as in the scope example further down.
+A boolean property also gets `isX` and `isNotX` methods. The scope example in the completeness check section calls `isActive()` on the `active` property.
 
 == Completeness check
 

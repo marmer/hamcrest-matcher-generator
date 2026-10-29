@@ -1,5 +1,5 @@
 = IDE setup
-:description: Make your IDE see the generated matchers and assertions, for Eclipse, IntelliJ IDEA and other IDEs.
+:description: Make your IDE see the generated matchers and assertions, for Eclipse and IntelliJ IDEA.
 :page-order: 8
 
 Use the IDE of your choice. An IDE with annotation processing support generates the matchers when the project builds, in the same way as the compiler does. Some IDEs need a little help to see the sources that Maven generates.
@@ -17,7 +17,9 @@ include::../../../../../example-maven-java-hamcrest/pom.xml[tag=ide-build-helper
 
 In plain Java projects you do not need to change anything. In mixed Java and Kotlin projects you need nothing either, as long as all your tests are written in Java.
 
-If your tests are written in Kotlin, IntelliJ IDEA does not know where kapt puts the generated test sources, and kapt cannot be told another output path. The workaround is to move the generated test sources into a well-known location right after generation, for example with a `maven-antrun-plugin` step in the `process-test-sources` phase. The drawback is that the project must be compiled with the build tool before the IDE sees fresh generated code. The Kotlin setup, with its exact configuration, is part of the Kotlin chapter.
+If your tests are written in Kotlin, IntelliJ IDEA does not know where kapt puts the generated test sources, and kapt cannot be told another output path. The workaround is to move the generated test sources into a well-known location right after generation. The drawback is that the project must be compiled with the build tool before the IDE sees fresh generated code.
+
+The Kotlin IDE setup is documented in the README for now, in its IDE section.
 
 == Other IDEs
 

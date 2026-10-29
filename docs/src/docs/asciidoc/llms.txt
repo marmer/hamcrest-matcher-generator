@@ -22,5 +22,3 @@ Typical usage: add the generator to the test classpath and the annotation proces
 ## Optional
 
 - [Repository](https://github.com/marmer/hamcrest-matcher-generator): source code, issues and releases.
-- [Changelog](https://github.com/marmer/hamcrest-matcher-generator/blob/HEAD/CHANGELOG.md): release history.
-- [Javadoc](https://javadoc.io/doc/io.github.marmer.testutils): API reference of the published artifacts.
