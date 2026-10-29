@@ -172,9 +172,15 @@ Documentation
 
 * The [user guide](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html) starts with a first green test
   and covers the backends, the configuration and the IDE setup.
-* Coming from 5.x? The migration chapter of the [user guide](https://marmer.github.io/hamcrest-matcher-generator/) explains the
-  new coordinates, `@GenerateMatchers` and the new package of `BeanPropertyMatcher`. Java 11 users stay on 5.x.
 * The architecture is documented with arc42 on the [same site](https://marmer.github.io/hamcrest-matcher-generator/).
+
+Coming from 5.x
+---------------
+
+Java 11 users stay on 5.x: 6.0.0 needs JDK 17 or higher. The 5.x artifacts `hamcrest-matcher-generator-annotationprocessor`
+and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no code and bring in
+`hamcrest-matcher-generator` at the same version. `@MatcherConfiguration` remains as a deprecated alias of
+`@GenerateMatchers`. Further migration notes go into the [user guide](https://marmer.github.io/hamcrest-matcher-generator/).
 
 Kotlin-JVM
 ----------
