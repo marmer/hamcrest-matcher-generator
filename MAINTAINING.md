@@ -22,7 +22,7 @@ updates the issue "Credential renewal due" 30 days before an expiry.
 
 | Credential | Used by | Storage location | Expiry | Renewal |
 |---|---|---|---|---|
-| `SONAR_TOKEN` (SonarQube Cloud user token) | Sonar job in `ci-build.yml`, credential reminder | Repository secret | Read from the SonarQube Cloud API by the reminder: the earliest `expirationDate` among the user's tokens. The setup checklist (#104) asks for a one-year token (see [Assumptions](#assumptions)) | SonarQube Cloud, My Account, Security: create a new user token with a one-year expiry, replace the `SONAR_TOKEN` secret, then run the Credential reminder with `workflow_dispatch` |
+| `SONAR_TOKEN` (SonarQube Cloud user token) | Sonar job in `ci-build.yml`, credential reminder | Repository secret | The token has no fixed validity period. SonarQube Cloud removes it after 60 days without use, so the real risk is the CI Sonar job and the weekly credential reminder both stopping for 60 days. The reminder reads `expirationDate` from the API; this token has none, so the reminder raises no Sonar item | SonarQube Cloud, My Account, Security: create a new user token, replace the `SONAR_TOKEN` secret, then run the Credential reminder with `workflow_dispatch` |
 | `MAVEN_GPG_KEY` and `MAVEN_GPG_PASSPHRASE` (release signing key) | Publish job in `release.yml` (BC signer), credential reminder | Environment secrets of the environment `release` | Three years (arc42 ch. 11). The reminder reads the earliest expiry of the key's primary and subkeys | Generate a new signing key with a three-year expiry, publish it to the keyservers, replace both secrets, then run the Credential reminder with `workflow_dispatch` |
 | `CENTRAL_USERNAME` and `CENTRAL_PASSWORD` (Maven Central Portal user token) | Publish job in `release.yml`, `check-central-token.py` | Environment secrets of the environment `release` | No API exposes it. The owner records the expiry date in the repository variable `CENTRAL_TOKEN_EXPIRES_ON` (YYYY-MM-DD) after each renewal; the token's validity period is an assumption | Central Portal, Account, Generate User Token (the namespace `io.github.marmer` is verified on the legacy username/password account). Replace both secrets, set `CENTRAL_TOKEN_EXPIRES_ON` to the new expiry, run the Credential reminder |
 | `RELEASE_APP_PRIVATE_KEY` (GitHub App private key) and `RELEASE_APP_ID` (App ID) | release-please job, announce job in `release.yml` | Key: repository secret. ID: repository variable | No API exposes it. The owner records the expiry date in the repository variable `RELEASE_APP_KEY_EXPIRES_ON` (YYYY-MM-DD); the key's validity period is an assumption | GitHub App settings: generate a new private key, replace `RELEASE_APP_PRIVATE_KEY`, set `RELEASE_APP_KEY_EXPIRES_ON`, delete the old key in the App settings, run the Credential reminder |
@@ -142,10 +142,6 @@ release-please (arc42 ch. 11).
 
 ## Assumptions
 
-- SonarQube Cloud token expiry: the setup checklist (#104, spec "one-year SONAR_TOKEN") and the renewal steps in
-  `scripts/ci/check-credential-expiry.py` say one year. arc42 ch. 11 says the personal token has no expiry date and
-  SonarQube Cloud removes it after 60 days without use. The reminder reads the real expiry from the API, so the
-  API value decides; the two statements in the repository disagree.
 - The validity period of the Central Portal token and of the GitHub App private key is not in the repository. The
   repository variables hold the dates the owner records.
 - Maven Central does not accept a version that was already published, and a failed deployment can be dropped in the
