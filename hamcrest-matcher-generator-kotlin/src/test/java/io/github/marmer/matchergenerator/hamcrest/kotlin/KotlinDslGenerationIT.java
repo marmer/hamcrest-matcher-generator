@@ -289,7 +289,8 @@ class KotlinDslGenerationIT {
     void nestedTypesOfDifferentOuterTypesWithOneSimpleNameGetTheirOwnNames() throws IOException {
         final Compilation compilation =
                 compileWithKapt(
-                        configuration("some.other.pck.Customer", "some.other.pck.A", "some.other.pck.B"),
+                        configuration(
+                                "some.other.pck.Customer", "some.other.pck.A", "some.other.pck.B"),
                         customerWithNested(),
                         outerWithNestedCustomer("A"),
                         outerWithNestedCustomer("B"));
@@ -303,21 +304,31 @@ class KotlinDslGenerationIT {
     @Test
     @DisplayName("The names of the scopes do not depend on the order of the types")
     void theNamesOfTheScopesDoNotDependOnTheOrderOfTheTypes() throws IOException {
-        compileWithKapt(
-                configuration("some.other.pck.Customer", "some.other.pck.A", "some.other.pck.B"),
-                customerWithNested(),
-                outerWithNestedCustomer("A"),
-                outerWithNestedCustomer("B"));
+        CompilationSubject.assertThat(
+                        compileWithKapt(
+                                configuration(
+                                        "some.other.pck.Customer",
+                                        "some.other.pck.A",
+                                        "some.other.pck.B"),
+                                customerWithNested(),
+                                outerWithNestedCustomer("A"),
+                                outerWithNestedCustomer("B")))
+                .succeeded();
         final Path reordered = kotlinOutput.resolve("reordered");
         Files.createDirectory(reordered);
-        Compiler.javac()
-                .withOptions("-Akapt.kotlin.generated=" + reordered)
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
-                .compile(
-                        configuration("some.other.pck.B", "some.other.pck.A", "some.other.pck.Customer"),
-                        outerWithNestedCustomer("B"),
-                        outerWithNestedCustomer("A"),
-                        customerWithNested());
+        CompilationSubject.assertThat(
+                        Compiler.javac()
+                                .withOptions("-Akapt.kotlin.generated=" + reordered)
+                                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                                .compile(
+                                        configuration(
+                                                "some.other.pck.B",
+                                                "some.other.pck.A",
+                                                "some.other.pck.Customer"),
+                                        outerWithNestedCustomer("B"),
+                                        outerWithNestedCustomer("A"),
+                                        customerWithNested()))
+                .succeeded();
 
         for (final String file : List.of("Customer", "A", "B")) {
             final String relative = "some/other/pck/" + file + "MatcherDsl.kt";
