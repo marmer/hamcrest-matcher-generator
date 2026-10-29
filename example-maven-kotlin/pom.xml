@@ -38,6 +38,8 @@
             <artifactId>assertj-assertion-generator</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- The Kotlin DSL artifact is on this classpath as well as on the KAPT processor path below: the generated DSL
+            uses the @MatcherDsl marker, and kotlinc fails with "Unresolved reference: MatcherDsl" without it. -->
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
