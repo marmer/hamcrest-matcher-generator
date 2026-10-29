@@ -2,7 +2,8 @@
 """Open or update the renewal issue when a release credential expires within 30 days.
 
 Expiry dates:
-- the Sonar token: `expirationDate` of the user's tokens (SonarQube Cloud API, the earliest one counts);
+- the Sonar token: `expirationDate` of the user's tokens (SonarQube Cloud API, the earliest one counts). A token
+  without `expirationDate` has no fixed validity period, so it raises no reminder (MAINTAINING.md, Credentials);
 - the GPG signing key: the expiry of its primary and subkeys, read from `MAVEN_GPG_KEY` in a throwaway GNUPGHOME;
 - the Central Portal token and the GitHub App private key: no API exposes them, so the repository variables
   `CENTRAL_TOKEN_EXPIRES_ON` and `RELEASE_APP_KEY_EXPIRES_ON` hold their expiry dates (YYYY-MM-DD), set by the
@@ -39,8 +40,8 @@ UNUSABLE_VALIDITY = ("r", "i", "d")
 
 RENEWAL_STEPS = {
     "Sonar token": (
-        "Create a new user token in SonarQube Cloud (My Account, Security) with a one-year expiry, "
-        "and replace the `SONAR_TOKEN` repository secret."
+        "Create a new user token in SonarQube Cloud (My Account, Security) and replace the `SONAR_TOKEN` "
+        "repository secret."
     ),
     "GPG signing key": (
         "Generate a new signing key with a three-year expiry, publish it to the keyservers, and replace "

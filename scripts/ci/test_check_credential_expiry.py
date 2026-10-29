@@ -156,6 +156,15 @@ class ReminderWindowTest(unittest.TestCase):
         self.assertEqual([], check.due_reminders({"Sonar token": None}, TODAY))
 
 
+class RenewalStepTest(unittest.TestCase):
+    def test_sonar_renewal_step_asks_for_no_expiry_date(self):
+        # Decision of 2026-10-29: the Sonar token has no fixed validity period.
+        step = check.RENEWAL_STEPS["Sonar token"]
+
+        self.assertNotIn("year", step.lower())
+        self.assertIn("SONAR_TOKEN", step)
+
+
 class IssueBodyTest(unittest.TestCase):
     def test_body_mentions_the_owner_and_lists_each_due_credential(self):
         body = check.issue_body([("Sonar token", date(2026, 11, 20), 23)])
