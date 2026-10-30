@@ -141,6 +141,24 @@ sessions, or when a pinned release has to be replaced.
 5. Confirm in a cloud session: `/tmp/session-start.log` must show `JDK <version> installed at <dir>` for both pins.
 6. Do not change the CI matrix (`ci-build.yml`) with this playbook; its `latest` leg is Renovate's (#134).
 
+### Vulnerability report
+
+`SECURITY.md` states the response deadlines and the supported versions; this playbook does not repeat the numbers. A
+report stays private until the fix is released.
+
+1. Read the report on GitHub's private vulnerability reporting page of the repository (the advisory, not a public issue
+   or pull request). Do not copy the details into an issue, a pull request, a log or a chat.
+2. Acknowledge the report on the advisory within the acknowledgement period of `SECURITY.md`.
+3. Assess it within the assessment period of `SECURITY.md`. If it is declined, write the explanation on the advisory, as
+   `SECURITY.md` promises.
+4. Fix it on the advisory's private fork (assumption: the private fork of an advisory is available for this
+   repository), so the fix is not public before the release. Release it through the normal release flow (the Release
+   pull request of release-please, see [Red Release pull request](#red-release-pull-request)) for each supported line
+   of the `SECURITY.md` table. Never move a tag.
+5. Disclose: publish the advisory when the fix is released, and tell the reporter before that (`SECURITY.md`: the
+   reporter is kept informed).
+6. Close: set the outcome on the advisory, fixed with the release or declined with the reason.
+
 ### External service outage
 
 The services are GitHub Actions and Pages, SonarQube Cloud, the Mend Renovate app, the Maven Central Portal and
@@ -174,5 +192,7 @@ release-please (arc42 ch. 11).
 - Maven Central does not accept a version that was already published, and a failed deployment can be dropped in the
   Central Portal before a re-run.
 - Renovate needs no repository secret of its own.
+- The response deadlines in `SECURITY.md` are commitments the owner has to confirm; this runbook points to them and does
+  not restate them.
 - The keyserver publication of the GPG key is the step that `check-credential-expiry.py` gives as renewal step; the
   repository does not show which keyserver is used.
