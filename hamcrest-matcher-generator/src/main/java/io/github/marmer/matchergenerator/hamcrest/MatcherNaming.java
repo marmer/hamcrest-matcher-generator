@@ -90,7 +90,7 @@ public final class MatcherNaming {
 
     /**
      * @param type a configured type, or one of its nested types
-     * @return whether the type has a property besides the one {@code Object.getClass()} contributes
+     * @return whether the type has an accessor property, see {@link TypeModel#accessorProperties()}
      */
     public static boolean hasProperties(final TypeModel type) {
         return !type.accessorProperties().isEmpty();

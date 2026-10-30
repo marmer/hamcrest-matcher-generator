@@ -53,6 +53,10 @@ public record TypeModel(
      * The properties a generated type checks: the distinct ones, in detection order, without the
      * {@code getClass()} that every type inherits from {@code Object}.
      *
+     * <p>Sites that must keep the {@code getClass()} accessor, such as the Hamcrest equals matchers
+     * and the Kotlin DSL, use {@code PropertyModel.distinctByName(properties())} instead. The
+     * generated {@code class} property methods and their goldens depend on it.
+     *
      * @return the properties with distinct names, without the {@code getClass()} accessor
      */
     public List<PropertyModel> accessorProperties() {
