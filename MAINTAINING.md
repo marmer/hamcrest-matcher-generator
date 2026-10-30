@@ -55,6 +55,11 @@ Renovate merges a pull request on its own once its checks are green (`automerge`
    and a `description` that names the reason and the last working version. Do not disable checks, and do not merge the
    red pull request by hand.
 
+Renovate does not touch the frozen 5.x suite pom (`hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml`): a
+`packageRules` entry in `renovate.json` disables it with `enabled: false`, because its tree hash is the guard that keeps
+the suite frozen (CLAUDE.md). The root `dependencyManagement` entry that the suite inherits is still updated, so a
+dependency update for the suite arrives as a root pom change.
+
 ### Red Release pull request
 
 release-please (job `release-please` in `release.yml`) keeps one Release pull request open on `main`. It uses the
@@ -117,6 +122,43 @@ analysis-only tools may need more; they run in the JDK 21+ profile and do not ch
      supersedes ADR 0005.
 3. Never lower the Java target or skip the Enforcer rule to get the pull request green.
 
+### Update the pinned JDKs of the session-start hook
+
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs two pinned Temurin releases for cloud sessions: JDK 17
+under `~/.jdks/17` and the newest GA JDK under `~/.jdks/latest`. Renovate does not update them, and the CI matrix's
+`latest` leg is not the same pin, so the two can drift apart. Update them when a newer GA JDK should be used in cloud
+sessions, or when a pinned release has to be replaced.
+
+1. Find the release on the Eclipse Temurin release page of the major version (`github.com/adoptium/temurin<N>-binaries`
+   for JDK `<N>`). Note its tag (for example `jdk-17.0.21+9`) and the archive for `x64`, `linux`, `hotspot`, `tar.gz`.
+2. Take the SHA-256 from the release's checksum file `OpenJDK<N>U-jdk_x64_linux_hotspot_<version>.tar.gz.sha256.txt`.
+   Do not copy it from a mirror or from a chat.
+3. Change the URL and the hash together in the two `install_jdk` calls: the URL carries the tag with `+` written as
+   `%2B`, and the file name carries the version with `_`. Keep the version label of the call in step with the URL.
+4. Check the hash against the archive itself: download the archive into a new, empty directory outside the repository
+   and run `sha256sum` on it; the value must equal the hash in the hook. The hook runs the same check with
+   `sha256sum --check` and logs `JDK <version> not installed` when it fails.
+5. Confirm in a cloud session: `/tmp/session-start.log` must show `JDK <version> installed at <dir>` for both pins.
+6. Do not change the CI matrix (`ci-build.yml`) with this playbook; its `latest` leg is Renovate's (#134).
+
+### Vulnerability report
+
+`SECURITY.md` states the response deadlines and the supported versions; this playbook does not repeat the numbers. A
+report stays private until the fix is released.
+
+1. Read the report on GitHub's private vulnerability reporting page of the repository (the advisory, not a public issue
+   or pull request). Do not copy the details into an issue, a pull request, a log or a chat.
+2. Acknowledge the report on the advisory within the acknowledgement period of `SECURITY.md`.
+3. Assess it within the assessment period of `SECURITY.md`. If it is declined, write the explanation on the advisory, as
+   `SECURITY.md` promises.
+4. Fix it on the advisory's private fork (assumption: the private fork of an advisory is available for this
+   repository), so the fix is not public before the release. Release it through the normal release flow (the Release
+   pull request of release-please, see [Red Release pull request](#red-release-pull-request)) for each supported line
+   of the `SECURITY.md` table. Never move a tag.
+5. Disclose: publish the advisory when the fix is released, and tell the reporter before that (`SECURITY.md`: the
+   reporter is kept informed).
+6. Close: set the outcome on the advisory, fixed with the release or declined with the reason.
+
 ### External service outage
 
 The services are GitHub Actions and Pages, SonarQube Cloud, the Mend Renovate app, the Maven Central Portal and
@@ -150,5 +192,7 @@ release-please (arc42 ch. 11).
 - Maven Central does not accept a version that was already published, and a failed deployment can be dropped in the
   Central Portal before a re-run.
 - Renovate needs no repository secret of its own.
+- The response deadlines in `SECURITY.md` are commitments the owner has to confirm; this runbook points to them and does
+  not restate them.
 - The keyserver publication of the GPG key is the step that `check-credential-expiry.py` gives as renewal step; the
   repository does not show which keyserver is used.
