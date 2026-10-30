@@ -55,6 +55,11 @@ Renovate merges a pull request on its own once its checks are green (`automerge`
    and a `description` that names the reason and the last working version. Do not disable checks, and do not merge the
    red pull request by hand.
 
+Renovate does not touch the frozen 5.x suite pom (`hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml`): a
+`packageRules` entry in `renovate.json` disables it with `enabled: false`, because its tree hash is the guard that keeps
+the suite frozen (CLAUDE.md). The root `dependencyManagement` entry that the suite inherits is still updated, so a
+dependency update for the suite arrives as a root pom change.
+
 ### Red Release pull request
 
 release-please (job `release-please` in `release.yml`) keeps one Release pull request open on `main`. It uses the
