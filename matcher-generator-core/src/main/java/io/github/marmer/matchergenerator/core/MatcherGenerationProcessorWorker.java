@@ -64,12 +64,6 @@ public class MatcherGenerationProcessorWorker {
     private static final String VALUE_ATTRIBUTE = "value";
     private static final String EXCLUDE_ATTRIBUTE = "exclude";
 
-    /**
-     * The only property Object contributes. It is not something a type declares, so it does not
-     * count as a property of a type without properties.
-     */
-    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
-
     /** Kind of the {@code kotlin.Metadata} annotation that marks a file facade. */
     private static final int KOTLIN_FILE_FACADE_KIND = 2;
 
@@ -387,8 +381,7 @@ public class MatcherGenerationProcessorWorker {
     }
 
     private static boolean hasNoProperties(final TypeModel model) {
-        return model.properties().stream()
-                .allMatch(property -> property.accessor().equals(OBJECT_CLASS_ACCESSOR));
+        return model.accessorProperties().isEmpty();
     }
 
     /**

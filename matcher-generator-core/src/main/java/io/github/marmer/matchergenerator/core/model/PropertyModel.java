@@ -7,6 +7,7 @@ package io.github.marmer.matchergenerator.core.model;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import javax.lang.model.type.TypeMirror;
@@ -27,6 +28,18 @@ public record PropertyModel(
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(accessor, "accessor");
         Objects.requireNonNull(nullability, "nullability");
+    }
+
+    /**
+     * The property name with its first letter in upper case, as the generated method names use it,
+     * e.g. {@code Foo} for {@code foo}. An empty name stays empty.
+     *
+     * @return the capitalized property name
+     */
+    public String capitalizedName() {
+        return name.isEmpty()
+                ? name
+                : name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
     }
 
     /**

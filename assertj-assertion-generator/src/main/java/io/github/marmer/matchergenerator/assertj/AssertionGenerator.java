@@ -48,7 +48,6 @@ import javax.lang.model.type.WildcardType;
  */
 class AssertionGenerator {
     private static final String ASSERTJ_API = "org.assertj.core.api";
-    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
     private static final String ACTUAL_FIELD = "actual";
     private static final String PATH = "path";
     private static final String ADDRESSED = "addressed";
@@ -82,14 +81,7 @@ class AssertionGenerator {
     AssertionGenerator(final TypeModel model, final GenerationContext context) {
         this.model = model;
         this.context = context;
-        this.properties =
-                PropertyModel.distinctByName(model.properties()).stream()
-                        .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
-                        .collect(Collectors.toList());
-    }
-
-    private static String capitalized(final String value) {
-        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
+        this.properties = model.accessorProperties();
     }
 
     /** The properties the assertions check, in declaration order, without {@code getClass()}. */
@@ -367,8 +359,8 @@ class AssertionGenerator {
         methods.add(hasMethod(property));
         methods.add(hasSatisfyingMethod(property));
         if (isBoolean(property)) {
-            methods.add(booleanMethod("is" + capitalized(property.name()), property, true));
-            methods.add(booleanMethod("isNot" + capitalized(property.name()), property, false));
+            methods.add(booleanMethod("is" + property.capitalizedName(), property, true));
+            methods.add(booleanMethod("isNot" + property.capitalizedName(), property, false));
         }
         methods.add(ignoringMethod(property));
         return methods;
@@ -475,7 +467,7 @@ class AssertionGenerator {
 
     /** {@code hasFoo(value)}: deep equality of the property with the value. */
     private MethodSpec hasMethod(final PropertyModel property) {
-        return MethodSpec.methodBuilder("has" + capitalized(property.name()))
+        return MethodSpec.methodBuilder("has" + property.capitalizedName())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(valueType(property), "value", Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
@@ -496,7 +488,7 @@ class AssertionGenerator {
      */
     private MethodSpec hasSatisfyingMethod(final PropertyModel property) {
         final MethodSpec.Builder method =
-                MethodSpec.methodBuilder("has" + capitalized(property.name()) + "Satisfying")
+                MethodSpec.methodBuilder("has" + property.capitalizedName() + "Satisfying")
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(requirementsType(property), "requirements", Modifier.FINAL)
                         .addStatement("$L()", IS_NOT_NULL)
@@ -541,7 +533,7 @@ class AssertionGenerator {
      * value check.
      */
     private MethodSpec ignoringMethod(final PropertyModel property) {
-        return MethodSpec.methodBuilder("ignoring" + capitalized(property.name()))
+        return MethodSpec.methodBuilder("ignoring" + property.capitalizedName())
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("$L.add($S)", ADDRESSED, property.name())
                 .addStatement(RETURN_MYSELF)

@@ -44,12 +44,16 @@ class MatcherNamingTest {
     @Test
     @DisplayName("Property methods are named after the property with its first letter capitalized")
     void propertyMethodsAreNamedAfterTheProperty() {
-        assertEquals("withName", MatcherNaming.withMethodName("name"));
-        assertEquals("ignoringName", MatcherNaming.ignoringMethodName("name"));
-        assertEquals("resetName", MatcherNaming.resetMethodName("name"));
-        assertEquals("withX", MatcherNaming.withMethodName("x"));
-        assertEquals("with", MatcherNaming.withMethodName(""));
-        assertEquals("ignoring", MatcherNaming.ignoringMethodName(""));
+        assertEquals("withName", MatcherNaming.withMethodName(propertyNamed("name")));
+        assertEquals("ignoringName", MatcherNaming.ignoringMethodName(propertyNamed("name")));
+        assertEquals("resetName", MatcherNaming.resetMethodName(propertyNamed("name")));
+        assertEquals("withX", MatcherNaming.withMethodName(propertyNamed("x")));
+        assertEquals("with", MatcherNaming.withMethodName(propertyNamed("")));
+        assertEquals("ignoring", MatcherNaming.ignoringMethodName(propertyNamed("")));
+    }
+
+    private static PropertyModel propertyNamed(final String name) {
+        return new PropertyModel(name, TypeMirrors.stringType(), "get", Nullability.UNSPECIFIED);
     }
 
     @Test

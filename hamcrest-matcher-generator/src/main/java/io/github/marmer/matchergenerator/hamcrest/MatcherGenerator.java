@@ -44,7 +44,6 @@ import org.jspecify.annotations.Nullable;
 class MatcherGenerator {
     private static final String RETURN_THIS = "return this";
     private static final String REFERENCE = "reference";
-    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
     private static final String COLLECTION = "java.util.Collection";
     private static final String LIST = "java.util.List";
     private static final String MAP = "java.util.Map";
@@ -65,10 +64,7 @@ class MatcherGenerator {
         this.model = model;
         this.context = context;
         this.simpleMatcherName = MatcherNaming.matcherName(model);
-        this.presetProperties =
-                PropertyModel.distinctByName(model.properties()).stream()
-                        .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
-                        .collect(Collectors.toList());
+        this.presetProperties = model.accessorProperties();
     }
 
     String simpleMatcherName() {
@@ -139,7 +135,7 @@ class MatcherGenerator {
         if (MatcherNaming.isMatcherType(property.type())) {
             return null;
         }
-        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(toParameterizedMatcherType(property), "matcher", Modifier.FINAL)
                 .addStatement("$L.with($S, matcher)", BUILDER_FIELD_NAME, property.name())
@@ -152,7 +148,7 @@ class MatcherGenerator {
         if (MatcherNaming.isMatcherType(property.type())) {
             return null;
         }
-        return MethodSpec.methodBuilder(MatcherNaming.resetMethodName(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.resetMethodName(property))
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("$L.reset($S)", BUILDER_FIELD_NAME, property.name())
                 .addStatement(RETURN_THIS)
@@ -184,8 +180,7 @@ class MatcherGenerator {
         return PropertyModel.distinctByName(model.properties()).stream()
                 .map(
                         property ->
-                                MethodSpec.methodBuilder(
-                                                MatcherNaming.ignoringMethodName(property.name()))
+                                MethodSpec.methodBuilder(MatcherNaming.ignoringMethodName(property))
                                         .addModifiers(Modifier.PUBLIC)
                                         .addStatement(
                                                 "$L.ignore($S)",
@@ -207,7 +202,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec toEqualsMatcher(final PropertyModel property) {
-        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property.name()))
+        return MethodSpec.methodBuilder(MatcherNaming.withMethodName(property))
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(toEqualsMatcherParameterType(property), "value", Modifier.FINAL)
                 .addStatement(
