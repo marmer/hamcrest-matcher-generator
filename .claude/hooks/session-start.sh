@@ -69,8 +69,9 @@ remove_rate_limit_artifacts
 # Agent worktrees branch off origin/HEAD; without it they start on the stale master (4976680).
 git remote set-head origin -a >/dev/null 2>&1 || true
 
-# Tickets must be green on JDK 17 and the newest GA; the container ships only JDK 21. Install pinned Temurin
-# releases under ~/.jdks/17 and ~/.jdks/latest (CLAUDE.md "Build & Test Commands"). Update each URL and hash together.
+# Tickets must be green on JDK 17 and on the newest GA JDK as pinned here; the container ships only JDK 21. Install
+# pinned Temurin releases under ~/.jdks/17 and ~/.jdks/latest (CLAUDE.md "Build & Test Commands"). The pins are updated
+# by hand, not by Renovate: MAINTAINING.md, "Update the pinned JDKs of the session-start hook". Update each URL and hash together.
 install_jdk() { # <version> <target-dir> <download-url> <sha256>
   [ -x "$2/bin/java" ] && return 0
   local tmp; tmp=$(mktemp -d)

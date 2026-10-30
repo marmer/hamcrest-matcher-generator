@@ -29,7 +29,7 @@ python3 scripts/ci/check-project-version.py
 ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 scripts/ci/check-release-artifacts.sh
 
-# Other JDKs in cloud sessions (the SessionStart hook installs Temurin 17 and the newest GA)
+# Other JDKs in cloud sessions (the SessionStart hook installs pinned Temurin 17 and 27 releases, updated by hand: MAINTAINING.md)
 JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify
 JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify
 

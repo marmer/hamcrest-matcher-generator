@@ -117,6 +117,25 @@ analysis-only tools may need more; they run in the JDK 21+ profile and do not ch
      supersedes ADR 0005.
 3. Never lower the Java target or skip the Enforcer rule to get the pull request green.
 
+### Update the pinned JDKs of the session-start hook
+
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs two pinned Temurin releases for cloud sessions: JDK 17
+under `~/.jdks/17` and the newest GA JDK under `~/.jdks/latest`. Renovate does not update them, and the CI matrix's
+`latest` leg is not the same pin, so the two can drift apart. Update them when a newer GA JDK should be used in cloud
+sessions, or when a pinned release has to be replaced.
+
+1. Find the release on the Eclipse Temurin release page of the major version (`github.com/adoptium/temurin<N>-binaries`
+   for JDK `<N>`). Note its tag (for example `jdk-17.0.21+9`) and the archive for `x64`, `linux`, `hotspot`, `tar.gz`.
+2. Take the SHA-256 from the release's checksum file `OpenJDK<N>U-jdk_x64_linux_hotspot_<version>.tar.gz.sha256.txt`.
+   Do not copy it from a mirror or from a chat.
+3. Change the URL and the hash together in the two `install_jdk` calls: the URL carries the tag with `+` written as
+   `%2B`, and the file name carries the version with `_`. Keep the version label of the call in step with the URL.
+4. Check the hash against the archive itself: download the archive into a new, empty directory outside the repository
+   and run `sha256sum` on it; the value must equal the hash in the hook. The hook runs the same check with
+   `sha256sum --check` and logs `JDK <version> not installed` when it fails.
+5. Confirm in a cloud session: `/tmp/session-start.log` must show `JDK <version> installed at <dir>` for both pins.
+6. Do not change the CI matrix (`ci-build.yml`) with this playbook; its `latest` leg is Renovate's (#134).
+
 ### External service outage
 
 The services are GitHub Actions and Pages, SonarQube Cloud, the Mend Renovate app, the Maven Central Portal and
