@@ -362,10 +362,9 @@ final class KotlinDslGenerator {
             }
         }
         scope.addFunction(
-                FunSpec.builder(MatcherNaming.ignoringMethodName(property.name()))
+                FunSpec.builder(MatcherNaming.ignoringMethodName(property))
                         .addStatement(
-                                "%L.%L()",
-                                DELEGATE, MatcherNaming.ignoringMethodName(property.name()))
+                                "%L.%L()", DELEGATE, MatcherNaming.ignoringMethodName(property))
                         .build());
     }
 
@@ -375,8 +374,7 @@ final class KotlinDslGenerator {
                 .addParameter(
                         "value",
                         property.type().getKind().isPrimitive() ? type : type.copy(true, List.of()))
-                .addStatement(
-                        "%L.%L(value)", DELEGATE, MatcherNaming.withMethodName(property.name()))
+                .addStatement("%L.%L(value)", DELEGATE, MatcherNaming.withMethodName(property))
                 .build();
     }
 
@@ -395,8 +393,7 @@ final class KotlinDslGenerator {
         }
         return FunSpec.builder(property.name())
                 .addParameter(MATCHER_PARAMETER, ParameterizedTypeName.get(MATCHER, matched))
-                .addStatement(
-                        "%L.%L(matcher)", DELEGATE, MatcherNaming.withMethodName(property.name()))
+                .addStatement("%L.%L(matcher)", DELEGATE, MatcherNaming.withMethodName(property))
                 .build();
     }
 
@@ -405,7 +402,7 @@ final class KotlinDslGenerator {
                 .addParameter(BLOCK, blockType(nested.spec()))
                 .addStatement(
                         "%L.%L(%M(block))",
-                        DELEGATE, MatcherNaming.withMethodName(property.name()), nested.entry())
+                        DELEGATE, MatcherNaming.withMethodName(property), nested.entry())
                 .build();
     }
 

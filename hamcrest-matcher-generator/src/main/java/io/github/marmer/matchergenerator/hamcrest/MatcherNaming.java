@@ -4,8 +4,8 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
-import java.util.Locale;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -21,8 +21,6 @@ public final class MatcherNaming {
 
     /** The method that switches the completeness check of a matcher on. */
     public static final String CHECKING_ALL_PROPERTIES = "checkingAllProperties";
-
-    private static final String OBJECT_CLASS_ACCESSOR = "getClass";
 
     private MatcherNaming() {}
 
@@ -52,28 +50,28 @@ public final class MatcherNaming {
     }
 
     /**
-     * @param property the name of a property
+     * @param property a property of a configured type
      * @return the name of the methods that check the property against a value or a matcher
      */
-    public static String withMethodName(final String property) {
-        return "with" + capitalized(property);
+    public static String withMethodName(final PropertyModel property) {
+        return "with" + property.capitalizedName();
     }
 
     /**
-     * @param property the name of a property
+     * @param property a property of a configured type
      * @return the name of the method that counts the property as addressed by the completeness
      *     check
      */
-    public static String ignoringMethodName(final String property) {
-        return "ignoring" + capitalized(property);
+    public static String ignoringMethodName(final PropertyModel property) {
+        return "ignoring" + property.capitalizedName();
     }
 
     /**
-     * @param property the name of a property
+     * @param property a property of a configured type
      * @return the name of the method that removes the check of the property
      */
-    public static String resetMethodName(final String property) {
-        return "reset" + capitalized(property);
+    public static String resetMethodName(final PropertyModel property) {
+        return "reset" + property.capitalizedName();
     }
 
     /**
@@ -92,11 +90,10 @@ public final class MatcherNaming {
 
     /**
      * @param type a configured type, or one of its nested types
-     * @return whether the type has a property besides the one {@code Object.getClass()} contributes
+     * @return whether the type has an accessor property, see {@link TypeModel#accessorProperties()}
      */
     public static boolean hasProperties(final TypeModel type) {
-        return type.properties().stream()
-                .anyMatch(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()));
+        return !type.accessorProperties().isEmpty();
     }
 
     /**
@@ -111,11 +108,5 @@ public final class MatcherNaming {
                         .contentEquals(
                                 ((TypeElement) ((DeclaredType) type).asElement())
                                         .getQualifiedName());
-    }
-
-    private static String capitalized(final String value) {
-        return value.isEmpty()
-                ? value
-                : value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 }
