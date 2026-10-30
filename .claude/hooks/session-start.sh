@@ -69,12 +69,13 @@ remove_rate_limit_artifacts
 # Agent worktrees branch off origin/HEAD; without it they start on the stale master (4976680).
 git remote set-head origin -a >/dev/null 2>&1 || true
 
-# Tickets must be green on JDK 17 and the newest GA; the container ships only JDK 21. Install Temurin
-# under ~/.jdks/17 and ~/.jdks/latest (CLAUDE.md "Build & Test Commands"). Non-fatal.
-install_jdk() { # <feature-version> <target-dir>
+# Tickets must be green on JDK 17 and the newest GA; the container ships only JDK 21. Install pinned Temurin
+# releases under ~/.jdks/17 and ~/.jdks/latest (CLAUDE.md "Build & Test Commands"). Update each URL and hash together.
+install_jdk() { # <version> <target-dir> <download-url> <sha256>
   [ -x "$2/bin/java" ] && return 0
   local tmp; tmp=$(mktemp -d)
-  if curl -fsSL "https://api.adoptium.net/v3/binary/latest/$1/ga/linux/x64/jdk/hotspot/normal/eclipse" -o "$tmp/jdk.tar.gz" \
+  if curl -fsSL "$3" -o "$tmp/jdk.tar.gz" \
+      && printf '%s  %s\n' "$4" "$tmp/jdk.tar.gz" | sha256sum --check --status \
       && mkdir -p "$2" && tar -xzf "$tmp/jdk.tar.gz" -C "$2" --strip-components=1; then
     echo "JDK $1 installed at $2"
   else
@@ -82,10 +83,12 @@ install_jdk() { # <feature-version> <target-dir>
   fi
   rm -rf "$tmp"
 }
-latest_jdk=$(curl -fsS https://api.adoptium.net/v3/info/available_releases 2>/dev/null \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin)["most_recent_feature_release"])' 2>/dev/null)
-install_jdk 17 "$HOME/.jdks/17"
-[ -n "$latest_jdk" ] && install_jdk "$latest_jdk" "$HOME/.jdks/latest"
+install_jdk "17.0.21+9" "$HOME/.jdks/17" \
+  "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.21_9.tar.gz" \
+  "8b9b611d917e3dfd8419d3566b5949226f69b052fed7e109c1368add1dfe8711"
+install_jdk "27.0.1.0.2+1" "$HOME/.jdks/latest" \
+  "https://github.com/adoptium/temurin27-binaries/releases/download/jdk-27.0.1.0.2%2B1/OpenJDK27U-jdk_x64_linux_hotspot_27.0.1.0.2_1.tar.gz" \
+  "30cb129f6cf299c852cec0feca9ea2a596d2ee9f26d8605d3a253951f6c8b20f"
 
 # Non-fatal: warn when this branch carries changes that no merged PR has landed (see Merging in docs/agents/wayfinding.md).
 # Compares content, not commits: after a squash merge the base is merged in, leaving old commits with an empty diff.

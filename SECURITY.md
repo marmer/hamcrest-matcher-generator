@@ -2,8 +2,7 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Security fixes are provided for the latest patch release in each supported line.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -14,8 +13,11 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Report vulnerabilities through
+[GitHub's private vulnerability reporting page](https://github.com/marmer/hamcrest-matcher-generator/security/advisories/new).
+Do not disclose vulnerability details in a public issue.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Maintainers will acknowledge a report within 7 days and aim to provide an
+assessment within 30 days. If confirmed, a fix and coordinated disclosure are
+targeted within 90 days. The reporter will be kept informed if investigation or
+remediation takes longer; declined reports will include an explanation.
