@@ -29,7 +29,26 @@
         <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
         <maven.install.skip>true</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- Structurizr 6.2.3 pins jackson-databind 2.22.2, which carries four advisories fixed in 2.22.3 (OpenSSF Scorecard
+            Vulnerabilities). Jackson reaches only the docs tooling, never a published jar. JacksonVersionTest keeps this at or
+            above 2.22.3. A patch-level override keeps Structurizr 6.2.3 as the tested version (ADR 0003). -->
+        <jackson.version>2.22.3</jackson.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Runtime scope: copied into the Structurizr home below and also used by the view test to read the workspace.
