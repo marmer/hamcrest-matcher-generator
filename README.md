@@ -252,6 +252,12 @@ You may copy this dependency if you want.
 </dependency>    
 ```
 
+### Feedback and contributing
+
+Report bugs and request enhancements in the [issue tracker](https://github.com/marmer/hamcrest-matcher-generator/issues).
+[CONTRIBUTING.md](CONTRIBUTING.md) explains the contribution process, the requirements for a pull request, the test
+policy and how to run the tests. Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+
 ### Changelog
 
 The release history is maintained in [CHANGELOG.md](CHANGELOG.md). This project uses semantic versioning. See https://semver.org/

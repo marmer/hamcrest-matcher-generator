@@ -21,3 +21,9 @@ Maintainers will acknowledge a report within 7 days and aim to provide an
 assessment within 30 days. If confirmed, a fix and coordinated disclosure are
 targeted within 90 days. The reporter will be kept informed if investigation or
 remediation takes longer; declined reports will include an explanation.
+
+## Fixed vulnerabilities in release notes
+
+When a release fixes a run-time vulnerability in the project's own code that already has a CVE or a GitHub security
+advisory, the release notes (the GitHub release and `CHANGELOG.md`) name its identifier. Vulnerabilities in dependencies
+are fixed by dependency updates (Renovate) and are not listed individually.
