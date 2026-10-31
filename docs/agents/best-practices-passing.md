@@ -94,7 +94,7 @@ Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the en
 | tests_documented_added | MET | CONTRIBUTING.md documents the test policy in the instructions for change proposals. | [CONTRIBUTING.md](../../CONTRIBUTING.md) |
 | warnings | MET | The build enables Error Prone with NullAway as errors on JDK 21+, and the end-to-end and example modules compile with `-Xlint:all -Werror`. SonarQube Cloud adds a quality gate. | [pom.xml](../../pom.xml), [endtoend pom](../../hamcrest-matcher-generator-endtoend/pom.xml) |
 | warnings_fixed | MET, assumption | Compiler, Error Prone and NullAway findings fail the build, so none stay. Assumption: SonarQube Cloud issues are not all cleared; the backlog is tracked in #275 and the quality gate is a required check. Owner to confirm that the backlog holds no warning that the criterion would count. | [pom.xml](../../pom.xml), ticket #275 |
-| warnings_strict | MET | NullAway runs at ERROR level over all project packages, `-Werror` is on for generated code, and the JaCoCo floor is 0.99. | [pom.xml](../../pom.xml) |
+| warnings_strict | MET | NullAway runs at ERROR level over all project packages, the end-to-end modules compile with `-Xlint:all -Werror` (the examples and the two end-to-end modules `plain-java-minimal` and `java-records` with `-Xlint:all,-processing -Werror`), and the JaCoCo floor is 0.99. | [pom.xml](../../pom.xml), [endtoend pom](../../hamcrest-matcher-generator-endtoend/pom.xml) |
 
 ## Security
 
