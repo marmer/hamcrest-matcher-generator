@@ -2,6 +2,8 @@
 import importlib.util
 import os
 import unittest
+import unittest.mock
+import urllib.error
 import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -9,7 +11,7 @@ spec = importlib.util.spec_from_file_location("sonar_issues", os.path.join(HERE,
 sonar = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sonar)
 
-PROJECT = "io.github.marmer.testutils:matcher-generator-parent"
+PROJECT = sonar.PROJECT
 
 
 def issue(n):
@@ -87,7 +89,94 @@ class FormatTest(unittest.TestCase):
         self.assertEqual(["0 open issue(s)"], sonar.report([]))
 
 
+PULL_REQUESTS = {"pullRequests": [{"key": "12"}, {"key": "13"}]}
+BRANCHES = {"branches": [{"name": "main"}, {"name": "master"}]}
+
+
+def known_targets(url):
+    return PULL_REQUESTS if "project_pull_requests" in url else BRANCHES
+
+
+class TargetCheckTest(unittest.TestCase):
+
+    def test_known_pull_request_passes(self):
+        sonar.check_target(known_targets, pull_request="12", branch=None)
+
+    def test_known_branch_passes(self):
+        sonar.check_target(known_targets, pull_request=None, branch="main")
+
+    def test_unknown_pull_request_exits_naming_the_known_ones(self):
+        with self.assertRaises(SystemExit) as error:
+            sonar.check_target(known_targets, pull_request="99", branch=None)
+
+        self.assertIn("pull request 99", str(error.exception))
+        self.assertIn("12, 13", str(error.exception))
+
+    def test_unknown_branch_exits_naming_the_known_ones(self):
+        with self.assertRaises(SystemExit) as error:
+            sonar.check_target(known_targets, pull_request=None, branch="mian")
+
+        self.assertIn("branch mian", str(error.exception))
+        self.assertIn("main, master", str(error.exception))
+
+    def test_target_lists_are_asked_for_the_project(self):
+        urls = []
+
+        def fetch(url):
+            urls.append(url)
+            return known_targets(url)
+
+        sonar.check_target(fetch, pull_request="12", branch=None)
+        sonar.check_target(fetch, pull_request=None, branch="main")
+
+        self.assertEqual([PROJECT, PROJECT], [query(u)["project"][0] for u in urls])
+        self.assertIn("api/project_pull_requests/list", urls[0])
+        self.assertIn("api/project_branches/list", urls[1])
+
+
+class GetJsonTest(unittest.TestCase):
+
+    def test_http_error_exits_naming_url_and_reason(self):
+        error = urllib.error.HTTPError("http://x/y", 503, "Unavailable", {}, None)
+
+        with unittest.mock.patch.object(sonar.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(SystemExit) as exit_:
+                sonar.get_json("http://x/y")
+
+        self.assertIn("sonar-issues: http://x/y failed:", str(exit_.exception))
+        self.assertIn("503", str(exit_.exception))
+
+    def test_unreachable_host_exits_naming_url_and_reason(self):
+        error = urllib.error.URLError("no route")
+
+        with unittest.mock.patch.object(sonar.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(SystemExit) as exit_:
+                sonar.get_json("http://x/y")
+
+        self.assertIn("sonar-issues: http://x/y failed:", str(exit_.exception))
+        self.assertIn("no route", str(exit_.exception))
+
+    def test_timeout_exits_naming_url(self):
+        with unittest.mock.patch.object(sonar.urllib.request, "urlopen", side_effect=TimeoutError("timed out")):
+            with self.assertRaises(SystemExit) as exit_:
+                sonar.get_json("http://x/y")
+
+        self.assertIn("sonar-issues: http://x/y failed: timed out", str(exit_.exception))
+
+
 class ArgumentsTest(unittest.TestCase):
+
+    def test_default_target_is_the_main_branch(self):
+        args = sonar.parse_args([])
+
+        self.assertEqual("main", args.branch)
+        self.assertIsNone(args.pr)
+
+    def test_pull_request_leaves_the_branch_unset(self):
+        args = sonar.parse_args(["--pr", "5"])
+
+        self.assertEqual("5", args.pr)
+        self.assertIsNone(args.branch)
 
     def test_pr_and_branch_exclude_each_other(self):
         with self.assertRaises(SystemExit):

@@ -7,15 +7,22 @@ line and message, and the total last.
 Usage:
   scripts/agents/sonar-issues.py --pr <number>
   scripts/agents/sonar-issues.py --branch <name>
-  scripts/agents/sonar-issues.py              # the project's default branch
+  scripts/agents/sonar-issues.py              # branch main (SonarCloud's main branch master is never analysed)
+
+An unknown pull request or branch is an error naming the known ones: SonarCloud answers it with 0 issues.
 """
 import argparse
 import json
+import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
 PROJECT = "io.github.marmer.testutils:matcher-generator-parent"
 API = "https://sonarcloud.io/api/issues/search"
+PROJECT_PULL_REQUESTS_API = "https://sonarcloud.io/api/project_pull_requests/list"
+PROJECT_BRANCHES_API = "https://sonarcloud.io/api/project_branches/list"
+DEFAULT_BRANCH = "main"
 PAGE_SIZE = 500
 
 
@@ -29,8 +36,23 @@ def issues_url(pull_request, branch, page):
 
 
 def get_json(url):
-    with urllib.request.urlopen(url, timeout=60) as response:
-        return json.load(response)
+    try:
+        with urllib.request.urlopen(url, timeout=60) as response:
+            return json.load(response)
+    except (urllib.error.URLError, TimeoutError) as error:
+        sys.exit(f"sonar-issues: {url} failed: {error}")
+
+
+def check_target(fetch, pull_request, branch):
+    """Exits with the known pull requests or branches when the target is none of them."""
+    if pull_request:
+        url, kind, target = PROJECT_PULL_REQUESTS_API, "pull request", pull_request
+        known = [item["key"] for item in fetch(f"{url}?{urllib.parse.urlencode({'project': PROJECT})}")["pullRequests"]]
+    else:
+        url, kind, target = PROJECT_BRANCHES_API, "branch", branch
+        known = [item["name"] for item in fetch(f"{url}?{urllib.parse.urlencode({'project': PROJECT})}")["branches"]]
+    if target not in known:
+        sys.exit(f"sonar-issues: unknown {kind} {target}; known: {', '.join(known) or 'none'}")
 
 
 def fetch_all(fetch, pull_request, branch):
@@ -59,12 +81,16 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     target = parser.add_mutually_exclusive_group()
     target.add_argument("--pr", help="pull request number")
-    target.add_argument("--branch", help="branch name (default: the project's default branch)")
-    return parser.parse_args(argv)
+    target.add_argument("--branch", help=f"branch name (default: {DEFAULT_BRANCH}; the SonarCloud main branch master is never analysed)")
+    args = parser.parse_args(argv)
+    if not args.pr and not args.branch:
+        args.branch = DEFAULT_BRANCH
+    return args
 
 
 def main(argv=None):
     args = parse_args(argv)
+    check_target(get_json, args.pr, args.branch)
     print("\n".join(report(fetch_all(get_json, args.pr, args.branch))))
 
 
