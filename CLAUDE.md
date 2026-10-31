@@ -111,6 +111,8 @@ Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit unit tests. Hamcrest mismatch messages are tested against golden `.txt` files in `BeanPropertyMatcherMessageTest` (and `PropertyDescriptionTest` for value rendering).
 
+`ItemsInAnyOrderFuzzTest` in `hamcrest-matcher-generator` is a Jazzer oracle test of `itemsInAnyOrder`: its seeds replay in the normal test phase, and `JAZZER_FUZZ=1 ./mvnw test -pl hamcrest-matcher-generator -Dtest=ItemsInAnyOrderFuzzTest#itemsInAnyOrderAgreesWithTheBruteForceOracle` fuzzes on demand (corpus `.cifuzz-corpus/` is git-ignored; details in CONTRIBUTING.md).
+
 Regenerate golden files with `-Dgolden.update=true` and review `git diff --stat` and the diff of `src/test/resources` (it also rewrites unrelated goldens when other output changed); never edit them by script, and never revert them with `git checkout` (that drops hand edits too): regenerate. After a scripted change `git diff --numstat` shows 0 deleted lines when only additions were meant. Hamcrest goldens: reinstall core first (`-pl hamcrest-matcher-generator` reads core from `~/.m2`). JavaPoet quirks in the AssertJ goldens: `$W` leaves a trailing space after `=` (leave long field initializers unwrapped) and the output carries `import java.lang.X;` lines.
 
 The plain-kotlin end-to-end module checks compile failures through maven-invoker consumer builds under `src/it` (`right-scope`, `wrong-scope`, `wrong-value-type`, BeanShell `postbuild.bsh` hooks); `-DskipTests` skips them, and they must pass on a fresh local repository (`scripts/agents/verify.sh --only fresh-repo`).
