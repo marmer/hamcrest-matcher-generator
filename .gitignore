@@ -58,3 +58,6 @@ __pycache__/
 
 # CI release dry run log
 release-dry-run.log
+
+### Jazzer fuzzing corpus ###
+.cifuzz-corpus/
