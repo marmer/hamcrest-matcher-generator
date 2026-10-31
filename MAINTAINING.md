@@ -71,6 +71,9 @@ jobs then build, publish and announce.
 2. Never merge a Release pull request with a red check, and never create a release tag by hand.
 3. For 6.0.0 the owner merges the Release pull request by hand (`release-as` in `release-please-config.json`). Release
    pull request auto-merge is enabled only after 6.0.0, and then `release-as` is removed (comment in `release.yml`).
+4. When the release fixes a vulnerability in the project's own code that has a CVE or GHSA identifier, name the
+   identifier in the release notes (the `CHANGELOG.md` section and the GitHub Release) before merging; `SECURITY.md`
+   promises it (OpenSSF criterion `release_notes_vulns`).
 
 ### Failed publish
 
