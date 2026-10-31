@@ -6,7 +6,6 @@ package io.github.marmer.matchergenerator.core.model;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -62,7 +61,7 @@ public record TypeModel(
     public List<PropertyModel> accessorProperties() {
         return PropertyModel.distinctByName(properties).stream()
                 .filter(property -> !OBJECT_CLASS_ACCESSOR.equals(property.accessor()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** The kind of a configured type. */
