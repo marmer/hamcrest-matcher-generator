@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.github.marmer.testutils</groupId>
         <artifactId>matcher-generator-parent</artifactId>
-        <version>5.1.0</version>
+        <version>6.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <!-- Documentation example: the guide and README take their snippets from the tagged regions of this module.
         Never published. Kotlin with KAPT, both libraries (Hamcrest and AssertJ) and the Kotlin DSL. -->
     <artifactId>example-maven-kotlin</artifactId>
-    <version>5.1.0</version>
+    <version>6.0.0</version>
     <name>example-maven-kotlin</name>
     <description>Maven Kotlin example with KAPT for the Hamcrest and AssertJ backends and the Kotlin DSL. Never published.</description>
 

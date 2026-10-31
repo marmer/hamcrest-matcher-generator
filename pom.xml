@@ -1,9 +1,8 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.marmer.testutils</groupId>
     <artifactId>matcher-generator-parent</artifactId>
-    <version>5.1.0</version>
+    <version>6.0.0</version>
     <packaging>pom</packaging>
     <name>Matcher Generator</name>
     <description>Generates Hamcrest matchers and AssertJ assertions for model classes (or other classes with property
@@ -55,8 +54,8 @@
              The frozen 5.x suite pins its own literal and does not follow this property. -->
         <lombok.version>1.18.48</lombok.version>
         <!-- Filled by jacoco prepare-agent (unit tests) and prepare-agent-integration (ITs) in modules that measure coverage. -->
-        <argLine></argLine>
-        <argLineIt></argLineIt>
+        <argLine/>
+        <argLineIt/>
 
         <!-- Sonar -->
         <sonar.organization>marmer-github</sonar.organization>
