@@ -48,6 +48,9 @@ in the same pull request. Write the test first and see it fail before the change
   `-Dgolden.update=true` and review the diff; never edit them by hand.
 - Runtime behaviour is covered by unit tests (`BeanPropertyMatcherTest`, golden mismatch messages).
 - The end-to-end modules apply the annotation to real model classes and assert with the generated code.
+- `ItemsInAnyOrderFuzzTest` is a Jazzer fuzz test: in the normal build it only runs its seeds and the crash reproducers
+  under `src/test/resources/.../ItemsInAnyOrderFuzzTestInputs/`; a crash the fuzzer finds goes there, with a test that
+  pins the fix. Its corpus directory `.cifuzz-corpus/` is in `.gitignore`.
 - Coverage (JaCoCo, branch floor 0.99) and mutation testing (PIT, profile `mutation`) guard the suite in CI.
 
 ## Run the tests
@@ -56,6 +59,7 @@ in the same pull request. Write the test first and see it fail before the change
 ./mvnw clean verify                                   # unit tests and integration tests, all modules
 ./mvnw test -pl hamcrest-matcher-generator -Dtest=ClassName          # one unit test class
 ./mvnw failsafe:integration-test -pl hamcrest-matcher-generator -Dit.test=ClassName   # one integration test class
+JAZZER_FUZZ=1 ./mvnw test -pl hamcrest-matcher-generator -Dtest=ItemsInAnyOrderFuzzTest#itemsInAnyOrderAgreesWithTheBruteForceOracle   # fuzzing mode, corpus in .cifuzz-corpus/
 ```
 
 The continuous integration workflow `.github/workflows/ci-build.yml` runs the same build on every pull request.

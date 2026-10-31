@@ -77,6 +77,8 @@
         <mockito.version>5.24.0</mockito.version>
         <!-- Jupiter and the Platform launcher share one version line (renovate.json, JUnit group). -->
         <junit.version>6.1.3</junit.version>
+        <!-- Jazzer (#290): test-scope fuzz test of the unordered collection matcher, regression mode in the unit-test phase. -->
+        <jazzer.version>0.30.0</jazzer.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <errorprone.version>2.51.0</errorprone.version>
         <nullaway.version>0.14.3</nullaway.version>
@@ -237,6 +239,19 @@
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-launcher</artifactId>
                 <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- jazzer-junit asks for junit-platform-commons 1.9.0, which wins over the 6.x line of the other JUnit artifacts and breaks the launcher; pin it to that line -->
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.code-intelligence</groupId>
+                <artifactId>jazzer-junit</artifactId>
+                <version>${jazzer.version}</version>
                 <scope>test</scope>
             </dependency>
 
