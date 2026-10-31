@@ -5,7 +5,10 @@ project at https://www.bestpractices.dev and pastes the answers from this file (
 
 - **Source of the criteria**: https://www.bestpractices.dev/en/criteria/0, read on 2026-10-31 (the page lists the
   criteria of the passing level; their wording changes, so re-read it before pasting). Criterion ids are in brackets.
-- **Audited commit**: `main` after the merge of #280, plus the commits of #281.
+- **Audited commit**: `ba98feaaa894b5c9ebf31d3c50bccedfda475a80` (origin/main after the merge of #280, base of the
+  #281 branch); observations dated 2026-10-31.
+- **Purpose**: a one-time audit, the input for the owner ticket #284. It is not a standing rule for agents and is not
+  kept current; re-run the audit before a later badge renewal.
 - **Status**: exactly one of MET, UNMET or N/A. A criterion that only the owner can answer stays UNMET until the owner
   answers.
 - **Justification (paste text)**: sentences for the badge form, true from the repository, with no instructions.
@@ -14,8 +17,6 @@ project at https://www.bestpractices.dev and pastes the answers from this file (
   confirms it. Dated observations (as of 2026-10-31) are facts that change.
 - **Evidence**: links are relative to this repository; the form needs the full URL
   `https://github.com/marmer/hamcrest-matcher-generator/blob/main/<path>`.
-- "Documentation site" below means https://marmer.github.io/hamcrest-matcher-generator/, built from
-  [`docs/src/docs/asciidoc`](../src/docs/asciidoc). See [sites_https](#other) for its present state.
 
 Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the end.
 
