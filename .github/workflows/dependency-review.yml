@@ -3,8 +3,7 @@ name: Dependency review
 # Blocks a pull request that adds a dependency with a known vulnerability (any severity) or with a license outside the
 # allow-list. The allow-list mirrors the license-maven-plugin gates in the root pom: runtime and unknown scopes take
 # Apache-2.0, MIT, BSD-2-Clause and BSD-3-Clause; test scope also takes EPL-1.0 and EPL-2.0 and, by purl, the
-# junit-jupiter, junit-platform-launcher and junit-platform-commons artifacts. Needs the dependency graph enabled in
-# the repository settings.
+# junit-jupiter and junit-platform-launcher artifacts. Needs the dependency graph enabled in the repository settings.
 # Not a required check: the owner decides whether to add it to the main ruleset.
 on:
   pull_request:
@@ -35,6 +34,5 @@ jobs:
           allow-licenses: Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, EPL-1.0, EPL-2.0
           # The dependency graph reports junit-jupiter and junit-platform-launcher (managed by the root
           # dependencyManagement) as LicenseRef-bad-non-standard, although both are EPL-2.0. Allowed here only, in
-          # test scope; the license is EPL-2.0, already allowed above. junit-platform-commons is managed the same way
-          # (jazzer-junit pulls in an old version, #290), so it is listed too.
-          allow-dependencies-licenses: pkg:maven/org.junit.jupiter/junit-jupiter, pkg:maven/org.junit.platform/junit-platform-launcher, pkg:maven/org.junit.platform/junit-platform-commons
+          # test scope; the license is EPL-2.0, already allowed above.
+          allow-dependencies-licenses: pkg:maven/org.junit.jupiter/junit-jupiter, pkg:maven/org.junit.platform/junit-platform-launcher
