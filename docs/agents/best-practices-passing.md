@@ -6,7 +6,8 @@ project at https://www.bestpractices.dev and pastes the answers from this file (
 - **Source of the criteria**: https://www.bestpractices.dev/en/criteria/0, read on 2026-10-31 (the page lists the
   criteria of the passing level; their wording changes, so re-read it before pasting). Criterion ids are in brackets.
 - **Audited commit**: `ba98feaaa894b5c9ebf31d3c50bccedfda475a80` (origin/main after the merge of #280, base of the
-  #281 branch); observations dated 2026-10-31.
+  #281 branch); observations dated 2026-10-31. The `dynamic_analysis` row was re-checked on origin/main at
+  `6178c2a11ac370f45f6dce9dab4f56243821657d` (after #291), the commit this change is based on.
 - **Purpose**: a one-time audit, the input for the owner ticket #284. It is not a standing rule for agents and is not
   kept current; re-run the audit before a later badge renewal.
 - **Status**: exactly one of MET, UNMET or N/A. A criterion that only the owner can answer stays UNMET until the owner
@@ -129,7 +130,7 @@ Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the en
 | static_analysis_common_vulnerabilities | MET | SonarQube Cloud's Java and Kotlin rule sets include vulnerability and security hotspot rules, and OpenSSF Scorecard runs weekly. | Assumption: the default Sonar way profile is active. Owner to confirm. | [ci-build.yml](../../.github/workflows/ci-build.yml), [scorecard.yml](../../.github/workflows/scorecard.yml) |
 | static_analysis_fixed | MET | The SonarQube Cloud quality gate is a required check, so new findings block merging. | Assumption: no confirmed medium or higher exploitable vulnerability is open; the older backlog is tracked in #275. Owner to confirm. | ticket #275 |
 | static_analysis_often | MET | The analyses run on every pull request and every push to main. |  | [ci-build.yml](../../.github/workflows/ci-build.yml) |
-| dynamic_analysis | UNMET | The project runs unit, integration and end-to-end tests and PIT mutation testing in CI; it uses no fuzzer or web application scanner. | Owner to decide (SUGGESTED only, does not block the badge). Whether PIT mutation testing counts as dynamic analysis is a judgement for the owner; no fuzzing is used (#282). | [ci-build.yml](../../.github/workflows/ci-build.yml), ticket #282 |
+| dynamic_analysis | UNMET | The project has a Jazzer fuzz test of the unordered collection matcher (`ItemsInAnyOrderFuzzTest` in `hamcrest-matcher-generator`) and runs PIT mutation testing in CI; CI only replays the fuzz test's seeds, and no fuzzing run is applied to a release. | Owner to decide (SUGGESTED only, does not block the badge). The criterion asks for a dynamic analysis tool applied to a proposed major release before it ships; CI runs no fuzzer (no JAZZER_FUZZ job in `ci-build.yml`), so the status stays UNMET. Whether the Jazzer fuzz test (#290) and PIT mutation testing count as dynamic analysis is a judgement for the owner; a fuzzing run before a release would be the evidence if the owner wants the row MET. | [ItemsInAnyOrderFuzzTest.java](../../hamcrest-matcher-generator/src/test/java/io/github/marmer/matchergenerator/hamcrest/ItemsInAnyOrderFuzzTest.java), [ci-build.yml](../../.github/workflows/ci-build.yml), tickets #290, #282 |
 | dynamic_analysis_unsafe | N/A | The project is written in Java and Kotlin, which are memory safe. |  | none |
 | dynamic_analysis_enable_assertions | MET | The tests run with Java assertions enabled. | Assumption: Surefire and Failsafe default to `enableAssertions=true`; `grep -rn enableAssertions pom.xml */pom.xml` finds nothing, so no override. | [pom.xml](../../pom.xml) |
 | dynamic_analysis_fixed | N/A | No vulnerability was found by dynamic analysis. |  | none |
@@ -150,6 +151,6 @@ Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the en
 7. **warnings_fixed, static_analysis_common_vulnerabilities, static_analysis_fixed**: confirm the SonarQube Cloud
    backlog (#275) holds no unfixed exploitable vulnerability and that the default rule set is active.
 8. **no_leaked_credentials**: confirm that no secret was ever committed (for example through GitHub secret scanning).
-9. **dynamic_analysis (SUGGESTED)**: decide whether mutation testing counts; not required for the badge.
+9. **dynamic_analysis (SUGGESTED)**: decide whether the Jazzer fuzz test (`ItemsInAnyOrderFuzzTest`, #290; CI only replays its seeds) and PIT mutation testing count as dynamic analysis; not required for the badge.
 10. **documentation_basics, documentation_interface**: confirm the documentation site and javadoc.io are online after
     6.0.0 is released.
