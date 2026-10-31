@@ -28,25 +28,47 @@ remove_rate_limit_artifacts() {
 # pipeline, so pipefail still reports Maven's exit code.
 quiet_jvm() { grep -v '^Picked up JAVA_TOOL_OPTIONS' || true; }
 
+# Names the cause of a failed Maven run from its log: an HTTP 429 only when the log says so, else Maven's first error.
+describe_maven_failure() { # <maven-log>
+  if grep -qE 'status code: 429|Too Many Requests|exceeded rate limits' "$1"; then
+    echo "HTTP 429 from Maven Central"
+  else
+    local first_error
+    first_error=$(grep -m1 '^\[ERROR\]' "$1" | cut -c1-300 || true)
+    echo "${first_error:-unknown (no [ERROR] line in the Maven output)}"
+  fi
+}
+
 # Maven Central answers HTTP 429 under load (`docs/agents/build-pitfalls.md`), and one rate-limited download fails the
 # whole pre-fetch. Try up to 4 times, pausing 2, 4 and 8 seconds between failed attempts, and log each failure.
 # An attempt also fails when it had to delete rate-limit artifacts, because the next attempt must re-fetch them.
+# `prefetch_failure_cause` keeps the reason of the last failed attempt, taken from Maven's own output.
+prefetch_failure_cause=""
 prefetch_maven_dependencies() {
-  local attempt delay=2
+  local attempt delay=2 mvn_log
+  mvn_log=$(mktemp)
   for attempt in 1 2 3 4; do
     # A full install with one fast unit test and one integration test class: surefire and failsafe resolve
-    # their test providers only when they actually run tests, which dependency:go-offline misses.
-    if ./mvnw -B -q install -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerationProcessorIT \
-        -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false 2>&1 | quiet_jvm \
-        && ! remove_rate_limit_artifacts; then
-      return 0
+    # their test providers only when they actually run tests, which dependency:go-offline misses. The filters leave
+    # most code untested, so the JaCoCo floor cannot hold (`jacoco.skip`); without the skip the first module fails
+    # and the reactor never reaches the later ones, whose dependencies (assertj-core for the AssertJ backend) stay unfetched.
+    if ./mvnw -B -q install -Djacoco.skip=true -Dtest=BeanPropertyMatcherTest -Dit.test=MatcherGenerationProcessorIT \
+        -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false 2>&1 | quiet_jvm | tee "$mvn_log"; then
+      if ! remove_rate_limit_artifacts; then
+        rm -f "$mvn_log"
+        return 0
+      fi
+      prefetch_failure_cause="HTTP 429 from Maven Central (rate-limit responses were stored as artifacts and deleted)"
+    else
+      prefetch_failure_cause=$(describe_maven_failure "$mvn_log")
     fi
-    echo "session-start: Maven pre-fetch attempt $attempt of 4 failed." >&2
+    echo "session-start: Maven pre-fetch attempt $attempt of 4 failed: $prefetch_failure_cause" >&2
     [ "$attempt" -eq 4 ] && break
     sleep "$delay"
     delay=$((delay * 2))
     remove_rate_limit_artifacts
   done
+  rm -f "$mvn_log"
   return 1
 }
 
@@ -55,7 +77,7 @@ if prefetch_maven_dependencies; then
   echo "Maven dependencies pre-fetched; subagents can build with -o." >&2
 else
   remove_rate_limit_artifacts
-  echo "Maven pre-fetch failed; see the Maven output above (an HTTP 429 from Maven Central is a common cause). Builds fall back to online resolution." >&2
+  echo "Maven pre-fetch failed (last cause: $prefetch_failure_cause); see the Maven output above. Builds fall back to online resolution." >&2
 fi
 
 # Jars for throwaway API prototypes (scripts/agents/prototype-classpath.sh reads ~/.m2 first).
