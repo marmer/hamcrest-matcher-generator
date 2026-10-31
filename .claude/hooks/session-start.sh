@@ -33,7 +33,9 @@ describe_maven_failure() { # <maven-log>
   if grep -qE 'status code: 429|Too Many Requests|exceeded rate limits' "$1"; then
     echo "HTTP 429 from Maven Central"
   else
-    grep -m1 '^\[ERROR\]' "$1" | cut -c1-300 || true
+    local first_error
+    first_error=$(grep -m1 '^\[ERROR\]' "$1" | cut -c1-300 || true)
+    echo "${first_error:-unknown (no [ERROR] line in the Maven output)}"
   fi
 }
 
@@ -75,7 +77,7 @@ if prefetch_maven_dependencies; then
   echo "Maven dependencies pre-fetched; subagents can build with -o." >&2
 else
   remove_rate_limit_artifacts
-  echo "Maven pre-fetch failed (last cause: ${prefetch_failure_cause:-unknown}); see the Maven output above. Builds fall back to online resolution." >&2
+  echo "Maven pre-fetch failed (last cause: $prefetch_failure_cause); see the Maven output above. Builds fall back to online resolution." >&2
 fi
 
 # Jars for throwaway API prototypes (scripts/agents/prototype-classpath.sh reads ~/.m2 first).
