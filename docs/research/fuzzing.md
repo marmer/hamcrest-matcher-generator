@@ -7,8 +7,9 @@ Research for ticket #282 (spec #104). No fuzzing code is part of this ticket. Ob
 - **Scorecard version looked at**: `v5.6.0`, commit `61e84743356275f6ffca23b1b2f2cb945e19eb96`. This is the version
   that produced the public result for this repository on 2026-10-31 (the `scorecard` field of
   <https://api.securityscorecards.dev/projects/github.com/marmer/hamcrest-matcher-generator>, `date`
-  `2026-10-31T18:43:24Z`, total `7.7`, `Fuzzing` `0`, reason `project is not fuzzed`). All source links below are
-  pinned to that commit. The project's own workflow uses `ossf/scorecard-action` v2.5.0
+  `2026-10-31T18:43:24Z`, total `7.7`, `Fuzzing` `0`, reason `project is not fuzzed`). The ticket's context quotes a
+  total of 7.4 from an earlier run; the API said 7.7 later on 2026-10-31 (the total moved between runs, the Fuzzing
+  check itself is 0 in both). All source links below are pinned to that commit. The project's own workflow uses `ossf/scorecard-action` v2.5.0
   ([scorecard.yml](../../.github/workflows/scorecard.yml)); the public API result is the one that counts for the badge.
 - **Status of claims**: "Verified" = read in the primary source named. "Assumption" = not verified, with what would
   verify it.
@@ -72,8 +73,12 @@ criteria were not read).
 
 ## 2. What Jazzer needs here
 
-Primary sources: [Jazzer README](https://github.com/CodeIntelligenceTesting/jazzer/blob/main/README.md) (read on the
-`main` branch on 2026-10-31), [`FuzzTest.java`](https://github.com/CodeIntelligenceTesting/jazzer/blob/main/src/main/java/com/code_intelligence/jazzer/junit/FuzzTest.java),
+Primary sources, pinned to the release tag `v0.30.0` (the tag exists: its `README.md` and `FuzzTest.java` were fetched
+from `raw.githubusercontent.com` at that tag with HTTP 200; the README and `FuzzTest.java` content quoted below was
+read on the `main` branch on 2026-10-31, and was not re-diffed against the tag; the `github.com/.../blob/...` pages
+themselves may answer 403 through some proxies, the raw URLs worked):
+[Jazzer README](https://github.com/CodeIntelligenceTesting/jazzer/blob/v0.30.0/README.md),
+[`FuzzTest.java`](https://github.com/CodeIntelligenceTesting/jazzer/blob/v0.30.0/src/main/java/com/code_intelligence/jazzer/junit/FuzzTest.java),
 Maven Central metadata and POM of `com.code-intelligence:jazzer-junit` 0.30.0 (latest release; metadata
 `lastUpdated` 2026-02-24).
 
@@ -125,9 +130,14 @@ section 4).
   (checked by brute force over permutations); on a mismatch, `describeMismatch` does not throw and names exactly the
   unmatched items and matchers (counts agree with the oracle). Order of the input lists never changes the verdict.
 - **Expected value**: low to moderate. The algorithm is the textbook augmenting path and its Javadoc says the result
-  must not depend on claim order, so a regression test for it probably exists (not verified; read `CollectionMatchersTest`
-  and `ItemsInAnyOrder` tests in the implementation ticket). A fuzz test could still find an error in the path where a
-  matcher with the completeness check is considered (`matchesByValues`) or in the closest-candidate message code
+  must not depend on claim order. Verified in `CollectionMatchersTest`:
+  `itemsInAnyOrderAssignsItemsSoThatEveryMatcherFindsItsOwnWheneverPossible` already covers the case where greedy
+  claiming fails and an augmenting path is needed (`List.of("ab", "ac")` against `startsWith("a"), equalTo("ab")`, and
+  a three-item variant), next to golden-message tests for missing, unexpected and closest items and
+  `BeanPropertyMatcherCompletenessTest` cases for completeness-checked item matchers. Those are a few hand-picked
+  shapes; nothing compares the verdict with an oracle over many inputs. A fuzz test could find an error in the path
+  where a matcher with the completeness check is considered (`PathWalk.matchesByValues`, called from `ItemsInAnyOrder`)
+  or in the closest-candidate message code
   (`describeMissingAndTakeClosest`, which mutates `unused`). Honest estimate: most likely finds nothing; protects the
   algorithm against a future rewrite.
 - **Build and CI cost on JDK 17**: lowest of the three. One test-scope dependency, one test class (about 100 lines),
@@ -144,10 +154,10 @@ section 4).
   checking walk, counts a pair met again as equal).
 - **Input fuzzed**: a graph of a few hand-written bean types (with collection, map, optional-null and back-reference
   properties), assembled from the data provider: node count, which property points to which node, including
-  self-loops and cycles. Fixtures that have a generated matcher already exist for tests (`BeanFixtures`); the fuzz test
-  needs bean types with matchers built by hand through the public `BeanPropertyMatcher` API, since the hamcrest module
-  does not run its own processor on its test sources (assumption; check `BeanFixtures` and the module's compiler
-  configuration).
+  self-loops and cycles. `BeanFixtures` holds beans (`Order`, `Node`, ...) and hand-written stand-ins for generated matchers
+  that implement `GeneratedBeanMatcher` (read: its Javadoc and `isOrder()` / `isNode()`), not generated matchers.
+  Reusing them for the fuzz test (`Node` has parent, children and sibling properties) is plausible but unverified;
+  the graph builder may need its own bean types wired the same way.
 - **Invariants**: (1) building the reference matcher for any graph terminates without exception or stack overflow;
   (2) reflexivity: the matcher built from a graph matches that same graph; (3) mutating one reachable property value
   makes the matcher mismatch, and `describeMismatch` and `describeTo` terminate without exception and (4) never print
@@ -185,22 +195,25 @@ section 4).
 
 ## 4. Recommendation
 
-**Implement, small: Target A first, as the carrier of the `Fuzzing` score; do not fuzz in CI.** Reasons:
+**Recommendation: implement Target A (the `ItemsInAnyOrder` oracle fuzz test) as one small ticket, and do not fuzz in
+CI.** Reasons:
 
 - It is the cheapest way to earn the +0.5 (7.7 to about 8.3) on a binary check with a test that checks a real
   invariant (assignment is a maximum matching, equal to brute force) instead of an empty import. A and B share the
   same dependency and set-up, so B is a natural follow-up ticket if A shows that the set-up works and the owner wants
   more bug-finding value; C is not worth its cost now.
 - The honest expectation is that A finds no bug. The value is a regression-mode test that protects the matching
-  algorithm and a documented way to fuzz on demand. If the owner does not want a test-scope dependency on a
-  third-party fuzzer for 0.5 score points, accepting the finding is just as defensible: the project's other
-  verification layers (golden ITs, end-to-end modules, PIT at a 90 threshold, JaCoCo at 0.99) already exceed what a
-  fuzzer would add for a build-time processor with no untrusted runtime input. In that case record it as an accepted
-  finding ("the project is verified by property-style oracle tests and mutation testing; Scorecard detects only
-  Jazzer for Java").
+  algorithm and a documented way to fuzz on demand.
 - Not recommended: a CI fuzzing workflow (ClusterFuzzLite or a scheduled `JAZZER_FUZZ=1` job). Scorecard counts the
   import only, a workflow adds pinned actions, permissions and maintenance, and the targets are not an attack surface
   (the library matches test objects; the processor runs at the user's build time on the user's own sources).
+
+### If the owner declines
+
+Accepting the finding is a valid outcome: the project's other verification layers (golden ITs, end-to-end modules, PIT
+at a 90 threshold, JaCoCo at 0.99) already exceed what a fuzzer would add for a build-time processor with no untrusted
+runtime input. Record it as an accepted finding for the "accepted findings" ticket: "the project is verified by
+oracle-style tests and mutation testing; Scorecard detects only Jazzer for Java".
 
 ### Implementation ticket (text for the orchestrator to create)
 
@@ -245,7 +258,7 @@ of the input lists. No production code changes unless the test finds a bug (then
       (section 2) in the same PR; if PIT cannot run `@FuzzTest`, the exclusion is configured and documented there.
 - [ ] `./mvnw verify` on JDK 21 and 17 is green with the JaCoCo gate (0.99) unchanged; `./mvnw verify -Pmutation -pl
       hamcrest-matcher-generator` is green with the PIT threshold unchanged.
-- [ ] `CONTRIBUTING.md` (or the testing section of the docs, wherever tests are described) gets two lines: how to run
+- [ ] `CONTRIBUTING.md` gets two lines in its test section ("Test policy" / "Run the tests"): how to run
       the fuzz test in fuzzing mode (`JAZZER_FUZZ=1`, which command, where the corpus goes) and that the corpus
       directory `.cifuzz-corpus/` is in `.gitignore`; crash reproducers found go to the `Inputs` directory with a test.
 - [ ] After the change is on `main`, the next Scorecard run (weekly, `.github/workflows/scorecard.yml`) shows
