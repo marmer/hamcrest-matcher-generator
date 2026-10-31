@@ -75,7 +75,7 @@
         <!-- Plugin and dependency Versions-->
         <kotlin.version>2.1.20</kotlin.version>
         <mockito.version>5.24.0</mockito.version>
-        <!-- Jupiter and the Platform launcher share one version line (renovate.json, JUnit group). -->
+        <!-- Jupiter, the Platform launcher and platform-commons share one version line (renovate.json, JUnit group). -->
         <junit.version>6.1.3</junit.version>
         <!-- Jazzer (#290): test-scope fuzz test of the unordered collection matcher, regression mode in the unit-test phase. -->
         <jazzer.version>0.30.0</jazzer.version>
@@ -241,7 +241,9 @@
                 <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
-            <!-- jazzer-junit asks for junit-platform-commons 1.9.0, which wins over the 6.x line of the other JUnit artifacts and breaks the launcher; pin it to that line -->
+            <!-- jazzer-junit declares junit-platform-commons 1.9.0, which won over the 6.x line and broke the surefire
+                 fork with NoSuchMethodError CollectionUtils.forEachInReverseOrder (#290); pinned to junit.version.
+                 Jupiter api/params/engine, launcher and platform-engine resolve to 6.x already (dependency:tree). -->
             <dependency>
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-commons</artifactId>

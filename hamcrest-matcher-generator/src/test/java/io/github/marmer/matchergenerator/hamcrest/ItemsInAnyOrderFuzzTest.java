@@ -33,6 +33,9 @@ class ItemsInAnyOrderFuzzTest {
     private static final int MAX_SIZE = 6;
     private static final int MAX_VALUE = 3;
 
+    /** The number of cases in {@link #matcherOfKind}. */
+    private static final int KIND_COUNT = 4;
+
     @FuzzTest
     void itemsInAnyOrderAgreesWithTheBruteForceOracle(final FuzzedDataProvider data) {
         final List<Integer> items = new ArrayList<>();
@@ -43,7 +46,7 @@ class ItemsInAnyOrderFuzzTest {
         for (var i = data.consumeInt(0, MAX_SIZE); i > 0; i--) {
             matchers.add(
                     matcherOfKind(
-                            data.consumeInt(0, 3),
+                            data.consumeInt(0, KIND_COUNT - 1),
                             data.consumeInt(0, MAX_VALUE),
                             data.consumeInt(0, MAX_VALUE)));
         }
@@ -104,24 +107,31 @@ class ItemsInAnyOrderFuzzTest {
                     Matchers.allOf(
                             Matchers.greaterThanOrEqualTo(Math.min(a, b)),
                             Matchers.lessThanOrEqualTo(Math.max(a, b)));
-            default -> Matchers.greaterThanOrEqualTo(a);
+            case 3 -> Matchers.greaterThanOrEqualTo(a);
+            default -> throw new IllegalArgumentException("unknown matcher kind " + kind);
         };
     }
 
-    /** The size of the largest one-to-one assignment, tried through all permutations. */
+    /**
+     * The size of the largest one-to-one assignment of matchers to items, found by backtracking:
+     * every matcher from {@code matcherIndex} on is left out or takes each free item it matches.
+     */
     private static int largestAssignment(
             final List<Matcher<Integer>> matchers,
             final List<Integer> items,
-            final int matcher,
+            final int matcherIndex,
             final boolean[] taken) {
-        if (matcher == matchers.size()) {
+        if (matcherIndex == matchers.size()) {
             return 0;
         }
-        var best = largestAssignment(matchers, items, matcher + 1, taken);
+        var best = largestAssignment(matchers, items, matcherIndex + 1, taken);
         for (var item = 0; item < items.size(); item++) {
-            if (!taken[item] && matchers.get(matcher).matches(items.get(item))) {
+            if (!taken[item] && matchers.get(matcherIndex).matches(items.get(item))) {
                 taken[item] = true;
-                best = Math.max(best, 1 + largestAssignment(matchers, items, matcher + 1, taken));
+                best =
+                        Math.max(
+                                best,
+                                1 + largestAssignment(matchers, items, matcherIndex + 1, taken));
                 taken[item] = false;
             }
         }
@@ -135,6 +145,8 @@ class ItemsInAnyOrderFuzzTest {
         final StringDescription description = new StringDescription();
         assertDoesNotThrow(() -> matcher.describeMismatch(items, description));
         final String text = description.toString();
+        // couples the test to the mismatch wording pinned by the golden messages in
+        // CollectionMatchersTest
         return new Verdict(
                 matches, countLines(text, "missing "), countLines(text, "unexpected "), text);
     }
