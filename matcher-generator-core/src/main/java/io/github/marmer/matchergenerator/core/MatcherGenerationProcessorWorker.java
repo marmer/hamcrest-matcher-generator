@@ -230,8 +230,7 @@ public class MatcherGenerationProcessorWorker {
         writtenInThisRound.clear();
         final LocalDateTime generationTime = timeProvider.get();
         final boolean jspecifyAvailable = isJspecifyAvailable();
-        final List<TypeModel> models =
-                planned.stream().map(PlannedType::model).collect(Collectors.toList());
+        final List<TypeModel> models = planned.stream().map(PlannedType::model).toList();
         planned.forEach(
                 type -> {
                     final GenerationContext context =
@@ -537,7 +536,7 @@ public class MatcherGenerationProcessorWorker {
         final List<TypeElement> modelledTypes =
                 typesByGeneratedType.keySet().stream()
                         .flatMap(generatedType -> withPublicMemberTypes(generatedType).stream())
-                        .collect(Collectors.toList());
+                        .toList();
         exclusions.forEach(
                 (name, exclusion) -> {
                     if (modelledTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
@@ -643,8 +642,9 @@ public class MatcherGenerationProcessorWorker {
     }
 
     private TypeElement getHighestNestingType(final TypeElement typeElement) {
-        if (typeElement != null && typeElement.getEnclosingElement() instanceof TypeElement) {
-            return getHighestNestingType((TypeElement) typeElement.getEnclosingElement());
+        if (typeElement != null
+                && typeElement.getEnclosingElement() instanceof TypeElement enclosing) {
+            return getHighestNestingType(enclosing);
         }
         return typeElement;
     }
@@ -691,8 +691,7 @@ public class MatcherGenerationProcessorWorker {
     }
 
     private boolean isJspecifyAvailable() {
-        return processingEnv.getElementUtils().getTypeElement("org.jspecify.annotations.NullMarked")
-                != null;
+        return processingEnv.getElementUtils().getTypeElement(NULL_MARKED) != null;
     }
 
     private boolean isSelfGenerated(final Element element) {

@@ -24,6 +24,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeKind;
@@ -80,7 +81,7 @@ class TypeModelFactory {
                 type.getTypeParameters().stream()
                         .map(TypeParameterElement::getSimpleName)
                         .map(Object::toString)
-                        .collect(Collectors.toList()),
+                        .toList(),
                 type.getKind() == ElementKind.RECORD ? TypeModel.Kind.RECORD : TypeModel.Kind.POJO,
                 type.asType(),
                 properties(type),
@@ -119,8 +120,17 @@ class TypeModelFactory {
         if (configuredPackage.isBlank()) {
             return packageName;
         }
-        final String prefix = configuredPackage.replaceAll("\\.+$", "");
+        final String prefix = withoutTrailingDots(configuredPackage);
         return packageName.isEmpty() ? prefix : prefix + "." + packageName;
+    }
+
+    /** The configured value without its trailing dots. */
+    private static String withoutTrailingDots(final String value) {
+        var withoutDots = value;
+        while (withoutDots.endsWith(".")) {
+            withoutDots = withoutDots.substring(0, withoutDots.length() - 1);
+        }
+        return withoutDots;
     }
 
     private String getConfiguredPackage() {
@@ -172,12 +182,12 @@ class TypeModelFactory {
                                         element.getReturnType(),
                                         element.getSimpleName().toString(),
                                         NullabilityResolver.of(element)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Set<ExecutableElement> recordComponentAccessors(final TypeElement type) {
         return type.getRecordComponents().stream()
-                .map(component -> component.getAccessor())
+                .map(RecordComponentElement::getAccessor)
                 .collect(Collectors.toSet());
     }
 
@@ -221,7 +231,7 @@ class TypeModelFactory {
                                                 element.getReturnType(),
                                                 element.getSimpleName().toString(),
                                                 NullabilityResolver.of(element)))
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (type.getKind() == ElementKind.RECORD) {
             final List<PropertyModel> all = new ArrayList<>(recordComponentProperties(type));

@@ -2196,6 +2196,21 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("A configured package loses every trailing dot before it is prefixed")
+    void configuredPackageLosesEveryTrailingDot() {
+        final Compilation compilation =
+                compile(
+                        configurationWith(
+                                "io.github.marmer.matchergenerator.annotations.GenerateMatchers",
+                                "@GenerateMatchers(value = \"some.other.pck.SomePojo\", generation = "
+                                        + "@GenerateMatchers.GenerationConfiguration(packageConfig = "
+                                        + "@GenerateMatchers.GenerationConfiguration.PackageConfiguration(\"prefix...\")))"),
+                        SOME_POJO);
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals("prefix.some.other.pck", RecordingBackend.models().get(0).targetPackage());
+    }
+
+    @Test
     @DisplayName("GenerateMatchers keeps its defaults like the alias does")
     void generateMatchersKeepsItsDefaults() {
         compile(
