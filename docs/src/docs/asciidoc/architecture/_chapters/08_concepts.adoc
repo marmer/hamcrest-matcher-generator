@@ -2,7 +2,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-concepts]]
 
-
 == Cross-cutting Concepts
 
 === Continuous integration gates

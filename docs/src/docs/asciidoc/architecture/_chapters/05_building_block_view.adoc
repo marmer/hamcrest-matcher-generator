@@ -2,10 +2,15 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-building-block-view]]
 
-
 == Building Block View
 
 === Whitebox Overall System
+
+.Containers
+[structurizr,target=containers,format=svg,view=Containers,alt="Containers",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
 
 Motivation::
 
@@ -100,12 +105,6 @@ reactor's artifacts from `mavenLocal()`.
 published to Maven Central.
 |===
 
-.Containers
-[structurizr,target=containers,format=svg,view=Containers,alt="Containers"]
-----
-include::../workspace.dsl[]
-----
-
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
@@ -117,6 +116,12 @@ guard this.
 === Level 2
 
 ==== White Box `matcher-generator-core`
+
+.Components of matcher-generator-core
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
 
 `MatcherGenerationProcessor`::
 The annotation processor (package `io.github.marmer.matchergenerator.core`) registered through `META-INF/services`. It loads the backends and hands every round to the
@@ -141,16 +146,24 @@ JSpecify annotations.
 `TypeModel`, `PropertyModel`, `Nullability`::
 The immutable model that backends work on (see the glossary term "Property model").
 
-.Components of matcher-generator-core
-[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core"]
-----
-include::../workspace.dsl[]
-----
-
 ==== White Box `hamcrest-matcher-generator`
 
 .Components of hamcrest-matcher-generator
-[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator"]
+[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
+
+`HamcrestGeneratorBackend`::
+The Hamcrest implementation of `GeneratorBackend`, registered through `META-INF/services`. For every `TypeModel` it
+asks `MatcherGenerator` for the `<Type>Matcher` source and returns it as one `GeneratedSource`.
+
+`MatcherGenerator`::
+Builds the source of a `<Type>Matcher` class with JavaPoet from a `TypeModel`: the `isX()` entry point, `withFoo`,
+`resetFoo` and `ignoringFoo` for every property, `checkingAllProperties()` and the `isXLike(reference)` method.
+
+`BeanPropertyMatcher` and its helpers::
+The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object,
+collects the failing checks with their property paths and builds the mismatch message (see chapter 6). Its helpers, the
+collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`), `ReferenceMatching`, `PathWalk` and `MismatchReport`,
+are described in the building block table above. The library extends Hamcrest's `TypeSafeMatcher`.

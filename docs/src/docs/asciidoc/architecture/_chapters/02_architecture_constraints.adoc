@@ -3,11 +3,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-architecture-constraints]]
 == Architecture Constraints
 
-
-
-
-
-
 [options="header",cols="1,4"]
 |===
 | Constraint | Background

@@ -35,41 +35,41 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         github = softwareSystem "GitHub Actions" "Builds, releases and deploys the documentation." "External"
         pages = softwareSystem "GitHub Pages" "Hosts the documentation." "External"
 
-        developer -> hmg "Configures types with @GenerateMatchers"
+        developer -> hmg "Configures types with\n@GenerateMatchers"
         developer -> central "Takes the artifacts from"
         maintainer -> github "Merges the Release PR in"
-        javac -> hmg "Runs as annotation processor in every round"
-        hmg -> javac "Writes generated sources through"
+        javac -> hmg "Runs as annotation\nprocessor in every round"
+        hmg -> javac "Writes generated sources\nthrough"
         hmg -> hamcrest "Generates matchers for"
         hmg -> assertj "Generates assertions for"
         github -> hmg "Builds and releases"
-        github -> central "Publishes the signed bundle to"
-        github -> pages "Deploys the documentation to"
+        github -> central "Publishes the signed\nbundle to"
+        github -> pages "Deploys the documentation\nto"
         github -> maintainer "Announces the release to"
 
-        developer -> annotations "Annotates a configuration class with"
+        developer -> annotations "Annotates a configuration\nclass with"
         javac -> processor "Invokes"
-        core -> annotations "Reads the configuration from"
-        worker -> hamcrestBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
-        worker -> assertjBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
-        worker -> kotlinBackend "Loads every backend at run time through ServiceLoader, without a compile dependency" "ServiceLoader"
-        hamcrestBackend -> core "Implements GeneratorBackend of"
-        kotlinBackend -> core "Implements GeneratorBackend of"
-        kotlinBackend -> hamcrestBackend "Reuses the naming of the generated matchers of (the one allowed dependency between backends)"
-        endtoend -> kotlinBackend "Apply the processor to Kotlin classes and use the DSL"
-        assertjBackend -> core "Implements GeneratorBackend of"
-        assertjBackend -> assertj "Generates classes that extend AbstractObjectAssert of"
-        endtoend -> assertjBackend "Apply the processor to beans and records"
+        core -> annotations "Reads the configuration\nfrom"
+        worker -> hamcrestBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
+        worker -> assertjBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
+        worker -> kotlinBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
+        hamcrestBackend -> core "Implements\nGeneratorBackend of"
+        kotlinBackend -> core "Implements\nGeneratorBackend of"
+        kotlinBackend -> hamcrestBackend "Reuses the naming of the\ngenerated matchers of (the\none allowed dependency\nbetween backends)"
+        endtoend -> kotlinBackend "Apply the processor to\nKotlin classes and use the\nDSL"
+        assertjBackend -> core "Implements\nGeneratorBackend of"
+        assertjBackend -> assertj "Generates classes that\nextend\nAbstractObjectAssert of"
+        endtoend -> assertjBackend "Apply the processor to\nbeans and records"
         hamcrestBackend -> hamcrest "Uses"
         bridge -> hamcrestBackend "Depends on"
-        endtoend -> hamcrestBackend "Apply the processor to beans and records"
+        endtoend -> hamcrestBackend "Apply the processor to\nbeans and records"
         endtoend -> annotations "Configure types with"
 
         processor -> worker "Hands every round to"
-        worker -> typeModelFactory "Asks for the model of a type"
+        worker -> typeModelFactory "Asks for the model of a\ntype"
         typeModelFactory -> propertyModel "Creates"
-        worker -> spi "Calls every backend through"
-        worker -> javac "Writes sources through the Filer of"
+        worker -> spi "Calls every backend\nthrough"
+        worker -> javac "Writes sources through the\nFiler of"
         backend -> matcherGenerator "Delegates to"
         backend -> spi "Implements"
         matcherGenerator -> runtimeLibrary "Generates code that calls"
@@ -119,16 +119,16 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         dynamic core "Generation" "What happens for a round in which the compiler finds the configuration annotation." {
             javac -> processor "Invokes in every round"
             processor -> worker "Hands the round to"
-            worker -> typeModelFactory "Asks for the model of every configured type"
-            worker -> hamcrestBackend "Calls every backend with the model"
-            worker -> javac "Writes the returned sources"
+            worker -> typeModelFactory "Asks for the model of\nevery configured type"
+            worker -> hamcrestBackend "Calls every backend with\nthe model"
+            worker -> javac "Writes the returned\nsources"
         }
 
         dynamic * "Release" "From merging the Release PR to the announcement." {
             maintainer -> github "Merges the Release PR in"
             github -> hmg "Builds the tag"
-            github -> central "Publishes the signed bundle to"
-            github -> pages "Deploys the documentation to"
+            github -> central "Publishes the signed\nbundle to"
+            github -> pages "Deploys the documentation\nto"
             github -> maintainer "Announces the release to"
         }
 
@@ -139,10 +139,31 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         styles {
             element "Person" {
                 shape Person
+                background #08427b
+                color #ffffff
+            }
+            element "Software System" {
+                background #1168bd
+                color #ffffff
+            }
+            element "Container" {
+                background #438dd5
+                color #ffffff
+            }
+            element "Component" {
+                background #85bbf0
+                color #000000
+            }
+            element "Infrastructure Node" {
+                background #ffffff
+                color #000000
             }
             element "External" {
                 background #8a8a8a
                 color #ffffff
+            }
+            relationship "Relationship" {
+                width 300
             }
         }
     }
