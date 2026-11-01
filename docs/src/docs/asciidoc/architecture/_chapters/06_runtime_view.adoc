@@ -107,7 +107,7 @@ sentence names the path of the asserted object from the root type, so a nested c
 include::../workspace.dsl[]
 ----
 
-The maintainer merges the Release PR that release-please keeps up to date. The tag this creates starts the build on
-GitHub Actions. Only a green build of the tag publishes the signed bundle to Maven Central, and the documentation is
+The maintainer merges the Release PR that release-please keeps up to date. The merge creates the tag and the release page, and the
+same workflow then builds the tag on GitHub Actions. Only a green build of the tag publishes the signed bundle to Maven Central, and the documentation is
 deployed to GitHub Pages from the same tag. Finally the workflow announces the release to the maintainer. The
 workflows, jobs and credentials are described in chapter 7.

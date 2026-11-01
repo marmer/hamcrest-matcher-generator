@@ -29,8 +29,9 @@ Actions (see chapter 7).
 | Runs the processor in every round and receives the generated sources.
 
 | Hamcrest, AssertJ
-| The assertion libraries that the generated matchers and assertions build on. They are on the user's test class path,
-not on the processor's.
+| The assertion libraries that the generated matchers and assertions build on. The generated code needs them on the
+user's test class path. The AssertJ backend itself does not use AssertJ while it generates; the Hamcrest backend does use
+Hamcrest.
 
 | Maven Central, GitHub Pages
 | Where users find the artifacts and the documentation.

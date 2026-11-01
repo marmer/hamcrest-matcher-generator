@@ -18,8 +18,9 @@ the compiler checks, so a wrong property name is a compile error, not a test fai
 | Chapter 8 (CI gates), chapter 10
 
 | Non-intrusiveness
-| The configuration annotation has `SOURCE` retention and sits on a separate configuration class, so model classes stay
-untouched and no runtime dependency reaches production code.
+| The configuration annotation sits on a separate configuration class, so model classes stay untouched and no runtime
+dependency reaches production code. (`@GenerateMatchers` has `CLASS` retention; only the deprecated 5.x alias
+`@MatcherConfiguration` has `SOURCE` retention.)
 | Chapter 3, chapter 6
 
 | Usability
