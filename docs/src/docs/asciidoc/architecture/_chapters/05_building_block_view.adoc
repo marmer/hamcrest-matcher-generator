@@ -16,7 +16,7 @@ Motivation::
 
 The processor is split so that everything that is independent of an assertion library lives once, in the core, while
 every assertion library is a backend that plugs in from the outside. A user chooses libraries by choosing artifacts
-(see ADR 0001).
+(see <<adr-0001,ADR 0001>>).
 
 Contained Building Blocks::
 
@@ -52,14 +52,14 @@ Every property also gets `ignoringFoo()`, and the abstract class has the opt-in 
 and `hasAllPropertiesChecked()`. The assertion object keeps the names it has addressed, and the check fails with the properties
 that are neither addressed nor ignored, after the value checks have passed. The failure reads AssertJ's wording, `Expecting every property of Order to be checked or ignored, but these were neither: tags`, and a nested check names its path. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
-Each target package gets one `SoftAssertionsProvider` mixin (written once per package, ADR 0006) with a default `assertThat` and `then` per type,
+Each target package gets one `SoftAssertionsProvider` mixin (written once per package, <<adr-0006,ADR 0006>>) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
-that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
-restarts at the element type. Name clashes in the generated code are reported as compiler errors (see chapter 8, Diagnostics). The backend depends only on the core;
+that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "<<term-assertion-path,Assertion path>>"); inside an array, collection or map the path
+restarts at the element type. Name clashes in the generated code are reported as compiler errors (see <<concepts-diagnostics,chapter 8>>, Diagnostics). The backend depends only on the core;
 the generated code needs AssertJ on the test class path.
 
 | `hamcrest-matcher-generator-kotlin`
-| The opt-in Kotlin DSL backend (ADR 0004). It writes one `<Type>MatcherDsl.kt` per configured type next to the Java
+| The opt-in Kotlin DSL backend (<<adr-0004,ADR 0004>>). It writes one `<Type>MatcherDsl.kt` per configured type next to the Java
 matcher, with KotlinPoet from Java: an entry function `isOrder { }` and a scope class `OrderSpec` per type (nested types
 included). A nested type whose simple name another type of the package shares gets the names of its enclosing types in
 front, such as `OuterInnerSpec` and `isOuterInner`; a top level type and every type without a clash keep their simple
@@ -80,12 +80,12 @@ type without properties gets no file. The names of the Hamcrest matcher API come
 backend, the one dependency between backends the Enforcer plugin and ArchUnit allow. Without KAPT (`GenerationContext.kotlinOutputAvailable`
 is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`. A property whose
 name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with an `Any` member
-(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see chapter 8, Diagnostics); the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
+(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see <<concepts-diagnostics,chapter 8>>, Diagnostics); the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
 take the runtime collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`) whose items are the DSL's entry functions.
 The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
-| Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see ADR 0002).
+| Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see <<adr-0002,ADR 0002>>).
 
 | `*-endtoend-*` modules
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated
@@ -101,10 +101,10 @@ reactor's artifacts from `mavenLocal()`.
 published to Maven Central.
 |===
 
-Important Interfaces::
+[[building-block-important-interfaces]]Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
-`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see chapter 8, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, `reportVerboseNote` for a compiler note that is only printed with `matchergenerator.verbose`, `classExistsOutsideOwnOutput` for whether a class is on the class path without being in this compilation's own output, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
+`GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see <<concepts-diagnostics,chapter 8>>, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, `reportVerboseNote` for a compiler note that is only printed with `matchergenerator.verbose`, `classExistsOutsideOwnOutput` for whether a class is on the class path without being in this compilation's own output, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
 configured type. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.
@@ -140,7 +140,7 @@ that tells backends whether `org.jspecify.annotations.NullMarked` resolves, whic
 JSpecify annotations.
 
 `TypeModel`, `PropertyModel`, `Nullability`::
-The immutable model that backends work on (see the glossary term "Property model").
+The immutable model that backends work on (see the glossary term "<<term-property-model,Property model>>").
 
 ==== White Box `hamcrest-matcher-generator`
 
@@ -160,6 +160,6 @@ Builds the source of a `<Type>Matcher` class with JavaPoet from a `TypeModel`: t
 
 `BeanPropertyMatcher` and its helpers::
 The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object,
-collects the failing checks with their property paths and builds the mismatch message (see chapter 6). Its helpers, the
+collects the failing checks with their property paths and builds the mismatch message (see <<section-runtime-view,chapter 6>>). Its helpers, the
 collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`), `ReferenceMatching`, `PathWalk` and `MismatchReport`,
 are described in the building block table above. The library extends Hamcrest's `TypeSafeMatcher`.

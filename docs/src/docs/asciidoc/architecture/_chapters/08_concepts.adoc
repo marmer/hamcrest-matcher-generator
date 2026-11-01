@@ -4,10 +4,11 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 == Cross-cutting Concepts
 
+[[concepts-ci-gates]]
 === Continuous integration gates
 
 Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
-blocked it. The checks the `main` branch ruleset requires before GitHub merges a pull request are listed in chapter 7.
+blocked it. The checks the `main` branch ruleset requires before GitHub merges a pull request are listed in <<section-deployment-view,chapter 7>>.
 
 [options="header",cols="2,5"]
 |===
@@ -38,7 +39,7 @@ code. Old code is not judged again when a rule changes.
 
 | Example Gradle (`Example Gradle`)
 | The Gradle example outside the reactor builds against the artifacts of the reactor, so the guide's Gradle setup keeps
-working on JDK 21 and on JDK 17 (see chapter 7).
+working on JDK 21 and on JDK 17 (see <<section-deployment-view,chapter 7>>).
 
 | Dependency review (`Dependency review`, not a required check)
 | A pull request that adds a dependency with a known vulnerability is blocked.
@@ -58,7 +59,7 @@ end-to-end sources in that package tree. The end-to-end POJOs in `foo.bar` are n
 not checked and carries no
 license header. The JDK 17 leg skips the profile.
 
-| Frozen 5.x suite (part of `Domain docs in sync`)
+| [[concepts-frozen-5x-suite]]Frozen 5.x suite (part of `Domain docs in sync`)
 | The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard; its parent and own
 version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:
 `endtoend-5x-compatibility-runner` builds it as a consumer build with the invoker plugin against an isolated local
@@ -74,6 +75,7 @@ block all merges.
 CI job names, and the file names and packages that `CLAUDE.md` mentions exist.
 |===
 
+[[concepts-diagnostics]]
 === Diagnostics
 
 The core reports a misconfiguration as a compiler diagnostic at the annotation that configured the type, once per
@@ -87,7 +89,7 @@ types whose factory constants share a name (such as `FooBar` and `Foo_Bar`, both
 also reports a top level class name that two types of one package need (`Foo` and `AbstractFoo` both generate
 `AbstractFooAssert`, or a type named like the package's mixin `SoftAssertionsProvider`) and then writes nothing for
 the package, while `FooBar`, `Foo_Bar` and `FOOBAR` are different classes and no clash; like the other per-package
-files it sees only the types of one processing round (ADR 0006).
+files it sees only the types of one processing round (<<adr-0006,ADR 0006>>).
 
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The

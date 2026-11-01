@@ -3,7 +3,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-solution-strategy]]
 == Solution Strategy
 
-The solution rests on a few fundamental decisions. The table connects each quality goal of chapter 1 with the
+The solution rests on a few fundamental decisions. The table connects each quality goal of <<section-introduction-and-goals,chapter 1>> with the
 approach that serves it and with the place in this documentation where the approach is described.
 
 [options="header",cols="2,5,2"]
@@ -15,31 +15,31 @@ approach that serves it and with the place in this documentation where the appro
 the end-to-end modules apply the processor to real beans and records and use the generated assertions in ordinary tests,
 and a JaCoCo floor and PIT mutation testing guard the tests themselves. The generated code is plain Java or Kotlin that
 the compiler checks, so a wrong property name is a compile error, not a test failure.
-| Chapter 8 (CI gates), chapter 10
+| <<concepts-ci-gates,Chapter 8>> (CI gates), <<section-quality-scenarios,chapter 10>>
 
-| Non-intrusiveness
+| [[strategy-non-intrusiveness]]Non-intrusiveness
 | The configuration annotation sits on a separate configuration class, so model classes stay untouched and no runtime
 dependency reaches production code. Both configuration annotations, `@GenerateMatchers` and the deprecated 5.x alias
 `@MatcherConfiguration`, have `SOURCE` retention: the processor reads them from the source elements of the running
 compilation, so a configuration class leaves no trace of them in its class file, even in the production sources.
-| Chapter 3, chapter 6
+| <<section-context-and-scope,Chapter 3>>, <<section-runtime-view,chapter 6>>
 
 | Usability
 | The generated API is fluent and follows one naming scheme: `isX()`, `withFoo(...)`, `resetFoo()`, `ignoringFoo()` and
 the opt-in completeness check. Mismatch messages name the property path of every failing check, and compile errors
 point at the annotation and name the cause.
-| Chapter 6 (mismatch messages), chapter 8 (diagnostics)
+| <<runtime-mismatch-hamcrest,Chapter 6>> (mismatch messages), <<concepts-diagnostics,chapter 8>> (diagnostics)
 
 | Build-tool agnosticism
 | The processor uses only the standard annotation processing API of `javax.annotation.processing`. It runs under javac
 for Java and under KAPT for Kotlin, in Maven and Gradle builds alike, and does not depend on a build plugin.
-| Chapter 3 (technical context), ADR 0004
+| <<context-technical-context,Chapter 3>> (technical context), <<adr-0004,ADR 0004>>
 
 | Maintainability
 | One library-independent core builds a property model of each type. Every assertion library is a backend behind a small
 interface (`GeneratorBackend`) that is found with `ServiceLoader`, so a new library needs a new module and no change of
 the core. Maven Enforcer and ArchUnit keep the dependency direction from drifting.
-| Chapter 5, ADR 0001, ADR 0004
+| <<section-building-block-view,Chapter 5>>, <<adr-0001,ADR 0001>>, <<adr-0004,ADR 0004>>
 |===
 
 Further decisions that shape the whole system:
@@ -49,9 +49,9 @@ KotlinPoet for Kotlin. Nothing is looked up by name at test time, and the IDE ca
 classes.
 * *Stay compatible with 5.x.* Tests written against 5.x keep compiling after a version bump. Class names and the
 `isX()`/`withFoo`/`resetFoo` API are kept, the old annotation stays as a deprecated alias and bridge jars cover the old
-artifact names (ADR 0002).
-* *Keep the baseline modern, and the project maintainable without effort.* The baseline is Java 17 (ADR 0005), so that
+artifact names (<<adr-0002,ADR 0002>>).
+* *Keep the baseline modern, and the project maintainable without effort.* The baseline is Java 17 (<<adr-0005,ADR 0005>>), so that
 dependency updates by Renovate are not blocked by an old Java version. Releases are cut by release-please and
-published from CI (chapter 7). After 6.0.0 no features are planned, only fixes and updates.
+published from CI (<<section-deployment-view,chapter 7>>). After 6.0.0 no features are planned, only fixes and updates.
 * *Document as code.* This documentation and the user guide are built with the project. Code in the guide comes from
-example modules that compile and run in the same build, and the diagrams are views of one Structurizr model (ADR 0003).
+example modules that compile and run in the same build, and the diagrams are views of one Structurizr model (<<adr-0003,ADR 0003>>).

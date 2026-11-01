@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.stream.Stream;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -527,6 +529,55 @@ class RenderedDocsTest {
                                 problems.isEmpty(),
                                 "llms.txt problems:\n" + String.join("\n", problems)));
     }
+
+    @Test
+    @DisplayName("Chapter and ADR references of the architecture page are links")
+    void chapterAndAdrReferencesOfTheArchitecturePageAreLinks() {
+        final Document architecture = parse(OUTPUT.resolve("architecture/index.html"));
+        final List<String> plain = new ArrayList<>();
+        for (final Element element : architecture.select("#content *")) {
+            if (element.closest(NOT_RUNNING_TEXT) != null) {
+                continue;
+            }
+            for (final TextNode text : element.textNodes()) {
+                final Matcher reference = CROSS_REFERENCE.matcher(text.text());
+                while (reference.find()) {
+                    plain.add("'" + reference.group() + "' in: " + text.text().strip());
+                }
+            }
+        }
+        assertTrue(
+                plain.isEmpty(),
+                "references to a chapter or an ADR that are plain text (link them with an xref):\n"
+                        + String.join("\n", plain));
+    }
+
+    @Test
+    @DisplayName("The reference check recognises plain references and skips links and headings")
+    void referenceCheckRecognisesPlainReferences() {
+        final Element link = Jsoup.parse("<p><a href=\"#x\">chapter 7</a></p>").selectFirst("a");
+        final Element heading = Jsoup.parse("<h3>ADR 0001: Title</h3>").selectFirst("h3");
+        final Element text = Jsoup.parse("<p>see chapter 7</p>").selectFirst("p");
+        assertAll(
+                () -> assertTrue(CROSS_REFERENCE.matcher("see chapter 7.").find()),
+                () -> assertTrue(CROSS_REFERENCE.matcher("Chapters 3 and 5").find()),
+                () -> assertTrue(CROSS_REFERENCE.matcher("(ADR 0004)").find()),
+                () -> assertFalse(CROSS_REFERENCE.matcher("ADR 4 and chapter").find()),
+                () -> assertNotNull(Objects.requireNonNull(link).closest(NOT_RUNNING_TEXT)),
+                () -> assertNotNull(Objects.requireNonNull(heading).closest(NOT_RUNNING_TEXT)),
+                () -> assertNull(Objects.requireNonNull(text).closest(NOT_RUNNING_TEXT)));
+    }
+
+    /** A reference to a chapter or an ADR by number, which must be a link. */
+    private static final Pattern CROSS_REFERENCE =
+            Pattern.compile("(?i)\\bchapters? [0-9]+|\\bADR [0-9]{4}");
+
+    /**
+     * Where a reference may stay plain: inside a link, in code, in headings (the ADR headings of
+     * chapter 9 name the decision), and in the table of contents and navigation.
+     */
+    private static final String NOT_RUNNING_TEXT =
+            "a, code, pre, h1, h2, h3, h4, h5, h6, nav, #toc";
 
     @Test
     @DisplayName("The link check detects broken links")

@@ -44,10 +44,10 @@ The remaining characteristics have no scenarios, for these reasons:
 
 * *Safety*: the library has no physical effect on people or the environment.
 * *Reliability / Availability and Recoverability*: the library is not a service; it only runs while a project compiles and tests.
-* *Security / Confidentiality, Non-repudiation and Accountability*: the library processes no user data and has no users of its own; integrity and authenticity of the released artifacts are covered by QS-X3.
+* *Security / Confidentiality, Non-repudiation and Accountability*: the library processes no user data and has no users of its own; integrity and authenticity of the released artifacts are covered by <<qs-x3,QS-X3>>.
 * *Interaction capability / Inclusivity and User engagement*: the library has no user interface; the project site's accessibility is not a quality of the architecture.
-* *Performance efficiency / Resource utilization and Capacity, Flexibility / Scalability*: the only load is the number of configured types at compile time, which QS-X5 covers.
-* *Flexibility / Installability*: adding the library is a plain build dependency; QS-U3 and QS-B1 cover it.
+* *Performance efficiency / Resource utilization and Capacity, Flexibility / Scalability*: the only load is the number of configured types at compile time, which <<qs-x5,QS-X5>> covers.
+* *Flexibility / Installability*: adding the library is a plain build dependency; <<qs-u3,QS-U3>> and <<qs-b1,QS-B1>> cover it.
 
 [[section-quality-scenarios-list]]
 === Quality Scenarios
@@ -87,7 +87,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n1]]QS-N1
 | Compatibility / Co-existence
-| *Production code stays untouched.* When a project adds the generator and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its model classes and runtime dependencies unchanged: the generator adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (chapter 4) extends this to a configuration class in the production sources.
+| *Production code stays untouched.* When a project adds the generator and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its model classes and runtime dependencies unchanged: the generator adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (<<section-solution-strategy,chapter 4>>) extends this to a configuration class in the production sources.
 | `ProductionClassFootprintTest` (end-to-end `plain-java-minimal`: the compiled production class `PackageConfigurationProduction` contains neither `GenerateMatchers` nor `RuntimeInvisibleAnnotations`); `CoreProcessorIT` (both annotations leave no trace, with a foreign `RUNTIME` annotation as control). The dependency half of the scenario has no automated check yet
 
 | [[qs-n2]]QS-N2
@@ -143,7 +143,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-m3]]QS-M3
 | Maintainability / Modularity
 | *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the backend SPI; no line changes in the core or in the existing backends.
-| ArchUnit tests; link:{adr-url}/0001-shared-property-model-and-backend-spi.md[ADR 0001]
+| ArchUnit tests; <<adr-0001,ADR 0001>>
 
 | [[qs-m4]]QS-M4
 | Maintainability / Analysability
@@ -158,7 +158,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-x2]]QS-X2
 | Flexibility / Replaceability
 | *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the bridge jars under the old coordinates cover the changed artifact, also for compiler plugins older than 3.12, which do not follow a relocation in the processor path).
-| The frozen 5.x suite, built as a consumer build against the reactor's bridge jars (see chapter 8, Frozen 5.x suite); `BridgeJarIT` checks the bridge jars' shape
+| The frozen 5.x suite, built as a consumer build against the reactor's bridge jars (see <<concepts-frozen-5x-suite,chapter 8>>, Frozen 5.x suite); `BridgeJarIT` checks the bridge jars' shape
 
 | [[qs-x3]]QS-X3
 | Security / Integrity, Authenticity
