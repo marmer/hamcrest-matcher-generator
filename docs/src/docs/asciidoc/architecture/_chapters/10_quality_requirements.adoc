@@ -158,7 +158,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-x2]]QS-X2
 | Flexibility / Replaceability
 | *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the bridge jars under the old coordinates cover the changed artifact, also for compiler plugins older than 3.12, which do not follow a relocation in the processor path).
-| The 5.x suite, frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard, built as a consumer build by `endtoend-5x-compatibility-runner` against the reactor's bridge jars; `scripts/ci/check-frozen-5x-suite.sh` guards the tree hash and `BridgeJarIT` checks the bridge jars' shape
+| The frozen 5.x suite, built as a consumer build against the reactor's bridge jars (see chapter 8, Frozen 5.x suite); `BridgeJarIT` checks the bridge jars' shape
 
 | [[qs-x3]]QS-X3
 | Security / Integrity, Authenticity

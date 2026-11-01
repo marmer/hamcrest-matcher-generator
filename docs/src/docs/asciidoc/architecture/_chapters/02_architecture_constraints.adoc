@@ -15,4 +15,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 | Apache-2.0 license
 | Every published artifact stays under the Apache License 2.0, with a short `NOTICE` file and an SPDX header in every source file. Generated code belongs to the user and carries no license header, so the generator's templates must never contain text copied from third-party code. Dependencies that end up on a user's classpath may only use permissive licenses (Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause); the build checks this.
+
+| Documentation built on JDK 21 or later
+| The documentation module renders this documentation with Structurizr, whose current libraries need Java 21. A JDK 17 build skips the module (see ADR 0003).
+
+| Conventional Commits
+| The title of every pull request follows Conventional Commits, because the squash-merged title is the commit that release-please reads to decide the next version (see chapter 7).
 |===

@@ -55,10 +55,7 @@ Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` naviga
 Each target package gets one `SoftAssertionsProvider` mixin (written once per package, ADR 0006) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
 that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
-restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and
-the core reports one compiler error at the annotation, naming the property and the methods; the same goes for a method
-name that two properties generate and a factory constant that two nested types share. The core hands the backend
-the inherited method names and the error reporting through `GenerationContext`. The backend depends only on the core;
+restarts at the element type. Name clashes in the generated code are reported as compiler errors (see chapter 8, Diagnostics). The backend depends only on the core;
 the generated code needs AssertJ on the test class path.
 
 | `hamcrest-matcher-generator-kotlin`
@@ -83,8 +80,7 @@ type without properties gets no file. The names of the Hamcrest matcher API come
 backend, the one dependency between backends the Enforcer plugin and ArchUnit allow. Without KAPT (`GenerationContext.kotlinOutputAvailable`
 is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`. A property whose
 name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with an `Any` member
-(`equals`, `hashCode`, `toString`) gets no DSL functions; `GenerationContext.reportWarning` reports it as a compiler warning,
-and the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
+(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see chapter 8, Diagnostics); the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
 take the runtime collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`) whose items are the DSL's entry functions.
 The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
 
