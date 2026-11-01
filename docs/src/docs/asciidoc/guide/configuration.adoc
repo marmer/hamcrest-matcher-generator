@@ -2,7 +2,7 @@
 :description: Choose the types to generate for with the configuration annotation, exclude types and set the package of the generated code.
 :page-order: 2
 
-One annotation, `GenerateMatchers`, tells the processor which types to generate for. Put it on a class of your choice. The backends on the processor path both read it, so a configuration selects the same types for the Hamcrest matchers and the AssertJ assertions.
+One annotation, `GenerateMatchers`, tells the processor which types to generate for. Put it on a class of your choice. The backends on the processor path both read it, so a configuration selects the same types for the Hamcrest matchers and the AssertJ assertions. The annotation has source retention: the processor reads it while compiling, and the compiled class of your configuration class carries no trace of it.
 
 == Selecting types
 

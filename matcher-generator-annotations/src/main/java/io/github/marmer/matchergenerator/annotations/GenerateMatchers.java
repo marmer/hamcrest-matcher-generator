@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * every configured type.
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.SOURCE)
 public @interface GenerateMatchers {
 
     /**
@@ -41,7 +41,7 @@ public @interface GenerateMatchers {
     GenerationConfiguration generation() default @GenerationConfiguration();
 
     /** Configuration of how to generate something. */
-    @Retention(RetentionPolicy.CLASS)
+    @Retention(RetentionPolicy.SOURCE)
     @interface GenerationConfiguration {
 
         /**
@@ -52,7 +52,7 @@ public @interface GenerateMatchers {
         PackageConfiguration packageConfig() default @PackageConfiguration("");
 
         /** Configuration of how packages are created for generated types. */
-        @Retention(RetentionPolicy.CLASS)
+        @Retention(RetentionPolicy.SOURCE)
         @interface PackageConfiguration {
 
             /**
