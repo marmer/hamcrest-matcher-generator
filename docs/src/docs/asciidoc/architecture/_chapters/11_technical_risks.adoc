@@ -100,6 +100,8 @@ The list is ordered by priority, the product of both values, highest first; entr
 
 The OpenSSF Scorecard (`.github/workflows/scorecard.yml`) reports the repository's posture; its score does not gate merges. The table below lists every Scorecard check that was accepted instead of fixed, with the reason and the owner's decision. It is separate from the table above, because a Scorecard check measures a practice and not a risk that occurs, so the probability and impact scales do not apply. The entries rest on the Scorecard API result of 2026-10-31 (analysed commit `95d1727`, Scorecard v5.6.0, total score 7.7) and on the ruleset as the owner left it. The date is the owner's decision where one is recorded, otherwise the date of that result.
 
+`Fuzzing` (score 0 on 2026-10-31) has no entry: the project has a Jazzer fuzz test (`ItemsInAnyOrderFuzzTest`), and an entry is written only if a weekly Scorecard run after it still reports 0.
+
 CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #284) is still open. It gets an entry only after the owner has decided the unmet criteria of the passing level.
 
 [options="header",cols="2,1,4,4,2"]
@@ -134,12 +136,6 @@ CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #28
 |6
 |Scorecard counts the contributing organizations: 2 companies or organizations. The project cannot influence this.
 |Accepted (spec #104 plan).
-|2026-10-31 (Scorecard result)
-
-|`Fuzzing`
-|0
-|Scorecard reports "no fuzzer integrations found". The project does have a Jazzer fuzz test, `ItemsInAnyOrderFuzzTest` (#290, merged in #291 before the analysed commit), which Scorecard does not detect. CI only replays its seed inputs.
-|No owner decision recorded; the entry records the score. The next weekly run confirms or revokes it.
 |2026-10-31 (Scorecard result)
 
 |===
