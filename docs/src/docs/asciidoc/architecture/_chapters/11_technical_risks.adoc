@@ -44,7 +44,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Risk: the Java baseline erodes again
 |medium
 |disabling
-|6.0.0 requires Java 17 (link:{adr-url}/0005-java-17-baseline.md[ADR 0005]). Libraries and tools keep raising their own minimum; Structurizr and Error Prone already need Java 21. When a dependency on the users' classpath or a build tool needed on the JDK 17 leg requires a newer Java version, its update cannot be merged automatically.
+|6.0.0 requires Java 17 (<<adr-0005,ADR 0005>>). Libraries and tools keep raising their own minimum; Structurizr and Error Prone already need Java 21. When a dependency on the users' classpath or a build tool needed on the JDK 17 leg requires a newer Java version, its update cannot be merged automatically.
 |The case shows up as one red Renovate pull request (Maven Enforcer's bytecode check or the JDK 17 leg). The maintainer either caps that dependency in the Renovate configuration with a comment naming the reason, or raises the baseline in a new major version. Tools that are only needed for analysis or documentation run in the JDK 21+ profile and do not affect the baseline.
 
 |Risk: a compromised dependency is released automatically
@@ -56,13 +56,13 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Technical debt: the 5.x compatibility layer stays forever
 |high
 |tolerable
-|To let 5.x users upgrade by a version bump, 6.0.0 keeps the deprecated `@MatcherConfiguration` annotation as an alias, bridge jars for the changed artifacts and the 5.x method names such as `resetFoo` (link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]). As 6.0.0 is the final feature release, there is no later major version that would remove them.
+|To let 5.x users upgrade by a version bump, 6.0.0 keeps the deprecated `@MatcherConfiguration` annotation as an alias, bridge jars for the changed artifacts and the 5.x method names such as `resetFoo` (<<adr-0002,ADR 0002>>). As 6.0.0 is the final feature release, there is no later major version that would remove them.
 |Accepted. The frozen 5.x suite (consumer build `endtoend-5x-compatibility-runner`, tree hash guarded) keeps the layer working (<<qs-x2,QS-X2>>); the deprecated alias is the only code in the old package.
 
 |Technical debt: the Kotlin DSL backend depends on the Hamcrest backend
 |high
 |tolerable
-|The architecture keeps backends independent of each other: each one depends only on the core. The Kotlin DSL backend is a deliberate exception. It builds on the Hamcrest backend and reuses its naming of the generated matchers (`XMatcher`, `isX`, `withFoo`, `ignoringFoo`). A change to that naming therefore breaks the generated Kotlin code, and the two modules cannot evolve independently (link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]).
+|The architecture keeps backends independent of each other: each one depends only on the core. The Kotlin DSL backend is a deliberate exception. It builds on the Hamcrest backend and reuses its naming of the generated matchers (`XMatcher`, `isX`, `withFoo`, `ignoringFoo`). A change to that naming therefore breaks the generated Kotlin code, and the two modules cannot evolve independently (<<adr-0004,ADR 0004>>).
 |The exception is allowed for exactly this one dependency, and Maven Enforcer and an ArchUnit test reject any other dependency between backends. Golden-file tests of the generated Kotlin code and the Kotlin end-to-end modules fail as soon as the Hamcrest naming changes without the DSL following it.
 
 |Risk: a release builds with a wrong module version

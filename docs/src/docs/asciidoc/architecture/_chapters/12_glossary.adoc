@@ -7,7 +7,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |===
 |Term |Definition
 
-|Property model
+|[[term-property-model]]Property model
 |The description of a configured type and its properties that does not depend on any assertion library. All backends share it. In code it consists of `TypeModel` (a whole type with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (whether the type is a plain `POJO` or a `RECORD`).
 
 |Nullability
@@ -22,10 +22,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 |Assertion class
 |The pair of classes the AssertJ backend generates per configured type: `AbstractXAssert<SELF, ACTUAL>` on `AbstractObjectAssert`, which holds the generated assertions, and the concrete, non-final `XAssert` with a public `XAssert(X)` constructor and a static `assertThat(X)`. Neither is named `Assertions` or `SoftAssertions`, and none extends `org.assertj.core.api.Assertions`, so `assertThat(String)` stays unambiguous.
 
-|Soft assertions mixin
-|The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see arc42 chapter 6, "Files written once per package", and ADR 0006).
+|[[term-soft-assertions-mixin]]Soft assertions mixin
+|The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see <<section-runtime-view,arc42 chapter 6>>, "<<files-once-per-package,Files written once per package>>", and <<adr-0006,ADR 0006>>).
 
-|Generated representation
+|[[term-generated-representation]]Generated representation
 |The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it is written once per package and covers only types generated in the same processing round; a later round gets the processor's "not written again" warning, but a second compilation gets no class-path note for it (only the mixin does).
 
 |Bridge jar
@@ -35,12 +35,12 @@ ifndef::imagesdir[:imagesdir: ../images]
 |The single annotation-based declaration of the types for which assertions are generated. It is the same for every backend.
 
 |Reference object
-|An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step with `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and uses `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`, and `-Amatchergenerator.verbose` prints a note per property that names the type (see arc42 chapter 6, "Files written once per package"). A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
+|An instance of a configured type whose property values are used as the expected values for all of its properties, so that a whole object can be compared in one step with `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and uses `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`, and `-Amatchergenerator.verbose` prints a note per property that names the type (see <<section-runtime-view,arc42 chapter 6>>, "<<files-once-per-package,Files written once per package>>"). A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
 
 |Property path
 |The route from the asserted object to the value that was checked, written with dots between property names, `[index]` for list items and `[key]` for map entries. Hamcrest mismatch messages use it to say exactly which value differs, for example `customer.address.city` or `lines[1].quantity`.
 
-|Assertion path
+|[[term-assertion-path]]Assertion path
 |The AssertJ counterpart of the property path: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). The generated assertion of the value a `hasFooSatisfying` requirement is run for continues the path of the enclosing property, carried by the runtime class `AssertionPath`. An assertion for any other object created inside the requirement (`OrderAssert.assertThat(other)`) starts at its own type, because the path is bound to the value by identity, not to everything created in the lambda. Known limits of the identity match: an unrelated assertion on `null` inside a requirement whose value is `null` inherits the path, and the same instance behind two properties reports the path of the property whose requirement is running. Inside an array, collection or map the path restarts at the element type (`OrderLine.sku`). Navigation with `extracting(.., as(X))` or `first(as(X))` starts a new path at the navigated type (`Customer.name`), while `hasFooSatisfying` keeps the root path (`Order.customer.name`). A missing asserted object reads `Expecting Order.customer not to be null`.
 
 |Generated bean matcher
@@ -56,7 +56,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |The check that every property of a type is either checked or consciously ignored. It makes sure that a property added later cannot go unchecked without anyone noticing. Opt-in per assertion. A property counts as addressed by a check (`withFoo` in Hamcrest, `hasFoo`, `hasFooSatisfying`, `isFoo`, `isNotFoo` in AssertJ) or by `ignoringFoo()`, which both backends generate. Hamcrest runs the check with `checkingAllProperties()`; AssertJ runs it with the scope `satisfiesCheckingAllProperties(..)` or the closing call `hasAllPropertiesChecked()`. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. Value mismatches fail first, and the check then names the properties that are neither checked nor ignored. Navigation with `extracting(.., as(X))` or `first(as(X))` yields a new assertion for a new subject, which has its own set of addressed properties: checks made before the navigation do not count for it, and a `hasAllPropertiesChecked()` after the navigation covers only the navigated type.
 
 |DSL scope
-|The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in arc42 chapter 5 (building block view), which also says what happens when two names still collide.
+|The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in <<section-building-block-view,arc42 chapter 5>> (building block view), which also says what happens when two names still collide.
 
 |Generated code
 |The source files that the processor writes into the user's project at compile time: matchers, assertions and Kotlin DSL files. They belong to the user and are not covered by the project's license.

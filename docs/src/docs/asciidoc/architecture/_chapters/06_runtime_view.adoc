@@ -24,26 +24,26 @@ own `@Generated` marker are skipped with a note.
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
-. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in chapter 5, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
+. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in <<building-block-important-interfaces,chapter 5>>, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
 `SoftAssertionsProvider` mixin per target package, from the first type of that package by name (see the glossary
-entry *Soft assertions mixin*), and the same type writes the `PropertyRepresentation` of that package (see the glossary
-entry *Generated representation*). The worker writes Java sources through the compiler's `Filer`, so they are compiled
+entry *<<term-soft-assertions-mixin,Soft assertions mixin>>*), and the same type writes the `PropertyRepresentation` of that package (see the glossary
+entry *<<term-generated-representation,Generated representation>>*). The worker writes Java sources through the compiler's `Filer`, so they are compiled
 in the same build.
 . Kotlin sources are written into the directory named by the processor option `kapt.kotlin.generated`, which only KAPT
-provides (see ADR 0004). The `GenerationContext` tells the backends whether that option is there. The Kotlin DSL backend
+provides (see <<adr-0004,ADR 0004>>). The `GenerationContext` tells the backends whether that option is there. The Kotlin DSL backend
 generates nothing without it and reports one compiler note, once per compilation; a backend that returns Kotlin anyway
 makes the worker report one compile error that names the backend and the type, because the Kotlin file would otherwise
 never be compiled. A type without properties of its own gets no DSL file, although its Java matcher exists. The scope
 classes and entry functions of all types in a package are top level declarations of that package, so the backend names
-them from the models of all types generated in the run; the naming rule and the error for names that still collide are in chapter 5.
+them from the models of all types generated in the run; the naming rule and the error for names that still collide are in <<section-building-block-view,chapter 5>>.
 
 [[files-once-per-package]]
 Files written once per package::
 A backend may write a file that exists once per target package, like the AssertJ `SoftAssertionsProvider` mixin and `PropertyRepresentation`. It does so from the first type of the package in the round, so two configuration classes of one package in one round still produce one file with the types of both. The generated API stays the same in every build: the name of the mixin does not depend on the configuration, so a test class that implements it keeps working when a type is added.
 +
-What a round cannot see is the file of an earlier round or compilation (decision: ADR 0006). The rule is: a file is written once per compilation, and the first round that writes it decides its content. The worker lives once per compilation and remembers every source it wrote, so the rule below is generic: it applies to every `GeneratedSource` of every backend, not only to files written once per package.
+What a round cannot see is the file of an earlier round or compilation (decision: <<adr-0006,ADR 0006>>). The rule is: a file is written once per compilation, and the first round that writes it decides its content. The worker lives once per compilation and remembers every source it wrote, so the rule below is generic: it applies to every `GeneratedSource` of every backend, not only to files written once per package.
 +
 * A later round of the same compilation, e.g. because another processor generated a configuration class, that produces a source whose name an earlier round wrote does not write it again (the `Filer` would refuse). The worker reports one warning at the annotation that configured the type, naming the file and the types of this round in its package that it does not know. Add those types to the configuration of the first round, or generate the configuration class in a round before the matcher generator runs, to have them in the file.
 * A second compilation of the same package (main and test, KAPT) writes its own file, and the compiler prefers it for that compilation. When the AssertJ backend finds a `SoftAssertionsProvider` of that package already on the class path outside the output directory of the running compilation, it reports a note naming the types the new mixin knows; `PropertyRepresentation` gets no such note. The class that a previous, non clean build of the same module left in its own output is replaced by this build and therefore no note. The mixin of the second compilation does not contain the types of the first.
@@ -56,8 +56,9 @@ Notable aspects::
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
 * A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests. A backend
-reports it through `GenerationContext.reportError`, once per problem, at the annotation (see chapter 8, Diagnostics).
+reports it through `GenerationContext.reportError`, once per problem, at the annotation (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
 
+[[runtime-mismatch-hamcrest]]
 === Describing a mismatch (Hamcrest)
 
 When an assertion with a generated Hamcrest matcher fails, the generated `<Type>Matcher` delegates `describeTo` and
@@ -92,7 +93,7 @@ object has (`class`) are left out.
 The generated `AbstractXAssert` fails through AssertJ's own failure, so the message keeps AssertJ's form, with the path of
 the failing property from the root type. A value that differs reads `Expecting Order.customer.address.city to be:`, the
 expected value on its own line, then `but was:` and the actual value. A null nested object reads `Expecting Order.customer
-not to be null`. The path is carried by `AssertionPath` into the nested assertion, see the glossary entry "Assertion path".
+not to be null`. The path is carried by `AssertionPath` into the nested assertion, see the glossary entry "<<term-assertion-path,Assertion path>>".
 
 The completeness check runs after the value checks. When properties are neither addressed nor ignored, the assertion fails
 with `Expecting every property of Order.customer to be checked or ignored, but these were neither: phone, address`. The
@@ -110,4 +111,4 @@ include::../workspace.dsl[]
 The maintainer merges the Release PR that release-please keeps up to date. The merge creates the tag and the release page, and the
 same workflow then builds the tag on GitHub Actions. Only a green build of the tag publishes the signed bundle to Maven Central, and the documentation is
 deployed to GitHub Pages from the same tag. Finally the workflow announces the release to the maintainer. The
-workflows, jobs and credentials are described in chapter 7.
+workflows, jobs and credentials are described in <<section-deployment-view,chapter 7>>.

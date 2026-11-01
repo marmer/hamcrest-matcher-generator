@@ -11,7 +11,7 @@ states what the system has to do, which qualities matter most and who cares abou
 === Requirements Overview
 
 * Generate Hamcrest matchers for model/domain classes at compile time
-* No production-code pollution - configuration uses one annotation on a separate configuration class, leaving model classes untouched (the retention rule is in chapter 4, Non-intrusiveness)
+* No production-code pollution - configuration uses one annotation on a separate configuration class, leaving model classes untouched (the retention rule is in <<strategy-non-intrusiveness,chapter 4>>, Non-intrusiveness)
 * Compile-safe alternative to Hamcrest's `hasProperty()` / `HasPropertyWithValue`
 * Informative mismatch messages via the generated fluent API
 * Lombok-annotated classes are supported
@@ -48,7 +48,7 @@ After 6.0.0 no further features are planned; the project receives only fixes and
 
 | 2
 | Non-intrusiveness
-| The core design promise: the model classes stay untouched and the generator adds no runtime dependency to production code; the annotation has `SOURCE` retention, see chapter 4
+| The core design promise: the model classes stay untouched and the generator adds no runtime dependency to production code; the annotation has `SOURCE` retention, see <<section-solution-strategy,chapter 4>>
 | <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>
 
 | 3

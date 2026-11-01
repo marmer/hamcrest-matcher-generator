@@ -3,6 +3,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-design-decisions]]
 == Architecture Decisions
 
+[[adr-0001]]
 === ADR 0001: Shared property model with separate library backends
 
 *Status:* accepted (6.0.0 planning)
@@ -11,6 +12,7 @@ Version 6.0.0 generates assertions for both Hamcrest and AssertJ from a single c
 
 Details: link:{adr-url}/0001-shared-property-model-and-backend-spi.md[ADR 0001]
 
+[[adr-0002]]
 === ADR 0002: Coordinates, packages and 5.x compatibility
 
 *Status:* accepted (6.0.0 planning)
@@ -19,6 +21,7 @@ The project keeps its name and the group ID `io.github.marmer.testutils`. Core a
 
 Details: link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
 
+[[adr-0003]]
 === ADR 0003: Docs as code with a Structurizr C4 model and embedded examples
 
 *Status:* accepted (6.0.0 planning)
@@ -27,6 +30,7 @@ Outdated snippets, broken links and missing images are common in project documen
 
 Details: link:{adr-url}/0003-docs-as-code-with-structurizr-and-embedded-examples.md[ADR 0003]
 
+[[adr-0004]]
 === ADR 0004: Kotlin DSL as a Kotlin-emitting backend on top of the Hamcrest backend
 
 *Status:* accepted (6.0.0 planning)
@@ -35,6 +39,7 @@ Kotlin users get an optional, type-safe DSL such as `isOrder { customer { name("
 
 Details: link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
 
+[[adr-0005]]
 === ADR 0005: Java 17 baseline for 6.0.0
 
 *Status:* accepted (6.0.0 planning)
@@ -43,6 +48,7 @@ Version 6.0.0 needs Java 17 or newer, for the annotation processor, the runtime 
 
 Details: link:{adr-url}/0005-java-17-baseline.md[ADR 0005]
 
+[[adr-0006]]
 === ADR 0006: Files written once per package, and the backend SPI channels that report it
 
 *Status:* accepted (2026-10-29)

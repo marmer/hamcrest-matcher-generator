@@ -11,7 +11,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 include::../workspace.dsl[]
 ----
 
-Test developers configure the types they need assertions for. Maintainers only appear through the release pipeline (see chapter 7).
+Test developers configure the types they need assertions for. Maintainers only appear through the release pipeline (see <<section-deployment-view,chapter 7>>).
 
 [options="header",cols="2,5"]
 |===
@@ -23,7 +23,7 @@ from Maven Central. Reads the generated matchers and assertions in the IDE and u
 
 | Maintainer
 | Merges the Release PR. Everything after that, from the build to the publication and the announcement, runs on GitHub
-Actions (see chapter 7).
+Actions (see <<section-deployment-view,chapter 7>>).
 
 | Java compiler (javac, KAPT)
 | Runs the processor in every round and receives the generated sources.
@@ -37,6 +37,7 @@ Hamcrest.
 | Where users find the artifacts and the documentation.
 |===
 
+[[context-technical-context]]
 === Technical Context
 
 [options="header",cols="2,3,3"]
@@ -49,7 +50,7 @@ Hamcrest.
 
 | Kotlin (KAPT only)
 | Directory named by the processor option `kapt.kotlin.generated`
-| The processor writes Kotlin sources (see ADR 0004).
+| The processor writes Kotlin sources (see <<adr-0004,ADR 0004>>).
 
 | Hamcrest
 | The generated matchers and the runtime library extend `TypeSafeMatcher`.
@@ -57,5 +58,5 @@ Hamcrest.
 
 | Maven Central
 | Maven coordinates
-| Users resolve the artifacts (see chapter 7).
+| Users resolve the artifacts (see <<section-deployment-view,chapter 7>>).
 |===
