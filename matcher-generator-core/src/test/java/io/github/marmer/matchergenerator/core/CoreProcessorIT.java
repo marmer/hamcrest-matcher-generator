@@ -2208,9 +2208,8 @@ class CoreProcessorIT {
     }
 
     @Test
-    @DisplayName(
-            "The deprecated MatcherConfiguration leaves no trace in compiled class files (QS-N1)")
-    void theDeprecatedAliasLeavesNoTraceInCompiledClassFiles() throws IOException {
+    @DisplayName("Neither configuration annotation leaves a trace in compiled class files (QS-N1)")
+    void neitherConfigurationAnnotationLeavesATraceInCompiledClassFiles() throws IOException {
         final Compilation alias =
                 compile(
                         configurationWith(
@@ -2229,9 +2228,25 @@ class CoreProcessorIT {
         final byte[] aliasClass = classFile(alias, "some.pck.SomeConfiguration");
         assertFalse(contains(aliasClass, "MatcherConfiguration"));
         assertFalse(contains(aliasClass, "beanmatcher"));
-        // proves the check above can fail: the CLASS retained annotation is visible in the class
+        final byte[] currentClass = classFile(current, "some.pck.SomeConfiguration");
+        assertFalse(contains(currentClass, "GenerateMatchers"));
+        assertFalse(contains(currentClass, "RuntimeInvisibleAnnotations"));
+
+        // proves the checks above can fail: a foreign RUNTIME annotation is visible in the class
         // file
-        assertTrue(contains(classFile(current, "some.pck.SomeConfiguration"), "GenerateMatchers"));
+        final Compilation control =
+                compile(
+                        JavaFileObjects.forSourceLines(
+                                "some.pck.SomeControl",
+                                "package some.pck;",
+                                "@Deprecated",
+                                "public final class SomeControl {",
+                                "}"),
+                        SOME_POJO);
+        CompilationSubject.assertThat(control).succeeded();
+        final byte[] controlClass = classFile(control, "some.pck.SomeControl");
+        assertTrue(contains(controlClass, "RuntimeVisibleAnnotations"));
+        assertTrue(contains(controlClass, "Deprecated"));
     }
 
     @Test

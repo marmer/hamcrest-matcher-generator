@@ -65,7 +65,7 @@ The configuration annotation is `@GenerateMatchers`, in the package `io.github.m
 include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
 ----
 
-The 5.x `@MatcherConfiguration` stays as a deprecated alias in its old package, `io.github.marmer.testutils.generators.beanmatcher.dependencies`. It is a full alias: it has the same attributes, including `exclude`, so you can use the new feature before you rename the annotation. Its retention is source only, so it leaves no trace in the compiled classes, as in 5.x.
+The 5.x `@MatcherConfiguration` stays as a deprecated alias in its old package, `io.github.marmer.testutils.generators.beanmatcher.dependencies`. It is a full alias: it has the same attributes, including `exclude`, so you can use the new feature before you rename the annotation. Its retention is source only, so it leaves no trace in the compiled classes, as in 5.x; the new `@GenerateMatchers` has source retention too.
 
 Two behaviours differ between the two annotations. A value that matches no type is a compiler error for `@GenerateMatchers` and a warning for the alias, which keeps 5.x configurations compiling. Renaming the annotation therefore makes a misspelled type name stop the build.
 

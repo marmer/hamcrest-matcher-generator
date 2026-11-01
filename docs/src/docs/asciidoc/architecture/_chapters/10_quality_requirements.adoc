@@ -87,8 +87,8 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n1]]QS-N1
 | Compatibility / Co-existence
-| *Production code stays untouched.* When a project adds the generator and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its model classes and runtime dependencies unchanged: the generator adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. (The annotation has `CLASS` retention, see chapter 4, so a configuration class in the production sources does carry it in its class file.)
-| None yet: no automated check covers this scenario; planned is an integration test that inspects the production artifact's classes and dependencies
+| *Production code stays untouched.* When a project adds the generator and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its model classes and runtime dependencies unchanged: the generator adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (chapter 4) extends this to a configuration class in the production sources.
+| `ProductionClassFootprintTest` (end-to-end `plain-java-minimal`: the compiled production class `PackageConfigurationProduction` contains neither `GenerateMatchers` nor `RuntimeInvisibleAnnotations`); `CoreProcessorIT` (both annotations leave no trace, with a foreign `RUNTIME` annotation as control). The dependency half of the scenario has no automated check yet
 
 | [[qs-n2]]QS-N2
 | Compatibility / Co-existence
