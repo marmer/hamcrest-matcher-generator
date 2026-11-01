@@ -95,3 +95,51 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Scenario <<qs-x5,QS-X5>> asks that generating assertions for 200 configured types adds at most 2 seconds to a compilation. No check measures this, so a change that slows down the annotation processor would go unnoticed until users complain about slow builds.
 |The risk is accepted: projects configure far fewer types than that, and a run-time check on shared CI runners would produce unreliable results. Should users report slow builds, a benchmark module can be added later.
 |===
+
+=== Accepted OpenSSF Scorecard findings
+
+The OpenSSF Scorecard (`.github/workflows/scorecard.yml`) reports the repository's posture; its score does not gate merges. The table below lists every Scorecard check that was accepted instead of fixed, with the reason and the owner's decision. It is separate from the table above, because a Scorecard check measures a practice and not a risk that occurs, so the probability and impact scales do not apply. The entries rest on the Scorecard API result of 2026-10-31 (analysed commit `95d1727`, Scorecard v5.6.0, total score 7.7) and on the ruleset as the owner left it. The date is the owner's decision where one is recorded, otherwise the date of that result.
+
+CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #284) is still open. It gets an entry only after the owner has decided the unmet criteria of the passing level.
+
+[options="header",cols="2,1,4,4,2"]
+|===
+|Check |Score |Reason |Owner decision |Date
+
+|`Code-Review`
+|0
+|Scorecard counts 0 of 29 changesets as approved by a reviewer. The project has one maintainer, and pull requests the maintainer merges are never counted as reviewed under any setup. An automatic bot approval was rejected, because it would show a review practice that does not exist.
+|Accepted (#285). The `main` ruleset keeps 0 required approvals, see `Branch-Protection`.
+|2026-11-01
+
+|`Branch-Protection`
+|3
+|Scorecard warns that `main` requires no approvers and no code owner review, dismisses no stale reviews, and does not apply its rules to administrators, among others. The ruleset `Development (Trunk)` requires 0 approvals and lets administrators bypass it, so auto-merge can merge a green pull request without a human review. Requiring one approval would make auto-merge wait for a review the single maintainer cannot give, for an expected gain of 3 to 4 points. The owner judged that not worth the auto-merge risk; the experiments E1 and E2 were not run.
+|Accepted (#285). The ruleset is unchanged.
+|2026-11-01
+
+|`Binary-Artifacts`
+|9
+|The Gradle wrapper jar of the Gradle example, `example-gradle-java/gradle/wrapper/gradle-wrapper.jar`. The CI job `Example Gradle` (#270) validates it with the SHA-pinned wrapper validation action, and the wrapper distribution is pinned by its checksum.
+|Accepted (spec #104 plan).
+|2026-10-31 (Scorecard result)
+
+|`Token-Permissions`
+|10
+|Warning: `contents: write` in the job `Publish to Maven Central` (`.github/workflows/release.yml`, line 96). The job creates the GitHub Release if release-please did not, so it needs write access to the repository contents. No other job asks for write access to the contents. The score stays 10.
+|Accepted (spec #104 plan).
+|2026-10-31 (Scorecard result)
+
+|`Contributors`
+|6
+|Scorecard counts the contributing organizations: 2 companies or organizations. The project cannot influence this.
+|Accepted (spec #104 plan).
+|2026-10-31 (Scorecard result)
+
+|`Fuzzing`
+|0
+|Scorecard reports "no fuzzer integrations found". The project does have a Jazzer fuzz test, `ItemsInAnyOrderFuzzTest` (#290, merged in #291 before the analysed commit), which Scorecard does not detect. CI only replays its seed inputs.
+|No owner decision recorded; the entry records the score. The next weekly run confirms or revokes it.
+|2026-10-31 (Scorecard result)
+
+|===
