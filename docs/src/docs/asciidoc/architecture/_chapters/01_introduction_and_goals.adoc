@@ -48,7 +48,7 @@ After 6.0.0 no further features are planned; the project receives only fixes and
 
 | 2
 | Non-intrusiveness
-| The core design promise: the model classes stay untouched and the generator adds no runtime dependency to production code; the annotation's retention is described in chapter 4
+| The core design promise: the model classes stay untouched and the generator adds no runtime dependency to production code; the annotation has `SOURCE` retention, see chapter 4
 | <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>
 
 | 3
