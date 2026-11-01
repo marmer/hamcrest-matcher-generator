@@ -75,8 +75,8 @@ the release keeps them current.
 
 ```xml
 <properties>
-    <hamcrest-matcher-generator.version>5.1.0</hamcrest-matcher-generator.version> <!-- x-release-please-version -->
-    <assertj-assertion-generator.version>5.1.0</assertj-assertion-generator.version> <!-- x-release-please-version -->
+    <hamcrest-matcher-generator.version>6.0.0</hamcrest-matcher-generator.version> <!-- x-release-please-version -->
+    <assertj-assertion-generator.version>6.0.0</assertj-assertion-generator.version> <!-- x-release-please-version -->
 </properties>
 ```
 
@@ -142,7 +142,7 @@ AssertJ, the same way:
 
 <!-- snippet: example-gradle-java/build.gradle.kts#gradle-version -->
 ```kotlin
-val matcherGeneratorVersion = "5.1.0" // x-release-please-version
+val matcherGeneratorVersion = "6.0.0" // x-release-please-version
 ```
 <!-- end snippet -->
 
