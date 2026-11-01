@@ -50,6 +50,7 @@ class AssertionGenerator {
     private static final String ASSERTJ_API = "org.assertj.core.api";
     private static final String ACTUAL_FIELD = "actual";
     private static final String PATH = "path";
+    private static final String VALUE = "value";
     private static final String ADDRESSED = "addressed";
     private static final String PROPERTY_NAMES = "PROPERTY_NAMES";
     private static final String RETURN_MYSELF = "return myself";
@@ -152,7 +153,7 @@ class AssertionGenerator {
         final Set<String> inherited =
                 context.inheritedMethodNames(ABSTRACT_OBJECT_ASSERT.toString());
         final List<List<MethodSpec>> methodsByProperty =
-                properties.stream().map(this::generatedMethods).collect(Collectors.toList());
+                properties.stream().map(this::generatedMethods).toList();
         final Set<String> sharedNames =
                 reportSharedNamesAmongProperties(methodsByProperty, inherited);
         IntStream.range(0, properties.size())
@@ -164,7 +165,7 @@ class AssertionGenerator {
                                     methods.stream()
                                             .map(method -> method.name)
                                             .filter(inherited::contains)
-                                            .collect(Collectors.toList());
+                                            .toList();
                             if (!clashing.isEmpty()) {
                                 context.reportError(clashMessage(property, clashing));
                             }
@@ -276,7 +277,7 @@ class AssertionGenerator {
         } else {
             field.addAnnotation(
                     AnnotationSpec.builder(SuppressWarnings.class)
-                            .addMember("value", "$S", "rawtypes")
+                            .addMember(VALUE, "$S", "rawtypes")
                             .build());
             field.initializer(
                     "new $T<>($T.class, new $T[] {$L}, $T::new)",
@@ -432,7 +433,7 @@ class AssertionGenerator {
                                                 constant,
                                                 nestedTypes.stream()
                                                         .map(TypeModel::qualifiedName)
-                                                        .collect(Collectors.toList())));
+                                                        .toList()));
                             }
                         });
     }
@@ -469,7 +470,7 @@ class AssertionGenerator {
     private MethodSpec hasMethod(final PropertyModel property) {
         return MethodSpec.methodBuilder("has" + property.capitalizedName())
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(valueType(property), "value", Modifier.FINAL)
+                .addParameter(valueType(property), VALUE, Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
                         "return $L($S, $L.$L(), value)",
@@ -745,20 +746,17 @@ class AssertionGenerator {
 
     AnnotationSpec generatedAnnotation() {
         return AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", context.generatorName())
+                .addMember(VALUE, "$S", context.generatorName())
                 .addMember("date", "$S", context.generationTime())
                 .build();
     }
 
     private TypeName typeVarsToWildcards(final TypeMirror type, final boolean boxPrimitives) {
-        if (type instanceof DeclaredType && !((DeclaredType) type).getTypeArguments().isEmpty()) {
+        if (type instanceof final DeclaredType declared && !declared.getTypeArguments().isEmpty()) {
             final TypeName[] typeArguments =
-                    ((DeclaredType) type)
-                            .getTypeArguments().stream()
-                                    .map(
-                                            argument ->
-                                                    typeArgumentToWildcard(argument, boxPrimitives))
-                                    .toArray(TypeName[]::new);
+                    declared.getTypeArguments().stream()
+                            .map(argument -> typeArgumentToWildcard(argument, boxPrimitives))
+                            .toArray(TypeName[]::new);
             return ParameterizedTypeName.get(ClassName.get(asTypeElement(type)), typeArguments);
         }
         if (type instanceof TypeVariable) {
@@ -775,8 +773,7 @@ class AssertionGenerator {
         if (argument instanceof TypeVariable) {
             return WildcardTypeName.subtypeOf(Object.class);
         }
-        if (argument instanceof WildcardType) {
-            final WildcardType wildcard = (WildcardType) argument;
+        if (argument instanceof final WildcardType wildcard) {
             if (wildcard.getExtendsBound() != null) {
                 return WildcardTypeName.subtypeOf(
                         typeVarsToWildcards(wildcard.getExtendsBound(), boxPrimitives));
