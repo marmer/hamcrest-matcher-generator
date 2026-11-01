@@ -49,6 +49,8 @@ class MatcherGenerator {
     private static final String MAP = "java.util.Map";
     private static final List<String> LIBRARY_PREFIXES = List.of("java.", "javax.", "kotlin.");
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
+    private static final String BEAN_PROPERTY_MATCHER_METHOD = "beanPropertyMatcher";
+    private static final String DESCRIPTION = "description";
     private static final AnnotationSpec NULL_MARKED =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
     private static final AnnotationSpec NULLABLE =
@@ -84,33 +86,30 @@ class MatcherGenerator {
     }
 
     TypeSpec.Builder getPreparedTypeSpecBuilder() {
-        final TypeSpec.Builder classBuilder =
-                TypeSpec.classBuilder(simpleMatcherName)
-                        .addModifiers(Modifier.PUBLIC)
-                        .addAnnotation(getGeneratedAnnotation())
-                        .superclass(getSuperClass())
-                        .addSuperinterface(GeneratedBeanMatcher.class)
-                        .addFields(getFields())
-                        .addMethod(getConstructor())
-                        .addMethods(getPropertyHamcrestMatcherMethods())
-                        .addMethods(getPropertyHamcrestMatcherResetMethods())
-                        .addMethods(getPropertyEqualsMatcherMethods())
-                        .addMethods(getPropertyIgnoreMethods())
-                        .addMethod(getCheckingAllPropertiesMethod())
-                        .addMethod(getReferenceInitializer())
-                        .addMethod(getPresetMethod())
-                        .addMethods(getMatcherMethods())
-                        .addMethod(getApiInitializer())
-                        .addTypes(getInnerMatchers());
-
-        return classBuilder;
+        return TypeSpec.classBuilder(simpleMatcherName)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(getGeneratedAnnotation())
+                .superclass(getSuperClass())
+                .addSuperinterface(GeneratedBeanMatcher.class)
+                .addFields(getFields())
+                .addMethod(getConstructor())
+                .addMethods(getPropertyHamcrestMatcherMethods())
+                .addMethods(getPropertyHamcrestMatcherResetMethods())
+                .addMethods(getPropertyEqualsMatcherMethods())
+                .addMethods(getPropertyIgnoreMethods())
+                .addMethod(getCheckingAllPropertiesMethod())
+                .addMethod(getReferenceInitializer())
+                .addMethod(getPresetMethod())
+                .addMethods(getMatcherMethods())
+                .addMethod(getApiInitializer())
+                .addTypes(getInnerMatchers());
     }
 
     private List<MethodSpec> getPropertyHamcrestMatcherMethods() {
         return PropertyModel.distinctByName(model.properties()).stream()
                 .map(this::toHamcrestMatcher)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private boolean isConflictingProperty(final String propertyName) {
@@ -124,11 +123,11 @@ class MatcherGenerator {
         return PropertyModel.distinctByName(model.properties()).stream()
                 .map(this::toHamcrestMatcherReset)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<MethodSpec> getPropertyEqualsMatcherMethods() {
-        return model.properties().stream().map(this::toEqualsMatcher).collect(Collectors.toList());
+        return model.properties().stream().map(this::toEqualsMatcher).toList();
     }
 
     private @Nullable MethodSpec toHamcrestMatcher(final PropertyModel property) {
@@ -189,7 +188,7 @@ class MatcherGenerator {
                                         .addStatement(RETURN_THIS)
                                         .returns(getGeneratedTypeName())
                                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private MethodSpec getCheckingAllPropertiesMethod() {
@@ -223,14 +222,11 @@ class MatcherGenerator {
     }
 
     private TypeName typeVarsToWildcards(final TypeMirror type, final boolean boxPrimitives) {
-        if (type instanceof DeclaredType && !((DeclaredType) type).getTypeArguments().isEmpty()) {
+        if (type instanceof DeclaredType declared && !declared.getTypeArguments().isEmpty()) {
             final TypeName[] typeArguments =
-                    ((DeclaredType) type)
-                            .getTypeArguments().stream()
-                                    .map(
-                                            argument ->
-                                                    typeArgumentToWildcard(argument, boxPrimitives))
-                                    .toArray(TypeName[]::new);
+                    declared.getTypeArguments().stream()
+                            .map(argument -> typeArgumentToWildcard(argument, boxPrimitives))
+                            .toArray(TypeName[]::new);
             return ParameterizedTypeName.get(ClassName.get(asTypeElement(type)), typeArguments);
         }
         if (type instanceof TypeVariable) {
@@ -247,8 +243,7 @@ class MatcherGenerator {
         if (argument instanceof TypeVariable) {
             return WildcardTypeName.subtypeOf(Object.class);
         }
-        if (argument instanceof WildcardType) {
-            final WildcardType wildcard = (WildcardType) argument;
+        if (argument instanceof WildcardType wildcard) {
             if (wildcard.getExtendsBound() != null) {
                 return WildcardTypeName.subtypeOf(
                         typeVarsToWildcards(wildcard.getExtendsBound(), boxPrimitives));
@@ -366,7 +361,7 @@ class MatcherGenerator {
      */
     private @Nullable TypeElement unmatchedUserType(final TypeMirror type) {
         final TypeMirror bound =
-                type instanceof WildcardType ? ((WildcardType) type).getExtendsBound() : type;
+                type instanceof WildcardType wildcard ? wildcard.getExtendsBound() : type;
         if (bound == null || bound.getKind() != TypeKind.DECLARED) {
             return null;
         }
@@ -410,8 +405,8 @@ class MatcherGenerator {
      *     this run, for enums and for types without properties, which tell nothing apart.
      */
     private @Nullable MatcherType matcherTypeOf(final TypeMirror type) {
-        if (type instanceof WildcardType) {
-            final TypeMirror bound = ((WildcardType) type).getExtendsBound();
+        if (type instanceof WildcardType wildcard) {
+            final TypeMirror bound = wildcard.getExtendsBound();
             return bound == null ? null : matcherTypeOf(bound);
         }
         if (type.getKind() != TypeKind.DECLARED) {
@@ -515,7 +510,7 @@ class MatcherGenerator {
                                                         .toString(),
                                                 argument)
                                         : argument)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** The matcher generated for a type and the name of its method for reference objects. */
@@ -552,7 +547,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getBeanPropertyMatcherMethod() {
-        return MethodSpec.methodBuilder("beanPropertyMatcher")
+        return MethodSpec.methodBuilder(BEAN_PROPERTY_MATCHER_METHOD)
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addStatement("return $L", BUILDER_FIELD_NAME)
@@ -564,8 +559,8 @@ class MatcherGenerator {
         return MethodSpec.methodBuilder("describeTo")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(Description.class, "description", Modifier.FINAL)
-                .addStatement("$L.describeTo($L)", BUILDER_FIELD_NAME, "description")
+                .addParameter(Description.class, DESCRIPTION, Modifier.FINAL)
+                .addStatement("$L.describeTo($L)", BUILDER_FIELD_NAME, DESCRIPTION)
                 .build();
     }
 
@@ -583,9 +578,9 @@ class MatcherGenerator {
         return MethodSpec.methodBuilder("describeMismatchSafely")
                 .addAnnotation(Override.class)
                 .addParameter(typeNameWithWildCards(), "item", Modifier.FINAL)
-                .addParameter(Description.class, "description", Modifier.FINAL)
+                .addParameter(Description.class, DESCRIPTION, Modifier.FINAL)
                 .addStatement(
-                        "$L.describeMismatch($L, $L)", BUILDER_FIELD_NAME, "item", "description")
+                        "$L.describeMismatch($L, $L)", BUILDER_FIELD_NAME, "item", DESCRIPTION)
                 .addModifiers(Modifier.PROTECTED)
                 .build();
     }
@@ -618,7 +613,7 @@ class MatcherGenerator {
                                         .getPreparedTypeSpecBuilder()
                                         .addModifiers(Modifier.STATIC)
                                         .build())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private AnnotationSpec getGeneratedAnnotation() {
