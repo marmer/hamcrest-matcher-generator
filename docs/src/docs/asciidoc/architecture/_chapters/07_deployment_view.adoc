@@ -2,10 +2,15 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-deployment-view]]
 
-
 == Deployment View
 
 === Infrastructure Level 1
+
+.Deployment of the build artifacts and the documentation
+[structurizr,target=deployment,format=svg,view=Deployment,alt="Deployment of the build artifacts and the documentation",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
 
 The project has no runtime infrastructure of its own: the processor runs inside the compiler of the user's build. What
 is deployed are the build artifacts and this documentation.
@@ -14,12 +19,6 @@ Motivation::
 
 Users take the artifacts from Maven Central, and readers take the documentation from GitHub Pages. Both are produced
 by automated builds, so no manual upload step exists.
-
-.Deployment of the build artifacts and the documentation
-[structurizr,target=deployment,format=svg,view=Deployment,alt="Deployment of the build artifacts and the documentation"]
-----
-include::../workspace.dsl[]
-----
 
 Quality and/or Performance Features::
 

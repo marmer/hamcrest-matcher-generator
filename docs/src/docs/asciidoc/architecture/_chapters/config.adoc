@@ -7,7 +7,6 @@
 
 // where are images located?
 :imagesdir: ./images
-:arc42help:
 
 // ADR files are not part of the rendered site; link to them on GitHub
 :adr-url: https://github.com/marmer/hamcrest-matcher-generator/blob/main/docs/adr

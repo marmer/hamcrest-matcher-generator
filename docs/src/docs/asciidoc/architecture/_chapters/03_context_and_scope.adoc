@@ -3,30 +3,41 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-context-and-scope]]
 == Context and Scope
 
-
-
-
-
-
 === Business Context
 
-
-
-
-
 .System context
-[structurizr,target=context,format=svg,view=Context,alt="System context"]
+[structurizr,target=context,format=svg,view=Context,alt="System context",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
 
 Test developers configure the types they need assertions for. Maintainers only appear through the release pipeline (see chapter 7).
 
+[options="header",cols="2,5"]
+|===
+| Neighbour | Exchange
+
+| Test developer
+| Annotates a configuration class with `@GenerateMatchers`, names the types that need assertions, and takes the artifacts
+from Maven Central. Reads the generated matchers and assertions in the IDE and uses them in tests.
+
+| Maintainer
+| Merges the Release PR. Everything after that, from the build to the publication and the announcement, runs on GitHub
+Actions (see chapter 7).
+
+| Java compiler (javac, KAPT)
+| Runs the processor in every round and receives the generated sources.
+
+| Hamcrest, AssertJ
+| The assertion libraries that the generated matchers and assertions build on. The generated code needs them on the
+user's test class path. The AssertJ backend itself does not use AssertJ while it generates; the Hamcrest backend does use
+Hamcrest.
+
+| Maven Central, GitHub Pages
+| Where users find the artifacts and the documentation.
+|===
+
 === Technical Context
-
-
-
-
 
 [options="header",cols="2,3,3"]
 |===

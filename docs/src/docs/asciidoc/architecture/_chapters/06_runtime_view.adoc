@@ -5,6 +5,12 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Generation of matchers
 
+.Generation of matchers in one round
+[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
+
 The compiler runs the processor in every round in which it finds `@GenerateMatchers` or its 5.x alias `@MatcherConfiguration`. For every configured type
 the following happens:
 
@@ -18,7 +24,7 @@ own `@Generated` marker are skipped with a note.
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
-. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (generator name, generation time, whether JSpecify is on the class path, the models of all types generated in the run, the inherited method names of a class on the compile class path, the error reporting `reportError`, whether KAPT's Kotlin output directory is there, the note reporting `reportNote`, the verbose note reporting `reportVerboseNote`, which the core prints only with `matchergenerator.verbose`, `classExistsOutsideOwnOutput`, which asks whether a class is on the class path without being in the output directory of this compilation, and the warning reporting `reportWarning`). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
+. The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in chapter 5, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
 `SoftAssertionsProvider` mixin per target package, from the first type of that package by name (see the glossary
@@ -44,12 +50,6 @@ What a round cannot see is the file of an earlier round or compilation (decision
 * The Hamcrest `isXLike(reference)` compares a property deeply only when the matcher for its type is generated in the same round. A property whose type is a class of the user without a generated matcher in the round is compared with `equals`; with `-Amatchergenerator.verbose` a note names the property and the type. Library types (`java.`, `javax.`, `kotlin.`), enums and types generated in the round, also those without properties, do not get a note. `Optional<X>` is a `java.` type and is not unwrapped: it is compared with `equals` without a note.
 
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
-
-.Generation of matchers in one round
-[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round"]
-----
-include::../workspace.dsl[]
-----
 
 Notable aspects::
 
@@ -102,7 +102,12 @@ sentence names the path of the asserted object from the root type, so a nested c
 === Release
 
 .Release
-[structurizr,target=release,format=svg,view=Release,alt="Release"]
+[structurizr,target=release,format=svg,view=Release,alt="Release",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
+
+The maintainer merges the Release PR that release-please keeps up to date. The merge creates the tag and the release page, and the
+same workflow then builds the tag on GitHub Actions. Only a green build of the tag publishes the signed bundle to Maven Central, and the documentation is
+deployed to GitHub Pages from the same tag. Finally the workflow announces the release to the maintainer. The
+workflows, jobs and credentials are described in chapter 7.

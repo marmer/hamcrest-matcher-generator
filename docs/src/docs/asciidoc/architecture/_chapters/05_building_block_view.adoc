@@ -2,10 +2,15 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-building-block-view]]
 
-
 == Building Block View
 
 === Whitebox Overall System
+
+.Containers
+[structurizr,target=containers,format=svg,view=Containers,alt="Containers",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
 
 Motivation::
 
@@ -50,10 +55,7 @@ Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` naviga
 Each target package gets one `SoftAssertionsProvider` mixin (written once per package, ADR 0006) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
 that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "Assertion path"); inside an array, collection or map the path
-restarts at the element type. A generated method name that an inherited AssertJ method already has is left out, and
-the core reports one compiler error at the annotation, naming the property and the methods; the same goes for a method
-name that two properties generate and a factory constant that two nested types share. The core hands the backend
-the inherited method names and the error reporting through `GenerationContext`. The backend depends only on the core;
+restarts at the element type. Name clashes in the generated code are reported as compiler errors (see chapter 8, Diagnostics). The backend depends only on the core;
 the generated code needs AssertJ on the test class path.
 
 | `hamcrest-matcher-generator-kotlin`
@@ -78,8 +80,7 @@ type without properties gets no file. The names of the Hamcrest matcher API come
 backend, the one dependency between backends the Enforcer plugin and ArchUnit allow. Without KAPT (`GenerationContext.kotlinOutputAvailable`
 is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`. A property whose
 name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with an `Any` member
-(`equals`, `hashCode`, `toString`) gets no DSL functions; `GenerationContext.reportWarning` reports it as a compiler warning,
-and the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
+(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see chapter 8, Diagnostics); the Java matcher keeps it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
 take the runtime collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`) whose items are the DSL's entry functions.
 The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
 
@@ -100,12 +101,6 @@ reactor's artifacts from `mavenLocal()`.
 published to Maven Central.
 |===
 
-.Containers
-[structurizr,target=containers,format=svg,view=Containers,alt="Containers"]
-----
-include::../workspace.dsl[]
-----
-
 Important Interfaces::
 
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
@@ -117,6 +112,12 @@ guard this.
 === Level 2
 
 ==== White Box `matcher-generator-core`
+
+.Components of matcher-generator-core
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
 
 `MatcherGenerationProcessor`::
 The annotation processor (package `io.github.marmer.matchergenerator.core`) registered through `META-INF/services`. It loads the backends and hands every round to the
@@ -141,16 +142,24 @@ JSpecify annotations.
 `TypeModel`, `PropertyModel`, `Nullability`::
 The immutable model that backends work on (see the glossary term "Property model").
 
-.Components of matcher-generator-core
-[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core"]
-----
-include::../workspace.dsl[]
-----
-
 ==== White Box `hamcrest-matcher-generator`
 
 .Components of hamcrest-matcher-generator
-[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator"]
+[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
+
+`HamcrestGeneratorBackend`::
+The Hamcrest implementation of `GeneratorBackend`, registered through `META-INF/services`. For every `TypeModel` it
+asks `MatcherGenerator` for the `<Type>Matcher` source and returns it as one `GeneratedSource`.
+
+`MatcherGenerator`::
+Builds the source of a `<Type>Matcher` class with JavaPoet from a `TypeModel`: the `isX()` entry point, `withFoo`,
+`resetFoo` and `ignoringFoo` for every property, `checkingAllProperties()` and the `isXLike(reference)` method.
+
+`BeanPropertyMatcher` and its helpers::
+The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object,
+collects the failing checks with their property paths and builds the mismatch message (see chapter 6). Its helpers, the
+collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`), `ReferenceMatching`, `PathWalk` and `MismatchReport`,
+are described in the building block table above. The library extends Hamcrest's `TypeSafeMatcher`.

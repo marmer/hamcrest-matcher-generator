@@ -4,12 +4,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Glossary
 
 [cols="e,2e" options="header"]
-|Generated code
-|The source files that the processor writes into the user's project at compile time: matchers, assertions and Kotlin DSL files. They belong to the user and are not covered by the project's license.
-
-|Runtime library
-|The published artifact that generated code calls while the user's tests run, such as the Hamcrest `BeanPropertyMatcher`. Like every other artifact of the project, it is under the project's license (Apache-2.0).
-
 |===
 |Term |Definition
 

@@ -2,7 +2,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-concepts]]
 
-
 == Cross-cutting Concepts
 
 === Continuous integration gates
@@ -27,6 +26,22 @@ excluded, so a drop below the floor fails `verify` on every JDK in the matrix. T
 | The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
 checks that every published module has its jar, sources jar, Javadoc jar and CycloneDX bill of materials, and that
 CycloneDX skipped no module. Nothing is uploaded.
+
+| Mutation testing (`Mutation testing`)
+| PIT mutates the production code of the published modules, and each module must detect at least 90 % of its mutants
+(`mutationThreshold` 90, checked by `scripts/ci/pit-scores.py`). This tests the tests: a suite that stays green when the
+code is broken fails the gate.
+
+| Sonar quality gate (`Sonar`)
+| SonarCloud analyses the build and its quality gate fails the job when new code adds issues, duplicated or uncovered
+code. Old code is not judged again when a rule changes.
+
+| Example Gradle (`Example Gradle`)
+| The Gradle example outside the reactor builds against the artifacts of the reactor, so the guide's Gradle setup keeps
+working on JDK 21 and on JDK 17 (see chapter 7).
+
+| Dependency review (`Dependency review`, not a required check)
+| A pull request that adds a dependency with a known vulnerability is blocked.
 
 | License gate (part of the Build and verify matrix)
 | Every project dependency that a published jar needs uses a permissive license (Apache-2.0, MIT, BSD-2-Clause or

@@ -118,10 +118,6 @@ table.tableblock p { margin: 0; }
 .imageblock .title, .exampleblock > .title, .sidebarblock > .content > .title { font: 600 .85rem var(--body); color: var(--muted); margin-top: 6px; }
 .quoteblock, .sidebarblock, .exampleblock > .content { margin: 0 0 1.25em; padding: 4px 16px; border-left: 3px solid var(--line); background: var(--surface); }
 
-/* arc42 help blocks: the chapters ship an inline style with a light background, so this needs the id for specificity */
-#content .arc42help { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-left: 3px solid var(--accent); }
-#content .arc42help::before { color: var(--accent); }
-
 /* landing page */
 .page-landing #content { max-width: 1080px; }
 .page-landing #toc { display: none; }
