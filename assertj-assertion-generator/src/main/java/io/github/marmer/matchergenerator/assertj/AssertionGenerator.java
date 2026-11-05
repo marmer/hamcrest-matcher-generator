@@ -52,6 +52,7 @@ class AssertionGenerator {
     private static final String PATH = "path";
     private static final String ADDRESSED = "addressed";
     private static final String PROPERTY_NAMES = "PROPERTY_NAMES";
+    private static final String VALUE = "value";
     private static final String RETURN_MYSELF = "return myself";
     private static final String IS_NOT_NULL = "isNotNull";
     private static final String CHECK_PROPERTY = "checkProperty";
@@ -276,7 +277,7 @@ class AssertionGenerator {
         } else {
             field.addAnnotation(
                     AnnotationSpec.builder(SuppressWarnings.class)
-                            .addMember("value", "$S", "rawtypes")
+                            .addMember(VALUE, "$S", "rawtypes")
                             .build());
             field.initializer(
                     "new $T<>($T.class, new $T[] {$L}, $T::new)",
@@ -469,7 +470,7 @@ class AssertionGenerator {
     private MethodSpec hasMethod(final PropertyModel property) {
         return MethodSpec.methodBuilder("has" + property.capitalizedName())
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(valueType(property), "value", Modifier.FINAL)
+                .addParameter(valueType(property), VALUE, Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
                         "return $L($S, $L.$L(), value)",
@@ -745,7 +746,7 @@ class AssertionGenerator {
 
     AnnotationSpec generatedAnnotation() {
         return AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", context.generatorName())
+                .addMember(VALUE, "$S", context.generatorName())
                 .addMember("date", "$S", context.generationTime())
                 .build();
     }
