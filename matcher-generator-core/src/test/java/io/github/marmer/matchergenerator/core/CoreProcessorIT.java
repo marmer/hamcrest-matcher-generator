@@ -1031,6 +1031,22 @@ class CoreProcessorIT {
                         .isPresent());
     }
 
+    @Test
+    @DisplayName("Every trailing dot of a configured package prefix is dropped")
+    void everyTrailingDotOfAConfiguredPackagePrefixIsDropped() {
+        final JavaFileObject bean =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.SomePojo",
+                        "package some.other.pck;",
+                        "public class SomePojo {",
+                        "}");
+        final Compilation compilation =
+                compile(prefixedConfiguration("\"some.other.pck.SomePojo\"", "prefix..."), bean);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals("prefix.some.other.pck", onlyModel().targetPackage());
+    }
+
     private static JavaFileObject exclusionConfiguration(
             final boolean deprecatedAlias,
             final String configuredTypes,
