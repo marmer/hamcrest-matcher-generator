@@ -82,7 +82,7 @@ final class RepresentationGenerator {
                         .addModifiers(Modifier.PUBLIC)
                         .addAnnotation(first.generatedAnnotation())
                         .superclass(STANDARD_REPRESENTATION)
-                        .addField(renderingField(first))
+                        .addField(renderingField())
                         .addMethod(fallback.build()));
     }
 
@@ -90,7 +90,7 @@ final class RepresentationGenerator {
      * The objects being rendered on the current thread, by identity, so that a cycle is found. The
      * fallback removes an object again when its rendering ends.
      */
-    private static FieldSpec renderingField(final AssertionGenerator first) {
+    private static FieldSpec renderingField() {
         final TypeName objectSet =
                 ParameterizedTypeName.get(ClassName.get(Set.class), TypeName.OBJECT);
         return FieldSpec.builder(
