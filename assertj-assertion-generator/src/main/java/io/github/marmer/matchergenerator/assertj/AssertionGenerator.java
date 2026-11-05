@@ -153,7 +153,7 @@ class AssertionGenerator {
         final Set<String> inherited =
                 context.inheritedMethodNames(ABSTRACT_OBJECT_ASSERT.toString());
         final List<List<MethodSpec>> methodsByProperty =
-                properties.stream().map(this::generatedMethods).collect(Collectors.toList());
+                properties.stream().map(this::generatedMethods).toList();
         final Set<String> sharedNames =
                 reportSharedNamesAmongProperties(methodsByProperty, inherited);
         IntStream.range(0, properties.size())
@@ -165,7 +165,7 @@ class AssertionGenerator {
                                     methods.stream()
                                             .map(method -> method.name)
                                             .filter(inherited::contains)
-                                            .collect(Collectors.toList());
+                                            .toList();
                             if (!clashing.isEmpty()) {
                                 context.reportError(clashMessage(property, clashing));
                             }
@@ -433,7 +433,7 @@ class AssertionGenerator {
                                                 constant,
                                                 nestedTypes.stream()
                                                         .map(TypeModel::qualifiedName)
-                                                        .collect(Collectors.toList())));
+                                                        .toList()));
                             }
                         });
     }
