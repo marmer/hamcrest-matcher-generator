@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  *
  * @deprecated use {@link io.github.marmer.matchergenerator.annotations.GenerateMatchers}
  */
-@Deprecated
+@Deprecated(since = "6.0.0")
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface MatcherConfiguration {

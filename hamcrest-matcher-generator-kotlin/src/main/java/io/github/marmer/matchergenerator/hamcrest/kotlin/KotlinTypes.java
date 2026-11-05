@@ -31,45 +31,52 @@ import javax.lang.model.type.WildcardType;
  */
 final class KotlinTypes {
 
-    private static final ClassName ANY = new ClassName("kotlin", "Any");
+    private static final String KOTLIN_PACKAGE = "kotlin";
+    private static final String KOTLIN_COLLECTIONS_PACKAGE = "kotlin.collections";
+
+    private static final ClassName ANY = new ClassName(KOTLIN_PACKAGE, "Any");
 
     /** Java classes that Kotlin knows under another name. */
     private static final Map<String, ClassName> MAPPED =
             Map.ofEntries(
                     Map.entry("java.lang.Object", ANY),
-                    Map.entry("java.lang.String", new ClassName("kotlin", "String")),
-                    Map.entry("java.lang.CharSequence", new ClassName("kotlin", "CharSequence")),
-                    Map.entry("java.lang.Number", new ClassName("kotlin", "Number")),
-                    Map.entry("java.lang.Boolean", new ClassName("kotlin", "Boolean")),
-                    Map.entry("java.lang.Byte", new ClassName("kotlin", "Byte")),
-                    Map.entry("java.lang.Short", new ClassName("kotlin", "Short")),
-                    Map.entry("java.lang.Integer", new ClassName("kotlin", "Int")),
-                    Map.entry("java.lang.Long", new ClassName("kotlin", "Long")),
-                    Map.entry("java.lang.Character", new ClassName("kotlin", "Char")),
-                    Map.entry("java.lang.Float", new ClassName("kotlin", "Float")),
-                    Map.entry("java.lang.Double", new ClassName("kotlin", "Double")),
-                    Map.entry("java.lang.Comparable", new ClassName("kotlin", "Comparable")),
-                    Map.entry("java.lang.Enum", new ClassName("kotlin", "Enum")),
-                    Map.entry("java.lang.Throwable", new ClassName("kotlin", "Throwable")),
+                    Map.entry("java.lang.String", new ClassName(KOTLIN_PACKAGE, "String")),
+                    Map.entry(
+                            "java.lang.CharSequence",
+                            new ClassName(KOTLIN_PACKAGE, "CharSequence")),
+                    Map.entry("java.lang.Number", new ClassName(KOTLIN_PACKAGE, "Number")),
+                    Map.entry("java.lang.Boolean", new ClassName(KOTLIN_PACKAGE, "Boolean")),
+                    Map.entry("java.lang.Byte", new ClassName(KOTLIN_PACKAGE, "Byte")),
+                    Map.entry("java.lang.Short", new ClassName(KOTLIN_PACKAGE, "Short")),
+                    Map.entry("java.lang.Integer", new ClassName(KOTLIN_PACKAGE, "Int")),
+                    Map.entry("java.lang.Long", new ClassName(KOTLIN_PACKAGE, "Long")),
+                    Map.entry("java.lang.Character", new ClassName(KOTLIN_PACKAGE, "Char")),
+                    Map.entry("java.lang.Float", new ClassName(KOTLIN_PACKAGE, "Float")),
+                    Map.entry("java.lang.Double", new ClassName(KOTLIN_PACKAGE, "Double")),
+                    Map.entry("java.lang.Comparable", new ClassName(KOTLIN_PACKAGE, "Comparable")),
+                    Map.entry("java.lang.Enum", new ClassName(KOTLIN_PACKAGE, "Enum")),
+                    Map.entry("java.lang.Throwable", new ClassName(KOTLIN_PACKAGE, "Throwable")),
                     Map.entry(
                             "java.lang.annotation.Annotation",
-                            new ClassName("kotlin", "Annotation")),
+                            new ClassName(KOTLIN_PACKAGE, "Annotation")),
                     Map.entry(
-                            "java.lang.Iterable", new ClassName("kotlin.collections", "Iterable")),
+                            "java.lang.Iterable",
+                            new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Iterable")),
                     Map.entry(
-                            "java.util.Iterator", new ClassName("kotlin.collections", "Iterator")),
+                            "java.util.Iterator",
+                            new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Iterator")),
                     Map.entry(
                             "java.util.ListIterator",
-                            new ClassName("kotlin.collections", "ListIterator")),
+                            new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "ListIterator")),
                     Map.entry(
                             "java.util.Collection",
-                            new ClassName("kotlin.collections", "Collection")),
-                    Map.entry("java.util.List", new ClassName("kotlin.collections", "List")),
-                    Map.entry("java.util.Set", new ClassName("kotlin.collections", "Set")),
-                    Map.entry("java.util.Map", new ClassName("kotlin.collections", "Map")),
+                            new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Collection")),
+                    Map.entry("java.util.List", new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "List")),
+                    Map.entry("java.util.Set", new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Set")),
+                    Map.entry("java.util.Map", new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Map")),
                     Map.entry(
                             "java.util.Map.Entry",
-                            new ClassName("kotlin.collections", "Map", "Entry")));
+                            new ClassName(KOTLIN_COLLECTIONS_PACKAGE, "Map", "Entry")));
 
     /**
      * Kotlin types that declare their type parameters {@code out}, by the indexes of those
@@ -95,14 +102,14 @@ final class KotlinTypes {
     /** The type of a value: a type variable is {@code Any}, a primitive stays a primitive. */
     static TypeName of(final TypeMirror type) {
         return switch (type.getKind()) {
-            case BOOLEAN -> new ClassName("kotlin", "Boolean");
-            case BYTE -> new ClassName("kotlin", "Byte");
-            case SHORT -> new ClassName("kotlin", "Short");
-            case INT -> new ClassName("kotlin", "Int");
-            case LONG -> new ClassName("kotlin", "Long");
-            case CHAR -> new ClassName("kotlin", "Char");
-            case FLOAT -> new ClassName("kotlin", "Float");
-            case DOUBLE -> new ClassName("kotlin", "Double");
+            case BOOLEAN -> new ClassName(KOTLIN_PACKAGE, "Boolean");
+            case BYTE -> new ClassName(KOTLIN_PACKAGE, "Byte");
+            case SHORT -> new ClassName(KOTLIN_PACKAGE, "Short");
+            case INT -> new ClassName(KOTLIN_PACKAGE, "Int");
+            case LONG -> new ClassName(KOTLIN_PACKAGE, "Long");
+            case CHAR -> new ClassName(KOTLIN_PACKAGE, "Char");
+            case FLOAT -> new ClassName(KOTLIN_PACKAGE, "Float");
+            case DOUBLE -> new ClassName(KOTLIN_PACKAGE, "Double");
             case ARRAY -> arrayOf((ArrayType) type);
             case DECLARED -> declared((DeclaredType) type);
             default -> ANY;
@@ -112,10 +119,11 @@ final class KotlinTypes {
     private static TypeName arrayOf(final ArrayType type) {
         final TypeMirror component = type.getComponentType();
         if (component.getKind().isPrimitive()) {
-            return new ClassName("kotlin", ((ClassName) of(component)).getSimpleName() + "Array");
+            return new ClassName(
+                    KOTLIN_PACKAGE, ((ClassName) of(component)).getSimpleName() + "Array");
         }
         return ParameterizedTypeName.get(
-                new ClassName("kotlin", "Array"), argument(component, false));
+                new ClassName(KOTLIN_PACKAGE, "Array"), argument(component, false));
     }
 
     private static TypeName declared(final DeclaredType type) {
