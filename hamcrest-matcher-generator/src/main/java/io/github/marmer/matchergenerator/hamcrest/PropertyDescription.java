@@ -47,8 +47,7 @@ final class PropertyDescription extends StringDescription {
             return ((Map<?, ?>) value)
                     .entrySet().stream().anyMatch(PropertyDescription::containsGeneratedType);
         }
-        if (value instanceof Map.Entry<?, ?>) {
-            final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) value;
+        if (value instanceof Map.Entry<?, ?> entry) {
             return containsGeneratedType(entry.getKey()) || containsGeneratedType(entry.getValue());
         }
         return isGeneratedType(value);
