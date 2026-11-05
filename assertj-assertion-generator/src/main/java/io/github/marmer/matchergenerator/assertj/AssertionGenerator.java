@@ -752,14 +752,11 @@ class AssertionGenerator {
     }
 
     private TypeName typeVarsToWildcards(final TypeMirror type, final boolean boxPrimitives) {
-        if (type instanceof DeclaredType && !((DeclaredType) type).getTypeArguments().isEmpty()) {
+        if (type instanceof DeclaredType declared && !declared.getTypeArguments().isEmpty()) {
             final TypeName[] typeArguments =
-                    ((DeclaredType) type)
-                            .getTypeArguments().stream()
-                                    .map(
-                                            argument ->
-                                                    typeArgumentToWildcard(argument, boxPrimitives))
-                                    .toArray(TypeName[]::new);
+                    declared.getTypeArguments().stream()
+                            .map(argument -> typeArgumentToWildcard(argument, boxPrimitives))
+                            .toArray(TypeName[]::new);
             return ParameterizedTypeName.get(ClassName.get(asTypeElement(type)), typeArguments);
         }
         if (type instanceof TypeVariable) {
@@ -776,8 +773,7 @@ class AssertionGenerator {
         if (argument instanceof TypeVariable) {
             return WildcardTypeName.subtypeOf(Object.class);
         }
-        if (argument instanceof WildcardType) {
-            final WildcardType wildcard = (WildcardType) argument;
+        if (argument instanceof WildcardType wildcard) {
             if (wildcard.getExtendsBound() != null) {
                 return WildcardTypeName.subtypeOf(
                         typeVarsToWildcards(wildcard.getExtendsBound(), boxPrimitives));
