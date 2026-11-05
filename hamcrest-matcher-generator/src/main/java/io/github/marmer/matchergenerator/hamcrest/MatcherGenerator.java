@@ -49,9 +49,8 @@ class MatcherGenerator {
     private static final String MAP = "java.util.Map";
     private static final List<String> LIBRARY_PREFIXES = List.of("java.", "javax.", "kotlin.");
 
-    /** The field holding the runtime matcher; the accessor method of the same name returns it. */
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
-
+    private static final String BEAN_PROPERTY_MATCHER_METHOD = "beanPropertyMatcher";
     private static final String DESCRIPTION = "description";
     private static final AnnotationSpec NULL_MARKED =
             AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
@@ -549,7 +548,7 @@ class MatcherGenerator {
     }
 
     private MethodSpec getBeanPropertyMatcherMethod() {
-        return MethodSpec.methodBuilder(BUILDER_FIELD_NAME)
+        return MethodSpec.methodBuilder(BEAN_PROPERTY_MATCHER_METHOD)
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addStatement("return $L", BUILDER_FIELD_NAME)
