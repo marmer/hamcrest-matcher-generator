@@ -1,19 +1,12 @@
 # Implementation process
 
-How implementation tickets (labelled `ready-for-agent`) are built in this repo. Wayfinder map tickets (`wayfinder:*`) are decisions, not implementation, and are exempt from the model rules below.
+How implementation tickets (labelled `ready-for-agent`) are built in this repo. Wayfinder map tickets (`wayfinder:*`) are decisions, not implementation, and are exempt from the ticket rules below.
 
-## Implementer model per ticket
+## Writing tickets
 
-Every implementation ticket names the model its implementer subagent starts with, as a line in the ticket body:
+Tickets name no model: the orchestrator chooses the implementer's model (see "Orchestration with `/implement-spec`" and the `orchestrate` skill), and a ticket body carries no model line or reason for one.
 
-```markdown
-**Implementer model:** haiku
-```
-
-- **Default: `haiku`.** Write tickets small and precise enough for Haiku to implement: clear acceptance criteria, context pointers to the spec, research notes and relevant files, one concern per ticket.
-- **Exception: `sonnet`**, when the ticket is hard to break down for Haiku, e.g. a cross-cutting design inside the annotation processor or subtle generics handling. Add a one-line reason below the model line.
-- **Rare exception: `opus`**, only when even Sonnet is unlikely to succeed. Always add the reason.
-- A missing model line means `haiku`.
+- Write tickets small and precise enough for a small model: clear acceptance criteria, context pointers to the spec, research notes and relevant files, one concern per ticket.
 - **Every checkable requirement is an acceptance criterion.** Implementers build to the criteria, so a constraint that lives only in "What to build" (e.g. "compared character by character") gets dropped; repeat it as a criterion. A criterion that freezes something ("unchanged", "byte-identical", "only X changes") names the files and tests it covers, and the ticket author checks that the frozen material holds no assumption the ticket itself changes.
 - **A ticket that introduces a gate** (a check that can fail PRs: dependency review, license, quality gate, mutation threshold) carries the criterion "first run on the whole current tree, findings listed, before the gate becomes required"; #131's `Dependency review` first ran on a later PR and rejected licences and `@...@` placeholder poms nobody could see locally. `actions/dependency-review-action` (pinned in `.github/workflows/dependency-review.yml`) has the inputs `base-ref` and `head-ref`; whether a base of the repository's first commit works is unverified, so check the action's inputs.
 - **Examples are run before they are written down.** The ticket author runs every example input of an acceptance criterion once against the rule it tests, and defines an ambiguous term ("scope") once in the ticket; #192 named `FOOBAR` as a clash, but it maps to `FOOBAR`.
@@ -22,11 +15,11 @@ Every implementation ticket names the model its implementer subagent starts with
 
 ## Orchestration with `/implement-spec`
 
-The orchestrator usually runs on Sonnet. It starts each implementer subagent on the model its ticket names, then judges the result before merging:
+The orchestrator usually runs on Sonnet. It starts each implementer subagent on the model the `orchestrate` skill prescribes (Haiku by default; the user may override it), then judges the result before merging:
 
 - **Quality bar**: `./mvnw clean verify` green, the ticket's acceptance criteria met, no shortcuts (skipped or weakened tests, suppressed checks), no test-last (every new test was seen red first), and the code reads like the surrounding code.
 - **Red evidence**: the orchestrator sends back every report whose table `test | production rule broken | failure line` (brief step 7) has an empty cell or misses a new test; golden ITs, near-miss and example-module tests pinning existing behaviour are no exception (brief step 3 gives the recipe). Coverage-floor tests (JaCoCo) are no exception: break the branch they pin and see them red. Such a report counts as a missed attempt under the escalation rules.
-- **Haiku gets up to three failed attempts** before escalating. An attempt is the initial run or one targeted follow-up instruction to the same subagent. After the third attempt misses the bar, discard the work and rerun the ticket on `sonnet`.
+- **Haiku gets up to three failed attempts** before escalating. An attempt is the initial run or one targeted follow-up instruction to the same subagent. After the third attempt misses the bar, discard the work and rerun the ticket on `sonnet`, as the `orchestrate` skill says.
 - **Sonnet and Opus get one follow-up** instruction; if the result still misses the bar, escalate (`sonnet` → `opus`). If Opus still misses it, stop and ask the user.
 - **Record every escalation** as a comment on the ticket: from which model to which, and why. These comments feed the retro.
 - **Subagent briefs** are `docs/agents/implementer-brief.md`: pass it to the implementer by path, with the ticket number and the `Claude-Session:` line for its commits; start it with `subagent_type: implementer` (`.claude/agents/implementer.md`), which limits its tools to git, build and file work, and pass its model explicitly. When the `implementer` agent type is not registered in the session (agent types load at session start), start `general-purpose` with the tool list of `.claude/agents/implementer.md` named in the prompt. The orchestrator passes the `Claude-Session:` line only: the implementer's co-author trailer names its own model, so a prompt never dictates it. The brief holds the implementer's steps and lessons; the orchestrator adds only the ticket-specific context.
