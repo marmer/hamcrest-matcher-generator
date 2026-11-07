@@ -7,6 +7,7 @@ Matcher Generator
 [![CI](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml/badge.svg)](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:hamcrest-matcher-generator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:hamcrest-matcher-generator)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/marmer/hamcrest-matcher-generator/badge)](https://securityscorecards.dev/viewer/?uri=github.com/marmer/hamcrest-matcher-generator)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16444/badge)](https://www.bestpractices.dev/projects/16444)
 [![License](https://img.shields.io/github/license/marmer/hamcrest-matcher-generator)](LICENSE)
 
 Generate Hamcrest matchers and AssertJ assertions for your model classes. An annotation processor writes them at compile
