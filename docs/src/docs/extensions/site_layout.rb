@@ -7,6 +7,7 @@
 #   * header docinfo: sticky top bar (Guide, Architecture, Javadoc, GitHub) and the generated chapter sidebar
 #   * footer docinfo: maintainer card and release information
 #   * treeprocessor:  previous/next pager at the end of every guide page
+#   * treeprocessor:  figure captions numbered 1 to n in every page (FigureNumbers)
 #   * postprocessor:  page kind class on <body> (page-landing, page-guide or page-arch)
 #   * postprocessor:  sitemap.xml with the address of every rendered page, written by the landing page
 #
@@ -239,6 +240,24 @@ module SiteLayout
     end
   end
 
+  # asciidoctorj-diagram parses a structurizr block twice: the text it sends to the renderer is a block of its own,
+  # and the rendered image takes the title and caption again. Each parse numbers a figure, so the diagrams got 2, 4,
+  # 6 ... This treeprocessor numbers the figure captions 1 to n in document order; no cross-reference uses them.
+  class FigureNumbers < Asciidoctor::Extensions::Treeprocessor
+    def process(document)
+      label = document.attr('figure-caption', 'Figure')
+      caption = /\A#{Regexp.escape(label)} \d+\. \z/
+      number = 0
+      document.find_by(context: :image).each do |block|
+        next unless block.caption&.match?(caption)
+
+        number += 1
+        block.caption = "#{label} #{number}. "
+      end
+      document
+    end
+  end
+
   class PageKindClass < Asciidoctor::Extensions::Postprocessor
     def process(document, output)
       kind = Page.new(document).kind
@@ -277,6 +296,7 @@ Asciidoctor::Extensions.register do
   docinfo_processor SiteLayout::HeaderDocinfo
   docinfo_processor SiteLayout::FooterDocinfo
   treeprocessor SiteLayout::GuidePager
+  treeprocessor SiteLayout::FigureNumbers
   postprocessor SiteLayout::PageKindClass
   postprocessor SiteLayout::SitemapFile
 end

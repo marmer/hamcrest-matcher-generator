@@ -31,6 +31,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -104,6 +105,36 @@ class RenderedDocsTest {
             }
         }
         assertTrue(problems.isEmpty(), "broken images:\n" + String.join("\n", problems));
+    }
+
+    private static final Pattern FIGURE_CAPTION = Pattern.compile("\\AFigure (\\d+)\\. ");
+
+    @Test
+    @DisplayName("Figure captions are numbered 1 to n in every page")
+    void figureCaptionsAreNumberedConsecutivelyInEveryPage() {
+        final List<String> problems = new ArrayList<>();
+        int figures = 0;
+        for (final Path page : pages) {
+            final List<String> numbers = new ArrayList<>();
+            for (final Element caption : parse(page).select("div.imageblock > div.title")) {
+                final Matcher figure = FIGURE_CAPTION.matcher(caption.text());
+                if (figure.find()) {
+                    numbers.add(figure.group(1));
+                }
+            }
+            figures += numbers.size();
+            final List<String> expected =
+                    IntStream.rangeClosed(1, numbers.size())
+                            .mapToObj(String::valueOf)
+                            .collect(Collectors.toList());
+            if (!numbers.equals(expected)) {
+                problems.add(OUTPUT.relativize(page) + ": " + numbers);
+            }
+        }
+        assertTrue(figures > 0, "no figure caption found in " + OUTPUT);
+        assertTrue(
+                problems.isEmpty(),
+                "figure captions are not numbered 1 to n:\n" + String.join("\n", problems));
     }
 
     @Test
