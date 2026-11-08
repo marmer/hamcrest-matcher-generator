@@ -206,7 +206,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         } finally {
             items.remove(item);
             if (items.isEmpty()) {
-                CHECKING.get().remove(this);
+                final Map<BeanPropertyMatcher<?>, Set<Object>> checking = CHECKING.get();
+                checking.remove(this);
+                if (checking.isEmpty()) {
+                    CHECKING.remove();
+                }
             }
         }
     }
@@ -265,7 +269,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
                         }
                     });
         } finally {
-            DESCRIBING.get().remove(this);
+            final Set<BeanPropertyMatcher<?>> describing = DESCRIBING.get();
+            describing.remove(this);
+            if (describing.isEmpty()) {
+                DESCRIBING.remove();
+            }
         }
     }
 

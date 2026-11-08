@@ -83,8 +83,7 @@ public final class MatcherNaming {
      * @return whether a matcher of the type is used to check a property of that type
      */
     public static boolean isComparedDeeply(final TypeModel type) {
-        return ((TypeElement) ((DeclaredType) type.type()).asElement()).getKind()
-                        != ElementKind.ENUM
+        return ((DeclaredType) type.type()).asElement().getKind() != ElementKind.ENUM
                 && hasProperties(type);
     }
 

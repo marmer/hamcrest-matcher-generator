@@ -25,9 +25,26 @@ Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the en
 project reached the passing level (100 %). The form deviates from the statuses below in these rows: `documentation_interface`
 (Met, the site and javadoc.io are online), `warnings_fixed` (Met, Sonar backlog tracked in #275), `dynamic_analysis` (Met by
 the owner's decision: the Jazzer fuzz test and PIT count), `sites_https` (Met after the repository homepage field was set to
-the HTTPS address), `no_leaked_credentials` (Met, confirmed by the owner; secret scanning is still disabled, #304),
+the HTTPS address), `no_leaked_credentials` (Met, confirmed by the owner; secret scanning and push protection were enabled afterwards, #304),
 `vulnerability_report_response` and `release_notes_vulns` (N/A, confirmed by the owner). The tables below keep the audit as
 of 2026-10-31.
+
+## Renewal checklist
+
+Steps for the next badge renewal. Done when step 4 reports 100 and the owner has answered every item of step 3.
+
+1. Re-read https://www.bestpractices.dev/en/criteria/0 and list every criterion whose form field says "(URL required)"; each such justification needs a full URL. On 2026-11-08 the page marks eight criteria `{Met URL}`: `contribution`, `contribution_requirements`, `license_location`, `release_notes`, `report_process`, `report_archive`, `vulnerability_report_process`, `vulnerability_report_private`.
+2. Verify the "Owner to confirm" facts before asking the owner, with the owner's `gh` token, from the repository root:
+   - `gh api repos/marmer/hamcrest-matcher-generator --jq .security_and_analysis`
+   - `gh api repos/marmer/hamcrest-matcher-generator/private-vulnerability-reporting`
+   - `gh api "repos/marmer/hamcrest-matcher-generator/dependabot/alerts?state=open" --jq length`
+   - `gh api "repos/marmer/hamcrest-matcher-generator/secret-scanning/alerts?state=open" --jq length`
+   - `https://sonarcloud.io/api/issues/search?componentKeys=io.github.marmer.testutils:matcher-generator-parent&resolved=false&types=VULNERABILITY&ps=1` (public, no token)
+   - `https://sonarcloud.io/api/qualityprofiles/search?organization=marmer-github&language=java&defaults=true` (public, no token)
+   - `grep -rn enableAssertions pom.xml */pom.xml` (no output means no override)
+   - `gh api "repos/marmer/hamcrest-matcher-generator/issues?state=all&since=<date 12 months ago>"` (add `--paginate`: without it only the first 30 items come back)
+3. Leave to the owner only: `know_secure_design`, `know_common_errors`, vulnerability reports received privately, and CVEs for the project's own code.
+4. After saving the form, read https://www.bestpractices.dev/projects/16444.json: `badge_percentage_0` must be 100 and `badge_level` `passing`. Below 100 means a criterion lacks a status or a required URL; find it before stopping.
 
 ## Basics
 
@@ -126,7 +143,7 @@ of 2026-10-31.
 | crypto_random | N/A | The software generates no keys or nonces. |  | same |
 | delivery_mitm | MET | Source is delivered through GitHub over HTTPS, the artifacts through Maven Central over HTTPS, and the release artifacts are GPG-signed. |  | [release.yml](../../.github/workflows/release.yml), [pom.xml](../../pom.xml) |
 | delivery_unsigned | MET | No hash is fetched over HTTP; the build downloads Maven and the wrapper over HTTPS only. |  | [maven-wrapper.properties](../../.mvn/wrapper/maven-wrapper.properties) |
-| vulnerabilities_fixed_60_days | MET | Dependency vulnerabilities are fixed promptly: Renovate raises security updates without the release-age delay, Dependabot alerts were cleared in #193 and the Jackson advisories reported by Scorecard were fixed in #280. | Owner to confirm: the agent cannot read the Dependabot alert list (HTTP 403 on 2026-10-31); the owner checks that no medium or higher alert has been open for more than 60 days. | [renovate.json](../../renovate.json), tickets #193, #280 |
+| vulnerabilities_fixed_60_days | MET | Dependency vulnerabilities are fixed promptly: Renovate raises security updates without the release-age delay, Dependabot alerts were cleared in #193 and the Jackson advisories reported by Scorecard were fixed in #280. | Owner to confirm: the agent can read the Dependabot alert list with the owner's token (HTTP 403 only without it); the owner checks that no medium or higher alert has been open for more than 60 days. | [renovate.json](../../renovate.json), tickets #193, #280 |
 | vulnerabilities_critical_fixed | MET | Critical findings are fixed ahead of normal work (see #193 and #280). | Assumption: no critical vulnerability is currently open. Owner to confirm with the alert list. | tickets #193, #280 |
 | no_leaked_credentials | MET | Credentials live in GitHub repository and environment secrets, never in the repository; a search for private key blocks finds only a fake placeholder in a unit test. | Assumption: no historical secret in the git history (no secret scanner result was available to the agent). Owner to confirm, for example through GitHub secret scanning. | `grep -rn "BEGIN .*PRIVATE KEY" .` finds only [test_check_credential_expiry.py](../../scripts/ci/test_check_credential_expiry.py) |
 

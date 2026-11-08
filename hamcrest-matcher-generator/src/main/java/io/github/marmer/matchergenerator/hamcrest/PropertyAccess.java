@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.stream.Collectors;
 import org.hamcrest.beans.PropertyUtil;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -37,10 +36,7 @@ final class PropertyAccess {
      */
     static void registerGeneratedType(final Class<?> type, final List<String> propertyNames) {
         PROPERTIES_OF_GENERATED_TYPES.putIfAbsent(
-                type,
-                propertyNames.stream()
-                        .filter(name -> !isDeclaredByObject(name))
-                        .collect(Collectors.toUnmodifiableList()));
+                type, propertyNames.stream().filter(name -> !isDeclaredByObject(name)).toList());
     }
 
     /**

@@ -47,13 +47,14 @@ final class PathWalk {
             return call.get();
         } finally {
             depth[0]--;
+            if (depth[0] == 0) {
+                FOREIGN_CALL_DEPTH.remove();
+            }
         }
     }
 
-    static @Nullable BeanPropertyMatcher<?> generatedOrNull(final Matcher<?> matcher) {
-        return matcher instanceof GeneratedBeanMatcher
-                ? ((GeneratedBeanMatcher) matcher).beanPropertyMatcher()
-                : null;
+    static @Nullable GeneratedBeanMatcher generatedOrNull(final Matcher<?> matcher) {
+        return matcher instanceof GeneratedBeanMatcher generated ? generated : null;
     }
 
     // ---- paths
@@ -88,10 +89,11 @@ final class PathWalk {
      * of the matched type, often {@code null}) is described on one line, not as a block.
      */
     static String describeExpected(final Matcher<?> matcher) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-        if (nested == null) {
+        final @Nullable GeneratedBeanMatcher generated = generatedOrNull(matcher);
+        if (generated == null) {
             return describeMatcher(matcher);
         }
+        final BeanPropertyMatcher<?> nested = generated.beanPropertyMatcher();
         final List<Check> checks = new ArrayList<>();
         nested.collectChecks("", checks);
         final String type = articleFor(nested.typeName()) + nested.typeName();
@@ -114,18 +116,21 @@ final class PathWalk {
             final @Nullable Object value,
             final String path,
             final MismatchReport report) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-        if (nested != null && value != null && nested.accepts(value)) {
-            nested.collectFailures(value, path + ".", report);
-        } else if (nested != null) {
-            report.fail(
-                    path,
-                    "expected "
-                            + describeExpected(matcher)
-                            + " but was "
-                            + PropertyDescription.describeValue(value));
-        } else if (matcher instanceof PathAwareMatcher) {
-            ((PathAwareMatcher) matcher).collectFailuresOf(value, path, report);
+        final @Nullable GeneratedBeanMatcher generated = generatedOrNull(matcher);
+        if (generated != null) {
+            final BeanPropertyMatcher<?> nested = generated.beanPropertyMatcher();
+            if (value != null && nested.accepts(value)) {
+                nested.collectFailures(value, path + ".", report);
+            } else {
+                report.fail(
+                        path,
+                        "expected "
+                                + describeExpected(matcher)
+                                + " but was "
+                                + PropertyDescription.describeValue(value));
+            }
+        } else if (matcher instanceof PathAwareMatcher pathAware) {
+            pathAware.collectFailuresOf(value, path, report);
         } else if (!matchesQuietly(matcher, value)) {
             final PropertyDescription mismatch = new PropertyDescription();
             callingForeign(
@@ -139,11 +144,11 @@ final class PathWalk {
 
     static void collectValueChecks(
             final String path, final Matcher<?> matcher, final List<Check> checks) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-        if (nested != null) {
-            nested.collectChecks(path + ".", checks);
-        } else if (matcher instanceof PathAwareMatcher) {
-            ((PathAwareMatcher) matcher).collectChecks(path, checks);
+        final @Nullable GeneratedBeanMatcher generated = generatedOrNull(matcher);
+        if (generated != null) {
+            generated.beanPropertyMatcher().collectChecks(path + ".", checks);
+        } else if (matcher instanceof PathAwareMatcher pathAware) {
+            pathAware.collectChecks(path, checks);
         } else {
             checks.add(new Check(path, matcher));
         }
@@ -159,8 +164,7 @@ final class PathWalk {
      *     whether the value is the one meant.
      */
     static boolean matchesByValues(final Matcher<?> matcher, final @Nullable Object value) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-        if (nested != null || matcher instanceof PathAwareMatcher) {
+        if (generatedOrNull(matcher) != null || matcher instanceof PathAwareMatcher) {
             final MismatchReport report = new MismatchReport();
             collectValueFailures(matcher, value, "", report);
             return !report.hasFailures();
@@ -174,8 +178,12 @@ final class PathWalk {
      */
     static @Nullable List<String> differencesOf(
             final Matcher<?> matcher, final @Nullable Object item) {
-        final BeanPropertyMatcher<?> nested = generatedOrNull(matcher);
-        if (nested == null || item == null || !nested.accepts(item)) {
+        final @Nullable GeneratedBeanMatcher generated = generatedOrNull(matcher);
+        if (generated == null || item == null) {
+            return null;
+        }
+        final BeanPropertyMatcher<?> nested = generated.beanPropertyMatcher();
+        if (!nested.accepts(item)) {
             return null;
         }
         final MismatchReport report = new MismatchReport();

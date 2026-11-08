@@ -15,6 +15,7 @@ Usage:
   scripts/agents/issue.py note <map> [--remove TEXT] [--add TEXT]  # edit the Notes bullets
   scripts/agents/issue.py child <map> --title T --type {research,prototype,grilling,task} --body-file F
   scripts/agents/issue.py block <n> --by <m> [--by <m2> ...] [--map <map>]
+  scripts/agents/issue.py check <n> [<index> ...] [--all] [--uncheck]  # tick task items (acceptance criteria)
 """
 import argparse
 import json
@@ -30,6 +31,9 @@ OUT_OF_SCOPE = "## Out of scope"
 FOG = "## Not yet specified"
 NOTES = "## Notes"
 STATUS_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "issue-status.py")
+TASK_ITEM = re.compile(r"^- \[([ xX])\](?=[ \t\r]|$)(.*)$")  # a Markdown task item at the start of a line
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")  # a fenced code block opening or closing line
+PREVIEW_LENGTH = 60  # characters of an item's text that `check` reports
 
 
 def gh(*args, check=True):
@@ -167,6 +171,71 @@ def edit_fog(body, remove=None, add=None):
 
 def edit_notes(body, remove=None, add=None):
     return edit_bullets(body, NOTES, remove, add)
+
+
+def _task_items(lines):
+    """Yield (position, match) for each task item at the start of a line, skipping fenced code blocks."""
+    fence = None  # the opening marker of the fenced code block we are in, e.g. "```" or "~~~~"
+    for position, line in enumerate(lines):
+        fence_match = FENCE.match(line)
+        if fence is None:
+            if fence_match:
+                fence = fence_match.group(1)
+            else:
+                match = TASK_ITEM.match(line)
+                if match:
+                    yield position, match
+        elif fence_match and _closes(fence_match, line, fence):
+            fence = None
+
+
+def _closes(fence_match, line, fence):
+    """True when `line` closes the fence opened by `fence`: same marker character, at least as long, no info string."""
+    marker = fence_match.group(1)
+    return marker[0] == fence[0] and len(marker) >= len(fence) and not line[fence_match.end():].strip()
+
+
+def set_task_items(body, indices=None, ticked=True):
+    """Return (body, changed): the body with the task items at the 1-based `indices` ticked (or unticked).
+
+    `indices=None` means every task item. Items are counted in order over the whole body, checked or not,
+    skipping fenced code blocks. `changed` lists (index, text) for each item whose state flipped, in index
+    order, with the text cut to PREVIEW_LENGTH characters. Raises ValueError, changing nothing, when an
+    index is out of range. Pure text manipulation, no API calls.
+    """
+    lines = body.split("\n")
+    items = list(_task_items(lines))
+    wanted = range(1, len(items) + 1) if indices is None else sorted(set(indices))
+    for index in wanted:
+        if not 1 <= index <= len(items):
+            raise ValueError(f"item {index} is out of range, the body has {len(items)} task items; nothing changed")
+    changed = []
+    for index in wanted:
+        position, match = items[index - 1]
+        if (match.group(1).strip() != "") == ticked:
+            continue
+        lines[position] = ("- [x]" if ticked else "- [ ]") + lines[position][len("- [ ]"):]
+        changed.append((index, match.group(2).strip()[:PREVIEW_LENGTH]))
+    return "\n".join(lines), changed
+
+
+def check(args):
+    if args.all and args.indices:
+        sys.exit("check takes either item indices or --all, not both")
+    if not args.all and not args.indices:
+        sys.exit("check needs item indices or --all")
+    body = gh(f"{REPO}/issues/{args.number}")["body"] or ""
+    try:
+        new_body, changed = set_task_items(body, None if args.all else args.indices, ticked=not args.uncheck)
+    except ValueError as error:
+        sys.exit(f"#{args.number}: {error}")
+    if not changed:
+        print(f"Nothing to change in #{args.number}")
+        return
+    gh("-X", "PATCH", f"{REPO}/issues/{args.number}", "-f", f"body={new_body}")
+    verb = "Unticked" if args.uncheck else "Ticked"
+    for index, text in changed:
+        print(f"{verb} item {index} of #{args.number}: {text}")
 
 
 def claim(args):
@@ -321,6 +390,14 @@ def main():
                    help="blocker issue number (repeatable)")
     p.add_argument("--map", type=int, help="map issue number; refresh its status section afterwards")
     p.set_defaults(func=block)
+
+    p = sub.add_parser("check", help="tick task items (acceptance criteria) in an issue body")
+    p.add_argument("number", type=int, help="the issue whose body holds the task items")
+    p.add_argument("indices", type=int, nargs="*", metavar="index",
+                   help="1-based task item to tick, counting every task item in the body in order")
+    p.add_argument("--all", action="store_true", help="tick every task item")
+    p.add_argument("--uncheck", action="store_true", help="untick the items instead of ticking them")
+    p.set_defaults(func=check)
 
     args = parser.parse_args()
     args.func(args)
