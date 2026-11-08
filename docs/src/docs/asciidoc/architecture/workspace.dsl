@@ -105,7 +105,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
 
     views {
         systemContext hmg "Context" {
-            include *
+            include * maintainer central pages
             autoLayout lr 500 1000
         }
 

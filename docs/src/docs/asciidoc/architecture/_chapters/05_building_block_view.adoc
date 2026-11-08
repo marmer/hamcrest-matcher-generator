@@ -7,7 +7,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 === Whitebox Overall System
 
 .Containers of the Hamcrest Matcher Generator
-[structurizr,target=containers,format=svg,view=Containers,alt="Containers: the annotations, the core and the Hamcrest, AssertJ and Kotlin backends; the core loads each backend through ServiceLoader and each backend implements the core SPI, with Hamcrest, AssertJ and the Java compiler as external systems",renderer=plantuml]
+[structurizr,target=containers,format=svg,view=Containers,alt="Containers: the annotations, the core and the Hamcrest, AssertJ and Kotlin backends; the Java compiler invokes the core, the core reads the annotations and loads each backend through ServiceLoader, and the Kotlin backend reuses the matcher naming of the Hamcrest backend; Hamcrest and AssertJ are external systems",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
