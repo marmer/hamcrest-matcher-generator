@@ -1,6 +1,7 @@
 workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for Java beans and records at compile time." {
     // The architecture model of hamcrest-matcher-generator. The arc42 chapters 3, 5, 6 and 7 embed its views
     // (structurizr blocks); WorkspaceViewsTest fails when a view is not embedded or an embedded diagram has no view.
+    // Labels are two to four words; the detail lives in the chapter text. Every view sets its own autoLayout.
 
 
     model {
@@ -9,23 +10,24 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
 
         hmg = softwareSystem "Hamcrest Matcher Generator" "Annotation processor that generates assertion code." {
             annotations = container "matcher-generator-annotations" "The configuration annotations." "Java, Maven module"
-            core = container "matcher-generator-core" "Processor entry point, type discovery, property model, backend SPI. No assertion library on its classpath." "Java, Maven module" {
+            core = container "matcher-generator-core" "Processor, type model and backend SPI. No assertion library." "Java, Maven module" {
                 processor = component "MatcherGenerationProcessor" "Annotation processor, registered through META-INF/services." "Java"
                 worker = component "MatcherGenerationProcessorWorker" "Resolves configured types, skips generated ones, writes every backend's source." "Java"
                 typeModelFactory = component "TypeModelFactory" "Reads a type through the element API." "Java"
+                nullability = component "NullabilityResolver" "Derives the nullability of a property." "Java"
                 propertyModel = component "TypeModel, PropertyModel, Nullability" "The property model that backends work on." "Java"
                 spi = component "GeneratorBackend" "SPI with GenerationContext and GeneratedSource." "Java interface"
             }
-            hamcrestBackend = container "hamcrest-matcher-generator" "The Hamcrest backend and its runtime library." "Java, Maven module" {
+            hamcrestBackend = container "hamcrest-matcher-generator" "The Hamcrest backend and its runtime library." "Java, JavaPoet, Maven module" {
                 backend = component "HamcrestGeneratorBackend" "Implements the SPI." "Java"
                 matcherGenerator = component "MatcherGenerator" "Builds the source of a <Type>Matcher class." "JavaPoet"
                 runtimeLibrary = component "BeanPropertyMatcher" "Runtime library that generated matchers call at test time." "Java"
             }
-            assertjBackend = container "assertj-assertion-generator" "The AssertJ backend: an AbstractXAssert and an XAssert per configured type, and the small AssertionPath runtime." "Java, Maven module"
-            kotlinBackend = container "hamcrest-matcher-generator-kotlin" "The opt-in Kotlin DSL backend: a Kotlin DSL file per configured type on top of the generated Hamcrest matchers. Runs under KAPT only." "Java, KotlinPoet, Maven module"
-            bridge = container "Bridge jars" "hamcrest-matcher-generator-dependencies and -annotationprocessor are code-free jars that bring 5.x users to the new coordinates." "Java, Maven modules"
-            endtoend = container "End-to-end modules" "Apply the processor to real beans and records and exercise the generated matchers." "Java, Kotlin, Maven modules"
-            docs = container "docs" "Renders this documentation and checks it. Needs JDK 21 or later." "Asciidoctor, Structurizr, Maven module"
+            assertjBackend = container "assertj-assertion-generator" "The AssertJ backend and its AssertionPath runtime." "Java, JavaPoet, Maven module"
+            kotlinBackend = container "hamcrest-matcher-generator-kotlin" "Opt-in Kotlin DSL backend: a DSL file per type with properties. Runs under KAPT only." "Java, KotlinPoet, Maven module"
+            bridge = container "Bridge jars" "Code-free jars for the 5.x coordinates." "Java, Maven modules"
+            endtoend = container "End-to-end modules" "Apply the processor and test the generated code." "Java, Kotlin, Maven modules"
+            docs = container "docs" "Renders and checks this documentation." "Asciidoctor, Structurizr, Maven module"
         }
 
         javac = softwareSystem "Java compiler" "javac, or KAPT for Kotlin." "External"
@@ -35,46 +37,48 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         github = softwareSystem "GitHub Actions" "Builds, releases and deploys the documentation." "External"
         pages = softwareSystem "GitHub Pages" "Hosts the documentation." "External"
 
-        developer -> hmg "Configures types with\n@GenerateMatchers"
-        developer -> central "Takes the artifacts from"
-        maintainer -> github "Merges the Release PR in"
-        javac -> hmg "Runs as annotation\nprocessor in every round"
-        hmg -> javac "Writes generated sources\nthrough"
+        developer -> hmg "Configures types with"
+        developer -> central "Downloads artifacts from"
+        maintainer -> github "Merges Release PR"
+        javac -> hmg "Runs as annotation processor"
+        hmg -> javac "Writes generated sources"
         hmg -> hamcrest "Generates matchers for"
         hmg -> assertj "Generates assertions for"
         github -> hmg "Builds and releases"
-        github -> central "Publishes the signed\nbundle to"
-        github -> pages "Deploys the documentation\nto"
-        github -> maintainer "Announces the release to"
+        github -> central "Publishes signed bundle"
+        github -> pages "Deploys documentation"
+        github -> maintainer "Announces release"
 
-        developer -> annotations "Annotates a configuration\nclass with"
+        developer -> annotations "Configures types with"
         javac -> processor "Invokes"
-        core -> annotations "Reads the configuration\nfrom"
-        worker -> hamcrestBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
-        worker -> assertjBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
-        worker -> kotlinBackend "Loads every backend at run\ntime through\nServiceLoader, without a\ncompile dependency" "ServiceLoader"
-        hamcrestBackend -> core "Implements\nGeneratorBackend of"
-        kotlinBackend -> core "Implements\nGeneratorBackend of"
-        kotlinBackend -> hamcrestBackend "Reuses the naming of the\ngenerated matchers of (the\none allowed dependency\nbetween backends)"
-        endtoend -> kotlinBackend "Apply the processor to\nKotlin classes and use the\nDSL"
-        assertjBackend -> core "Implements\nGeneratorBackend of"
-        assertjBackend -> assertj "Generates classes that\nextend\nAbstractObjectAssert of"
-        endtoend -> assertjBackend "Apply the processor to\nbeans and records"
+        core -> annotations "Reads configuration from"
+        processor -> hamcrestBackend "Loads via ServiceLoader" "ServiceLoader"
+        processor -> assertjBackend "Loads via ServiceLoader" "ServiceLoader"
+        processor -> kotlinBackend "Loads via ServiceLoader" "ServiceLoader"
+        hamcrestBackend -> core "Implements backend SPI"
+        kotlinBackend -> core "Implements backend SPI"
+        kotlinBackend -> hamcrestBackend "Reuses matcher naming"
+        endtoend -> kotlinBackend "Tests Kotlin DSL"
+        assertjBackend -> core "Implements backend SPI"
+        assertjBackend -> assertj "Extends AbstractObjectAssert"
+        endtoend -> assertjBackend "Tests generated assertions"
         hamcrestBackend -> hamcrest "Uses"
         bridge -> hamcrestBackend "Depends on"
-        endtoend -> hamcrestBackend "Apply the processor to\nbeans and records"
-        endtoend -> annotations "Configure types with"
+        endtoend -> hamcrestBackend "Tests generated matchers"
+        endtoend -> annotations "Configures types with"
 
-        processor -> worker "Hands every round to"
-        worker -> typeModelFactory "Asks for the model of a\ntype"
+        processor -> worker "Hands rounds to"
+        worker -> typeModelFactory "Asks for type model"
+        typeModelFactory -> nullability "Asks for nullability"
+        nullability -> propertyModel "Feeds nullability to"
         typeModelFactory -> propertyModel "Creates"
-        worker -> spi "Calls every backend\nthrough"
-        worker -> javac "Writes sources through the\nFiler of"
+        worker -> spi "Calls every backend"
+        worker -> javac "Writes sources via Filer"
         backend -> matcherGenerator "Delegates to"
         backend -> spi "Implements"
-        matcherGenerator -> runtimeLibrary "Generates code that calls"
+        matcherGenerator -> runtimeLibrary "Generates code calling"
         matcherGenerator -> propertyModel "Reads"
-        runtimeLibrary -> hamcrest "Extends TypeSafeMatcher of"
+        runtimeLibrary -> hamcrest "Extends TypeSafeMatcher"
 
         release = deploymentEnvironment "Release" {
             deploymentNode "GitHub" {
@@ -94,7 +98,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
                 containerInstance kotlinBackend
                 containerInstance bridge
             }
-            releaseWorkflow -> centralNode "Uploads one bundle to" "central-publishing-maven-plugin"
+            releaseWorkflow -> centralNode "Uploads one bundle" "central-publishing-maven-plugin"
             docsWorkflow -> pagesNode "Deploys to" "deploy-pages"
         }
     }
@@ -102,38 +106,54 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
     views {
         systemContext hmg "Context" {
             include *
+            autoLayout lr 500 1000
         }
 
         container hmg "Containers" {
             include *
+            exclude endtoend docs bridge
+            exclude "core -> javac"
+            autoLayout lr 500 1000
+        }
+
+        container hmg "BuildModules" {
+            include endtoend docs bridge annotations hamcrestBackend assertjBackend kotlinBackend
+            autoLayout lr 500 1000
         }
 
         component core "CoreComponents" {
             include *
+            exclude "kotlinBackend -> hamcrestBackend"
+            autoLayout lr 500 1000
         }
 
         component hamcrestBackend "HamcrestComponents" {
             include *
+            autoLayout tb 500 1000
         }
 
         dynamic core "Generation" "What happens for a round in which the compiler finds the configuration annotation." {
             javac -> processor "Invokes in every round"
             processor -> worker "Hands the round to"
-            worker -> typeModelFactory "Asks for the model of\nevery configured type"
-            worker -> hamcrestBackend "Calls every backend with\nthe model"
-            worker -> javac "Writes the returned\nsources"
+            worker -> typeModelFactory "Asks for type model"
+            worker -> spi "Calls every backend"
+            worker -> javac "Writes sources"
+            autoLayout tb 500 1000
         }
 
         dynamic * "Release" "From merging the Release PR to the announcement." {
-            maintainer -> github "Merges the Release PR in"
+            maintainer -> github "Merges Release PR"
             github -> hmg "Builds the tag"
-            github -> central "Publishes the signed\nbundle to"
-            github -> pages "Deploys the documentation\nto"
-            github -> maintainer "Announces the release to"
+            github -> central "Publishes signed bundle"
+            github -> pages "Deploys documentation"
+            github -> maintainer "Announces release"
+            autoLayout lr 500 1000
         }
 
         deployment hmg release "Deployment" {
             include *
+            exclude "core -> annotations" "hamcrestBackend -> core" "assertjBackend -> core" "kotlinBackend -> core" "kotlinBackend -> hamcrestBackend" "bridge -> hamcrestBackend" "core -> hamcrestBackend" "core -> assertjBackend" "core -> kotlinBackend"
+            autoLayout tb 500 1000
         }
 
         styles {

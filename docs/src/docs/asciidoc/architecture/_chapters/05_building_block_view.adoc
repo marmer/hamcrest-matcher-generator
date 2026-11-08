@@ -6,8 +6,8 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Whitebox Overall System
 
-.Containers
-[structurizr,target=containers,format=svg,view=Containers,alt="Containers",renderer=plantuml]
+.Containers of the Hamcrest Matcher Generator
+[structurizr,target=containers,format=svg,view=Containers,alt="Containers: the annotations, the core and the Hamcrest, AssertJ and Kotlin backends; the core loads each backend through ServiceLoader and each backend implements the core SPI, with Hamcrest, AssertJ and the Java compiler as external systems",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
@@ -59,7 +59,7 @@ restarts at the element type. Name clashes in the generated code are reported as
 the generated code needs AssertJ on the test class path.
 
 | `hamcrest-matcher-generator-kotlin`
-| The opt-in Kotlin DSL backend (<<adr-0004,ADR 0004>>). It writes one `<Type>MatcherDsl.kt` per configured type next to the Java
+| The opt-in Kotlin DSL backend (<<adr-0004,ADR 0004>>). It writes one `<Type>MatcherDsl.kt` per configured type with properties next to the Java
 matcher, with KotlinPoet from Java: an entry function `isOrder { }` and a scope class `OrderSpec` per type (nested types
 included). A nested type whose simple name another type of the package shares gets the names of its enclosing types in
 front, such as `OuterInnerSpec` and `isOuterInner`; a top level type and every type without a clash keep their simple
@@ -106,15 +106,27 @@ published to Maven Central.
 `GeneratorBackend` is the only interface between the core and a backend. A backend receives a `TypeModel` and a
 `GenerationContext` (generator name, generation time, whether JSpecify resolves at compile time, the models of all types generated in the run, so that generated code can refer to the code of another type, the names of the methods of a class on the compile class path, `inheritedMethodNames`, `reportError` for a compiler error at the annotation, see <<concepts-diagnostics,chapter 8>>, whether Kotlin output is available, `kotlinOutputAvailable`, `reportNote` for a compiler note, `reportVerboseNote` for a compiler note that is only printed with `matchergenerator.verbose`, `classExistsOutsideOwnOutput` for whether a class is on the class path without being in this compilation's own output, and `reportWarning` for a compiler warning) and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none).
 Backends are discovered with `java.util.ServiceLoader` from the processor path, and every backend found runs for every
-configured type. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
+configured type. The core has no compile dependency on any backend, so it loads them only at run time. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.
+
+==== Build-Only Modules
+
+.Build-only modules of the Hamcrest Matcher Generator
+[structurizr,target=build-modules,format=svg,view=BuildModules,alt="Build-only modules: the end-to-end modules test the annotations and the Hamcrest, AssertJ and Kotlin backends, the bridge jars depend on the Hamcrest backend, and docs stands alone",renderer=plantuml]
+----
+include::../workspace.dsl[]
+----
+
+The end-to-end modules apply the processor to real beans, records and Kotlin classes, and test the generated matchers,
+assertions and Kotlin DSL. The bridge jars only carry the 5.x coordinates over to the Hamcrest backend, and `docs` renders this documentation.
+None of these modules is shipped to users, so the container view above leaves them out.
 
 === Level 2
 
 ==== White Box `matcher-generator-core`
 
 .Components of matcher-generator-core
-[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core",renderer=plantuml]
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core: the processor hands each round to the worker, which asks the type model factory and the nullability resolver for the model, calls the backend SPI and writes sources through the Java compiler",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
@@ -145,7 +157,7 @@ The immutable model that backends work on (see the glossary term "<<term-propert
 ==== White Box `hamcrest-matcher-generator`
 
 .Components of hamcrest-matcher-generator
-[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator",renderer=plantuml]
+[structurizr,target=hamcrest-components,format=svg,view=HamcrestComponents,alt="Components of hamcrest-matcher-generator: the backend implements the SPI and delegates to the matcher generator, which generates code calling the runtime library, which extends Hamcrest TypeSafeMatcher",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
