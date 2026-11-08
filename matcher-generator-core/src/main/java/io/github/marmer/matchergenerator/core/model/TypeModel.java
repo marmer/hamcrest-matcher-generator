@@ -77,6 +77,24 @@ public record TypeModel(
                 > 1;
     }
 
+    /**
+     * Whether the name of the given property is shared by another accessor of this type, as {@link
+     * #isNameShared(PropertyModel)} asks, but the {@code getClass()} accessor does not count. The
+     * AssertJ backend generates no {@code class} property, so {@code getClass()} clashes with
+     * nothing there.
+     *
+     * @param property a property of this type
+     * @return {@code true} when two or more properties other than {@code getClass()} have the name
+     *     of the property
+     */
+    public boolean isNameSharedByAccessors(final PropertyModel property) {
+        return properties.stream()
+                        .filter(other -> !OBJECT_CLASS_ACCESSOR.equals(other.accessor()))
+                        .filter(other -> other.name().equals(property.name()))
+                        .count()
+                > 1;
+    }
+
     /** The kind of a configured type. */
     public enum Kind {
         /** Any type whose properties are bean getters: classes, interfaces and enums. */
