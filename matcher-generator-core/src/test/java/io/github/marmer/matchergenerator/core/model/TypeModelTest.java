@@ -65,26 +65,26 @@ class TypeModelTest {
     }
 
     @Test
-    @DisplayName("By accessors, a user property isClass is not shared with the getClass accessor")
-    void byAccessorsAUserPropertyIsClassIsNotSharedWithGetClass() {
+    @DisplayName("Without getClass, a user property isClass is not shared with getClass")
+    void withoutGetClassAUserPropertyIsClassIsNotShared() {
         final PropertyModel getClassProperty = property("class", "getClass");
         final PropertyModel isClass = property("class", "isClass");
 
         final TypeModel model = typeWith(getClassProperty, isClass);
 
-        assertFalse(model.isNameSharedByAccessors(isClass));
+        assertFalse(model.isNameSharedWithoutGetClass(isClass));
     }
 
     @Test
-    @DisplayName("By accessors, getFoo and isFoo still share the name foo")
-    void byAccessorsGetFooAndIsFooStillShareTheName() {
+    @DisplayName("Without getClass, getFoo and isFoo still share the name foo")
+    void withoutGetClassGetFooAndIsFooStillShareTheName() {
         final PropertyModel getFoo = property("foo", "getFoo");
         final PropertyModel isFoo = property("foo", "isFoo");
 
         final TypeModel model = typeWith(getFoo, isFoo);
 
-        assertTrue(model.isNameSharedByAccessors(getFoo));
-        assertTrue(model.isNameSharedByAccessors(isFoo));
+        assertTrue(model.isNameSharedWithoutGetClass(getFoo));
+        assertTrue(model.isNameSharedWithoutGetClass(isFoo));
     }
 
     @Test
