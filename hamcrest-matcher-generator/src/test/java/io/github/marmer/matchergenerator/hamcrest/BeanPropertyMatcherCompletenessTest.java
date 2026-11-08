@@ -23,6 +23,7 @@ import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Address;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Booking;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Contact;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Customer;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Lookalike;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.OrderLine;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Registry;
 import java.io.IOException;
@@ -38,6 +39,7 @@ class BeanPropertyMatcherCompletenessTest {
     private static final Address PARIS = new Address("Paris");
     private static final Contact ADA = new Contact("Ada", "0170-1", PARIS);
     private static final Contact BOB = new Contact("Bob", "0170-2", PARIS);
+    private static final Lookalike LOOKALIKE = new Lookalike(true, "waiting", "code");
 
     private final GoldenMessages golden = new GoldenMessages("BeanPropertyMatcherCompletenessTest");
 
@@ -78,6 +80,33 @@ class BeanPropertyMatcherCompletenessTest {
                         .checkingAllProperties();
 
         assertTrue(matcher.matches(PARIS));
+    }
+
+    @Test
+    void aPropertyNamedNotifyFailsTheCheckWhenItIsUnaddressed() {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, "notify").checkingAllProperties();
+
+        assertFalse(matcher.matches(LOOKALIKE));
+        assertEquals("neither checked nor ignored: notify", mismatchOf(matcher, LOOKALIKE));
+    }
+
+    @Test
+    void aPropertyNamedWaitFailsTheCheckWhenItIsUnaddressed() {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, "wait").checkingAllProperties();
+
+        assertFalse(matcher.matches(LOOKALIKE));
+        assertEquals("neither checked nor ignored: wait", mismatchOf(matcher, LOOKALIKE));
+    }
+
+    @Test
+    void aPropertyNamedHashCodeFailsTheCheckWhenItIsUnaddressed() {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, "hashCode").checkingAllProperties();
+
+        assertFalse(matcher.matches(LOOKALIKE));
+        assertEquals("neither checked nor ignored: hashCode", mismatchOf(matcher, LOOKALIKE));
     }
 
     @Test

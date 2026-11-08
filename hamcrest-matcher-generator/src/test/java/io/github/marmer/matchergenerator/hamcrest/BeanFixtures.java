@@ -268,6 +268,14 @@ final class BeanFixtures {
         }
     }
 
+    /** Properties named like methods every object has, but declared by the type itself. */
+    @Value
+    public static class Lookalike {
+        boolean notify;
+        String wait;
+        String hashCode;
+    }
+
     /** Small bean for the completeness tests of the collection matchers. */
     @Value
     public static class Registry {

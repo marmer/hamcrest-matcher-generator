@@ -219,7 +219,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
             final Object item, final String prefix, final MismatchReport report) {
         if (checkingAllProperties) {
             propertyNames.stream()
-                    .filter(name -> !PropertyAccess.isDeclaredByObject(name))
+                    .filter(name -> !PropertyAccess.isClassProperty(name))
                     .filter(name -> !isAddressed(name))
                     .forEach(name -> report.addUnaddressed(prefix + name));
         }

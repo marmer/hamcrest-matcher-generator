@@ -118,11 +118,22 @@ class PropertyDescriptionTest {
     }
 
     @Test
-    void testRegisterGeneratedType_PropertiesEveryObjectHas_ShouldNotBeRegistered() {
+    void testRegisterGeneratedType_ClassProperty_ShouldNotBeRegistered() {
         PropertyAccess.registerGeneratedType(
                 Registered.class, List.of("id", "toString", "hashCode", "class"));
 
-        assertEquals(List.of("id"), PropertyAccess.propertiesOfGeneratedType(Registered.class));
+        assertEquals(
+                List.of("id", "toString", "hashCode"),
+                PropertyAccess.propertiesOfGeneratedType(Registered.class));
+    }
+
+    @Test
+    void testDescribeValue_GeneratedTypeWithPropertyNamedLikeAnObjectMethod_ShouldPrintIt() {
+        new BeanPropertyMatcher<>(Named.class, "hashCode", "id");
+
+        assertEquals(
+                "Named {hashCode \"h\", id \"x\"}",
+                PropertyDescription.describeValue(new Named("x", "h")));
     }
 
     @Test
@@ -148,6 +159,12 @@ class PropertyDescriptionTest {
     @Value
     public static class Sparse {
         String id;
+    }
+
+    @Value
+    public static class Named {
+        String id;
+        String hashCode;
     }
 
     public static class Registered {}
