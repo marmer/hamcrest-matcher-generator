@@ -195,7 +195,7 @@ Generated matchers are annotated with JSpecify (`@NullMarked`, `@Nullable` on eq
 JSpecify is on the classpath, so Kotlin sees real nullable and non-null types and `withFoo(null)` compiles. Kotlin treats
 JSpecify mismatches as errors by default; if that gets in your way, `-Xjspecify-annotations=warn` lowers them to warnings.
 
-You can find an example [here](hamcrest-matcher-generator-endtoend-mixed-kotlin-java/pom.xml)
+You can find an example [here](hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml)
 
 Additionally, you have to add the output directories for the test-compile execution of the kotlin-maven-plugin:
 
