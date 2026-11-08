@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues. Use `gh api` (REST) for all operations, or `scripts/agents/issue.py` for claim, comment and close. `gh issue`/`gh pr` subcommands use GraphQL, which is blocked in Claude Code cloud sessions; use `gh api` REST or `scripts/agents/issue.py`.
+Issues and specs for this repo live as GitHub issues. Use `gh api` (REST) for all operations, or `scripts/agents/issue.py` for claim, comment, tick and close. `gh issue`/`gh pr` subcommands use GraphQL, which is blocked in Claude Code cloud sessions; use `gh api` REST or `scripts/agents/issue.py`.
 
 ## Conventions
 
@@ -12,7 +12,8 @@ Issues and specs for this repo live as GitHub issues. Use `gh api` (REST) for al
 - **Make an issue a sub-issue of a parent**: `gh api -X POST $R/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>` (database id, as in **Blocking** below). Without sub-issues, put `Part of #<parent>` at the top of the child body.
 - **Comment on an issue**: `scripts/agents/issue.py comment <number> --body-file comment.md` (or `gh api -X POST $R/issues/<number>/comments -F body=@comment.md`).
 - **Apply / remove labels**: `gh api -X POST $R/issues/<number>/labels -f 'labels[]=...'` / `gh api -X DELETE $R/issues/<number>/labels/<label>`.
-- **Close**: `scripts/agents/issue.py close <number> [--reason completed|not_planned]` (or `gh api -X PATCH $R/issues/<number> -f state=closed -f state_reason=completed`).
+- **Close**: `scripts/agents/issue.py close <number> [--reason completed|not_planned]` (or `gh api -X PATCH $R/issues/<number> -f state=closed -f state_reason=completed`); pass `--map <parent>` when the ticket is a child of a spec or map.
+- **Tick acceptance criteria**: `scripts/agents/issue.py check <number> --all` (or indices, e.g. `check <number> 2 3`) as each criterion is met, before commenting and closing; raw REST: PATCH the body (`gh api -X PATCH $R/issues/<number> -F body=@body.md`).
 
 Infer the repo from `git remote -v`; the REST commands below hard-code `R`, so use the same repo.
 
