@@ -60,7 +60,7 @@ Renovate merges a pull request on its own once its checks are green (`automerge`
 
 Renovate does not touch the frozen 5.x suite pom (`hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml`): a
 `packageRules` entry in `renovate.json` disables it with `enabled: false`, because its tree hash is the guard that keeps
-the suite frozen (CLAUDE.md). The root `dependencyManagement` entry that the suite inherits is still updated, so a
+the suite frozen (`docs/agents/5x-compatibility.md`). The root `dependencyManagement` entry that the suite inherits is still updated, so a
 dependency update for the suite arrives as a root pom change.
 
 ### Red Release pull request

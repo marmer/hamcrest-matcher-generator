@@ -1,0 +1,3 @@
+# KAPT configuration (Kotlin end-to-end modules)
+
+`hamcrest-matcher-generator-endtoend-mixed-kotlin-java` and `hamcrest-matcher-generator-endtoend-plain-kotlin` run the processor through the `kotlin-maven-plugin` `test-kapt` execution into `target/generated-sources/kapt/test/`. A `build-helper-maven-plugin` `add-test-source` registers that directory as a test source root, so javac compiles every generated matcher, not only the ones Java tests reference (#110). The poms are the source of truth. The documentation example `example-maven-kotlin` is the main-code counterpart: it runs the same KAPT setup with the plain `kapt` execution (its tagged `maven-kapt` region feeds the docs).
