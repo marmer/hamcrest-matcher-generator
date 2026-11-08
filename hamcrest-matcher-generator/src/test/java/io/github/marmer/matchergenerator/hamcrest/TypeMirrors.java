@@ -10,7 +10,9 @@ import com.google.testing.compile.JavaFileObjects;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
@@ -32,7 +34,77 @@ final class TypeMirrors {
 
     /** A real declared type mirror of the named class, which has to be on the class path. */
     static TypeMirror typeNamed(final String qualifiedName) {
-        final AtomicReference<@Nullable TypeMirror> string = new AtomicReference<>();
+        return inCompilation(environment -> typeElement(environment, qualifiedName).asType());
+    }
+
+    /** A real {@code java.util.List} of the named class, which has to be on the class path. */
+    static TypeMirror listOf(final String elementName) {
+        return inCompilation(
+                environment ->
+                        environment
+                                .getTypeUtils()
+                                .getDeclaredType(
+                                        typeElement(environment, "java.util.List"),
+                                        typeElement(environment, elementName).asType()));
+    }
+
+    /** A real {@code java.util.List} of an unknown subtype of the named class. */
+    static TypeMirror listOfExtending(final String upperBoundName) {
+        return inCompilation(
+                environment ->
+                        environment
+                                .getTypeUtils()
+                                .getDeclaredType(
+                                        typeElement(environment, "java.util.List"),
+                                        environment
+                                                .getTypeUtils()
+                                                .getWildcardType(
+                                                        typeElement(environment, upperBoundName)
+                                                                .asType(),
+                                                        null)));
+    }
+
+    /**
+     * A real {@code java.util.Collection} of the named class, which has to be on the class path.
+     */
+    static TypeMirror collectionOf(final String elementName) {
+        return inCompilation(
+                environment ->
+                        environment
+                                .getTypeUtils()
+                                .getDeclaredType(
+                                        typeElement(environment, "java.util.Collection"),
+                                        typeElement(environment, elementName).asType()));
+    }
+
+    /** A real {@code java.util.Map} of the named classes, which have to be on the class path. */
+    static TypeMirror mapOf(final String keyName, final String valueName) {
+        return inCompilation(
+                environment ->
+                        environment
+                                .getTypeUtils()
+                                .getDeclaredType(
+                                        typeElement(environment, "java.util.Map"),
+                                        typeElement(environment, keyName).asType(),
+                                        typeElement(environment, valueName).asType()));
+    }
+
+    /** A real array type of the named class, which has to be on the class path. */
+    static TypeMirror arrayOf(final String elementName) {
+        return inCompilation(
+                environment ->
+                        environment
+                                .getTypeUtils()
+                                .getArrayType(typeElement(environment, elementName).asType()));
+    }
+
+    /**
+     * Builds a type mirror inside a compilation, since only the processing environment of one can
+     * make parameterized, array or wildcard types.
+     */
+    private static TypeMirror inCompilation(
+            final Function<ProcessingEnvironment, TypeMirror> build) {
+        final AtomicReference<@Nullable TypeMirror> mirror = new AtomicReference<>();
         CompilationSubject.assertThat(
                         Compiler.javac()
                                 .withProcessors(
@@ -51,12 +123,8 @@ final class TypeMirrors {
                                             public boolean process(
                                                     final Set<? extends TypeElement> annotations,
                                                     final RoundEnvironment round) {
-                                                string.compareAndSet(
-                                                        null,
-                                                        processingEnv
-                                                                .getElementUtils()
-                                                                .getTypeElement(qualifiedName)
-                                                                .asType());
+                                                mirror.compareAndSet(
+                                                        null, build.apply(processingEnv));
                                                 return false;
                                             }
                                         })
@@ -64,6 +132,11 @@ final class TypeMirrors {
                                         JavaFileObjects.forSourceLines(
                                                 "some.Empty", "package some;", "class Empty {}")))
                 .succeeded();
-        return Objects.requireNonNull(string.get());
+        return Objects.requireNonNull(mirror.get());
+    }
+
+    private static TypeElement typeElement(
+            final ProcessingEnvironment environment, final String qualifiedName) {
+        return Objects.requireNonNull(environment.getElementUtils().getTypeElement(qualifiedName));
     }
 }
