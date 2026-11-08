@@ -38,7 +38,7 @@ Do not report a vulnerability in a public issue. [SECURITY.md](SECURITY.md) desc
 - **Documentation stays in sync**: a change to behaviour updates the user guide and, where it touches architecture or
   terms, `GLOSSARY.md`, `docs/adr/` and the arc42 chapters. README snippets are copied from the example modules by
   `python3 scripts/ci/sync-readme-snippets.py`; `python3 scripts/agents/check-domain-docs-sync.py` checks the domain
-  documents. `CLAUDE.md` describes the module structure and the build in detail.
+  documents. `docs/agents/modules.md` describes the module structure, and `CLAUDE.md` the build commands.
 - **License**: your contribution is released under the project's [Apache-2.0 license](LICENSE).
 
 ## Test policy

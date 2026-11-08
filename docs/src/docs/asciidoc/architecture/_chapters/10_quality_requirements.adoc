@@ -98,7 +98,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 | [[qs-n3]]QS-N3
 | Compatibility / Co-existence
 | *Generated code compiles without warnings.* When a test developer compiles a project's tests with `-Xlint:all -Werror` on any JDK from 17 to the latest, the generated sources compile; they produce no warning at all, including rawtypes, unchecked and deprecation warnings.
-| End-to-end modules compiled with `-Xlint:all -Werror` (`-Xlint:all,-processing -Werror` in the two modules that run the processor on test sources, see CLAUDE.md)
+| End-to-end modules compiled with `-Xlint:all -Werror` (`-Xlint:all,-processing -Werror` in the two modules that run the processor on test sources, see `docs/agents/modules.md`)
 
 | [[qs-u1]]QS-U1
 | Interaction capability / User error protection
