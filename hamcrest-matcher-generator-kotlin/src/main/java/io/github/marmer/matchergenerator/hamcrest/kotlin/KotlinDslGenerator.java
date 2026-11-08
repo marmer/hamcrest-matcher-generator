@@ -45,6 +45,12 @@ final class KotlinDslGenerator {
     /** The private property of a scope that holds the Java matcher it delegates to. */
     private static final String DELEGATE = "delegate";
 
+    /**
+     * The format of a call without arguments on a receiver, such as {@code
+     * delegate.ignoringName()}.
+     */
+    private static final String MEMBER_CALL_FORMAT = "%L.%L()";
+
     /** The parameter of the nested scope lambda, of the entry function and of a nested property. */
     private static final String BLOCK = "block";
 
@@ -337,14 +343,18 @@ final class KotlinDslGenerator {
     private static FunSpec checkingAllPropertiesFunction(final TypeModel type) {
         final FunSpec.Builder function =
                 FunSpec.builder(MatcherNaming.CHECKING_ALL_PROPERTIES)
-                        .addStatement("%L.%L()", DELEGATE, MatcherNaming.CHECKING_ALL_PROPERTIES);
+                        .addStatement(
+                                MEMBER_CALL_FORMAT,
+                                DELEGATE,
+                                MatcherNaming.CHECKING_ALL_PROPERTIES);
         PropertyModel.distinctByName(type.properties()).stream()
                 .filter(KotlinDslGenerator::isLeftOut)
                 .forEach(
                         property ->
                                 function.addStatement(
-                                        "%L.%L()",
-                                        DELEGATE, MatcherNaming.ignoringMethodName(property)));
+                                        MEMBER_CALL_FORMAT,
+                                        DELEGATE,
+                                        MatcherNaming.ignoringMethodName(property)));
         return function.build();
     }
 
@@ -378,7 +388,9 @@ final class KotlinDslGenerator {
         scope.addFunction(
                 FunSpec.builder(MatcherNaming.ignoringMethodName(property))
                         .addStatement(
-                                "%L.%L()", DELEGATE, MatcherNaming.ignoringMethodName(property))
+                                MEMBER_CALL_FORMAT,
+                                DELEGATE,
+                                MatcherNaming.ignoringMethodName(property))
                         .build());
     }
 
