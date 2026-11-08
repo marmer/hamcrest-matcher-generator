@@ -10,7 +10,7 @@ For the rest of this session you are the **coordinator**: subagents do the work.
 
 Split the task into subtasks, each with its own checkable **done criterion**. Independent subtasks with disjoint areas (files, modules) run in parallel; overlapping ones run in sequence.
 
-Name what stays in the main session: questions and ongoing alignment with the user, one-line fixes (1-2 lines), and pure commands that check (`git status`, the project's lint or build command). Every part of the task ends up as a subtask or as main-session work.
+Name what stays in the main session: questions and ongoing alignment with the user, one-line fixes (1-2 lines), and pure commands that check (`git status`, the project's lint or build command). A one-line fix you make is checked by a different agent, so that check is a subtask. Every part of the task ends up as a subtask or as main-session work.
 
 ## Delegate
 
@@ -32,7 +32,7 @@ Start every subagent on **Haiku with effort `high`** (`model: "haiku"`, `effort:
 
 A result counts only after you verified it: read the diff or the changed files, check scope, rules and style, and run the matching check yourself.
 
-A result that misses the bar goes back as a targeted follow-up instruction to the same subagent (`SendMessage`), naming what is wrong. One-line defects you fix yourself.
+A result that misses the bar goes back as a targeted follow-up instruction to the same subagent (`SendMessage`), naming what is wrong. One-line defects you fix yourself. Every fix, yours included, is checked by a different agent. A verification ends with a check, never with a fix: the fixed result is checked again. Each fix counts as an attempt under the escalation rules.
 
 ### Escalation
 

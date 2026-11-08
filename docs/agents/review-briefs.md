@@ -1,6 +1,6 @@
 # Review briefs
 
-The two review prompts that `code-review` (Standards and Spec axes) runs as sub-agents, and how the orchestrator triages what they return. Give each the fixed point (`origin/main` for a ticket, the session's first base for a session-end review) and the ticket or spec number.
+The review prompts: two that `code-review` (Standards and Spec axes) runs as sub-agents, and the delta check that closes a fix. Also how the orchestrator triages what they return. Give each the fixed point (`origin/main` for a ticket, the session's first base for a session-end review, the commit the review looked at for the delta check) and the ticket or spec number.
 
 ## Standards
 
@@ -10,6 +10,14 @@ The two review prompts that `code-review` (Standards and Spec axes) runs as sub-
 
 > Fetch the ticket and its comments (`gh api repos/marmer/hamcrest-matcher-generator/issues/<n>` plus `/comments`); grep the spec only as needed. Compare `git diff <fixed point>...HEAD` with them and report: missing or partial criteria, scope creep, and implemented-but-wrong behaviour. Quote the spec line each finding rests on. Report under 400 words.
 
+## Delta check
+
+Run by a fresh review agent, never the fixer or the agent that made the review's findings, after the implementer has fixed them.
+
+> Review `git diff <reviewed commit>..HEAD`. For each finding below, report fixed or not fixed, quoting its file:line. Then report new defects in the lines this diff changes, one per line with file and line. Under 300 words. Change nothing.
+>
+> Findings: <each finding, with file and line, as the review wrote it>
+
 ## Triage of findings
 
-Findings go back to the implementer when they are correctness gaps, missing tests, docs-sync gaps or standard violations. Refactorings beyond the ticket and style nits stay as they are, unless they sit in lines the PR changes anyway; the follow-up names which findings to fix and which stay, with the reason. A finding that stays has one of two fates: dropped with its reason, or a follow-up ticket when it needs an owner decision, exceeds the ticket or is a real defect the ticket did not cover. The orchestrator writes that ticket by hand rather than only mentioning it in the report: the ticket shape of `.agents/skills/to-tickets/SKILL.md`, acceptance criteria per `docs/agents/implementation.md`, `Part of #<spec>` or a sub-issue link, then the graph step of the follow-up rule under Blocking in `docs/agents/issue-tracker.md`. When several follow-ups accumulate or their cut is unclear, the final report asks the owner to run `/to-tickets` (user-invoked only). Ask the user only about findings that need their decision.
+Findings go back to the implementer when they are correctness gaps, missing tests, docs-sync gaps or standard violations. Refactorings beyond the ticket and style nits stay as they are, unless they sit in lines the PR changes anyway; the follow-up names which findings to fix and which stay, with the reason. A finding that stays has one of two fates: dropped with its reason, or a follow-up ticket when it needs an owner decision, exceeds the ticket or is a real defect the ticket did not cover. The orchestrator writes that ticket by hand rather than only mentioning it in the report: the ticket shape of `.agents/skills/to-tickets/SKILL.md`, acceptance criteria per `docs/agents/implementation.md`, `Part of #<spec>` or a sub-issue link, then the graph step of the follow-up rule under Blocking in `docs/agents/issue-tracker.md`. When several follow-ups accumulate or their cut is unclear, the final report asks the owner to run `/to-tickets` (user-invoked only). Ask the user only about findings that need their decision. Triage ends with the delta check above on the fixes that go back to the implementer, never with the fix itself.
