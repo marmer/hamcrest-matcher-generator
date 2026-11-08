@@ -12,7 +12,9 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             annotations = container "matcher-generator-annotations" "The configuration annotations." "Java, Maven module"
             core = container "matcher-generator-core" "Processor, type model and backend SPI. No assertion library." "Java, Maven module" {
                 processor = component "MatcherGenerationProcessor" "Annotation processor, registered through META-INF/services." "Java"
-                worker = component "MatcherGenerationProcessorWorker" "Resolves configured types, skips generated ones, writes every backend's source." "Java"
+                worker = component "MatcherGenerationProcessorWorker" "Resolves configured types, skips generated ones, hands every backend's source to the source writer." "Java"
+                diagnostics = component "ProcessorDiagnostics" "Holds the texts of the messages and places them through the Messager; the worker decides which applies." "Java"
+                sourceWriter = component "GeneratedSourceWriter" "Owns the Filer, writes each source once: Java through the Filer, Kotlin into the KAPT directory." "Java"
                 typeModelFactory = component "TypeModelFactory" "Reads a type through the element API." "Java"
                 nullability = component "NullabilityResolver" "Derives the nullability of a property." "Java"
                 propertyModel = component "TypeModel, PropertyModel, Nullability" "The property model that backends work on." "Java"
@@ -73,7 +75,11 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         nullability -> propertyModel "Feeds nullability to"
         typeModelFactory -> propertyModel "Creates"
         worker -> spi "Calls backends"
-        worker -> javac "Writes sources via Filer"
+        worker -> sourceWriter "Hands sources to"
+        worker -> diagnostics "Reports through"
+        sourceWriter -> diagnostics "Reports through"
+        sourceWriter -> javac "Writes sources via Filer"
+        diagnostics -> javac "Reports through Messager"
         backend -> matcherGenerator "Delegates to"
         backend -> spi "Implements"
         matcherGenerator -> runtimeLibrary "Generates code calling"
@@ -137,7 +143,8 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             processor -> worker "Hands the round to"
             worker -> typeModelFactory "Asks for model"
             worker -> spi "Calls backends"
-            worker -> javac "Writes sources"
+            worker -> sourceWriter "Hands sources to"
+            sourceWriter -> javac "Writes sources"
             autoLayout lr 500 1000
         }
 
