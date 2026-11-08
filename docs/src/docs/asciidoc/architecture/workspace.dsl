@@ -13,7 +13,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             core = container "matcher-generator-core" "Processor, type model and backend SPI. No assertion library." "Java, Maven module" {
                 processor = component "MatcherGenerationProcessor" "Annotation processor, registered through META-INF/services." "Java"
                 worker = component "MatcherGenerationProcessorWorker" "Resolves configured types, skips generated ones, hands every backend's source to the source writer." "Java"
-                diagnostics = component "ProcessorDiagnostics" "The only code that reports through the Messager." "Java"
+                diagnostics = component "ProcessorDiagnostics" "Holds the texts of the messages and places them through the Messager; the worker decides which applies." "Java"
                 sourceWriter = component "GeneratedSourceWriter" "Owns the Filer, writes each source once: Java through the Filer, Kotlin into the KAPT directory." "Java"
                 typeModelFactory = component "TypeModelFactory" "Reads a type through the element API." "Java"
                 nullability = component "NullabilityResolver" "Derives the nullability of a property." "Java"

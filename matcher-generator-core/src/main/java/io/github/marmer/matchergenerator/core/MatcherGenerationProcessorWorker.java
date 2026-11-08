@@ -136,13 +136,14 @@ public class MatcherGenerationProcessorWorker {
             return List.of();
         }
         final AnnotationMirror configurationMirror = mirrors.get(0);
+        final ConfigurationSite configuration =
+                new ConfigurationSite(configurationElement, configurationMirror);
         final Map<String, AnnotationValue> exclusions =
                 distinctEntries(configurationMirror, EXCLUDE_ATTRIBUTE);
         final Predicate<TypeElement> excluded = excludedBy(exclusions);
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
-                getAllTypeElementsFor(configurationElement, configurationMirror);
-        warnAboutUnmatchedExclusions(
-                typesByGeneratedType, configurationElement, configurationMirror, exclusions);
+                getAllTypeElementsFor(configuration);
+        warnAboutUnmatchedExclusions(typesByGeneratedType, configuration, exclusions);
         final Set<String> namedTypes = namedTypes(configurationMirror);
         final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
@@ -156,8 +157,7 @@ public class MatcherGenerationProcessorWorker {
                                                 typeElement,
                                                 configuredTypes,
                                                 namedTypes,
-                                                configurationElement,
-                                                configurationMirror,
+                                                configuration,
                                                 excluded));
                             }
                         });
@@ -180,15 +180,14 @@ public class MatcherGenerationProcessorWorker {
             final TypeElement typeElement,
             final Set<TypeElement> configuredTypes,
             final Set<String> namedTypes,
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
+            final ConfigurationSite configuration,
             final Predicate<TypeElement> excluded) {
         final TypeModel model =
-                new TypeModelFactory(processingEnv, configurationMirror, excluded)
+                new TypeModelFactory(processingEnv, configuration.mirror(), excluded)
                         .create(typeElement);
         configuredTypes.forEach(
                 configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
-        return new PlannedType(typeElement, model, configurationElement, configurationMirror);
+        return new PlannedType(typeElement, model, configuration);
     }
 
     /**
@@ -196,10 +195,10 @@ public class MatcherGenerationProcessorWorker {
      * refer to the code generated for another type, whichever configuration asked for it.
      */
     private void generate(final List<PlannedType> planned) {
-        sourceWriter.startRound();
+        final List<TypeModel> models = planned.stream().map(PlannedType::model).toList();
+        sourceWriter.startRound(typesByPackage(models));
         final LocalDateTime generationTime = timeProvider.get();
         final boolean jspecifyAvailable = isJspecifyAvailable();
-        final List<TypeModel> models = planned.stream().map(PlannedType::model).toList();
         planned.forEach(
                 type -> {
                     final GenerationContext context =
@@ -210,10 +209,7 @@ public class MatcherGenerationProcessorWorker {
                                     models,
                                     this::inheritedMethodNames,
                                     message ->
-                                            diagnostics.backendError(
-                                                    type.configurationElement(),
-                                                    type.configurationMirror(),
-                                                    message),
+                                            diagnostics.backendError(type.configuration(), message),
                                     processingEnv
                                             .getOptions()
                                             .containsKey(
@@ -221,9 +217,7 @@ public class MatcherGenerationProcessorWorker {
                                     diagnostics::backendNote,
                                     message ->
                                             diagnostics.backendWarning(
-                                                    type.configurationElement(),
-                                                    type.configurationMirror(),
-                                                    message),
+                                                    type.configuration(), message),
                                     diagnostics::backendVerboseNote,
                                     sourceWriter::classExistsOutsideOwnOutput);
                     backends.forEach(
@@ -235,10 +229,17 @@ public class MatcherGenerationProcessorWorker {
                                                                     backend,
                                                                     source,
                                                                     type.typeElement(),
-                                                                    type.configurationElement(),
-                                                                    type.configurationMirror(),
-                                                                    models)));
+                                                                    type.configuration())));
                 });
+    }
+
+    /** The qualified names of the types the models generate, by their target package. */
+    private static Map<String, List<String>> typesByPackage(final List<TypeModel> models) {
+        return models.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                TypeModel::targetPackage,
+                                Collectors.mapping(TypeModel::qualifiedName, Collectors.toList())));
     }
 
     /**
@@ -316,17 +317,13 @@ public class MatcherGenerationProcessorWorker {
      * type is generated with its highest nesting type, which then is not a configured type itself.
      */
     private Map<TypeElement, Set<TypeElement>> getAllTypeElementsFor(
-            final Element configurationElement, final AnnotationMirror configurationMirror) {
+            final ConfigurationSite configuration) {
         final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        distinctEntries(configurationMirror, VALUE_ATTRIBUTE)
+        distinctEntries(configuration.mirror(), VALUE_ATTRIBUTE)
                 .forEach(
                         (name, configuredValue) ->
                                 getAllTypeElementsFor(
-                                        name,
-                                        configurationElement,
-                                        configurationMirror,
-                                        configuredValue,
-                                        result));
+                                        name, configuration, configuredValue, result));
         return result;
     }
 
@@ -359,8 +356,7 @@ public class MatcherGenerationProcessorWorker {
      */
     private void warnAboutUnmatchedExclusions(
             final Map<TypeElement, Set<TypeElement>> typesByGeneratedType,
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
+            final ConfigurationSite configuration,
             final Map<String, AnnotationValue> exclusions) {
         final List<TypeElement> modelledTypes =
                 typesByGeneratedType.keySet().stream()
@@ -369,8 +365,7 @@ public class MatcherGenerationProcessorWorker {
         exclusions.forEach(
                 (name, exclusion) -> {
                     if (modelledTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
-                        diagnostics.unmatchedExclusion(
-                                name, configurationElement, configurationMirror, exclusion);
+                        diagnostics.unmatchedExclusion(name, configuration, exclusion);
                     }
                 });
     }
@@ -427,8 +422,7 @@ public class MatcherGenerationProcessorWorker {
 
     private void getAllTypeElementsFor(
             final String currentQualifiedTypeOrPackageName,
-            final Element configurationType,
-            final AnnotationMirror configurationMirror,
+            final ConfigurationSite configuration,
             final AnnotationValue configuredValue,
             final Map<TypeElement, Set<TypeElement>> result) {
         final Map<TypeElement, Set<TypeElement>> found = new LinkedHashMap<>();
@@ -453,10 +447,7 @@ public class MatcherGenerationProcessorWorker {
 
         if (found.isEmpty()) {
             reportNotExistingTypeConfigured(
-                    configurationType,
-                    configurationMirror,
-                    configuredValue,
-                    currentQualifiedTypeOrPackageName);
+                    configuration, configuredValue, currentQualifiedTypeOrPackageName);
         }
         found.forEach(
                 (type, configured) ->
@@ -478,17 +469,15 @@ public class MatcherGenerationProcessorWorker {
      * at the failing name.
      */
     private void reportNotExistingTypeConfigured(
-            final Element configurationClass,
-            final AnnotationMirror mirror,
+            final ConfigurationSite configuration,
             final AnnotationValue configuredValue,
             final String qualifiedTypeOrPackageName) {
         diagnostics.unresolvableName(
-                ElementSupport.isOfType(mirror, GENERATE_MATCHERS)
+                ElementSupport.isOfType(configuration.mirror(), GENERATE_MATCHERS)
                         ? Diagnostic.Kind.ERROR
                         : Diagnostic.Kind.WARNING,
                 qualifiedTypeOrPackageName,
-                configurationClass,
-                mirror,
+                configuration,
                 configuredValue);
     }
 

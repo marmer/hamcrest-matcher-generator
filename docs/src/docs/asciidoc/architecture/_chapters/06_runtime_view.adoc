@@ -6,7 +6,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 === Generation of Matchers
 
 .Generation of matchers in one round
-[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round: the Java compiler invokes the processor, which hands the round to the worker; the worker asks for the type model, calls the Hamcrest, AssertJ and Kotlin backends and writes the returned sources",renderer=plantuml]
+[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round: the Java compiler invokes the processor, which hands the round to the worker; the worker asks for the type model, calls the Hamcrest, AssertJ and Kotlin backends and hands the returned sources to the source writer, which writes them",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----

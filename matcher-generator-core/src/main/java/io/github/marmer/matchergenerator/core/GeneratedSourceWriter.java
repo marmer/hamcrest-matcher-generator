@@ -4,7 +4,6 @@
  */
 package io.github.marmer.matchergenerator.core;
 
-import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GeneratedSource;
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
 import java.io.IOException;
@@ -15,10 +14,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.FileObject;
@@ -27,7 +26,8 @@ import javax.tools.StandardLocation;
 /**
  * Writes the sources the backends generate and owns the {@code Filer}. Java sources go through the
  * Filer; Kotlin sources go into the directory KAPT compiles. A source an earlier round wrote is not
- * written again, since the Filer refuses a second source of a name.
+ * written again, since the Filer refuses a second source of a name. It also answers whether a class
+ * exists outside the output of this compilation, which the backends ask through the context.
  */
 final class GeneratedSourceWriter {
     /** The processor option KAPT passes with the directory Kotlin sources have to be written to. */
@@ -37,13 +37,18 @@ final class GeneratedSourceWriter {
     private final ProcessorDiagnostics diagnostics;
 
     /**
-     * The names of the sources written so far, per round. The Filer refuses a second source of the
-     * same name, which for a file a backend writes once per package happens when a later round adds
-     * a type to that package.
+     * The names of the sources that the rounds before the current one wrote, of this compilation.
      */
     private final Set<String> writtenInEarlierRounds = new HashSet<>();
 
+    /**
+     * The names of the sources the current round wrote. They count as written in an earlier round
+     * once the next round starts.
+     */
     private final Set<String> writtenInThisRound = new HashSet<>();
+
+    /** The qualified names of the types the current round generates, by target package. */
+    private Map<String, List<String>> typesOfThisRound = Map.of();
 
     GeneratedSourceWriter(
             final ProcessingEnvironment processingEnv, final ProcessorDiagnostics diagnostics) {
@@ -53,35 +58,28 @@ final class GeneratedSourceWriter {
 
     /**
      * Starts a round. The sources the previous round wrote count as written in an earlier round.
+     * The types of this round, by target package, are named in the warning for a source an earlier
+     * round wrote.
      */
-    void startRound() {
+    void startRound(final Map<String, List<String>> typesByPackage) {
         writtenInEarlierRounds.addAll(writtenInThisRound);
         writtenInThisRound.clear();
+        typesOfThisRound = typesByPackage;
     }
 
-    /**
-     * Writes one source of a backend for a type. The configuration names the element and annotation
-     * a diagnostic points at; the round models are the types this round generates.
-     */
+    /** Writes one source of a backend for a type, which the configuration asked for. */
     void write(
             final GeneratorBackend backend,
             final GeneratedSource source,
             final TypeElement typeElement,
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
-            final List<TypeModel> roundModels) {
+            final ConfigurationSite configuration) {
         final String name = source.qualifiedName();
         if (writtenInEarlierRounds.contains(name)) {
-            printNotWrittenAgain(
-                    configurationElement,
-                    configurationMirror,
-                    name,
-                    source.packageName(),
-                    roundModels);
+            printNotWrittenAgain(configuration, name, source.packageName());
             return;
         }
         writtenInThisRound.add(name);
-        final Element[] originatingElements = {typeElement, configurationElement};
+        final Element[] originatingElements = {typeElement, configuration.element()};
         try {
             if (source.language() == GeneratedSource.Language.JAVA) {
                 writeJava(name, source, originatingElements);
@@ -121,18 +119,12 @@ final class GeneratedSourceWriter {
      * this round adds to the package is not part of it, which the user has to know.
      */
     private void printNotWrittenAgain(
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
-            final String name,
-            final String packageName,
-            final List<TypeModel> roundModels) {
+            final ConfigurationSite configuration, final String name, final String packageName) {
         final String missing =
-                roundModels.stream()
-                        .filter(model -> model.targetPackage().equals(packageName))
-                        .map(TypeModel::qualifiedName)
+                typesOfThisRound.getOrDefault(packageName, List.of()).stream()
                         .sorted()
                         .collect(Collectors.joining(", "));
-        diagnostics.sourceNotWrittenAgain(configurationElement, configurationMirror, name, missing);
+        diagnostics.sourceNotWrittenAgain(configuration, name, missing);
     }
 
     private void writeJava(

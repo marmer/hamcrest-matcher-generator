@@ -13,9 +13,11 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 /**
- * The only place of the processor that reports through the {@code Messager}. Every message is
- * reported with the element and annotation it names, so the user finds the annotation that caused
- * it.
+ * Holds the texts of the messages the worker and the source writer give and places each one through
+ * the {@code Messager}, at the element and annotation it names, so the user finds the annotation
+ * that caused it. The worker decides which message applies and, for an unresolvable name, its kind.
+ * Apart from verbose notes, this is where the worker path calls the {@code Messager}: verbose notes
+ * go through {@link ElementSupport#logNote}, which {@link TypeModelFactory} uses as well.
  */
 final class ProcessorDiagnostics {
 
@@ -41,28 +43,26 @@ final class ProcessorDiagnostics {
 
     void unmatchedExclusion(
             final String name,
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
+            final ConfigurationSite configuration,
             final AnnotationValue exclusion) {
         processingEnv
                 .getMessager()
                 .printMessage(
                         Diagnostic.Kind.WARNING,
                         "Exclusion '" + name + "' matches no configured type",
-                        configurationElement,
-                        configurationMirror,
+                        configuration.element(),
+                        configuration.mirror(),
                         exclusion);
     }
 
     /**
-     * A configured name that is neither a type nor a package. The kind is an error for {@code
-     * GenerateMatchers} and a warning for the deprecated alias.
+     * A configured name that is neither a type nor a package, reported with the kind the worker
+     * picks.
      */
     void unresolvableName(
             final Diagnostic.Kind kind,
             final String qualifiedTypeOrPackageName,
-            final Element configurationClass,
-            final AnnotationMirror mirror,
+            final ConfigurationSite configuration,
             final AnnotationValue configuredValue) {
         processingEnv
                 .getMessager()
@@ -71,8 +71,8 @@ final class ProcessorDiagnostics {
                         "Neither a type nor a package exists for '"
                                 + qualifiedTypeOrPackageName
                                 + "'",
-                        configurationClass,
-                        mirror,
+                        configuration.element(),
+                        configuration.mirror(),
                         configuredValue);
     }
 
@@ -110,28 +110,25 @@ final class ProcessorDiagnostics {
     }
 
     /** A backend found a problem in a configured type. */
-    void backendError(
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
-            final String message) {
+    void backendError(final ConfigurationSite configuration, final String message) {
         processingEnv
                 .getMessager()
                 .printMessage(
-                        Diagnostic.Kind.ERROR, message, configurationElement, configurationMirror);
+                        Diagnostic.Kind.ERROR,
+                        message,
+                        configuration.element(),
+                        configuration.mirror());
     }
 
     /** A backend reports something it left out of the code it generates. */
-    void backendWarning(
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
-            final String message) {
+    void backendWarning(final ConfigurationSite configuration, final String message) {
         processingEnv
                 .getMessager()
                 .printMessage(
                         Diagnostic.Kind.WARNING,
                         message,
-                        configurationElement,
-                        configurationMirror);
+                        configuration.element(),
+                        configuration.mirror());
     }
 
     /** A backend has something to tell that is no problem. It is a note without an element. */
@@ -145,16 +142,13 @@ final class ProcessorDiagnostics {
     }
 
     /**
-     * A source an earlier round wrote is not written again. It names the types it does not know.
+     * A source an earlier round wrote is not written again. It names the types of this round in its
+     * package that it does not know.
      */
     void sourceNotWrittenAgain(
-            final Element configurationElement,
-            final AnnotationMirror configurationMirror,
-            final String name,
-            final String missingTypes) {
+            final ConfigurationSite configuration, final String name, final String missingTypes) {
         backendWarning(
-                configurationElement,
-                configurationMirror,
+                configuration,
                 name
                         + " was already written in an earlier processing round and is not written"
                         + " again. It does not know the types generated in this round: "

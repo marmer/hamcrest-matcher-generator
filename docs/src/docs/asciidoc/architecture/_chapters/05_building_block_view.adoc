@@ -108,7 +108,7 @@ The core and the Hamcrest backend have a component view, shown below. The Assert
 ==== White Box `matcher-generator-core`
 
 .Components of matcher-generator-core
-[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core: the processor hands each round to the worker, which asks the type model factory and the nullability resolver for the model, calls the backend SPI and writes sources through the Java compiler",renderer=plantuml]
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core: the processor hands each round to the worker, which asks the type model factory and the nullability resolver for the model, calls the backend SPI and hands the sources to the source writer, which writes them through the Java compiler",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
@@ -122,12 +122,15 @@ Resolves the configured class and package names to types, skips types that are a
 backend for its source, which it hands to the source writer.
 
 `ProcessorDiagnostics`::
-The only code of the processor that reports through the compiler's `Messager`. It holds the texts, severities and
-annotations of every message the worker and the source writer give.
+Holds the texts of the messages the worker and the source writer give and places each one through the compiler's
+`Messager`, at the element and annotation it names; the worker decides which message applies. Apart from verbose notes,
+this is where the worker path calls the `Messager`: verbose notes go through `ElementSupport.logNote`, which the model
+factory uses as well.
 
 `GeneratedSourceWriter`::
-Owns the `Filer`. It writes Java sources through the `Filer`, Kotlin sources into the directory named by the processor
-option `kapt.kotlin.generated`, and does not write a source that an earlier round wrote.
+Owns the `Filer`. It writes each source a backend returns, Java through the `Filer` and Kotlin into the directory named
+by the processor option `kapt.kotlin.generated`, and keeps the rule for files written once per compilation (see
+<<files-once-per-package,Files Written Once per Package>>).
 
 `TypeModelFactory`::
 Reads a type with the compiler's element API and creates the `TypeModel`: getters for beans, components and accessors
