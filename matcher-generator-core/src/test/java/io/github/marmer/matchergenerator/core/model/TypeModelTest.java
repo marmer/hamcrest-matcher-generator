@@ -65,6 +65,29 @@ class TypeModelTest {
     }
 
     @Test
+    @DisplayName("Without getClass, a user property isClass is not shared with getClass")
+    void withoutGetClassAUserPropertyIsClassIsNotShared() {
+        final PropertyModel getClassProperty = property("class", "getClass");
+        final PropertyModel isClass = property("class", "isClass");
+
+        final TypeModel model = typeWith(getClassProperty, isClass);
+
+        assertFalse(model.isNameSharedWithoutGetClass(isClass));
+    }
+
+    @Test
+    @DisplayName("Without getClass, getFoo and isFoo still share the name foo")
+    void withoutGetClassGetFooAndIsFooStillShareTheName() {
+        final PropertyModel getFoo = property("foo", "getFoo");
+        final PropertyModel isFoo = property("foo", "isFoo");
+
+        final TypeModel model = typeWith(getFoo, isFoo);
+
+        assertTrue(model.isNameSharedWithoutGetClass(getFoo));
+        assertTrue(model.isNameSharedWithoutGetClass(isFoo));
+    }
+
+    @Test
     @DisplayName("The accessor properties keep the first property of every name")
     void theAccessorPropertiesKeepTheFirstPropertyOfEveryName() {
         final PropertyModel first = property("foo", "getFoo");
