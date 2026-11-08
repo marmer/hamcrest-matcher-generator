@@ -4,7 +4,7 @@
 // configure EN settings for asciidoc
 include::_chapters/config.adoc[]
 
-= hamcrest-matcher-generator
+= hamcrest-matcher-generator architecture (arc42)
 :description: Architecture of hamcrest-matcher-generator (arc42): context, building blocks, runtime view, deployment and decisions.
 :revnumber: {revnumber}
 :revdate: {revdate}

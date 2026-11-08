@@ -55,6 +55,11 @@ bundle automatically and waits until it is published. The former OSSRH is not us
 The `Docs` workflow builds the `docs` module on JDK 21, uploads the rendered HTML as a Pages artifact and deploys it
 with the official Pages actions. It runs for version tags and on manual request.
 
+The site is published on its custom domain, the one base URL of the docs build (`docs.base.url` in `docs/pom.xml`).
+Every page carries a canonical link to its address there. The site root also holds `sitemap.xml` (every rendered page),
+`robots.txt` (every crawler allowed, names the sitemap) and `llms.txt`. The `github.io` address of the project only
+redirects to the base URL.
+
 === CI pipeline
 
 Pull requests and pushes to `main` run these workflows on GitHub-hosted runners:

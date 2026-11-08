@@ -3,11 +3,14 @@
 # Site layout for the project documentation (design: issue #68, variant D).
 #
 # Wraps every rendered page in the site chrome without touching page content:
-#   * head docinfo:   stylesheet link and theme color
+#   * head docinfo:   stylesheet link, theme color and the canonical link of the page (on the base URL)
 #   * header docinfo: sticky top bar (Guide, Architecture, Javadoc, GitHub) and the generated chapter sidebar
 #   * footer docinfo: maintainer card and release information
 #   * treeprocessor:  previous/next pager at the end of every guide page
 #   * postprocessor:  page kind class on <body> (page-landing, page-guide or page-arch)
+#   * postprocessor:  sitemap.xml with the address of every rendered page, written by the landing page
+#
+# The site-root files that only name the base URL (robots.txt, llms.txt) are filtered copies made by the docs pom.
 #
 # The page kind follows the directory of the source file: guide/ is the user guide, architecture/ is arc42, the
 # source root is the landing page. The sidebar is generated, never written by hand:
@@ -30,9 +33,27 @@ module SiteLayout
 
   GuidePage = Struct.new(:file, :title, :order)
 
+  # The page path of a source file, relative to the source root: guide/kotlin.adoc is guide/kotlin.html.
+  def self.site_path(relative_source)
+    Pathname.new(relative_source).sub_ext('.html').to_s
+  end
+
+  # The address of a page on the base URL. The landing page is the base URL itself.
+  def self.address(base_url, site_path)
+    site_path == 'index.html' ? base_url : "#{base_url}#{site_path}"
+  end
+
+  # The source files that the build renders as pages: every .adoc file except those below an underscore directory,
+  # which hold the arc42 chapters that index.adoc includes.
+  def self.page_sources(source_dir)
+    Dir.glob('**/*.adoc', base: source_dir)
+       .reject { |path| Pathname.new(path).dirname.each_filename.any? { |name| name.start_with?('_') } }
+       .sort
+  end
+
   # Where a page sits in the site, derived from the location of its source file.
   class Page
-    attr_reader :kind, :relroot
+    attr_reader :kind, :relroot, :site_path
 
     def initialize(document)
       @source_dir = Pathname.new(document.attr('site-source-dir')).cleanpath
@@ -41,6 +62,13 @@ module SiteLayout
       @kind = PAGE_KINDS.fetch(directories.first, 'landing')
       @relroot = '../' * directories.size
       @file = relative.basename('.adoc').to_s
+      @site_path = SiteLayout.site_path(relative)
+      @base_url = document.attr('site-base-url')
+    end
+
+    # The address of this page on the base URL.
+    def address
+      SiteLayout.address(@base_url, @site_path)
     end
 
     def guide_pages
@@ -81,6 +109,7 @@ module SiteLayout
     def head(page)
       <<~HTML
         <link rel="stylesheet" href="#{page.relroot}assets/theme.css">
+        <link rel="canonical" href="#{h(page.address)}">
         <meta name="theme-color" content="#1d2a4d">
       HTML
     end
@@ -216,6 +245,31 @@ module SiteLayout
       output.sub(/<body class="([^"]*)"/) { %(<body class="#{Regexp.last_match(1)} page-#{kind}") }
     end
   end
+
+  # Writes sitemap.xml next to the rendered pages. The landing page writes it, because it renders once per build and the
+  # list is the same for every page: the source tree decides which pages exist (SiteLayout.page_sources).
+  class SitemapFile < Asciidoctor::Extensions::Postprocessor
+    def process(document, output)
+      write_sitemap(document) if Page.new(document).site_path == 'index.html'
+      output
+    end
+
+    private
+
+    def write_sitemap(document)
+      base_url = document.attr('site-base-url')
+      source_dir = Pathname.new(document.attr('site-source-dir')).cleanpath
+      addresses = SiteLayout.page_sources(source_dir).map do |source|
+        SiteLayout.address(base_url, SiteLayout.site_path(source))
+      end
+      entries = addresses.sort.map { |address| "  <url><loc>#{Html.h(address)}</loc></url>\n" }
+      File.write(File.join(document.attr('outdir'), 'sitemap.xml'), <<~XML)
+        <?xml version="1.0" encoding="UTF-8"?>
+        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        #{entries.join}</urlset>
+      XML
+    end
+  end
 end
 
 Asciidoctor::Extensions.register do
@@ -224,4 +278,5 @@ Asciidoctor::Extensions.register do
   docinfo_processor SiteLayout::FooterDocinfo
   treeprocessor SiteLayout::GuidePager
   postprocessor SiteLayout::PageKindClass
+  postprocessor SiteLayout::SitemapFile
 end
