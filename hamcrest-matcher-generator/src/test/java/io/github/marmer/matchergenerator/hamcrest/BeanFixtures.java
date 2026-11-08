@@ -274,6 +274,7 @@ final class BeanFixtures {
         boolean notify;
         String wait;
         String hashCode;
+        String toString;
     }
 
     /** Small bean for the completeness tests of the collection matchers. */

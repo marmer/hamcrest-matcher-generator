@@ -128,12 +128,12 @@ class PropertyDescriptionTest {
     }
 
     @Test
-    void testDescribeValue_GeneratedTypeWithPropertyNamedLikeAnObjectMethod_ShouldPrintIt() {
-        new BeanPropertyMatcher<>(Named.class, "hashCode", "id");
+    void testDescribeValue_GeneratedTypeWithPropertiesNamedLikeObjectMethods_ShouldPrintThem() {
+        new BeanPropertyMatcher<>(Named.class, "hashCode", "toString", "id");
 
         assertEquals(
-                "Named {hashCode \"h\", id \"x\"}",
-                PropertyDescription.describeValue(new Named("x", "h")));
+                "Named {hashCode \"h\", toString \"s\", id \"x\"}",
+                PropertyDescription.describeValue(new Named("x", "h", "s")));
     }
 
     @Test
@@ -165,6 +165,7 @@ class PropertyDescriptionTest {
     public static class Named {
         String id;
         String hashCode;
+        String toString;
     }
 
     public static class Registered {}
