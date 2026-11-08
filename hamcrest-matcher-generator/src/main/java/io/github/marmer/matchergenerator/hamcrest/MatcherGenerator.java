@@ -36,7 +36,6 @@ import org.jspecify.annotations.Nullable;
 
 class MatcherGenerator {
     private static final String RETURN_THIS = "return this";
-    private static final String REFERENCE = "reference";
 
     private static final String BUILDER_FIELD_NAME = "beanPropertyMatcher";
     private static final String BEAN_PROPERTY_MATCHER_METHOD = "beanPropertyMatcher";
@@ -58,7 +57,8 @@ class MatcherGenerator {
         this.simpleMatcherName = MatcherNaming.matcherName(model);
         this.presetProperties = model.accessorProperties();
         this.referencePresets =
-                new ReferencePresetPlanner(context.generatedTypes(), context::reportVerboseNote);
+                new ReferencePresetPlanner(
+                        model, context.generatedTypes(), context::reportVerboseNote);
     }
 
     String simpleMatcherName() {
@@ -253,14 +253,15 @@ class MatcherGenerator {
     private MethodSpec getReferenceInitializer() {
         return MethodSpec.methodBuilder(MatcherNaming.referenceInitializerName(model))
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL)
+                .addParameter(
+                        typeNameWithWildCards(), ReferencePresetPlanner.REFERENCE, Modifier.FINAL)
                 .addStatement(
                         "return $T.matcherFor($L, $T.class, $T::new, matcher -> matcher.presetFrom($L))",
                         ReferenceMatching.class,
-                        REFERENCE,
+                        ReferencePresetPlanner.REFERENCE,
                         getGeneratedTypeName(),
                         getGeneratedTypeName(),
-                        presetProperties.isEmpty() ? "" : REFERENCE)
+                        presetProperties.isEmpty() ? "" : ReferencePresetPlanner.REFERENCE)
                 .returns(getGeneratedTypeName())
                 .build();
     }
@@ -272,7 +273,8 @@ class MatcherGenerator {
                         .addModifiers(Modifier.PRIVATE)
                         .addStatement("$L.checkingAllProperties()", BUILDER_FIELD_NAME);
         if (!presetProperties.isEmpty()) {
-            method.addParameter(typeNameWithWildCards(), REFERENCE, Modifier.FINAL);
+            method.addParameter(
+                    typeNameWithWildCards(), ReferencePresetPlanner.REFERENCE, Modifier.FINAL);
         }
         presetProperties.forEach(
                 property ->
@@ -280,7 +282,7 @@ class MatcherGenerator {
                                 "$L.preset($S, $L)",
                                 BUILDER_FIELD_NAME,
                                 property.name(),
-                                referencePresets.presetOf(model, property)));
+                                referencePresets.presetOf(property)));
         return method.build();
     }
 

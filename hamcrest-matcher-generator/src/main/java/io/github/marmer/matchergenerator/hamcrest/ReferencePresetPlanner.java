@@ -30,32 +30,38 @@ import org.jspecify.annotations.Nullable;
  * deeply with the matcher of a type generated in the same round, or by {@code equals} for the rest.
  */
 class ReferencePresetPlanner {
-    private static final String REFERENCE = "reference";
+    /** The name of the reference object parameter of the generated {@code isXLike} methods. */
+    static final String REFERENCE = "reference";
+
     private static final String COLLECTION = "java.util.Collection";
     private static final String LIST = "java.util.List";
     private static final String MAP = "java.util.Map";
     private static final List<String> LIBRARY_PREFIXES = List.of("java.", "javax.", "kotlin.");
 
+    private final TypeModel owner;
     private final List<TypeModel> generatedTypes;
     private final Consumer<String> verboseNotes;
     private @Nullable Map<String, MatcherType> referenceTypes;
 
     /**
+     * @param owner the configured type or nested type whose reference object is preset
      * @param generatedTypes the models of all types generated in the round
      * @param verboseNotes receives the verbose notes about properties compared by {@code equals}
      */
     ReferencePresetPlanner(
-            final List<TypeModel> generatedTypes, final Consumer<String> verboseNotes) {
+            final TypeModel owner,
+            final List<TypeModel> generatedTypes,
+            final Consumer<String> verboseNotes) {
+        this.owner = owner;
         this.generatedTypes = generatedTypes;
         this.verboseNotes = verboseNotes;
     }
 
     /**
-     * @param owner the configured type or nested type the reference object belongs to
      * @param property a property of the owner
      * @return the code that presets the property of the matcher from the reference object
      */
-    CodeBlock presetOf(final TypeModel owner, final PropertyModel property) {
+    CodeBlock presetOf(final PropertyModel property) {
         final CodeBlock value = CodeBlock.of("$L.$L()", REFERENCE, property.accessor());
         final TypeMirror type = property.type();
         final MatcherType direct = matcherTypeOf(type);
@@ -69,7 +75,7 @@ class ReferencePresetPlanner {
             if (item != null) {
                 return referencePreset("array", value, item);
             }
-            return equalsPreset(owner, property, compared, value);
+            return equalsPreset(property, compared, value);
         }
         final @Nullable List<TypeMirror> collectionItem = argumentsAs(type, COLLECTION);
         if (collectionItem != null && collectionItem.size() == 1) {
@@ -88,7 +94,7 @@ class ReferencePresetPlanner {
                 return referencePreset("map", value, item);
             }
         }
-        return equalsPreset(owner, property, compared, value);
+        return equalsPreset(property, compared, value);
     }
 
     /**
@@ -97,10 +103,7 @@ class ReferencePresetPlanner {
      * one cannot know, so the user is told in verbose mode.
      */
     private CodeBlock equalsPreset(
-            final TypeModel owner,
-            final PropertyModel property,
-            final TypeMirror compared,
-            final CodeBlock value) {
+            final PropertyModel property, final TypeMirror compared, final CodeBlock value) {
         final @Nullable TypeElement unmatched = unmatchedUserType(compared);
         if (unmatched != null) {
             verboseNotes.accept(

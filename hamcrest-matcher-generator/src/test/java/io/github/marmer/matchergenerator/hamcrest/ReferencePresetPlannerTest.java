@@ -24,17 +24,23 @@ class ReferencePresetPlannerTest {
     private static final String CUSTOMER = PACKAGE + ".BeanFixtures.Customer";
     private static final String COLOR = PACKAGE + ".BeanFixtures.Color";
     private static final String CONTACT = PACKAGE + ".BeanFixtures.Contact";
+    private static final String MARKER = PACKAGE + ".ReferencePresetPlannerTest.Marker";
 
     private final List<String> verboseNotes = new ArrayList<>();
+
+    /** A class of the test class path without any property, only {@code getClass()}. */
+    static final class Marker {}
 
     private static PropertyModel property(
             final String name, final String accessor, final TypeMirror type) {
         return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED);
     }
 
-    /** A type of the class path with the given properties, which makes it compared deeply. */
+    /** A type of the class path with the given properties and nested types. */
     private static TypeModel generated(
-            final String qualifiedName, final PropertyModel... properties) {
+            final String qualifiedName,
+            final List<PropertyModel> properties,
+            final List<TypeModel> nestedTypes) {
         final String simpleName = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
         return new TypeModel(
                 qualifiedName,
@@ -44,18 +50,29 @@ class ReferencePresetPlannerTest {
                 List.of(),
                 TypeModel.Kind.POJO,
                 TypeMirrors.typeNamed(qualifiedName),
-                List.of(properties),
-                List.of());
+                properties,
+                nestedTypes);
+    }
+
+    /** A generated type with the given properties, which makes it compared deeply. */
+    private static TypeModel generated(
+            final String qualifiedName, final PropertyModel... properties) {
+        return generated(qualifiedName, List.of(properties), List.of());
     }
 
     /** The address, a generated type with a property of its own. */
-    private static TypeModel address() {
+    private static TypeModel addressModel() {
         return generated(ADDRESS, property("city", "getCity", TypeMirrors.stringType()));
     }
 
-    /** The planner of a round that generated the given types, with the notes it reports. */
-    private ReferencePresetPlanner plannerFor(final TypeModel... generatedTypes) {
-        return new ReferencePresetPlanner(List.of(generatedTypes), verboseNotes::add);
+    /**
+     * The planner for a configured type, in a round that generated the owner and the other given
+     * types, with the notes it reports.
+     */
+    private ReferencePresetPlanner plannerFor(final TypeModel owner, final TypeModel... others) {
+        final List<TypeModel> generatedTypes = new ArrayList<>(List.of(owner));
+        generatedTypes.addAll(List.of(others));
+        return new ReferencePresetPlanner(owner, generatedTypes, verboseNotes::add);
     }
 
     @Test
@@ -67,7 +84,36 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".nested(reference.getAddress(), " + ADDRESS_MATCHER + ")",
-                plannerFor(customer, address()).presetOf(customer, address).toString());
+                plannerFor(customer, addressModel()).presetOf(address).toString());
+        assertEquals(List.of(), verboseNotes);
+    }
+
+    @Test
+    @DisplayName(
+            "A property of a type nested in a generated type is preset with the nested matcher")
+    void aPropertyOfANestedGeneratedTypeIsPresetWithTheNestedMatcher() {
+        final PropertyModel address =
+                property("address", "getAddress", TypeMirrors.typeNamed(ADDRESS));
+        final TypeModel customer = generated(CUSTOMER, List.of(address), List.of(addressModel()));
+
+        assertEquals(
+                REFERENCE_MATCHING
+                        + ".nested(reference.getAddress(), "
+                        + PACKAGE
+                        + ".CustomerMatcher.AddressMatcher::isAddressLike)",
+                plannerFor(customer).presetOf(address).toString());
+        assertEquals(List.of(), verboseNotes);
+    }
+
+    @Test
+    @DisplayName("A property of a generated type without properties is compared by equals silently")
+    void aPropertyOfAGeneratedTypeWithoutPropertiesIsComparedByEquals() {
+        final PropertyModel marker = property("marker", "getMarker", TypeMirrors.typeNamed(MARKER));
+        final TypeModel customer = generated(CUSTOMER, marker);
+
+        assertEquals(
+                REFERENCE_MATCHING + ".value(reference.getMarker())",
+                plannerFor(customer, generated(MARKER)).presetOf(marker).toString());
         assertEquals(List.of(), verboseNotes);
     }
 
@@ -80,7 +126,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".array(reference.getAddresses(), " + ADDRESS_MATCHER + ")",
-                plannerFor(customer, address()).presetOf(customer, addresses).toString());
+                plannerFor(customer, addressModel()).presetOf(addresses).toString());
     }
 
     @Test
@@ -92,7 +138,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".list(reference.getAddresses(), " + ADDRESS_MATCHER + ")",
-                plannerFor(customer, address()).presetOf(customer, addresses).toString());
+                plannerFor(customer, addressModel()).presetOf(addresses).toString());
     }
 
     @Test
@@ -107,7 +153,7 @@ class ReferencePresetPlannerTest {
                         + ".collection(reference.getAddresses(), "
                         + ADDRESS_MATCHER
                         + ")",
-                plannerFor(customer, address()).presetOf(customer, addresses).toString());
+                plannerFor(customer, addressModel()).presetOf(addresses).toString());
     }
 
     @Test
@@ -125,7 +171,7 @@ class ReferencePresetPlannerTest {
                         + ".map(reference.getAddressesByName(), "
                         + ADDRESS_MATCHER
                         + ")",
-                plannerFor(customer, address()).presetOf(customer, addressesByName).toString());
+                plannerFor(customer, addressModel()).presetOf(addressesByName).toString());
     }
 
     @Test
@@ -136,7 +182,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".value(reference.getColor())",
-                plannerFor(customer).presetOf(customer, color).toString());
+                plannerFor(customer).presetOf(color).toString());
         assertEquals(List.of(), verboseNotes);
     }
 
@@ -149,7 +195,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".value(reference.getCreatedOn())",
-                plannerFor(customer).presetOf(customer, createdOn).toString());
+                plannerFor(customer).presetOf(createdOn).toString());
         assertEquals(List.of(), verboseNotes);
     }
 
@@ -162,7 +208,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".list(reference.getAddresses(), " + ADDRESS_MATCHER + ")",
-                plannerFor(customer, address()).presetOf(customer, addresses).toString());
+                plannerFor(customer, addressModel()).presetOf(addresses).toString());
     }
 
     @Test
@@ -175,7 +221,7 @@ class ReferencePresetPlannerTest {
 
         assertEquals(
                 REFERENCE_MATCHING + ".value(reference.getContact())",
-                plannerFor(customer).presetOf(customer, contact).toString());
+                plannerFor(customer).presetOf(contact).toString());
         assertEquals(
                 List.of(
                         "isCustomerLike compares the property 'contact' with equals: no matcher for "
