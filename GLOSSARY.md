@@ -55,7 +55,7 @@ Whether a property may be `null`, one of `NULLABLE`, `NON_NULL` and `UNSPECIFIED
 The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
 
 **Property**:
-A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Every generated matcher also lists `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x, but the completeness check does not count `class`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
+A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Hamcrest matchers also list `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x. The Hamcrest completeness check never counts a property named `class`, so you never need to ignore it. The AssertJ backend generates nothing for `getClass()`, but a type's own boolean `isClass()` is a `class` property there, and its completeness check counts it: check it with `isClass()` or `hasClass(...)`, or name it with `ignoringClass()`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
 _Avoid_: field, attribute
 
 **Property model**:
