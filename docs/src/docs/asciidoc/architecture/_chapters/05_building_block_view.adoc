@@ -147,6 +147,12 @@ JSpecify annotations.
 `TypeModel`, `PropertyModel`, `Nullability`::
 The immutable model that backends work on (see the glossary term "<<term-property-model,Property model>>").
 
+`TypeHierarchy`::
+The one walk over a type's supertypes that the model factory and the backends share (package `io.github.marmer.matchergenerator.core.model`).
+It gives the direct supertypes of a type with the type variables of the type replaced by the type arguments it is given, and the element of a
+declared type mirror. It only reads the `javax.lang.model` API; the backends bind their type arguments, find iterable or map ancestors and count
+ancestors with it.
+
 ==== White Box `hamcrest-matcher-generator`
 
 .Components of hamcrest-matcher-generator
