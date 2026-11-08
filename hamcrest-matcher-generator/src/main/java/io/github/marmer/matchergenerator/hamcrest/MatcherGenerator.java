@@ -113,13 +113,6 @@ class MatcherGenerator {
                 .toList();
     }
 
-    private boolean isConflictingProperty(final String propertyName) {
-        return model.properties().stream()
-                        .filter(property -> property.name().equals(propertyName))
-                        .count()
-                > 1;
-    }
-
     private List<MethodSpec> getPropertyHamcrestMatcherResetMethods() {
         return PropertyModel.distinctByName(model.properties()).stream()
                 .map(this::toHamcrestMatcherReset)
@@ -159,7 +152,7 @@ class MatcherGenerator {
     private TypeName toParameterizedMatcherType(final PropertyModel property) {
         return ParameterizedTypeName.get(
                 ClassName.get(Matcher.class),
-                isConflictingProperty(property.name())
+                model.isNameShared(property)
                         ? WildcardTypeName.subtypeOf(TypeName.OBJECT)
                         : WildcardTypeName.supertypeOf(
                                 nullableIf(

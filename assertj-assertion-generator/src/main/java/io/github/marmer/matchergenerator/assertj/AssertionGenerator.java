@@ -545,7 +545,7 @@ class AssertionGenerator {
     /** Whether the property is a boolean, primitive or boxed, that has a single type. */
     private boolean isBoolean(final PropertyModel property) {
         final TypeMirror type = property.type();
-        return !isConflicting(property)
+        return !model.isNameShared(property)
                 && (type.getKind() == TypeKind.BOOLEAN
                         || (type.getKind() == TypeKind.DECLARED
                                 && asTypeElement(type)
@@ -699,7 +699,7 @@ class AssertionGenerator {
     }
 
     private TypeName valueType(final PropertyModel property) {
-        if (isConflicting(property) || property.type().getKind() == TypeKind.TYPEVAR) {
+        if (model.isNameShared(property) || property.type().getKind() == TypeKind.TYPEVAR) {
             return nullable(TypeName.OBJECT);
         }
         return nullable(typeVarsToWildcards(property.type(), false));
@@ -707,20 +707,13 @@ class AssertionGenerator {
 
     private TypeName requirementsType(final PropertyModel property) {
         final TypeName value =
-                isConflicting(property)
+                model.isNameShared(property)
                         ? TypeName.OBJECT
                         : nullableIf(
                                 property.nullability() == Nullability.NULLABLE,
                                 typeVarsToWildcards(property.type(), true));
         return ParameterizedTypeName.get(
                 ClassName.get(Consumer.class), WildcardTypeName.supertypeOf(value));
-    }
-
-    private boolean isConflicting(final PropertyModel property) {
-        return model.properties().stream()
-                        .filter(other -> other.name().equals(property.name()))
-                        .count()
-                > 1;
     }
 
     private TypeName nullableIf(final boolean nullable, final TypeName type) {
