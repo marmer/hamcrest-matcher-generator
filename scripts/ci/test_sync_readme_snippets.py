@@ -333,6 +333,7 @@ class RepositoryReadmeTest(unittest.TestCase):
             ("example-maven-java-hamcrest/pom.xml", "maven-processor"),
             ("example-maven-java-assertj/pom.xml", "maven-dependencies"),
             ("example-maven-java-assertj/pom.xml", "maven-processor"),
+            ("hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml", "test-compile-source-dirs"),
             ("example-gradle-java/build.gradle.kts", "gradle-version"),
             ("example-gradle-java/build.gradle.kts", "gradle-dependencies"),
             ("example-gradle-java/build.gradle.kts", "gradle-processor"),

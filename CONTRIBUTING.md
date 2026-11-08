@@ -31,9 +31,9 @@ Do not report a vulnerability in a public issue. [SECURITY.md](SECURITY.md) desc
 - **Code style**: Spotless with google-java-format formats the Java code; `./mvnw install` checks it and fails on
   unformatted code (`scripts/agents/verify.sh` applies it first). Error Prone with NullAway runs on JDK 21+ and fails
   the build on findings; do not suppress a finding to get green.
-- **No warnings**: the end-to-end modules compile with `-Xlint:all -Werror`; the example modules and the end-to-end
-  modules `plain-java-minimal` and `java-records` compile with `-Xlint:all,-processing -Werror`. Generated code must
-  produce no compiler warning there.
+- **No warnings**: the end-to-end modules compile with `-Xlint:all -Werror`; `plain-java-minimal`, `java-records`,
+  `assertj` and the three Maven example modules compile with `-Xlint:all,-processing -Werror`. Generated code must
+  produce no compiler warning in any of them.
 - **Tests come with the change** (the test policy, below).
 - **Documentation stays in sync**: a change to behaviour updates the user guide and, where it touches architecture or
   terms, `GLOSSARY.md`, `docs/adr/` and the arc42 chapters. README snippets are copied from the example modules by

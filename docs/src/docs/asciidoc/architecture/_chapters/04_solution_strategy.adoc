@@ -18,7 +18,7 @@ the compiler checks, so a wrong property name is a compile error, not a test fai
 | <<concepts-ci-gates,Chapter 8>> (CI gates), <<section-quality-scenarios,chapter 10>>
 
 | [[strategy-non-intrusiveness]]Non-intrusiveness
-| The configuration annotation sits on a separate configuration class, so model classes stay untouched and no runtime
+| The configuration annotation sits on a separate configuration class, so configured types stay untouched and no runtime
 dependency reaches production code. Both configuration annotations, `@GenerateMatchers` and the deprecated 5.x alias
 `@MatcherConfiguration`, have `SOURCE` retention: the processor reads them from the source elements of the running
 compilation, so a configuration class leaves no trace of them in its class file, even in the production sources.
@@ -36,7 +36,7 @@ for Java and under KAPT for Kotlin, in Maven and Gradle builds alike, and does n
 | <<context-technical-context,Chapter 3>> (technical context), <<adr-0004,ADR 0004>>
 
 | Maintainability
-| One library-independent core builds a property model of each type. Every assertion library is a backend behind a small
+| One library-agnostic core builds a property model of each type. Every assertion library is a backend behind a small
 interface (`GeneratorBackend`) that is found with `ServiceLoader`, so a new library needs a new module and no change of
 the core. Maven Enforcer and ArchUnit keep the dependency direction from drifting.
 | <<section-building-block-view,Chapter 5>>, <<adr-0001,ADR 0001>>, <<adr-0004,ADR 0004>>
