@@ -24,8 +24,7 @@ Legend for all diagrams: a dark blue figure is a person, a blue box is a softwar
 from Maven Central. Reads the generated matchers and assertions in the IDE and uses them in tests.
 
 | Maintainer
-| Merges the Release PR. Everything after that, from the build to the publication and the announcement, runs on GitHub
-Actions (see <<section-deployment-view,chapter 7>>).
+| Merges the Release PR that starts the release (see <<section-deployment-view,chapter 7>>).
 
 | Java compiler (javac, KAPT)
 | Runs the processor in every round and receives the generated sources.

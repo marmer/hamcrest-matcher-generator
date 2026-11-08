@@ -133,7 +133,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-m2]]QS-M2
 | Maintainability / Modifiability
-| *A new property kind stays local.* When a contributor adds support for a new property kind (such as `Optional`) on the main branch, the change touches only the core property model, each backend's rendering and their tests; no backend depends on another (apart from the documented Kotlin DSL exception), which every build checks.
+| *A new property kind stays local.* When a contributor adds support for a new property kind (such as `Optional`) on the main branch, the change touches only the core property model, each backend's rendering and their tests; no backend depends on another (apart from the one exception named in <<building-block-important-interfaces,chapter 5>>), which every build checks.
 | Maven Enforcer; ArchUnit tests
 
 | [[qs-m3]]QS-M3
@@ -153,7 +153,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x2]]QS-X2
 | Flexibility / Replaceability
-| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later, the user's tests compile and pass against the newly generated matchers; no line of test code changes (the bridge jars under the old coordinates cover the changed artifact, also for compiler plugins older than 3.12, which do not follow a relocation in the processor path).
+| *Upgrading from 5.x is a version bump.* When a 5.x user raises the version to 6.0.0 in an existing project that builds on JDK 17 or later (the baseline of <<section-architecture-constraints,chapter 2>>), the user's tests compile and pass against the newly generated matchers; no line of test code changes (the bridge jars under the old coordinates cover the changed artifact, also for compiler plugins older than 3.12, which do not follow a relocation in the processor path).
 | The frozen 5.x suite, built as a consumer build against the reactor's bridge jars (see <<concepts-frozen-5x-suite,chapter 8>>, Frozen 5.x suite); `BridgeJarIT` checks the bridge jars' shape
 
 | [[qs-x3]]QS-X3

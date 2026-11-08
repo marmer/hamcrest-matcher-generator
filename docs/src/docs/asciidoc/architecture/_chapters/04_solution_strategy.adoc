@@ -38,7 +38,7 @@ for Java and under KAPT for Kotlin, in Maven and Gradle builds alike, and does n
 | Maintainability
 | One library-agnostic core builds a property model of each type. Every assertion library is a backend behind a small
 interface (`GeneratorBackend`) that is found with `ServiceLoader`, so a new library needs a new module and no change of
-the core. Maven Enforcer and ArchUnit keep the dependency direction from drifting.
+the core. The dependency rules between the backends are stated in <<building-block-important-interfaces,chapter 5>>.
 | <<section-building-block-view,chapter 5>>, <<adr-0001,ADR 0001>>, <<adr-0004,ADR 0004>>
 |===
 
@@ -47,11 +47,11 @@ Further decisions that shape the whole system:
 * *Generate code instead of reflecting.* Assertions are generated while the project compiles, with JavaPoet for Java and
 KotlinPoet for Kotlin. Nothing is looked up by name at test time, and the IDE can navigate and complete the generated
 classes.
-* *Stay compatible with 5.x.* Tests written against 5.x keep compiling after a version bump. Class names and the
-`isX()`/`withFoo`/`resetFoo` API are kept, the old annotation stays as a deprecated alias and bridge jars cover the old
-artifact names (<<adr-0002,ADR 0002>>).
-* *Keep the baseline modern, and the project maintainable without effort.* The baseline is Java 17 (<<adr-0005,ADR 0005>>), so that
-dependency updates by Renovate are not blocked by an old Java version. Releases are cut by release-please and
+* *Stay compatible with 5.x.* Tests written against 5.x keep compiling after a version bump; the rules are in
+<<section-architecture-constraints,chapter 2>> and the decision in <<adr-0002,ADR 0002>>.
+* *Keep the baseline modern, and the project maintainable without effort.* The Java 17 baseline
+(<<section-architecture-constraints,chapter 2>>, <<adr-0005,ADR 0005>>) keeps dependency updates by Renovate from being
+blocked by an old Java version. Releases are cut by release-please and
 published from CI (<<section-deployment-view,chapter 7>>). After 6.0.0 no features are planned, only fixes and updates.
 * *Document as code.* This documentation and the user guide are built with the project. Code in the guide comes from
 example modules that compile and run in the same build, and the diagrams are views of one Structurizr model (<<adr-0003,ADR 0003>>).

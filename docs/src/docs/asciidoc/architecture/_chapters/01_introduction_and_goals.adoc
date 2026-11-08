@@ -6,31 +6,33 @@ ifndef::imagesdir[:imagesdir: ../images]
 hamcrest-matcher-generator is an annotation processor for Java and Kotlin projects. A test developer names the configured
 types (beans and records) in a `@GenerateMatchers` annotation, and the processor generates type-safe Hamcrest matchers
 and AssertJ assertions for their properties while the project compiles. The configured types stay untouched. This chapter
-states what the system has to do, which qualities matter most and who cares about it.
+states what the system has to do, which qualities matter most and who cares about it. The five quality goals, in priority
+order, are correctness, non-intrusiveness, usability, build-tool agnosticism and maintainability
+(<<section-quality-goals,Quality Goals>>); <<section-quality-scenarios,chapter 10>> refines each of them into measurable scenarios.
 
 === Requirements Overview
 
-* Generate Hamcrest matchers for configured types (beans and records) at compile time
-* No production-code pollution: configuration uses one annotation on a separate configuration class, leaving configured types untouched (the retention rule is in <<strategy-non-intrusiveness,chapter 4>>, Non-intrusiveness)
-* Compile-safe alternative to Hamcrest's `hasProperty()` / `HasPropertyWithValue`
-* Informative mismatch messages via the generated fluent API
-* Lombok-annotated classes are supported
-* Works with plain Java and Kotlin (via KAPT)
+* Hamcrest matchers for configured types (beans and records), generated at compile time (<<section-runtime-view,chapter 6>>)
+* Configured types stay untouched: one annotation on a separate configuration class (<<strategy-non-intrusiveness,chapter 4>>)
+* A compile-safe alternative to Hamcrest's `hasProperty()` (link:../guide/hamcrest-backend.html[Hamcrest backend guide])
+* Informative mismatch messages (<<runtime-mismatch-hamcrest,chapter 6>>)
+* Lombok-annotated classes are supported (link:../guide/configuration.html[configuration guide])
+* Plain Java and Kotlin, the latter via KAPT (link:../guide/kotlin.html[Kotlin guide])
 
 .Planned feature set of 6.0.0, the final feature release
 Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are driven by the same configuration. Its features are:
 
-* *Completeness check* (the lead feature, for both backends): every property of a type is either checked or consciously ignored. Users opt in per assertion and the check runs when the test runs: Hamcrest matchers offer `checkingAllProperties()`, AssertJ assertions offer the scope `satisfiesCheckingAllProperties(...)` and the closing call `hasAllPropertiesChecked()`, and `ignoringFoo()` marks a property as consciously ignored. Without the opt-in, matchers behave as in 5.x.
-* *Reference-object matcher* (Hamcrest): compares a whole object against a reference object and allows single properties to be overridden or reset. The comparison goes deep: a nested value whose type has a generated matcher is compared property by property, a list item by item in order, any other collection in any order, and a map key by key. Everything else is compared with `equals`. AssertJ users get the same with AssertJ's built-in recursive comparison, which the documentation shows side by side.
-* *Readable mismatches* (Hamcrest): only the failing checks are listed, one per line, each with its property path and both values, for example `customer.address.city: expected "Berlin" but was "Paris"`. Paths reach into lists (`lines[1].quantity`) and maps (`bySku["B-2"].quantity`); missing and unexpected items or keys get their own line. A generated matcher held by one of Hamcrest's own matchers, such as `contains(...)`, uses the one-line rendering. Values of generated types are shown with their properties instead of their `toString()`.
-* *Collection matchers* (Hamcrest runtime): `itemsInOrder(...)`, `itemsInAnyOrder(...)` and `entries(...)` check every item of a list or collection, or every entry of a map, and produce the paths above. Hamcrest's own collection matchers keep working but print Hamcrest's less specific messages.
-* *AssertJ messages* keep AssertJ's native `Expecting ... to be ... but was ...` style and name the property path from the asserted object, for example `Expecting Order.customer.address.city to be: "Berlin"`. Inside a collection or map, the path starts again at the element type, because AssertJ reports the element's index itself. An optional generated representation (`PropertyRepresentation`) shows configured types with their properties in AssertJ's own messages.
-* *Exclude configuration*: packages or classes can be excluded from generation, for every backend.
-* *Null-safety annotations* (JSpecify) in the generated code and the Hamcrest runtime, which mainly makes the API type-safe for Kotlin.
-* *Clear compiler diagnostics*: errors for unresolvable names and for generated names that clash (method names with inherited ones, the top level class names the AssertJ backend generates into one package, the scope names of the Kotlin DSL), warnings for configured types without properties and for exclusions that match nothing.
-* *Kotlin support*: correct detection of Kotlin boolean and `is`-prefixed properties, and a Kotlin DSL.
-* *Java module names*: every published jar declares an `Automatic-Module-Name`.
-* *AssertJ assertions* with `hasFoo`, `hasFooSatisfying`, `isFoo`/`isNotFoo`, an `InstanceOfAssertFactory` per type and soft-assertion support.
+* *Completeness check* (both backends): every property of a type is checked or consciously ignored, opt-in per assertion (link:../guide/completeness-check.html[completeness check guide]).
+* *Reference-object matcher* (Hamcrest): compares a whole object with a reference object, with overrides; AssertJ users get the same with its recursive comparison (link:../guide/hamcrest-backend.html[Hamcrest backend guide], link:../guide/assertj-backend.html[AssertJ backend guide]).
+* *Readable mismatches* (Hamcrest): one line per failing check with its property path and both values (<<runtime-mismatch-hamcrest,chapter 6>>, link:../guide/mismatch-messages.html[mismatch messages]).
+* *Collection matchers* (Hamcrest runtime): `itemsInOrder(...)`, `itemsInAnyOrder(...)` and `entries(...)` check every item or entry; Hamcrest's own collection matchers keep working but print Hamcrest's less specific messages (link:../guide/mismatch-messages.html[mismatch messages]).
+* *AssertJ messages* keep AssertJ's own wording and name the property path (link:../guide/mismatch-messages.html[mismatch messages]).
+* *Exclude configuration*: packages or classes can be excluded from generation, for every backend (link:../guide/configuration.html[configuration guide]).
+* *Null-safety annotations* (JSpecify) in the generated code and the Hamcrest runtime, mainly for Kotlin (<<term-nullability,Nullability>>).
+* *Clear compiler diagnostics*: errors and warnings at the annotation that configured the type (<<concepts-diagnostics,chapter 8>>).
+* *Kotlin support*: Kotlin boolean and `is`-prefixed properties, and a Kotlin DSL (link:../guide/kotlin.html[Kotlin guide]).
+* *Java module names*: every published jar declares an `Automatic-Module-Name` (<<section-deployment-view,chapter 7>>).
+* *AssertJ assertions* with `hasFoo`, `hasFooSatisfying`, `isFoo`/`isNotFoo`, an `InstanceOfAssertFactory` per type and soft-assertion support (link:../guide/assertj-backend.html[AssertJ backend guide]).
 
 After 6.0.0 no further features are planned; the project receives only fixes and automated dependency updates.
 

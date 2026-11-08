@@ -2,26 +2,28 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-concepts]]
 
-== Cross-cutting Concepts
+== Cross-Cutting Concepts
 
 [[concepts-ci-gates]]
 === Continuous Integration Gates
 
-Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
-blocked it. The checks the `main` branch ruleset requires before GitHub merges a pull request are listed in <<section-deployment-view,chapter 7>>.
+Every push runs a small set of automated gates, and each one exists because a defect once reached the main branch or
+blocked it. Pull requests and pushes to `main` run the workflows of the table on GitHub-hosted runners.
 
 [options="header",cols="2,5"]
 |===
 | Gate | What it guarantees
 
 | Build and verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
-| The reactor installs without tests, and `./mvnw clean verify` is green on every supported JDK, including the newest
-generally available one.
+a|
+* `Build` runs `mvnw -B clean install -DskipTests`, then `mvnw -B verify`: the reactor installs without tests.
+* `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest` run the build and verify matrix. `latest` follows the newest generally available JDK.
+* Together they guarantee that `./mvnw clean verify` is green on every supported JDK, including the newest generally available one.
 
 | JaCoCo floor (part of `Build and verify matrix`, checked in `verify`)
 | Each of the five production modules (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`,
 `assertj-assertion-generator`, `hamcrest-matcher-generator-kotlin`) has at least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
-excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no code (deliberate deviation from #126).
+excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no code.
 
 | Release dry run
 | The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
@@ -29,20 +31,27 @@ checks that every published module has its jar, sources jar, Javadoc jar and Cyc
 CycloneDX skipped no module. Nothing is uploaded.
 
 | Mutation testing (`Mutation testing`)
-| PIT mutates the production code of four modules, named in the `--expect` list of the job: `matcher-generator-core`,
+a|
+* PIT mutates the production code of four modules, named in the `--expect` list of the job: `matcher-generator-core`,
 `hamcrest-matcher-generator`, `assertj-assertion-generator` and `hamcrest-matcher-generator-kotlin`. Each of them must detect
 at least 90 % of its mutants (`mutationThreshold` 90, checked by `scripts/ci/pit-scores.py`). This tests the tests: a suite that stays green when the
 code is broken fails the gate.
+* The job keeps a history cache keyed on the PIT version.
 
 | Sonar quality gate (`Sonar`)
-| SonarQube Cloud analyses the build and its quality gate fails the job when new code adds issues, duplicated or uncovered
+a|
+* `scripts/ci/check-sonar-token.py` validates `SONAR_TOKEN` before the build.
+* SonarQube Cloud analyses the build and its quality gate fails the job when new code adds issues, duplicated or uncovered
 code. Old code is not judged again when a rule changes.
 
 | Example Gradle (`Example Gradle`)
-| The Gradle example outside the reactor builds against the artifacts of the reactor, so the guide's Gradle setup keeps
-working on JDK 21 and on JDK 17 (see <<section-deployment-view,chapter 7>>).
+a|
+* The Gradle example outside the reactor builds against the artifacts of the reactor, so the guide's Gradle setup keeps
+working on JDK 21 and on JDK 17, because users copy the example on both.
+* The job validates the wrapper jar with the SHA-pinned `gradle/actions/wrapper-validation`, installs the reactor with `mvnw -B -DskipEndtoend -DskipTests install`, then runs `gradlew build` in `example-gradle-java` on JDK 21 and again on JDK 17. The example resolves the reactor's artifacts from `mavenLocal()`.
+* The job has no Gradle dependency cache, because a cache is state that can differ between runs, and a 30-minute time limit. The wrapper distribution is pinned by `distributionSha256Sum`; only that distribution is cached (keyed on `gradle-wrapper.properties`), and the wrapper's `networkTimeout` is 60 seconds, so a slow download does not fail the check.
 
-| Dependency review (`Dependency review`, not a required check)
+| Dependency review (`Dependency review`)
 | The check fails on a pull request that adds a dependency with a known vulnerability.
 
 | License gate (part of the Build and verify matrix)
@@ -53,19 +62,22 @@ Every published jar carries `META-INF/LICENSE`, `META-INF/NOTICE` and `THIRD-PAR
 Build plugins and the `docs` module's tooling are not checked.
 
 | Static analysis (JDK 21+ profile `static-analysis`, part of `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`)
-| Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
-of the modules, including tests and end-to-end sources, except the frozen 5.x suite, which stays frozen and so carries no SPDX headers (deliberate deviation from #128). Error Prone runs its default checks on every module at ERROR
-with no baseline. NullAway runs at ERROR in JSpecify mode on the `io.github.marmer` packages only: main, test and
-end-to-end sources in that package tree. The end-to-end POJOs in `foo.bar` are not NullAway-checked. Generated code is
-not checked and carries no
-license header. The JDK 17 leg skips the profile.
+a|
+* Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
+of the modules, including tests and end-to-end sources, except the frozen 5.x suite, which stays frozen and so carries no SPDX headers.
+* Error Prone runs its default checks on every module at ERROR with no baseline.
+* NullAway runs at ERROR in JSpecify mode on the `io.github.marmer` packages only: main, test and end-to-end sources in that package tree. The end-to-end POJOs in `foo.bar` are not NullAway-checked.
+* Generated code is not checked and carries no license header.
+* The JDK 17 leg skips the profile.
 
 | [[concepts-frozen-5x-suite]]Frozen 5.x suite (part of `Domain docs in sync`)
-| The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, frozen except for the owner-approved deviations (version references filtered by the consumer build, `RelocationPomTest` deleted with #159), with the tree hash as the guard; its parent and own
-version (`@project.version@`) follow the project version, as a 5.x user's version bump does. It is not a reactor module:
-`endtoend-5x-compatibility-runner` builds it as a consumer build with the invoker plugin against an isolated local
-repository that holds the reactor artifacts, so Maven resolves the bridge jars like it does for a 5.x user, with the project's own compiler plugin version. The suite runs every test it has; its `RelocationPomTest`, which asserted the former relocation POMs, was deleted with the owner's approval (#159), and each bridge module tests its own shape (`BridgeJarIT`). Its tree
-hash must equal the stored one. Only the owner may update that hash.
+a|
+* The `endtoend-5x-compatibility` module is the one the 5.x promise was made with, frozen except for the owner-approved deviations (version references filtered by the consumer build). Its parent and own
+version (`@project.version@`) follow the project version, as a 5.x user's version bump does.
+* It is not a reactor module: `endtoend-5x-compatibility-runner` builds it as a consumer build with the invoker plugin against an isolated local
+repository that holds the reactor artifacts, so Maven resolves the bridge jars like it does for a 5.x user, with the project's own compiler plugin version.
+* The suite runs every test it has. Its `RelocationPomTest`, which asserted the former relocation POMs, was deleted with the owner's approval, and each bridge module tests its own shape (`BridgeJarIT`).
+* Its tree hash must equal the stored one. Only the owner may update that hash.
 
 | Ruleset against job names (part of `Domain docs in sync`)
 | Every status check that the `main` ruleset requires is the name of an existing CI job, so a removed job cannot
@@ -74,13 +86,36 @@ block all merges.
 | Docs sync (`Domain docs in sync`)
 | The agent-facing glossary and ADRs are mirrored in these chapters, the required checks named in the agent docs are
 CI job names, and the file names and packages that `CLAUDE.md` mentions exist.
+
+| Versions and README snippets (part of `Domain docs in sync`)
+| `scripts/ci/check-project-version.py` checks that every module pom's own and parent version equals the manifest version, is an `extra-files` entry, and that project dependencies have no literal version. `scripts/ci/sync-readme-snippets.py --check` fails when a README snippet no longer matches its tagged example region.
+
+| Workflow hardening and script tests (part of `Domain docs in sync`)
+| `scripts/ci/check-workflow-hardening.py`, and the unit tests of `scripts/ci` and `scripts/agents`, run in the same job.
+
+| PR title (`PR title`, not a gate)
+| Checks that the title of a pull request follows Conventional Commits.
+
+| Scorecard (`Scorecard`, not a gate)
+| Runs weekly and on pushes to `main`, and reports the repository's posture. Its score does not gate merges. The accepted findings are listed in <<concepts-scorecard-findings,Accepted OpenSSF Scorecard Findings>>.
+
+| SCANOSS (`SCANOSS`, not a gate)
+| Runs on pull requests and weekly. It is non-blocking.
+
+| External links (`External links`, not a gate)
+a|
+* Runs weekly and on manual request. Its `lychee` job checks the external links of the rendered docs and opens or updates an issue for broken ones; it is non-blocking.
+* Its `badges` job fails when a README badge is broken.
+
+| Credential reminder (`Credential reminder`, not a gate)
+| Validates the Sonar and Central tokens and warns before a credential expires; it is described with the credentials in <<deployment-credentials,chapter 7>>.
 |===
 
 [[concepts-diagnostics]]
 === Diagnostics
 
 The core reports a misconfiguration as a compiler diagnostic at the annotation that configured the type. It reports
-each problem once and names the offending value, such as the unresolvable names of #113.
+each problem once and names the offending value, such as unresolvable names.
 
 * A backend that finds a problem in a configured type reports it the same way, through
 `GenerationContext.reportError(message)`. The core prints the message as a compiler error at the `@GenerateMatchers`
@@ -98,9 +133,54 @@ per name;
 for the package.
 * Names that only look alike do not clash: `FooBar`, `Foo_Bar` and `FOOBAR` are different classes.
 * Like the other per-package files, the AssertJ backend sees only the types of one processing round
-(<<adr-0006,ADR 0006>>).
+(see <<files-once-per-package,chapter 6>> and <<adr-0006,ADR 0006>>).
 
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The
-Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out of
-the DSL and the Java matcher keeps it.
+Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out
+of the DSL and the Java matcher keeps it.
+
+[[concepts-scorecard-findings]]
+=== Accepted OpenSSF Scorecard Findings
+
+The OpenSSF Scorecard (`.github/workflows/scorecard.yml`) reports the repository's posture; its score does not gate merges. The table below lists every Scorecard check that was accepted instead of fixed, with the reason and the owner's decision. It is separate from the risk table in <<section-technical-risks,chapter 11>>, because a Scorecard check measures a practice and not a risk that occurs, so the probability and impact scales do not apply. The entries rest on the Scorecard API result of 2026-10-31 (analysed commit `95d1727`, Scorecard v5.6.0, total score 7.7) and on the ruleset as the owner left it. The date is the owner's decision where one is recorded, otherwise the date of that result.
+
+`Fuzzing` (score 0 on 2026-10-31) has no entry: the project has a Jazzer fuzz test (`ItemsInAnyOrderFuzzTest`), and an entry is written only if a weekly Scorecard run after it still reports 0.
+
+CII-Best-Practices (score 0) has no entry yet. The project is registered and the README shows the OpenSSF Best Practices badge. The entry follows only after the owner has decided the unmet criteria of the passing level.
+
+[options="header",cols="2,1,4,4,2"]
+|===
+|Check |Score |Reason |Owner decision |Date
+
+|`Code-Review`
+|0
+|Scorecard counts 0 of 29 changesets as approved by a reviewer. The project has one maintainer, and pull requests the maintainer merges are never counted as reviewed under any setup. An automatic bot approval was rejected, because it would show a review practice that does not exist.
+|Accepted. The `main` ruleset keeps 0 required approvals, see `Branch-Protection`.
+|2026-11-01
+
+|`Branch-Protection`
+|3
+|Scorecard warns that `main` requires no approvers and no code owner review, dismisses no stale reviews, and does not apply its rules to administrators, among others. The ruleset `Development (Trunk)` requires 0 approvals and lets administrators bypass it, so auto-merge can merge a green pull request without a human review. Requiring one approval would make auto-merge wait for a review the single maintainer cannot give, for an expected gain of 3 to 4 points. The owner judged that not worth the auto-merge risk, so the two experiments that would have tested the setting were not run.
+|Accepted. The ruleset is unchanged.
+|2026-11-01
+
+|`Binary-Artifacts`
+|9
+|The Gradle wrapper jar of the Gradle example, `example-gradle-java/gradle/wrapper/gradle-wrapper.jar`. The CI job `Example Gradle` validates it with the SHA-pinned wrapper validation action, and the wrapper distribution is pinned by its checksum.
+|Accepted.
+|2026-10-31 (Scorecard result)
+
+|`Token-Permissions`
+|10
+|Warning: `contents: write` in the job `Publish to Maven Central` (`.github/workflows/release.yml`, line 96). The job creates the GitHub Release if release-please did not, so it needs write access to the repository contents. No other job asks for write access to the contents. The score stays 10.
+|Accepted.
+|2026-10-31 (Scorecard result)
+
+|`Contributors`
+|6
+|Scorecard counts the contributing organisations: 2 companies or organisations. The project cannot influence this.
+|Accepted.
+|2026-10-31 (Scorecard result)
+
+|===
