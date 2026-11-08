@@ -118,8 +118,16 @@ The annotation processor (package `io.github.marmer.matchergenerator.core`) regi
 worker. It declares the processor option `kapt.kotlin.generated`.
 
 `MatcherGenerationProcessorWorker`::
-Resolves the configured class and package names to types, skips types that are already marked as generated, asks every
-backend for its source and writes it.
+Resolves the configured class and package names to types, skips types that are already marked as generated, and asks every
+backend for its source, which it hands to the source writer.
+
+`ProcessorDiagnostics`::
+The only code of the processor that reports through the compiler's `Messager`. It holds the texts, severities and
+annotations of every message the worker and the source writer give.
+
+`GeneratedSourceWriter`::
+Owns the `Filer`. It writes Java sources through the `Filer`, Kotlin sources into the directory named by the processor
+option `kapt.kotlin.generated`, and does not write a source that an earlier round wrote.
 
 `TypeModelFactory`::
 Reads a type with the compiler's element API and creates the `TypeModel`: getters for beans, components and accessors

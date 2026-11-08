@@ -60,9 +60,7 @@ public class MatcherGenerationProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(
-                MatcherGenerationProcessorWorker.KAPT_KOTLIN_GENERATED,
-                ElementSupport.VERBOSE_OPTION);
+        return Set.of(GeneratedSourceWriter.KAPT_KOTLIN_GENERATED, ElementSupport.VERBOSE_OPTION);
     }
 
     @Override

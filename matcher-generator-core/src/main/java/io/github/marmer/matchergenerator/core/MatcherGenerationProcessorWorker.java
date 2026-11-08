@@ -5,19 +5,11 @@
 package io.github.marmer.matchergenerator.core;
 
 import io.github.marmer.matchergenerator.core.model.TypeModel;
-import io.github.marmer.matchergenerator.core.spi.GeneratedSource;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,13 +31,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.StandardLocation;
 
 public class MatcherGenerationProcessorWorker {
-    /** The processor option KAPT passes with the directory Kotlin sources have to be written to. */
-    static final String KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated";
-
     static final String GENERATE_MATCHERS =
             "io.github.marmer.matchergenerator.annotations.GenerateMatchers";
     static final String GENERATED = "javax.annotation.processing.Generated";
@@ -75,15 +62,8 @@ public class MatcherGenerationProcessorWorker {
     private final ProcessingEnvironment processingEnv;
     private final String generatorName;
     private final List<GeneratorBackend> backends;
-
-    /**
-     * The names of the sources written so far, per round. The Filer refuses a second source of the
-     * same name, which for a file a backend writes once per package happens when a later round adds
-     * a type to that package.
-     */
-    private final Set<String> writtenInEarlierRounds = new HashSet<>();
-
-    private final Set<String> writtenInThisRound = new HashSet<>();
+    private final ProcessorDiagnostics diagnostics;
+    private final GeneratedSourceWriter sourceWriter;
 
     public MatcherGenerationProcessorWorker(
             final Supplier<LocalDateTime> timeProvider,
@@ -94,6 +74,8 @@ public class MatcherGenerationProcessorWorker {
         this.processingEnv = processingEnv;
         this.generatorName = generatorName;
         this.backends = List.copyOf(backends);
+        this.diagnostics = new ProcessorDiagnostics(processingEnv);
+        this.sourceWriter = new GeneratedSourceWriter(processingEnv, diagnostics);
     }
 
     private static List<AnnotationMirror> getConfigurationMirrors(final Element element) {
@@ -114,7 +96,7 @@ public class MatcherGenerationProcessorWorker {
         if (roundEnv.processingOver()) {
             return false;
         }
-        ElementSupport.logNote(processingEnv, "Matcher generation started", null);
+        diagnostics.matcherGenerationStarted();
         final Set<Element> configurationElements = new LinkedHashSet<>();
         annotations.stream()
                 .filter(
@@ -150,12 +132,7 @@ public class MatcherGenerationProcessorWorker {
     private List<PlannedType> planMatchers(final Element configurationElement) {
         final List<AnnotationMirror> mirrors = getConfigurationMirrors(configurationElement);
         if (mirrors.size() != 1) {
-            processingEnv
-                    .getMessager()
-                    .printMessage(
-                            Diagnostic.Kind.ERROR,
-                            "Use either @GenerateMatchers or @MatcherConfiguration on a type, not both",
-                            configurationElement);
+            diagnostics.bothConfigurationAnnotations(configurationElement);
             return List.of();
         }
         final AnnotationMirror configurationMirror = mirrors.get(0);
@@ -186,13 +163,6 @@ public class MatcherGenerationProcessorWorker {
                         });
         return planned;
     }
-
-    /** A type to generate for, modelled but not yet written. */
-    private record PlannedType(
-            TypeElement typeElement,
-            TypeModel model,
-            Element configurationElement,
-            AnnotationMirror configurationMirror) {}
 
     /**
      * The qualified names of the types the configuration names explicitly. Names that are no type,
@@ -226,8 +196,7 @@ public class MatcherGenerationProcessorWorker {
      * refer to the code generated for another type, whichever configuration asked for it.
      */
     private void generate(final List<PlannedType> planned) {
-        writtenInEarlierRounds.addAll(writtenInThisRound);
-        writtenInThisRound.clear();
+        sourceWriter.startRound();
         final LocalDateTime generationTime = timeProvider.get();
         final boolean jspecifyAvailable = isJspecifyAvailable();
         final List<TypeModel> models = planned.stream().map(PlannedType::model).toList();
@@ -240,80 +209,36 @@ public class MatcherGenerationProcessorWorker {
                                     jspecifyAvailable,
                                     models,
                                     this::inheritedMethodNames,
-                                    message -> printBackendError(type, message),
-                                    processingEnv.getOptions().containsKey(KAPT_KOTLIN_GENERATED),
-                                    this::printBackendNote,
-                                    message -> printBackendWarning(type, message),
-                                    this::printBackendVerboseNote,
-                                    this::classExistsOutsideOwnOutput);
+                                    message ->
+                                            diagnostics.backendError(
+                                                    type.configurationElement(),
+                                                    type.configurationMirror(),
+                                                    message),
+                                    processingEnv
+                                            .getOptions()
+                                            .containsKey(
+                                                    GeneratedSourceWriter.KAPT_KOTLIN_GENERATED),
+                                    diagnostics::backendNote,
+                                    message ->
+                                            diagnostics.backendWarning(
+                                                    type.configurationElement(),
+                                                    type.configurationMirror(),
+                                                    message),
+                                    diagnostics::backendVerboseNote,
+                                    sourceWriter::classExistsOutsideOwnOutput);
                     backends.forEach(
                             backend ->
                                     backend.generate(type.model(), context)
                                             .forEach(
                                                     source ->
-                                                            write(backend, source, type, models)));
+                                                            sourceWriter.write(
+                                                                    backend,
+                                                                    source,
+                                                                    type.typeElement(),
+                                                                    type.configurationElement(),
+                                                                    type.configurationMirror(),
+                                                                    models)));
                 });
-    }
-
-    /**
-     * A backend found a problem in a configured type, such as a generated method name that clashes
-     * with an inherited one. It is reported once, at the annotation that configured the type.
-     */
-    private void printBackendError(final PlannedType type, final String message) {
-        processingEnv
-                .getMessager()
-                .printMessage(
-                        Diagnostic.Kind.ERROR,
-                        message,
-                        type.configurationElement(),
-                        type.configurationMirror());
-    }
-
-    /**
-     * A backend reports something it left out of the code it generates, such as a property the DSL
-     * cannot name. It is reported at the annotation that configured the type, like an error.
-     */
-    private void printBackendWarning(final PlannedType type, final String message) {
-        processingEnv
-                .getMessager()
-                .printMessage(
-                        Diagnostic.Kind.WARNING,
-                        message,
-                        type.configurationElement(),
-                        type.configurationMirror());
-    }
-
-    /** A backend has something to tell that is no problem. It is a note without an element. */
-    private void printBackendNote(final String message) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
-    }
-
-    /**
-     * Whether a class of that name is on the compile class path or source path, without being part
-     * of the output directory of this compilation. What a previous, non clean build of this module
-     * left in its own output is not counted, since it is replaced by this build.
-     */
-    private boolean classExistsOutsideOwnOutput(final String qualifiedClassName) {
-        if (processingEnv.getElementUtils().getTypeElement(qualifiedClassName) == null) {
-            return false;
-        }
-        try (InputStream ignored =
-                processingEnv
-                        .getFiler()
-                        .getResource(
-                                StandardLocation.CLASS_OUTPUT,
-                                "",
-                                qualifiedClassName.replace('.', '/') + ".class")
-                        .openInputStream()) {
-            return false;
-        } catch (final IOException e) {
-            return true;
-        }
-    }
-
-    /** A backend has something to tell that only matters in verbose mode. */
-    private void printBackendVerboseNote(final String message) {
-        ElementSupport.logNote(processingEnv, message, null);
     }
 
     /**
@@ -349,21 +274,10 @@ public class MatcherGenerationProcessorWorker {
                 .ifPresent(
                         model -> {
                             if (namedTypes.contains(qualifiedName)) {
-                                processingEnv
-                                        .getMessager()
-                                        .printMessage(
-                                                Diagnostic.Kind.WARNING,
-                                                "Type '"
-                                                        + qualifiedName
-                                                        + "' has no properties to match",
-                                                configuredType);
+                                diagnostics.typeWithoutProperties(qualifiedName, configuredType);
                             } else {
-                                ElementSupport.logNote(
-                                        processingEnv,
-                                        "Type '"
-                                                + qualifiedName
-                                                + "' picked up by a package entry has no properties to match",
-                                        configuredType);
+                                diagnostics.typePickedUpWithoutProperties(
+                                        qualifiedName, configuredType);
                             }
                         });
     }
@@ -395,91 +309,6 @@ public class MatcherGenerationProcessorWorker {
                         entry ->
                                 Integer.valueOf(KOTLIN_FILE_FACADE_KIND)
                                         .equals(entry.getValue().getValue()));
-    }
-
-    private void write(
-            final GeneratorBackend backend,
-            final GeneratedSource source,
-            final PlannedType type,
-            final List<TypeModel> roundModels) {
-        final String name = source.qualifiedName();
-        if (writtenInEarlierRounds.contains(name)) {
-            printNotWrittenAgain(type, name, source.packageName(), roundModels);
-            return;
-        }
-        writtenInThisRound.add(name);
-        final Element[] originatingElements = {type.typeElement(), type.configurationElement()};
-        try {
-            if (source.language() == GeneratedSource.Language.JAVA) {
-                writeJava(name, source, originatingElements);
-            } else {
-                writeKotlin(backend, source, type.typeElement());
-            }
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /**
-     * A source an earlier round wrote is not written again, which the Filer would refuse. Whatever
-     * this round adds to the package is not part of it, which the user has to know.
-     */
-    private void printNotWrittenAgain(
-            final PlannedType type,
-            final String name,
-            final String packageName,
-            final List<TypeModel> roundModels) {
-        final String missing =
-                roundModels.stream()
-                        .filter(model -> model.targetPackage().equals(packageName))
-                        .map(TypeModel::qualifiedName)
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-        printBackendWarning(
-                type,
-                name
-                        + " was already written in an earlier processing round and is not written"
-                        + " again. It does not know the types generated in this round: "
-                        + missing);
-    }
-
-    private void writeJava(
-            final String name, final GeneratedSource source, final Element[] originatingElements)
-            throws IOException {
-        final FileObject file =
-                processingEnv.getFiler().createSourceFile(name, originatingElements);
-        try (Writer writer = file.openWriter()) {
-            writer.write(source.content());
-        }
-    }
-
-    private void writeKotlin(
-            final GeneratorBackend backend,
-            final GeneratedSource source,
-            final TypeElement typeElement)
-            throws IOException {
-        final String outputDirectory = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED);
-        if (outputDirectory == null) {
-            processingEnv
-                    .getMessager()
-                    .printMessage(
-                            Diagnostic.Kind.ERROR,
-                            "Backend "
-                                    + backend.getClass().getName()
-                                    + " generated Kotlin for "
-                                    + typeElement.getQualifiedName()
-                                    + ", which is only compiled when the annotation processor runs"
-                                    + " with KAPT (processor option '"
-                                    + KAPT_KOTLIN_GENERATED
-                                    + "' is missing)",
-                            typeElement);
-            return;
-        }
-        final Path directory = Path.of(outputDirectory, source.packageName().split("\\."));
-        Files.createDirectories(directory);
-        Files.writeString(
-                directory.resolve(source.simpleName() + "." + source.language().fileExtension()),
-                source.content());
     }
 
     /**
@@ -540,14 +369,8 @@ public class MatcherGenerationProcessorWorker {
         exclusions.forEach(
                 (name, exclusion) -> {
                     if (modelledTypes.stream().noneMatch(type -> isNamedBy(type, name))) {
-                        processingEnv
-                                .getMessager()
-                                .printMessage(
-                                        Diagnostic.Kind.WARNING,
-                                        "Exclusion '" + name + "' matches no configured type",
-                                        configurationElement,
-                                        configurationMirror,
-                                        exclusion);
+                        diagnostics.unmatchedExclusion(
+                                name, configurationElement, configurationMirror, exclusion);
                     }
                 });
     }
@@ -629,7 +452,7 @@ public class MatcherGenerationProcessorWorker {
         }
 
         if (found.isEmpty()) {
-            printErrorBecauseOfNotExistingTypeConfigured(
+            reportNotExistingTypeConfigured(
                     configurationType,
                     configurationMirror,
                     configuredValue,
@@ -654,23 +477,19 @@ public class MatcherGenerationProcessorWorker {
      * warns, as it did in 5.x, so existing 5.x configurations keep compiling. The diagnostic points
      * at the failing name.
      */
-    private void printErrorBecauseOfNotExistingTypeConfigured(
+    private void reportNotExistingTypeConfigured(
             final Element configurationClass,
             final AnnotationMirror mirror,
             final AnnotationValue configuredValue,
             final String qualifiedTypeOrPackageName) {
-        processingEnv
-                .getMessager()
-                .printMessage(
-                        ElementSupport.isOfType(mirror, GENERATE_MATCHERS)
-                                ? Diagnostic.Kind.ERROR
-                                : Diagnostic.Kind.WARNING,
-                        "Neither a type nor a package exists for '"
-                                + qualifiedTypeOrPackageName
-                                + "'",
-                        configurationClass,
-                        mirror,
-                        configuredValue);
+        diagnostics.unresolvableName(
+                ElementSupport.isOfType(mirror, GENERATE_MATCHERS)
+                        ? Diagnostic.Kind.ERROR
+                        : Diagnostic.Kind.WARNING,
+                qualifiedTypeOrPackageName,
+                configurationClass,
+                mirror,
+                configuredValue);
     }
 
     private void printSkipNoteBecauseOfSelfGenerationFor(final TypeElement typeElement) {
@@ -678,16 +497,7 @@ public class MatcherGenerationProcessorWorker {
                 .filter(
                         mirror ->
                                 ElementSupport.isOfType(mirror, Generated.class.getCanonicalName()))
-                .forEach(
-                        mirror ->
-                                ElementSupport.logNote(
-                                        processingEnv,
-                                        "Generation skipped for: '"
-                                                + typeElement.getQualifiedName()
-                                                + "' because it is already generated by this processor",
-                                        typeElement,
-                                        mirror,
-                                        ElementSupport.valueAttribute(processingEnv, mirror)));
+                .forEach(mirror -> diagnostics.selfGenerationSkipped(typeElement, mirror));
     }
 
     private boolean isJspecifyAvailable() {
