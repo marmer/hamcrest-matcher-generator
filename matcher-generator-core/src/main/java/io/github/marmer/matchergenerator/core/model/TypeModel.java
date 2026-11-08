@@ -6,6 +6,7 @@ package io.github.marmer.matchergenerator.core.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -73,7 +74,30 @@ public record TypeModel(
      * @return {@code true} when two or more properties of this type have the name of the property
      */
     public boolean isNameShared(final PropertyModel property) {
-        return properties.stream().filter(other -> other.name().equals(property.name())).count()
+        return isNameSharedAmong(property, other -> true);
+    }
+
+    /**
+     * Whether the name of the given property is shared by another property of this type, as {@link
+     * #isNameShared(PropertyModel)} asks, but the {@code getClass()} accessor does not count. The
+     * AssertJ backend generates no {@code class} property for {@code getClass()}, so it clashes
+     * with nothing there.
+     *
+     * @param property a property of this type
+     * @return {@code true} when two or more properties other than {@code getClass()} have the name
+     *     of the property
+     */
+    public boolean isNameSharedWithoutGetClass(final PropertyModel property) {
+        return isNameSharedAmong(
+                property, other -> !OBJECT_CLASS_ACCESSOR.equals(other.accessor()));
+    }
+
+    private boolean isNameSharedAmong(
+            final PropertyModel property, final Predicate<PropertyModel> counted) {
+        return properties.stream()
+                        .filter(counted)
+                        .filter(other -> other.name().equals(property.name()))
+                        .count()
                 > 1;
     }
 
