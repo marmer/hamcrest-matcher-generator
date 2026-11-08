@@ -1,0 +1,6 @@
+# The documentation is public: every crawler may read every page. The sitemap lists the pages.
+# Filtered by the docs build: ${docs.base.url} is the base URL of the site (docs/pom.xml).
+User-agent: *
+Allow: /
+
+Sitemap: ${docs.base.url}sitemap.xml

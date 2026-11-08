@@ -22,10 +22,16 @@
         <asciidoctorj.diagram.version>3.2.1</asciidoctorj.diagram.version>
         <asciidoctorj.diagram.plantuml.version>1.2026.2</asciidoctorj.diagram.plantuml.version>
         <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
+        <!-- the version Maven 3.9 binds to every module by default; pinned here so the site-root copy below has a version -->
+        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <properties.maven.plugin.version>1.2.1</properties.maven.plugin.version>
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
+        <!-- The public address of the site, with its trailing slash (owner's statement of 2026-10-31, #277). The canonical
+            links, sitemap.xml, robots.txt and llms.txt all derive from it; RenderedDocsTest reads it from the surefire
+            configuration below. The github.io address only redirects to it. -->
+        <docs.base.url>https://hamcrest-matcher-generator.marmer.online/</docs.base.url>
         <!-- the module produces only the rendered site (no jar), so there is nothing to install or deploy -->
         <maven.install.skip>true</maven.install.skip>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -146,6 +152,36 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Site-root files that name the base URL: a filtered copy, so docs.base.url is the only place it is written.
+                Runs after the asciidoctor render, which writes the pages and sitemap.xml. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven.resources.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>site-root-files</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${docs.output.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/docs/asciidoc</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <!-- the hand-maintained index for AI assistants: its links name the base URL -->
+                                        <include>llms.txt</include>
+                                        <include>robots.txt</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- asciidoctorj-diagram reads the home from this system property of the Maven JVM. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -212,8 +248,6 @@
                                     <includes>
                                         <include>**/images/**</include>
                                         <include>assets/**</include>
-                                        <!-- the hand-maintained index for AI assistants, published at the site root -->
-                                        <include>llms.txt</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -235,6 +269,7 @@
                                 <toc>right</toc>
                                 <toc-title>On this page</toc-title>
                                 <site-source-dir>${project.basedir}/src/docs/asciidoc</site-source-dir>
+                                <site-base-url>${docs.base.url}</site-base-url>
                                 <project-version>${project.version}</project-version>
                                 <!-- Versions the guide names in prose. GuideVersionsTest fails when they differ from the
                                     root pom's dependencyManagement. -->
@@ -260,6 +295,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <docs.output.directory>${docs.output.directory}</docs.output.directory>
+                        <docs.base.url>${docs.base.url}</docs.base.url>
                         <docs.source.directory>${project.basedir}/src/docs/asciidoc</docs.source.directory>
                     </systemPropertyVariables>
                 </configuration>
