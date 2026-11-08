@@ -12,9 +12,9 @@ The review prompts: two that `code-review` (Standards and Spec axes) runs as sub
 
 ## Delta check
 
-Run by a fresh agent (see the principle in `docs/agents/implementation.md`) after the implementer has fixed the findings. Give it the ticket number `<n>` with the reviewed commit and the findings.
+Run by a fresh agent (see the principle in `docs/agents/implementation.md`) after the implementer has fixed the findings. Give it the ticket number `<n>` with the reviewed commit and the findings; for a session-end or spec-wide review, give the spec number instead, and for a fix with no ticket or spec (e.g. a retro fix), drop the criteria sentence from the brief.
 
-> Review `git diff <reviewed commit>..HEAD`, where `<reviewed commit>` is the HEAD the review looked at. This is a delta check, not a full re-review: check only the findings below and the lines this diff changes. For each finding, report fixed or not fixed, quoting its file:line. Then report new defects in the changed lines, one per line with file and line. Fetch the ticket (`gh api repos/marmer/hamcrest-matcher-generator/issues/<n>`) and report every acceptance criterion that the changed lines touch or break, quoting the criterion. Under 300 words. Change nothing.
+> Review `git diff <reviewed commit>..HEAD`, where `<reviewed commit>` is the HEAD the review looked at. This is a delta check, not a full re-review: check only the findings below and the lines this diff changes. For each finding, report fixed or not fixed, quoting its file:line. Then report new defects in the changed lines, one per line with file and line. Fetch the ticket and its comments (`gh api repos/marmer/hamcrest-matcher-generator/issues/<n>` plus `/comments`), grep the spec only as needed, and report each acceptance criterion that the changed lines break, quoting the criterion. Under 300 words. Change nothing.
 >
 > Findings: <each finding, with file and line, as the review wrote it>
 
