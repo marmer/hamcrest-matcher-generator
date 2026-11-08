@@ -138,7 +138,7 @@ for the package.
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The
 Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out
-of the DSL, the Java matcher keeps it, and the DSL's completeness check ignores it.
+of the DSL (what the DSL does with it is in <<building-block-kotlin,chapter 5>>).
 
 [[concepts-scorecard-findings]]
 === Accepted OpenSSF Scorecard Findings

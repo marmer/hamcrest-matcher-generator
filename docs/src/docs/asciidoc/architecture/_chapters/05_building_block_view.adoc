@@ -217,6 +217,6 @@ types are written as their Kotlin counterparts (`String`, `Int`, `List<out T>`, 
 type without properties gets no file. Without KAPT (`GenerationContext.kotlinOutputAvailable`
 is false) the backend generates nothing and reports one compiler note through `GenerationContext.reportNote`. A property whose
 name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with an `Any` member
-(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see <<concepts-diagnostics,chapter 8>>, Diagnostics); the Java matcher keeps it, and the scope's `checkingAllProperties()` ignores it on the Java matcher, so the DSL's completeness check does not wait for it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
+(`equals`, `hashCode`, `toString`) gets no DSL functions and a compiler warning (see <<concepts-diagnostics,chapter 8>>, Diagnostics); the Java matcher keeps it, and the scope's `checkingAllProperties()` calls `ignoringX()` for it, so the completeness check does not wait for it. Kotlin keywords as property names are escaped with backticks. Collection and map properties
 take the runtime collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`) whose items are the DSL's entry functions.
 The generated Kotlin needs this artifact and `kotlin-stdlib` on the class path of the Kotlin compilation; it uses only Kotlin 1.9 language features.
