@@ -7,12 +7,62 @@ package io.github.marmer.matchergenerator.core.model;
 import static io.github.marmer.matchergenerator.core.model.ModelTestSupport.anyType;
 import static io.github.marmer.matchergenerator.core.model.ModelTestSupport.property;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class TypeModelTest {
+
+    @Test
+    @DisplayName("A property whose name no other property of the type has is not shared")
+    void aPropertyWhoseNameNoOtherPropertyHasIsNotShared() {
+        final PropertyModel foo = property("foo", "getFoo");
+        final PropertyModel bar = property("bar", "getBar");
+
+        final TypeModel model = typeWith(foo, bar);
+
+        assertFalse(model.isNameShared(foo));
+        assertFalse(model.isNameShared(bar));
+    }
+
+    @Test
+    @DisplayName("Two properties with the same name share that name")
+    void twoPropertiesWithTheSameNameShareThatName() {
+        final PropertyModel getFoo = property("foo", "getFoo");
+        final PropertyModel isFoo = property("foo", "isFoo");
+
+        final TypeModel model = typeWith(getFoo, isFoo);
+
+        assertTrue(model.isNameShared(getFoo));
+        assertTrue(model.isNameShared(isFoo));
+    }
+
+    @Test
+    @DisplayName("The getClass property next to a user property of another name is not shared")
+    void theGetClassPropertyNextToAUserPropertyOfAnotherNameIsNotShared() {
+        final PropertyModel getClassProperty = property("class", "getClass");
+        final PropertyModel foo = property("foo", "getFoo");
+
+        final TypeModel model = typeWith(getClassProperty, foo);
+
+        assertFalse(model.isNameShared(getClassProperty));
+        assertFalse(model.isNameShared(foo));
+    }
+
+    @Test
+    @DisplayName("The getClass property shares the name class with a user property isClass")
+    void theGetClassPropertySharesTheNameClassWithAUserPropertyIsClass() {
+        final PropertyModel getClassProperty = property("class", "getClass");
+        final PropertyModel isClass = property("class", "isClass");
+
+        final TypeModel model = typeWith(getClassProperty, isClass);
+
+        assertTrue(model.isNameShared(getClassProperty));
+        assertTrue(model.isNameShared(isClass));
+    }
 
     @Test
     @DisplayName("The accessor properties keep the first property of every name")
