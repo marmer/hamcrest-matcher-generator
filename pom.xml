@@ -86,7 +86,7 @@
         <!-- maven-invoker-plugin of the 5.x consumer builds; managed in pluginManagement, Renovate bumps it. -->
         <maven-invoker-plugin.version>3.9.1</maven-invoker-plugin.version>
         <!-- PIT (#127); the CI mutation job keys its history cache on this value. -->
-        <pitest.version>1.30.1</pitest.version>
+        <pitest.version>1.30.2</pitest.version>
         <pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
         <pitest-history-plugin.version>0.0.1</pitest-history-plugin.version>
         <!-- PINNED at 1.36.0. 1.37.0 fails inside Spotless's in-process formatter run (InvocationTargetException on
