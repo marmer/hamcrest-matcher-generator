@@ -1,9 +1,16 @@
 #!/bin/bash
-# Pre-fetches Maven dependencies once per cloud session so parallel subagents can build offline (-o)
-# instead of each hitting Maven Central (HTTP 429, see `docs/agents/build-pitfalls.md`).
+# Runs in every session (local and cloud). Local: fast-forwards a clean `main` to origin/main, see
+# `scripts/agents/fast-forward-main.sh`. Cloud: also pre-fetches Maven dependencies once per session so parallel subagents
+# can build offline (-o) instead of each hitting Maven Central (HTTP 429, see `docs/agents/build-pitfalls.md`).
 set -uo pipefail
 
+# Never fails the session start: the script exits 0 on every path, and `|| true` covers a missing script.
+fast_forward_main() {
+  (cd "$CLAUDE_PROJECT_DIR" && "$CLAUDE_PROJECT_DIR/scripts/agents/fast-forward-main.sh") || true
+}
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+  fast_forward_main
   exit 0
 fi
 
@@ -12,6 +19,7 @@ cd "$CLAUDE_PROJECT_DIR"
 # Keep a record of this run; `docs/agents/build-pitfalls.md` points agents here.
 exec > >(tee /tmp/session-start.log) 2>&1
 echo "session-start: $(date -u +%FT%TZ)"
+fast_forward_main
 
 # Maven may store a 429 response body as a .pom or .jar, which breaks every later build
 # ("Non-parseable POM", NoClassDefFoundError). Drop the whole version directory so it is re-fetched.
