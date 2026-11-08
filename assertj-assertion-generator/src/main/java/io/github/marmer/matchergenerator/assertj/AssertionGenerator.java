@@ -213,7 +213,10 @@ class AssertionGenerator {
         final MethodSpec.Builder constructor =
                 MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PROTECTED)
-                        .addParameter(nullable(ACTUAL_TYPE), ACTUAL_FIELD, Modifier.FINAL)
+                        .addParameter(
+                                FileShell.nullable(ACTUAL_TYPE, context),
+                                ACTUAL_FIELD,
+                                Modifier.FINAL)
                         .addParameter(
                                 ParameterizedTypeName.get(
                                         ClassName.get(Class.class),
@@ -295,7 +298,10 @@ class AssertionGenerator {
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
         return MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(nullable(assertedType(model)), ACTUAL_FIELD, Modifier.FINAL)
+                .addParameter(
+                        FileShell.nullable(assertedType(model), context),
+                        ACTUAL_FIELD,
+                        Modifier.FINAL)
                 .addStatement("super($L, $T.class)", ACTUAL_FIELD, concreteClass)
                 .build();
     }
@@ -303,7 +309,10 @@ class AssertionGenerator {
     private MethodSpec assertThatMethod(final ClassName concreteClass) {
         return MethodSpec.methodBuilder("assertThat")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(nullable(assertedType(model)), ACTUAL_FIELD, Modifier.FINAL)
+                .addParameter(
+                        FileShell.nullable(assertedType(model), context),
+                        ACTUAL_FIELD,
+                        Modifier.FINAL)
                 .addStatement("return new $T($L)", concreteClass, ACTUAL_FIELD)
                 .returns(concreteClass)
                 .build();
@@ -635,8 +644,12 @@ class AssertionGenerator {
         return MethodSpec.methodBuilder(CHECK_PROPERTY)
                 .addModifiers(Modifier.PRIVATE)
                 .addParameter(String.class, "property", Modifier.FINAL)
-                .addParameter(nullable(TypeName.OBJECT), "actualValue", Modifier.FINAL)
-                .addParameter(nullable(TypeName.OBJECT), "expectedValue", Modifier.FINAL)
+                .addParameter(
+                        FileShell.nullable(TypeName.OBJECT, context), "actualValue", Modifier.FINAL)
+                .addParameter(
+                        FileShell.nullable(TypeName.OBJECT, context),
+                        "expectedValue",
+                        Modifier.FINAL)
                 .addStatement("$L.add(property)", ADDRESSED)
                 .beginControlFlow("if (!$T.deepEquals(actualValue, expectedValue))", Objects.class)
                 .addStatement(
@@ -657,9 +670,9 @@ class AssertionGenerator {
     private TypeName valueType(final PropertyModel property) {
         if (model.isNameSharedWithoutGetClass(property)
                 || property.type().getKind() == TypeKind.TYPEVAR) {
-            return nullable(TypeName.OBJECT);
+            return FileShell.nullable(TypeName.OBJECT, context);
         }
-        return nullable(typeVarsToWildcards(property.type(), false));
+        return FileShell.nullable(typeVarsToWildcards(property.type(), false), context);
     }
 
     private TypeName requirementsType(final PropertyModel property) {
@@ -674,11 +687,7 @@ class AssertionGenerator {
     }
 
     private TypeName nullableIf(final boolean nullable, final TypeName type) {
-        return nullable ? nullable(type) : type;
-    }
-
-    private TypeName nullable(final TypeName type) {
-        return FileShell.nullable(type, context);
+        return nullable ? FileShell.nullable(type, context) : type;
     }
 
     /** The asserted type, with wildcards for the type parameters of a generic type. */
