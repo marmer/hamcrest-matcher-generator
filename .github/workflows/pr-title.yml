@@ -1,7 +1,8 @@
 name: PR title
 
 # The squash-merged PR title becomes the commit message on main, and release-please derives the version bump and the
-# CHANGELOG from it, so it must follow Conventional Commits. The job name `PR title` is the required check.
+# CHANGELOG from it, so it must follow Conventional Commits and name the ticket it closes (`(#284)`); bots are exempt
+# from the ticket number. The job name `PR title` is the required check.
 on:
   pull_request_target:
     types: [ opened, edited, synchronize, reopened ]
@@ -17,7 +18,19 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      # pull_request_target is safe here: the job checks out nothing and runs no code from the pull request.
+      # pull_request_target is safe here: the job checks out the base branch only, never the pull request's code, and
+      # runs only the scripts of the base branch. The title reaches the script through env, never through a shell line.
       - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # No `ref:`: pull_request_target checks out the base ref by default, never the pull request head.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the PR title names a ticket number (bot pull requests exempt)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+        run: python3 scripts/ci/check-pr-title-ticket.py

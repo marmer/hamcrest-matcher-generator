@@ -16,8 +16,11 @@ Do not report a vulnerability in a public issue. [SECURITY.md](SECURITY.md) desc
 1. Open an issue for anything larger than a typo fix, so the change is agreed before you write it.
 2. Fork the repository and work on a branch.
 3. Open a pull request against `main`. The maintainer reviews it. A pull request is squash-merged, so its **title** must
-   follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix: ...`, `feat: ...`, `docs: ...`): the
-   check `PR title` enforces it, and release-please derives the version bump and the release notes from it.
+   follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix: ...`, `feat: ...`, `docs: ...`) and carry
+   the number of the ticket it closes, e.g. `docs: add the badge (#284)` (GitHub appends the pull request number itself).
+   The check `PR title` enforces both, and release-please derives the version bump and the release notes from the title.
+   Pull requests opened by a bot (release-please, Renovate, Dependabot) are exempt from the ticket number. A change
+   without a ticket gets one first: open the issue, then the pull request.
 4. The required checks run on every pull request (see below) and must be green before it is merged.
 
 ## Requirements for an acceptable contribution
