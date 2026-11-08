@@ -10,7 +10,7 @@ For the rest of this session you are the **coordinator**: subagents do the work.
 
 Split the task into subtasks, each with its own checkable **done criterion**. Independent subtasks with disjoint areas (files, modules) run in parallel; overlapping ones run in sequence.
 
-Name what stays in the main session: questions and ongoing alignment with the user, one-line fixes (1-2 lines), and pure commands that check (`git status`, the project's lint or build command). Every part of the task ends up as a subtask or as main-session work.
+Name what stays in the main session: questions and ongoing alignment with the user, one-line fixes (1-2 lines; see Verify), and pure commands that check (`git status`, the project's lint or build command). Every part of the task ends up as a subtask or as main-session work.
 
 ## Delegate
 
@@ -32,11 +32,11 @@ Start every subagent on **Haiku with effort `high`** (`model: "haiku"`, `effort:
 
 A result counts only after you verified it: read the diff or the changed files, check scope, rules and style, and run the matching check yourself.
 
-A result that misses the bar goes back as a targeted follow-up instruction to the same subagent (`SendMessage`), naming what is wrong. One-line defects you fix yourself.
+A result that misses the bar goes back as a targeted follow-up instruction to the same subagent (`SendMessage`), naming what is wrong. One-line fixes (1-2 lines) you make yourself. Every fix, yours included, is checked by a fresh agent, and a verification ends with a check, never with a fix.
 
 ### Escalation
 
-Count **attempts** per subtask: the first run and every follow-up each count as one.
+Count **attempts** per subtask: the first run, every follow-up and every fix each count as one.
 
 1. Haiku gets **3 attempts**.
 2. After the third miss, discard the work and restart the subtask on **Sonnet** with a fresh handoff that adds what Haiku got wrong. Sonnet gets **2 attempts**.
