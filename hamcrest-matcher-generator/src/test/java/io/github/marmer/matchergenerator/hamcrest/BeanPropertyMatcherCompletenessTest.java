@@ -86,7 +86,7 @@ class BeanPropertyMatcherCompletenessTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"notify", "wait", "hashCode"})
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
     void aPropertyNamedLikeAnObjectMethodFailsTheCheckWhenItIsUnaddressed(final String property) {
         final BeanPropertyMatcher<Lookalike> matcher =
                 new BeanPropertyMatcher<>(Lookalike.class, property).checkingAllProperties();
@@ -96,7 +96,7 @@ class BeanPropertyMatcherCompletenessTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"notify", "wait", "hashCode"})
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
     void aPropertyNamedLikeAnObjectMethodIsAddressedWhenItIsChecked(final String property) {
         final BeanPropertyMatcher<Lookalike> matcher =
                 new BeanPropertyMatcher<>(Lookalike.class, property)
@@ -107,7 +107,7 @@ class BeanPropertyMatcherCompletenessTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"notify", "wait", "hashCode"})
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
     void aPropertyNamedLikeAnObjectMethodIsAddressedWhenItIsIgnored(final String property) {
         final BeanPropertyMatcher<Lookalike> matcher =
                 new BeanPropertyMatcher<>(Lookalike.class, property)
