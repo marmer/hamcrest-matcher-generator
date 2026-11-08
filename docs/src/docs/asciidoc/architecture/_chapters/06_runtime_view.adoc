@@ -55,8 +55,7 @@ Notable Aspects::
 
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
-* A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests. A backend
-reports it through `GenerationContext.reportError`, once per problem, at the annotation (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
+* A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
 
 [[runtime-mismatch-hamcrest]]
 === Describing a Mismatch (Hamcrest)
@@ -108,7 +107,5 @@ sentence names the path of the asserted object from the root type, so a nested c
 include::../workspace.dsl[]
 ----
 
-The maintainer merges the Release PR that release-please keeps up to date. The merge creates the tag and the release page, and the
-same workflow then builds the tag on GitHub Actions. Only a green build of the tag publishes the signed bundle to Maven Central, and the documentation is
-deployed to GitHub Pages from the same tag. Finally the workflow announces the release to the maintainer. The
-workflows, jobs and credentials are described in <<section-deployment-view,chapter 7>>.
+The release is a sequence of CI jobs that starts when the maintainer merges the Release PR. The sequence is described in
+<<deployment-release-pipeline,chapter 7>>, Release Pipeline, and the credentials it uses in <<deployment-credentials,its Credentials section>>.
