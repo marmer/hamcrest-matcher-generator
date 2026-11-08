@@ -68,11 +68,11 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         endtoend -> annotations "Configures types with"
 
         processor -> worker "Hands rounds to"
-        worker -> typeModelFactory "Asks for type model"
+        worker -> typeModelFactory "Asks for model"
         typeModelFactory -> nullability "Asks for nullability"
         nullability -> propertyModel "Feeds nullability to"
         typeModelFactory -> propertyModel "Creates"
-        worker -> spi "Calls every backend"
+        worker -> spi "Calls backends"
         worker -> javac "Writes sources via Filer"
         backend -> matcherGenerator "Delegates to"
         backend -> spi "Implements"
@@ -112,7 +112,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         container hmg "Containers" {
             include *
             exclude endtoend docs bridge
-            exclude "core -> javac"
+            exclude "core -> javac" "hamcrestBackend -> core" "assertjBackend -> core" "kotlinBackend -> core"
             autoLayout lr 500 1000
         }
 
@@ -123,7 +123,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
 
         component core "CoreComponents" {
             include *
-            exclude "kotlinBackend -> hamcrestBackend"
+            exclude "kotlinBackend -> hamcrestBackend" "hamcrestBackend -> propertyModel"
             autoLayout lr 500 1000
         }
 
@@ -135,10 +135,10 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         dynamic core "Generation" "What happens for a round in which the compiler finds the configuration annotation." {
             javac -> processor "Invokes in every round"
             processor -> worker "Hands the round to"
-            worker -> typeModelFactory "Asks for type model"
-            worker -> spi "Calls every backend"
+            worker -> typeModelFactory "Asks for model"
+            worker -> spi "Calls backends"
             worker -> javac "Writes sources"
-            autoLayout tb 500 1000
+            autoLayout lr 500 1000
         }
 
         dynamic * "Release" "From merging the Release PR to the announcement." {
