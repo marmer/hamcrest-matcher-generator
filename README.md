@@ -171,10 +171,10 @@ not the code the processor writes from your classes.
 Documentation
 -------------
 
-* The [user guide](https://marmer.github.io/hamcrest-matcher-generator/guide/getting-started.html) starts with a first green test
+* The [user guide](https://hamcrest-matcher-generator.marmer.online/guide/getting-started.html) starts with a first green test
   and covers the backends, the configuration and the IDE setup.
-* The architecture is documented with arc42 on the [same site](https://marmer.github.io/hamcrest-matcher-generator/).
-* Migrating from 5.x: the [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists what changes.
+* The architecture is documented with arc42 on the [same site](https://hamcrest-matcher-generator.marmer.online/).
+* Migrating from 5.x: the [migration guide](https://hamcrest-matcher-generator.marmer.online/guide/migration.html) lists what changes.
 
 Coming from 5.x
 ---------------
@@ -182,7 +182,7 @@ Coming from 5.x
 Java 11 users stay on 5.x: 6.0.0 needs JDK 17 or higher. The 5.x artifacts `hamcrest-matcher-generator-annotationprocessor`
 and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no code and bring in
 `hamcrest-matcher-generator` at the same version. `@MatcherConfiguration` remains as a deprecated alias of
-`@GenerateMatchers`. The [migration guide](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html) lists the rest, including the [new mismatch message form](https://marmer.github.io/hamcrest-matcher-generator/guide/migration.html#mismatch-format), which breaks tests that pin message text.
+`@GenerateMatchers`. The [migration guide](https://hamcrest-matcher-generator.marmer.online/guide/migration.html) lists the rest, including the [new mismatch message form](https://hamcrest-matcher-generator.marmer.online/guide/migration.html#mismatch-format), which breaks tests that pin message text.
 
 Kotlin-JVM
 ----------
@@ -199,25 +199,15 @@ You can find an example [here](hamcrest-matcher-generator-endtoend-mixed-kotlin-
 
 Additionally, you have to add the output directories for the test-compile execution of the kotlin-maven-plugin:
 
+<!-- snippet: hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml#test-compile-source-dirs -->
 ```xml
-
-<execution>
-    <id>test-compile</id>
-    <goals>
-        <goal>test-compile</goal>
-    </goals>
-    <configuration>
-        <sourceDirs>
-            <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
-            <sourceDir>${project.basedir}/src/test/java</sourceDir>
-            <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
-            <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
-            <sourceDir>${project.build.directory}/generated-test-sources/test-annotations
-        </sourceDirs>
-    </configuration>
-</execution>
-
+<sourceDirs>
+    <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+    <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
+    <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
+</sourceDirs>
 ```
+<!-- end snippet -->
 
 Requirements
 ============
@@ -229,7 +219,7 @@ You can use this library with the build tool of your choice or even with javac. 
 
 IDE
 ---
-Use the IDE of your choice. The user guide's [IDE setup chapter](https://marmer.github.io/hamcrest-matcher-generator/guide/ide-setup.html) covers Eclipse and IntelliJ IDEA, and its [Kotlin chapter](https://marmer.github.io/hamcrest-matcher-generator/guide/kotlin.html) covers the IntelliJ workaround for Kotlin tests.
+Use the IDE of your choice. The user guide's [IDE setup chapter](https://hamcrest-matcher-generator.marmer.online/guide/ide-setup.html) covers Eclipse and IntelliJ IDEA, and its [Kotlin chapter](https://hamcrest-matcher-generator.marmer.online/guide/kotlin.html) covers the IntelliJ workaround for Kotlin tests.
 
 JDK
 ---
@@ -248,7 +238,7 @@ You may copy this dependency if you want.
 <dependency>
     <groupId>org.hamcrest</groupId>
     <artifactId>hamcrest</artifactId>
-    <version>2.2</version>
+    <version>3.0</version>
     <scope>test</scope>
 </dependency>    
 ```
