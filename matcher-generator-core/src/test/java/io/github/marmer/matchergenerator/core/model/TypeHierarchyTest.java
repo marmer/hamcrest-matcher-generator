@@ -21,6 +21,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,17 +29,9 @@ import org.junit.jupiter.api.Test;
 /** The supertype walk over real type mirrors of a compilation. */
 class TypeHierarchyTest {
 
-    private static final List<String> NAMES =
+    /** The JDK types the tests walk to; the fixture types come from the compiled source. */
+    private static final List<String> JDK_TYPES =
             List.of(
-                    "some.Holder",
-                    "some.Bag",
-                    "some.Lines",
-                    "some.Line",
-                    "some.Plain",
-                    "some.A",
-                    "some.B",
-                    "some.C",
-                    "some.D",
                     "java.lang.Object",
                     "java.lang.String",
                     "java.util.ArrayList",
@@ -121,7 +114,10 @@ class TypeHierarchyTest {
         return supertype.arguments().stream().map(Object::toString).toList();
     }
 
-    /** Compiles the types the tests walk and keeps their elements, looked up while processing. */
+    /**
+     * Compiles the fixture types and keeps their elements by qualified name, collected while
+     * processing: the root elements of the compiled source, and the JDK types the tests walk to.
+     */
     private static Map<String, TypeElement> compileTypes() {
         final Map<String, TypeElement> found = new HashMap<>();
         CompilationSubject.assertThat(
@@ -142,9 +138,16 @@ class TypeHierarchyTest {
                                             public boolean process(
                                                     final Set<? extends TypeElement> annotations,
                                                     final RoundEnvironment round) {
+                                                for (final TypeElement type :
+                                                        ElementFilter.typesIn(
+                                                                round.getRootElements())) {
+                                                    found.put(
+                                                            type.getQualifiedName().toString(),
+                                                            type);
+                                                }
                                                 final Elements elements =
                                                         processingEnv.getElementUtils();
-                                                NAMES.forEach(
+                                                JDK_TYPES.forEach(
                                                         name ->
                                                                 found.put(
                                                                         name,
