@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues. Use `gh api` (REST) for all operations, or `scripts/agents/issue.py` for claim, comment and close. `gh issue`/`gh pr` subcommands use GraphQL, which is blocked in Claude Code cloud sessions; use `gh api` REST or `scripts/agents/issue.py`.
+Issues and specs for this repo live as GitHub issues. Use `gh api` (REST) for all operations, or `scripts/agents/issue.py` for claim, comment, tick and close. `gh issue`/`gh pr` subcommands use GraphQL, which is blocked in Claude Code cloud sessions; use `gh api` REST or `scripts/agents/issue.py`.
 
 ## Conventions
 
