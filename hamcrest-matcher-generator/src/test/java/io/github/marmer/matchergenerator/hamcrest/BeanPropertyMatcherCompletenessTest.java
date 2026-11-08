@@ -14,6 +14,7 @@ import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.entr
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInAnyOrder;
 import static io.github.marmer.matchergenerator.hamcrest.CollectionMatchers.itemsInOrder;
 import static io.github.marmer.matchergenerator.hamcrest.GoldenMessages.messageOf;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,6 +24,7 @@ import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Address;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Booking;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Contact;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Customer;
+import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Lookalike;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.OrderLine;
 import io.github.marmer.matchergenerator.hamcrest.BeanFixtures.Registry;
 import java.io.IOException;
@@ -32,12 +34,15 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** The completeness check of the runtime matcher: opt-in per matcher, off by default. */
 class BeanPropertyMatcherCompletenessTest {
     private static final Address PARIS = new Address("Paris");
     private static final Contact ADA = new Contact("Ada", "0170-1", PARIS);
     private static final Contact BOB = new Contact("Bob", "0170-2", PARIS);
+    private static final Lookalike LOOKALIKE = new Lookalike(true, "waiting", "code", "text");
 
     private final GoldenMessages golden = new GoldenMessages("BeanPropertyMatcherCompletenessTest");
 
@@ -78,6 +83,38 @@ class BeanPropertyMatcherCompletenessTest {
                         .checkingAllProperties();
 
         assertTrue(matcher.matches(PARIS));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
+    void aPropertyNamedLikeAnObjectMethodFailsTheCheckWhenItIsUnaddressed(final String property) {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, property).checkingAllProperties();
+
+        assertFalse(matcher.matches(LOOKALIKE));
+        assertEquals("neither checked nor ignored: " + property, mismatchOf(matcher, LOOKALIKE));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
+    void aPropertyNamedLikeAnObjectMethodIsAddressedWhenItIsChecked(final String property) {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, property)
+                        .with(property, anything())
+                        .checkingAllProperties();
+
+        assertTrue(matcher.matches(LOOKALIKE));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"notify", "wait", "hashCode", "toString"})
+    void aPropertyNamedLikeAnObjectMethodIsAddressedWhenItIsIgnored(final String property) {
+        final BeanPropertyMatcher<Lookalike> matcher =
+                new BeanPropertyMatcher<>(Lookalike.class, property)
+                        .ignore(property)
+                        .checkingAllProperties();
+
+        assertTrue(matcher.matches(LOOKALIKE));
     }
 
     @Test
