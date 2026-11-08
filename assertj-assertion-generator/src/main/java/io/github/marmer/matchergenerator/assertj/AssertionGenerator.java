@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -33,7 +32,6 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -65,10 +63,6 @@ class AssertionGenerator {
     private static final ClassName REFLECT_TYPE = ClassName.get("java.lang.reflect", "Type");
     private static final Set<String> ITERABLE_OR_MAP =
             Set.of("java.lang.Iterable", "java.util.Map");
-    private static final AnnotationSpec NULL_MARKED =
-            AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "NullMarked")).build();
-    private static final AnnotationSpec NULLABLE =
-            AnnotationSpec.builder(ClassName.get("org.jspecify.annotations", "Nullable")).build();
 
     private static final String SELF_NAME = "SELF";
     private static final String ACTUAL_TYPE_NAME = "ACTUAL";
@@ -87,60 +81,41 @@ class AssertionGenerator {
         this.properties = model.accessorProperties();
     }
 
-    /** The properties the assertions check, in declaration order, without {@code getClass()}. */
-    List<PropertyModel> properties() {
-        return properties;
-    }
-
-    String abstractName() {
-        return abstractNameOf(model.simpleName());
-    }
-
-    String concreteName() {
-        return concreteNameOf(model.simpleName());
-    }
-
-    static String abstractNameOf(final String simpleName) {
-        return "Abstract" + simpleName + "Assert";
-    }
-
-    static String concreteNameOf(final String simpleName) {
-        return simpleName + "Assert";
-    }
-
     /** The abstract assertion class of the configured type, which is the null marked scope. */
     TypeSpec abstractTypeSpec() {
-        return topLevel(
-                abstractTypeSpecBuilder(ClassName.get(model.targetPackage(), abstractName())));
+        return FileShell.topLevel(
+                abstractTypeSpecBuilder(
+                        ClassName.get(
+                                model.targetPackage(),
+                                AssertionNaming.abstractName(model.simpleName()))),
+                context);
     }
 
     /** The concrete assertion class of the configured type, which is the null marked scope. */
     TypeSpec concreteTypeSpec() {
-        return topLevel(
+        return FileShell.topLevel(
                 concreteTypeSpecBuilder(
-                        ClassName.get(model.targetPackage(), abstractName()),
-                        ClassName.get(model.targetPackage(), concreteName())));
-    }
-
-    /** The builder's type as a top level type, null marked when JSpecify is available. */
-    TypeSpec topLevel(final TypeSpec.Builder builder) {
-        if (context.jspecifyAvailable()) {
-            builder.addAnnotation(NULL_MARKED);
-        }
-        return builder.build();
+                        ClassName.get(
+                                model.targetPackage(),
+                                AssertionNaming.abstractName(model.simpleName())),
+                        ClassName.get(
+                                model.targetPackage(),
+                                AssertionNaming.concreteName(model.simpleName()))),
+                context);
     }
 
     private TypeSpec.Builder abstractTypeSpecBuilder(final ClassName abstractClass) {
         final TypeSpec.Builder builder =
-                TypeSpec.classBuilder(abstractName())
+                TypeSpec.classBuilder(AssertionNaming.abstractName(model.simpleName()))
                         .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                        .addAnnotation(generatedAnnotation())
+                        .addAnnotation(FileShell.generatedAnnotation(context))
                         .addTypeVariable(
                                 TypeVariableName.get(
                                         SELF_NAME,
                                         ParameterizedTypeName.get(
                                                 abstractClass, SELF, ACTUAL_TYPE)))
-                        .addTypeVariable(TypeVariableName.get(ACTUAL_TYPE_NAME, assertedType()))
+                        .addTypeVariable(
+                                TypeVariableName.get(ACTUAL_TYPE_NAME, assertedType(model)))
                         .superclass(
                                 ParameterizedTypeName.get(
                                         ABSTRACT_OBJECT_ASSERT, SELF, ACTUAL_TYPE))
@@ -193,7 +168,8 @@ class AssertionGenerator {
                                     generator
                                             .abstractTypeSpecBuilder(
                                                     abstractClass.nestedClass(
-                                                            generator.abstractName()))
+                                                            AssertionNaming.abstractName(
+                                                                    nested.simpleName())))
                                             .addModifiers(Modifier.STATIC)
                                             .build());
                         });
@@ -203,12 +179,12 @@ class AssertionGenerator {
     private TypeSpec.Builder concreteTypeSpecBuilder(
             final ClassName abstractClass, final ClassName concreteClass) {
         final TypeSpec.Builder builder =
-                TypeSpec.classBuilder(concreteName())
+                TypeSpec.classBuilder(AssertionNaming.concreteName(model.simpleName()))
                         .addModifiers(Modifier.PUBLIC)
-                        .addAnnotation(generatedAnnotation())
+                        .addAnnotation(FileShell.generatedAnnotation(context))
                         .superclass(
                                 ParameterizedTypeName.get(
-                                        abstractClass, concreteClass, assertedType()))
+                                        abstractClass, concreteClass, assertedType(model)))
                         .addField(instanceOfAssertFactoryField(concreteClass))
                         .addMethod(concreteConstructor(concreteClass))
                         .addMethod(assertThatMethod(concreteClass));
@@ -222,9 +198,11 @@ class AssertionGenerator {
                                     generator
                                             .concreteTypeSpecBuilder(
                                                     abstractClass.nestedClass(
-                                                            generator.abstractName()),
+                                                            AssertionNaming.abstractName(
+                                                                    nested.simpleName())),
                                                     concreteClass.nestedClass(
-                                                            generator.concreteName()))
+                                                            AssertionNaming.concreteName(
+                                                                    nested.simpleName())))
                                             .addModifiers(Modifier.STATIC)
                                             .build());
                         });
@@ -261,12 +239,12 @@ class AssertionGenerator {
      * time.
      */
     private FieldSpec instanceOfAssertFactoryField(final ClassName concreteClass) {
-        final ClassName rawClass = rawClass();
+        final ClassName rawClass = rawClass(model);
         final FieldSpec.Builder field =
                 FieldSpec.builder(
                         ParameterizedTypeName.get(
                                 INSTANCE_OF_ASSERT_FACTORY, rawClass, concreteClass),
-                        factoryName(model.simpleName()),
+                        AssertionNaming.factoryName(model.simpleName()),
                         Modifier.PUBLIC,
                         Modifier.STATIC,
                         Modifier.FINAL);
@@ -292,25 +270,8 @@ class AssertionGenerator {
         return field.build();
     }
 
-    /**
-     * A default method of the soft assertions mixin, such as {@code assertThat(Order)}: a soft
-     * proxy of the concrete assertion class for the value.
-     */
-    MethodSpec softAssertionMethod(final String name, final ClassName concreteClass) {
-        return MethodSpec.methodBuilder(name)
-                .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
-                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
-                .addStatement(
-                        "return proxy($T.class, $T.class, $L)",
-                        concreteClass,
-                        rawClass(),
-                        ACTUAL_FIELD)
-                .returns(concreteClass)
-                .build();
-    }
-
     /** The erasure of the type, which is the class of the values the assertions accept. */
-    private ClassName rawClass() {
+    static ClassName rawClass(final TypeModel model) {
         return ClassName.get(asTypeElement(model.type()));
     }
 
@@ -331,14 +292,10 @@ class AssertionGenerator {
         return TypeName.OBJECT;
     }
 
-    private static String factoryName(final String simpleName) {
-        return simpleName.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase(Locale.ROOT);
-    }
-
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
         return MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
+                .addParameter(nullable(assertedType(model)), ACTUAL_FIELD, Modifier.FINAL)
                 .addStatement("super($L, $T.class)", ACTUAL_FIELD, concreteClass)
                 .build();
     }
@@ -346,7 +303,7 @@ class AssertionGenerator {
     private MethodSpec assertThatMethod(final ClassName concreteClass) {
         return MethodSpec.methodBuilder("assertThat")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(nullable(assertedType()), ACTUAL_FIELD, Modifier.FINAL)
+                .addParameter(nullable(assertedType(model)), ACTUAL_FIELD, Modifier.FINAL)
                 .addStatement("return new $T($L)", concreteClass, ACTUAL_FIELD)
                 .returns(concreteClass)
                 .build();
@@ -424,7 +381,7 @@ class AssertionGenerator {
         model.nestedTypes().stream()
                 .collect(
                         Collectors.groupingBy(
-                                nested -> factoryName(nested.simpleName()),
+                                nested -> AssertionNaming.factoryName(nested.simpleName()),
                                 TreeMap::new,
                                 Collectors.toList()))
                 .forEach(
@@ -461,9 +418,7 @@ class AssertionGenerator {
                 + "' of '"
                 + model.qualifiedName()
                 + "' generates "
-                + methodNames.stream()
-                        .map(name -> "'" + name + "'")
-                        .collect(Collectors.joining(" and "))
+                + quotedAndJoined(methodNames)
                 + ", which clashes with inherited AssertJ methods of the same names;"
                 + " rename the property";
     }
@@ -722,13 +677,12 @@ class AssertionGenerator {
         return nullable ? nullable(type) : type;
     }
 
-    /** Marks the type as nullable when JSpecify is available. Primitives cannot be annotated. */
-    TypeName nullable(final TypeName type) {
-        return context.jspecifyAvailable() && !type.isPrimitive() ? type.annotated(NULLABLE) : type;
+    private TypeName nullable(final TypeName type) {
+        return FileShell.nullable(type, context);
     }
 
     /** The asserted type, with wildcards for the type parameters of a generic type. */
-    TypeName assertedType() {
+    static TypeName assertedType(final TypeModel model) {
         if (model.typeParameters().isEmpty()) {
             return TypeName.get(model.type());
         }
@@ -737,13 +691,6 @@ class AssertionGenerator {
                 model.typeParameters().stream()
                         .map(parameter -> WildcardTypeName.subtypeOf(Object.class))
                         .toArray(TypeName[]::new));
-    }
-
-    AnnotationSpec generatedAnnotation() {
-        return AnnotationSpec.builder(Generated.class)
-                .addMember(VALUE, "$S", context.generatorName())
-                .addMember("date", "$S", context.generationTime())
-                .build();
     }
 
     private TypeName typeVarsToWildcards(final TypeMirror type, final boolean boxPrimitives) {

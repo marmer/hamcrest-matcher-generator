@@ -23,9 +23,9 @@ import java.util.TreeMap;
  */
 final class GeneratedNameClashes {
     private static final String MIXIN_CLAIMANT =
-            "the generated mixin '" + SoftAssertionsProviderGenerator.NAME + "'";
+            "the generated mixin '" + AssertionNaming.SOFT_ASSERTIONS_PROVIDER + "'";
     private static final String REPRESENTATION_CLAIMANT =
-            "the generated representation '" + RepresentationGenerator.NAME + "'";
+            "the generated representation '" + AssertionNaming.PROPERTY_REPRESENTATION + "'";
 
     private final Map<String, Claimants> claimantsByName = new TreeMap<>();
 
@@ -43,11 +43,11 @@ final class GeneratedNameClashes {
                     if (model.packageName().equals(model.targetPackage())) {
                         claimType(model.simpleName(), type);
                     }
-                    claimType(AssertionGenerator.abstractNameOf(model.simpleName()), type);
-                    claimType(AssertionGenerator.concreteNameOf(model.simpleName()), type);
+                    claimType(AssertionNaming.abstractName(model.simpleName()), type);
+                    claimType(AssertionNaming.concreteName(model.simpleName()), type);
                 });
-        claimGenerated(SoftAssertionsProviderGenerator.NAME, MIXIN_CLAIMANT);
-        claimGenerated(RepresentationGenerator.NAME, REPRESENTATION_CLAIMANT);
+        claimGenerated(AssertionNaming.SOFT_ASSERTIONS_PROVIDER, MIXIN_CLAIMANT);
+        claimGenerated(AssertionNaming.PROPERTY_REPRESENTATION, REPRESENTATION_CLAIMANT);
     }
 
     private void claimType(final String name, final String type) {

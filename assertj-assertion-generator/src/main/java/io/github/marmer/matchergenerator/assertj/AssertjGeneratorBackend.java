@@ -46,11 +46,11 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
                         List.of(
                                 sourceOf(
                                         model,
-                                        generator.abstractName(),
+                                        AssertionNaming.abstractName(model.simpleName()),
                                         generator.abstractTypeSpec()),
                                 sourceOf(
                                         model,
-                                        generator.concreteName(),
+                                        AssertionNaming.concreteName(model.simpleName()),
                                         generator.concreteTypeSpec())));
         // Only the first model of the package writes the mixin and the representation. The list
         // holds the types generated in this round, so a type from another round or compilation is
@@ -59,14 +59,14 @@ public class AssertjGeneratorBackend implements GeneratorBackend {
             final GeneratedSource mixin =
                     sourceOf(
                             model,
-                            SoftAssertionsProviderGenerator.NAME,
+                            AssertionNaming.SOFT_ASSERTIONS_PROVIDER,
                             new SoftAssertionsProviderGenerator(packageModels, context).typeSpec());
             noteMixinOnClassPath(mixin, packageModels, context);
             sources.add(mixin);
             sources.add(
                     sourceOf(
                             model,
-                            RepresentationGenerator.NAME,
+                            AssertionNaming.PROPERTY_REPRESENTATION,
                             new RepresentationGenerator(packageModels, context).typeSpec()));
         }
         return sources;

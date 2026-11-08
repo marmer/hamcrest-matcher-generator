@@ -5,6 +5,7 @@
 package io.github.marmer.matchergenerator.assertj;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
@@ -18,9 +19,9 @@ import javax.lang.model.element.Modifier;
  * generated assertions become soft and BDD assertions. AssertJ creates the soft proxies.
  */
 final class SoftAssertionsProviderGenerator {
-    static final String NAME = "SoftAssertionsProvider";
     private static final ClassName SOFT_ASSERTIONS_PROVIDER =
-            ClassName.get("org.assertj.core.api", NAME);
+            ClassName.get("org.assertj.core.api", AssertionNaming.SOFT_ASSERTIONS_PROVIDER);
+    private static final String ACTUAL = "actual";
     private static final String ASSERT_THAT = "assertThat";
     private static final String THEN = "then";
 
@@ -38,28 +39,26 @@ final class SoftAssertionsProviderGenerator {
     }
 
     TypeSpec typeSpec() {
-        final AssertionGenerator first = new AssertionGenerator(models.get(0), context);
         final TypeSpec.Builder builder =
-                TypeSpec.interfaceBuilder(NAME)
+                TypeSpec.interfaceBuilder(AssertionNaming.SOFT_ASSERTIONS_PROVIDER)
                         .addModifiers(Modifier.PUBLIC)
-                        .addAnnotation(first.generatedAnnotation())
+                        .addAnnotation(FileShell.generatedAnnotation(context))
                         .addSuperinterface(SOFT_ASSERTIONS_PROVIDER);
         models.forEach(
-                model -> {
-                    final AssertionGenerator generator = new AssertionGenerator(model, context);
-                    addMethods(
-                            builder,
-                            model,
-                            ClassName.get(model.targetPackage(), generator.concreteName()));
-                });
-        return first.topLevel(builder);
+                model ->
+                        addMethods(
+                                builder,
+                                model,
+                                ClassName.get(
+                                        model.targetPackage(),
+                                        AssertionNaming.concreteName(model.simpleName()))));
+        return FileShell.topLevel(builder, context);
     }
 
     private void addMethods(
             final TypeSpec.Builder builder, final TypeModel model, final ClassName assertClass) {
-        final AssertionGenerator generator = new AssertionGenerator(model, context);
-        builder.addMethod(generator.softAssertionMethod(ASSERT_THAT, assertClass))
-                .addMethod(generator.softAssertionMethod(THEN, assertClass));
+        builder.addMethod(softAssertionMethod(ASSERT_THAT, model, assertClass))
+                .addMethod(softAssertionMethod(THEN, model, assertClass));
         model.nestedTypes()
                 .forEach(
                         nested ->
@@ -67,7 +66,28 @@ final class SoftAssertionsProviderGenerator {
                                         builder,
                                         nested,
                                         assertClass.nestedClass(
-                                                new AssertionGenerator(nested, context)
-                                                        .concreteName())));
+                                                AssertionNaming.concreteName(
+                                                        nested.simpleName()))));
+    }
+
+    /**
+     * A default method of the soft assertions mixin, such as {@code assertThat(Order)}: a soft
+     * proxy of the concrete assertion class for the value.
+     */
+    private MethodSpec softAssertionMethod(
+            final String name, final TypeModel model, final ClassName concreteClass) {
+        return MethodSpec.methodBuilder(name)
+                .addModifiers(Modifier.PUBLIC, Modifier.DEFAULT)
+                .addParameter(
+                        FileShell.nullable(AssertionGenerator.assertedType(model), context),
+                        ACTUAL,
+                        Modifier.FINAL)
+                .addStatement(
+                        "return proxy($T.class, $T.class, $L)",
+                        concreteClass,
+                        AssertionGenerator.rawClass(model),
+                        ACTUAL)
+                .returns(concreteClass)
+                .build();
     }
 }
