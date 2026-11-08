@@ -1,4 +1,4 @@
-= hamcrest-matcher-generator
+= hamcrest-matcher-generator: Hamcrest matchers and AssertJ assertions
 :description: Generates Hamcrest matchers and AssertJ assertions for your model classes at compile time.
 :notitle:
 

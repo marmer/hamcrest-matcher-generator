@@ -22,9 +22,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,6 +36,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -476,6 +479,49 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("Every page has a non-empty title that no other page shares")
+    void everyPageHasADistinctNonEmptyTitle() {
+        final Map<String, List<String>> pagesByTitle = new TreeMap<>();
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final String title = parse(page).title().strip();
+            if (title.isEmpty()) {
+                problems.add(OUTPUT.relativize(page) + ": no title");
+            }
+            pagesByTitle
+                    .computeIfAbsent(title, unused -> new ArrayList<>())
+                    .add(OUTPUT.relativize(page).toString());
+        }
+        pagesByTitle.forEach(
+                (title, names) -> {
+                    if (names.size() > 1) {
+                        problems.add("title '" + title + "' is shared by " + names);
+                    }
+                });
+        assertTrue(problems.isEmpty(), "page titles:\n" + String.join("\n", problems));
+    }
+
+    @Test
+    @DisplayName("Every page has one canonical link to its address on the base URL")
+    void everyPageHasOneCanonicalLinkToItsAddress() {
+        final List<String> problems = new ArrayList<>();
+        for (final Path page : pages) {
+            final List<String> canonical =
+                    parse(page).select("link[rel=canonical]").eachAttr("href");
+            final String expected = addressOnBaseUrl(page);
+            if (!List.of(expected).equals(canonical)) {
+                problems.add(
+                        OUTPUT.relativize(page)
+                                + ": canonical links are "
+                                + canonical
+                                + ", expected "
+                                + expected);
+            }
+        }
+        assertTrue(problems.isEmpty(), "canonical links:\n" + String.join("\n", problems));
+    }
+
+    @Test
     @DisplayName("No page still shows a placeholder")
     void noPageStillShowsAPlaceholder() {
         final List<String> problems = new ArrayList<>();
@@ -499,20 +545,75 @@ class RenderedDocsTest {
     }
 
     @Test
+    @DisplayName("sitemap.xml lists the absolute URL of every rendered page and nothing else")
+    void sitemapXmlListsEveryRenderedPageAndNothingElse() throws IOException {
+        final Path sitemap = OUTPUT.resolve("sitemap.xml");
+        assertTrue(Files.isRegularFile(sitemap), "sitemap.xml is missing in " + OUTPUT);
+        final List<String> listed =
+                parseXml(sitemap).select("urlset > url > loc").eachText().stream()
+                        .sorted()
+                        .collect(Collectors.toList());
+        final List<String> expected =
+                pages.stream()
+                        .map(RenderedDocsTest::addressOnBaseUrl)
+                        .sorted()
+                        .collect(Collectors.toList());
+        assertEquals(expected, listed, "the URLs in sitemap.xml differ from the rendered pages");
+    }
+
+    @Test
+    @DisplayName("robots.txt allows every crawler and names the absolute sitemap")
+    void robotsTxtAllowsEveryCrawlerAndNamesTheSitemap() throws IOException {
+        final Path robots = OUTPUT.resolve("robots.txt");
+        assertTrue(Files.isRegularFile(robots), "robots.txt is missing in " + OUTPUT);
+        final List<String> lines =
+                Files.readAllLines(robots, StandardCharsets.UTF_8).stream()
+                        .map(String::strip)
+                        .collect(Collectors.toList());
+        assertAll(
+                () -> assertTrue(lines.contains("User-agent: *"), "applies to every crawler"),
+                () ->
+                        assertTrue(
+                                lines.stream()
+                                        .noneMatch(line -> line.matches("(?i)disallow:\\s*\\S.*")),
+                                "no path is disallowed: " + lines),
+                () ->
+                        assertTrue(
+                                lines.contains("Sitemap: " + BASE_URL + "sitemap.xml"),
+                                "names the absolute sitemap: " + lines));
+    }
+
+    @Test
+    @DisplayName("Every absolute site link in llms.txt starts with the base URL")
+    void everyAbsoluteSiteLinkInLlmsTxtStartsWithTheBaseUrl() throws IOException {
+        final Matcher links =
+                LINK_TARGET.matcher(
+                        Files.readString(OUTPUT.resolve("llms.txt"), StandardCharsets.UTF_8));
+        final List<String> wrong = new ArrayList<>();
+        while (links.find()) {
+            final String href = links.group(1);
+            if (SITE_HOSTS.contains(toUri(href).getHost()) && !href.startsWith(BASE_URL)) {
+                wrong.add(href);
+            }
+        }
+        assertTrue(wrong.isEmpty(), "site links outside the base URL " + BASE_URL + ": " + wrong);
+    }
+
+    @Test
     @DisplayName("llms.txt is published, lists every guide page and its links resolve")
     void llmsTxtIsPublishedListsEveryGuidePageAndItsLinksResolve() throws IOException {
         final Path llms = OUTPUT.resolve("llms.txt");
         assertTrue(Files.isRegularFile(llms), "llms.txt is missing in " + OUTPUT);
         final String content = Files.readString(llms, StandardCharsets.UTF_8);
-        final Matcher links = Pattern.compile("\\]\\(([^)\\s]+)\\)").matcher(content);
+        final Matcher links = LINK_TARGET.matcher(content);
         final List<String> problems = new ArrayList<>();
         final Set<String> siteLinks = new TreeSet<>();
         while (links.find()) {
             final String href = links.group(1);
-            if (!href.startsWith(SITE_URL)) {
+            if (!href.startsWith(BASE_URL)) {
                 continue;
             }
-            final String relative = href.substring(SITE_URL.length());
+            final String relative = href.substring(BASE_URL.length());
             siteLinks.add(relative);
             checkLink(llms, relative).ifPresent(problems::add);
         }
@@ -604,7 +705,29 @@ class RenderedDocsTest {
         assertTrue(checkImage(page, "").isPresent(), "empty image source");
     }
 
-    private static final String SITE_URL = "https://marmer.github.io/hamcrest-matcher-generator/";
+    /** The public base URL of the site, the one value of {@code docs.base.url} in docs/pom.xml. */
+    private static final String BASE_URL =
+            Objects.requireNonNull(
+                    System.getProperty("docs.base.url"),
+                    "docs.base.url is set by the surefire configuration of docs/pom.xml");
+
+    /**
+     * The hosts whose absolute links count as site links: the base URL and the GitHub Pages address
+     * that only redirects to it.
+     */
+    private static final Set<String> SITE_HOSTS =
+            Set.of(URI.create(BASE_URL).getHost(), "marmer.github.io");
+
+    /** The target of a Markdown link, {@code [text](target)}. */
+    private static final Pattern LINK_TARGET = Pattern.compile("\\]\\(([^)\\s]+)\\)");
+
+    /**
+     * The absolute URL of a rendered page on the base URL. The landing page is the base URL itself.
+     */
+    private static String addressOnBaseUrl(final Path page) {
+        final String relative = OUTPUT.relativize(page).toString().replace('\\', '/');
+        return "index.html".equals(relative) ? BASE_URL : BASE_URL + relative;
+    }
 
     private static Optional<String> checkLink(final Path page, final String href) {
         if (href.isEmpty() || isExternal(href)) {
@@ -686,6 +809,14 @@ class RenderedDocsTest {
     private static Document parse(final Path page) {
         try {
             return Jsoup.parse(page.toFile(), "UTF-8");
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static Document parseXml(final Path file) {
+        try {
+            return Jsoup.parse(file.toFile(), "UTF-8", "", Parser.xmlParser());
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
