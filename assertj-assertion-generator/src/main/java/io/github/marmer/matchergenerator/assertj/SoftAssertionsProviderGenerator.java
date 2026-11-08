@@ -20,7 +20,7 @@ import javax.lang.model.element.Modifier;
  */
 final class SoftAssertionsProviderGenerator {
     private static final ClassName SOFT_ASSERTIONS_PROVIDER =
-            ClassName.get("org.assertj.core.api", AssertionNaming.SOFT_ASSERTIONS_PROVIDER);
+            ClassName.get("org.assertj.core.api", "SoftAssertionsProvider");
     private static final String ACTUAL = "actual";
     private static final String ASSERT_THAT = "assertThat";
     private static final String THEN = "then";
