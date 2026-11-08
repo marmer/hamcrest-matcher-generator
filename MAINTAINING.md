@@ -35,6 +35,9 @@ Notes:
 - A cloud agent session cannot list repository secrets (`build-pitfalls.md`). A person with admin rights renews
   the credentials in the external services and the secret stores; an agent session can check the result with
   `workflow_dispatch` and the run log.
+- The SonarQube Cloud project key is the parent POM's (`io.github.marmer.testutils:matcher-generator-parent`), not a
+  module's, and the weekly badge check (`external-links.yml`, job `badges`) catches a README badge that points at a
+  wrong project.
 
 ## Playbooks
 
