@@ -4,27 +4,27 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Architecture Decisions
 
 [[adr-0001]]
-=== ADR 0001: Shared property model with separate library backends
+=== ADR 0001: Shared property model with separate library backends behind a `GeneratorBackend` interface
 
-*Status:* accepted (6.0.0 planning)
+*Status:* accepted, 2026-10-29
 
 Version 6.0.0 generates assertions for both Hamcrest and AssertJ from a single configuration. To keep the two libraries cleanly apart, a library-agnostic core module builds a property model of each configured type, and each assertion library has its own backend module that turns this model into code. Backends depend only on the core and are discovered via Java's `ServiceLoader`, so users pick a library simply by adding its artifact to the annotation processor path. The dependency rules are enforced by Maven Enforcer and ArchUnit. The existing `@MatcherConfiguration` annotation keeps working unchanged as a deprecated alias, and the migration is carried out behind the existing automated tests.
 
 Details: link:{adr-url}/0001-shared-property-model-and-backend-spi.md[ADR 0001]
 
 [[adr-0002]]
-=== ADR 0002: Coordinates, packages and 5.x compatibility
+=== ADR 0002: Keep the Hamcrest identity, add neutral sibling coordinates, stay source-compatible with 5.x
 
-*Status:* accepted (6.0.0 planning)
+*Status:* accepted, 2026-10-29
 
 The project keeps its name and the group ID `io.github.marmer.testutils`. Core and annotations get neutral `matcher-generator-*` artifacts, the Hamcrest artifact keeps its name, and AssertJ gets `assertj-assertion-generator`. New code lives in `io.github.marmer.matchergenerator.*`, and the new annotation is `@GenerateMatchers`. Only the deprecated `@MatcherConfiguration` stays in the old package. The two 5.x artifacts stay as code-free bridge jars that depend on the Hamcrest artifact, because older compiler plugins do not follow a relocation in the processor path (amendment of 2026-10-27). 5.x user tests should compile after a version bump alone. The Central namespace `io.github.marmer` is verified in the Central Portal, so these coordinates stay usable.
 
 Details: link:{adr-url}/0002-coordinates-packages-and-5x-compatibility.md[ADR 0002]
 
 [[adr-0003]]
-=== ADR 0003: Docs as code with a Structurizr C4 model and embedded examples
+=== ADR 0003: Docs as code: Asciidoctor in the Maven reactor, Structurizr C4 model, embedded example modules
 
-*Status:* accepted (6.0.0 planning)
+*Status:* accepted, 2026-10-29
 
 Outdated snippets, broken links and missing images are common in project documentation. To rule them out, the whole documentation is built by the normal Maven build. A dedicated `docs` module renders the user guide and this architecture documentation with Asciidoctor. Code shown in the guide is included directly from example Maven modules, which are compiled and tested in the same build. The diagrams of the context, building block, runtime and deployment views are C4 views generated from a single Structurizr model, so the levels stay consistent and need little explanatory text. The build fails on Asciidoctor warnings, and tests check links, anchors, images and that every modelled view appears in the documentation. Because the current Structurizr libraries require Java 21, the documentation is only built on JDK 21 or newer.
 
@@ -33,7 +33,7 @@ Details: link:{adr-url}/0003-docs-as-code-with-structurizr-and-embedded-examples
 [[adr-0004]]
 === ADR 0004: Kotlin DSL as a Kotlin-emitting backend on top of the Hamcrest backend
 
-*Status:* accepted (6.0.0 planning)
+*Status:* accepted, 2026-10-29
 
 Kotlin users get an optional, type-safe DSL such as `isOrder { customer { name("Ada") } }`, which builds on the generated Hamcrest matchers. Because it needs one scope class per type of the property model (a configured type or one of its nested types), it is generated as well, by a separate opt-in artifact `hamcrest-matcher-generator-kotlin`. This artifact is another backend behind the same `GeneratorBackend` interface as Hamcrest and AssertJ; that interface therefore returns Java or Kotlin source files, one or more per type. It is the only backend allowed to depend on another backend, the Hamcrest one, whose naming it reuses, and the build enforces that exception explicitly. The backend itself is written in Java and produces Kotlin with the KotlinPoet library, so the project's production code stays plain Java. It runs only under KAPT, the Kotlin compiler's way of running annotation processors; under plain javac it skips the DSL and prints one note.
 
@@ -42,7 +42,7 @@ Details: link:{adr-url}/0004-kotlin-dsl-backend-on-top-of-hamcrest.md[ADR 0004]
 [[adr-0005]]
 === ADR 0005: Java 17 baseline for 6.0.0
 
-*Status:* accepted (6.0.0 planning)
+*Status:* accepted, 2026-10-29
 
 Version 6.0.0 needs Java 17 or newer, for the annotation processor, the runtime artifacts and the generated code. Earlier planning assumed Java 11, but the libraries and tools this project updates automatically have moved on: JUnit 6 and AssertJ 4 need Java 17, Maven 4 needs it to run, and some tools already need Java 21. With Java 11, every such update would stop and wait for the maintainer, which contradicts the goal of a project that maintains itself. A major release is the right moment for this break. Users who stay on Java 11 keep using 5.x; everyone on Java 17 or newer upgrades by changing the version number.
 
@@ -51,7 +51,7 @@ Details: link:{adr-url}/0005-java-17-baseline.md[ADR 0005]
 [[adr-0006]]
 === ADR 0006: Files written once per package, and the channels of the `GeneratorBackend` interface that report it
 
-*Status:* accepted (2026-10-29)
+*Status:* accepted, 2026-10-29
 
 Some generated files exist once per target package, such as the AssertJ soft assertions mixin, and they only know the types of the processing round that wrote them. Instead of failing with a Filer exception or leaving types out silently, the file is written once per package, the first round decides its content, and a later round or a second compilation (main and test, KAPT) gets a diagnostic. Naming the mixin per configuration was rejected: a test class that implements it would break when the configuration layout changes, and the types of earlier rounds would still be missing. To report this, the `GeneratorBackend` interface gained a verbose-only note and a question whether a class exists outside the compilation's own output; the rule that a source is not written again applies to every backend. Consequences are that builds with warnings as errors fail on the late-round warning and that the class path note cannot tell every case apart. A diagnostics interface instead of the growing list of channels is recorded as an open idea.
 

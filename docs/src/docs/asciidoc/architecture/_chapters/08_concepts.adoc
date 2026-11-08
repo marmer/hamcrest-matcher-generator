@@ -5,7 +5,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Cross-cutting Concepts
 
 [[concepts-ci-gates]]
-=== Continuous integration gates
+=== Continuous Integration Gates
 
 Every push runs a small set of automated gates. Each one exists because a defect once reached the main branch or
 blocked it. The checks the `main` branch ruleset requires before GitHub merges a pull request are listed in <<section-deployment-view,chapter 7>>.
@@ -14,13 +14,13 @@ blocked it. The checks the `main` branch ruleset requires before GitHub merges a
 |===
 | Gate | What it guarantees
 
-| Build and Verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
+| Build and verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
 | The reactor installs without tests, and `./mvnw clean verify` is green on every supported JDK, including the newest
 generally available one.
 
-| JaCoCo floor (part of `Build and Verify matrix`, checked in `verify`)
-| Each production bundle (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`) has at
-least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
+| JaCoCo floor (part of `Build and verify matrix`, checked in `verify`)
+| Each of the five production modules (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`,
+`assertj-assertion-generator`, `hamcrest-matcher-generator-kotlin`) has at least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
 excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no code (deliberate deviation from #126).
 
 | Release dry run
@@ -29,12 +29,13 @@ checks that every published module has its jar, sources jar, Javadoc jar and Cyc
 CycloneDX skipped no module. Nothing is uploaded.
 
 | Mutation testing (`Mutation testing`)
-| PIT mutates the production code of the published modules, and each module must detect at least 90 % of its mutants
-(`mutationThreshold` 90, checked by `scripts/ci/pit-scores.py`). This tests the tests: a suite that stays green when the
+| PIT mutates the production code of four modules, named in the `--expect` list of the job: `matcher-generator-core`,
+`hamcrest-matcher-generator`, `assertj-assertion-generator` and `hamcrest-matcher-generator-kotlin`. Each of them must detect
+at least 90 % of its mutants (`mutationThreshold` 90, checked by `scripts/ci/pit-scores.py`). This tests the tests: a suite that stays green when the
 code is broken fails the gate.
 
 | Sonar quality gate (`Sonar`)
-| SonarCloud analyses the build and its quality gate fails the job when new code adds issues, duplicated or uncovered
+| SonarQube Cloud analyses the build and its quality gate fails the job when new code adds issues, duplicated or uncovered
 code. Old code is not judged again when a rule changes.
 
 | Example Gradle (`Example Gradle`)
@@ -42,7 +43,7 @@ code. Old code is not judged again when a rule changes.
 working on JDK 21 and on JDK 17 (see <<section-deployment-view,chapter 7>>).
 
 | Dependency review (`Dependency review`, not a required check)
-| A pull request that adds a dependency with a known vulnerability is blocked.
+| The check fails on a pull request that adds a dependency with a known vulnerability.
 
 | License gate (part of the Build and verify matrix)
 | Every project dependency that a published jar needs uses a permissive license (Apache-2.0, MIT, BSD-2-Clause or
@@ -78,18 +79,26 @@ CI job names, and the file names and packages that `CLAUDE.md` mentions exist.
 [[concepts-diagnostics]]
 === Diagnostics
 
-The core reports a misconfiguration as a compiler diagnostic at the annotation that configured the type, once per
-problem and naming the offending value (the unresolvable names of #113). A backend that finds a problem in a configured
-type reports it the same way through `GenerationContext.reportError(message)`: the core prints the message as a compiler
-error at the `@GenerateMatchers` annotation. The backend leaves the offending member out of its generated code, so the
-error is the only one the user sees. The AssertJ backend does this for a generated method whose name an inherited
-AssertJ method already has: one error per property, naming the property and the clashing methods. It also reports two
-properties that generate the same method name (such as a boolean `foo` and `notFoo`, both `isNotFoo()`) and two nested
-types whose factory constants share a name (such as `FooBar` and `Foo_Bar`, both `FOO_BAR`), one error per name. It
-also reports a top level class name that two types of one package need (`Foo` and `AbstractFoo` both generate
-`AbstractFooAssert`, or a type named like the package's mixin `SoftAssertionsProvider`) and then writes nothing for
-the package, while `FooBar`, `Foo_Bar` and `FOOBAR` are different classes and no clash; like the other per-package
-files it sees only the types of one processing round (<<adr-0006,ADR 0006>>).
+The core reports a misconfiguration as a compiler diagnostic at the annotation that configured the type. It reports
+each problem once and names the offending value, such as the unresolvable names of #113.
+
+* A backend that finds a problem in a configured type reports it the same way, through
+`GenerationContext.reportError(message)`. The core prints the message as a compiler error at the `@GenerateMatchers`
+annotation.
+* The backend leaves the offending member out of its generated code, so the error is the only one the user sees.
+* The AssertJ backend reports these problems:
+** a generated method whose name an inherited AssertJ method already has: one error per property, naming the property
+and the clashing methods;
+** two properties that generate the same method name, such as a boolean `foo` and `notFoo`, both `isNotFoo()`: one error
+per name;
+** two nested types whose factory constants share a name, such as `FooBar` and `Foo_Bar`, both `FOO_BAR`: one error
+per name;
+** a top level class name that two types of one package need, such as `Foo` and `AbstractFoo`, both generating
+`AbstractFooAssert`, or a type named like the package's mixin `SoftAssertionsProvider`: the backend then writes nothing
+for the package.
+* Names that only look alike do not clash: `FooBar`, `Foo_Bar` and `FOOBAR` are different classes.
+* Like the other per-package files, the AssertJ backend sees only the types of one processing round
+(<<adr-0006,ADR 0006>>).
 
 A backend that leaves something out of its generated code without failing the build reports it through
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The

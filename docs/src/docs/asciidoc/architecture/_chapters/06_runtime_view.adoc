@@ -3,7 +3,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-runtime-view]]
 == Runtime View
 
-=== Generation of matchers
+=== Generation of Matchers
 
 .Generation of matchers in one round
 [structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round: the Java compiler invokes the processor, which hands the round to the worker; the worker asks for the type model, calls the Hamcrest, AssertJ and Kotlin backends and writes the returned sources",renderer=plantuml]
@@ -19,11 +19,11 @@ and package names to types. Names that match nothing are a compiler error for `@
 5.x alias, which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types they name
 by class or package, and the public member types they name are not modelled as nested types. An `exclude` entry that
 matches neither a configured type nor one of their public member types is a warning. Types that carry the processor's
-own `@Generated` marker are skipped with a note.
+own `@Generated` marker are skipped, and the compiler notes each skip only with the verbose option.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages also hold types that are not configured. Each skipped method is reported with its reason, but only when the processor option
-`matchergenerator.verbose` is given; without it the compiler prints no notes.
+`matchergenerator.verbose` is given; without it the compiler prints no note for them.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in <<building-block-important-interfaces,chapter 5>>, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
@@ -40,18 +40,18 @@ classes and entry functions of all types in a package are top level declarations
 them from the models of all types generated in the run; the naming rule and the error for names that still collide are in <<section-building-block-view,chapter 5>>.
 
 [[files-once-per-package]]
-Files written once per package::
+Files Written Once per Package::
 A backend may write a file that exists once per target package, like the AssertJ `SoftAssertionsProvider` mixin and `PropertyRepresentation`. It does so from the first type of the package in the round, so two configuration classes of one package in one round still produce one file with the types of both. The generated API stays the same in every build: the name of the mixin does not depend on the configuration, so a test class that implements it keeps working when a type is added.
 +
 What a round cannot see is the file of an earlier round or compilation (decision: <<adr-0006,ADR 0006>>). The rule is: a file is written once per compilation, and the first round that writes it decides its content. The worker lives once per compilation and remembers every source it wrote, so the rule below is generic: it applies to every `GeneratedSource` of every backend, not only to files written once per package.
 +
 * A later round of the same compilation, e.g. because another processor generated a configuration class, that produces a source whose name an earlier round wrote does not write it again (the `Filer` would refuse). The worker reports one warning at the annotation that configured the type, naming the file and the types of this round in its package that it does not know. Add those types to the configuration of the first round, or generate the configuration class in a round before the matcher generator runs, to have them in the file.
-* A second compilation of the same package (main and test, KAPT) writes its own file, and the compiler prefers it for that compilation. When the AssertJ backend finds a `SoftAssertionsProvider` of that package already on the class path outside the output directory of the running compilation, it reports a note naming the types the new mixin knows; `PropertyRepresentation` gets no such note. The class that a previous, non clean build of the same module left in its own output is replaced by this build and therefore no note. The mixin of the second compilation does not contain the types of the first.
+* A second compilation of the same package (main and test, KAPT) writes its own file, and the compiler prefers it for that compilation. When the AssertJ backend finds a `SoftAssertionsProvider` of that package already on the class path outside the output directory of the running compilation, it reports a note naming the types the new mixin knows; `PropertyRepresentation` gets no such note. A class that a previous build of the same module left in its own output is replaced by this build, so it gets no note. The mixin of the second compilation does not contain the types of the first.
 * The Hamcrest `isXLike(reference)` compares a property deeply only when the matcher for its type is generated in the same round. A property whose type is a class of the user without a generated matcher in the round is compared with `equals`; with `-Amatchergenerator.verbose` a note names the property and the type. Library types (`java.`, `javax.`, `kotlin.`), enums and types generated in the round, also those without properties, do not get a note. `Optional<X>` is a `java.` type and is not unwrapped: it is compared with `equals` without a note.
 
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
 
-Notable aspects::
+Notable Aspects::
 
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
@@ -59,7 +59,7 @@ getter naming exist only once.
 reports it through `GenerationContext.reportError`, once per problem, at the annotation (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
 
 [[runtime-mismatch-hamcrest]]
-=== Describing a mismatch (Hamcrest)
+=== Describing a Mismatch (Hamcrest)
 
 When an assertion with a generated Hamcrest matcher fails, the generated `<Type>Matcher` delegates `describeTo` and
 `describeMismatchSafely` to its `BeanPropertyMatcher`, which builds the message in this order:
@@ -80,7 +80,7 @@ and after the failing checks the mismatch adds one line that lists the propertie
 nested paths, as `neither checked nor ignored: customer.phone, customer.address`. The golden test `BeanPropertyMatcherTest`
 pins this line.
 
-Notable aspects::
+Notable Aspects::
 
 * The counter is raised only by generated matchers. A generated matcher that a foreign matcher holds directly, as in
 `assertThat(list, contains(isOrderLine()))`, keeps the block format, because nothing generated has called the foreign
@@ -88,7 +88,7 @@ matcher.
 * The properties printed for a type are the ones the first generated matcher of that type reported; properties every
 object has (`class`) are left out.
 
-=== Describing a mismatch (AssertJ)
+=== Describing a Mismatch (AssertJ)
 
 The generated `AbstractXAssert` fails through AssertJ's own failure, so the message keeps AssertJ's form, with the path of
 the failing property from the root type. A value that differs reads `Expecting Order.customer.address.city to be:`, the

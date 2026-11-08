@@ -32,11 +32,13 @@ Mapping of Building Blocks to Infrastructure::
 |===
 | Building block | Deployed to
 
-| `matcher-generator-annotations`, `matcher-generator-core`, `hamcrest-matcher-generator` and the two bridge jars
+| `matcher-generator-annotations`, `matcher-generator-core`, `hamcrest-matcher-generator`, `assertj-assertion-generator`,
+`hamcrest-matcher-generator-kotlin` and the two bridge jars
 | Maven Central through the Central Portal.
 
-| `*-endtoend-*` modules, `docs`
-| Not published. The release bundle excludes them (`excludeArtifacts`).
+| `*-endtoend-*` modules, the `example-maven-*` modules, `docs`
+| Not published. The release bundle excludes them (`excludeArtifacts` of the root pom). The Gradle example is not a
+reactor module and is not published either.
 
 | Documentation
 | GitHub Pages, deployed by the `Docs` GitHub Actions workflow after the docs build and its link checks passed.
@@ -60,26 +62,52 @@ Every page carries a canonical link to its address there. The site root also hol
 `robots.txt` (every crawler allowed, names the sitemap) and `llms.txt`. The `github.io` address of the project only
 redirects to the base URL.
 
-=== CI pipeline
+=== CI Pipeline
 
 Pull requests and pushes to `main` run these workflows on GitHub-hosted runners:
 
-* `.github/workflows/ci-build.yml` (`CI-Build`) runs the jobs `Build` (`mvnw -B clean install -DskipTests`), `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest` (the matrix; `latest` follows the newest GA JDK), `Release dry run` (the release profile with `verify`, then `scripts/ci/check-release-artifacts.sh`), `Mutation testing` (PIT, with a history cache keyed on the PIT version) and `Sonar` (validates `SONAR_TOKEN` with `scripts/ci/check-sonar-token.py` before the build, then runs the scanner with the quality gate), and `Example Gradle` (validates the wrapper jar with the SHA-pinned `gradle/actions/wrapper-validation`, runs `mvnw -B -DskipEndtoend -DskipTests install`, then `gradlew build` in `example-gradle-java` on JDK 21 and again on JDK 17, because users copy the example on both; the example resolves the reactor's artifacts from `mavenLocal()`). `Example Gradle` has no Gradle dependency cache (the build is small and a cache is state that can differ between runs) and a 30 minute time limit; the wrapper distribution is pinned by `distributionSha256Sum`, and only that distribution is cached (keyed on `gradle-wrapper.properties`), with a wrapper `networkTimeout` of 60 seconds, so a slow download does not fail the check.
-* `.github/workflows/domain-docs-sync.yml` (`Domain docs in sync`) runs the domain docs check, the frozen 5.x suite check, `scripts/ci/check-project-version.py` (every module pom's own and parent version equals the manifest version, is an `extra-files` entry, and project dependencies have no literal version), `scripts/ci/check-workflow-hardening.py`, the unit tests of `scripts/ci` and `scripts/agents`, and the check of the ruleset's job names. It also runs `scripts/ci/sync-readme-snippets.py --check`, which fails when a README snippet no longer matches its tagged example region; the README's `x-release-please-version` lines are raised by release-please through the `README.md` entry of `extra-files`.
-* `.github/workflows/dependency-review.yml` (`Dependency review`) runs on pull requests, `.github/workflows/scorecard.yml` (`Scorecard`) weekly and on pushes to `main`, and `.github/workflows/scanoss.yml` (`SCANOSS`) on pull requests and weekly. SCANOSS is non-blocking.
-* `.github/workflows/credential-reminder.yml` (`Credential reminder`) runs weekly and on manual request, in a job of the `release` environment (so it reads `SONAR_TOKEN`, `CENTRAL_USERNAME`, `CENTRAL_PASSWORD` and `MAVEN_GPG_KEY` there). It validates the Sonar and Central Portal tokens (`scripts/ci/check-sonar-token.py`, `scripts/ci/check-central-token.py`), then `scripts/ci/check-credential-expiry.py` reads the expiry of the GPG key (the Sonar token has no expiry date, so it raises no Sonar reminder) and the expiry dates (`YYYY-MM-DD`, set by the maintainer after each renewal) in the repository variables `CENTRAL_TOKEN_EXPIRES_ON` and `RELEASE_APP_KEY_EXPIRES_ON`, and opens or updates one renewal issue for a credential that expires within 30 days.
+* `.github/workflows/ci-build.yml` (`CI-Build`) runs these jobs:
+** `Build`: `mvnw -B clean install -DskipTests`, then `mvnw -B verify`.
+** `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`: the build and verify matrix. `latest` follows the newest GA JDK.
+** `Release dry run`: the release profile through `deploy`, with signing and publishing skipped, then `scripts/ci/check-release-artifacts.sh`.
+** `Mutation testing`: PIT, with a history cache keyed on the PIT version.
+** `Sonar`: validates `SONAR_TOKEN` with `scripts/ci/check-sonar-token.py` before the build, then runs the scanner with the quality gate.
+** `Example Gradle`: validates the wrapper jar with the SHA-pinned `gradle/actions/wrapper-validation`, installs the reactor with `mvnw -B -DskipEndtoend -DskipTests install`, then runs `gradlew build` in `example-gradle-java` on JDK 21 and again on JDK 17, because users copy the example on both. The example resolves the reactor's artifacts from `mavenLocal()`. The job has no Gradle dependency cache, because a cache is state that can differ between runs, and a 30-minute time limit. The wrapper distribution is pinned by `distributionSha256Sum`; only that distribution is cached (keyed on `gradle-wrapper.properties`), and the wrapper's `networkTimeout` is 60 seconds, so a slow download does not fail the check.
+* `.github/workflows/domain-docs-sync.yml` (`Domain docs in sync`) runs:
+** the domain docs check and the frozen 5.x suite check;
+** `scripts/ci/check-project-version.py`: every module pom's own and parent version equals the manifest version, is an `extra-files` entry, and project dependencies have no literal version;
+** `scripts/ci/check-workflow-hardening.py`, the unit tests of `scripts/ci` and `scripts/agents`, and the check of the ruleset's job names;
+** `scripts/ci/sync-readme-snippets.py --check`, which fails when a README snippet no longer matches its tagged example region. release-please raises the README's `x-release-please-version` lines through the `README.md` entry of `extra-files`.
+* `.github/workflows/dependency-review.yml` (`Dependency review`) runs on pull requests.
+* `.github/workflows/scorecard.yml` (`Scorecard`) runs weekly and on pushes to `main`.
+* `.github/workflows/scanoss.yml` (`SCANOSS`) runs on pull requests and weekly. It is non-blocking.
+* `.github/workflows/external-links.yml` (`External links`) runs weekly and on manual request. Its `lychee` job checks the external links of the rendered docs and opens or updates an issue for broken ones; it is non-blocking. Its `badges` job fails when a README badge is broken.
+* `.github/workflows/credential-reminder.yml` (`Credential reminder`) runs weekly and on manual request, in a job of the `release` environment, so it reads `SONAR_TOKEN`, `CENTRAL_USERNAME`, `CENTRAL_PASSWORD` and `MAVEN_GPG_KEY` there. It runs:
+** `scripts/ci/check-sonar-token.py` and `scripts/ci/check-central-token.py`, which validate the Sonar and Central Portal tokens;
+** `scripts/ci/check-credential-expiry.py`, which reads the expiry of the GPG key, the earliest `expirationDate` of all the user's SonarQube Cloud tokens (a token without one raises no reminder) and the dates (`YYYY-MM-DD`, set by the maintainer after each renewal) in the repository variables `CENTRAL_TOKEN_EXPIRES_ON` and `RELEASE_APP_KEY_EXPIRES_ON`. It opens or updates one renewal issue for a credential that expires within 30 days.
 
-The `main` ruleset requires `Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`, `Domain docs in sync`, `Release dry run`, `Sonar`, `Mutation testing` and `Example Gradle`. `scripts/ci/check-ruleset-job-names.py` checks that every required name is a job name, so renaming the `Example Gradle` job without changing the ruleset fails it. `Dependency review`, `Scorecard` and `SCANOSS` are not required. Scorecard reports only; its score does not gate merges; accepted findings are listed in <<section-technical-risks,chapter 11>>.
+The `main` ruleset requires `Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`, `Domain docs in sync`, `Release dry run`, `Sonar`, `Mutation testing` and `Example Gradle`:
 
-=== Release pipeline
+* `scripts/ci/check-ruleset-job-names.py` checks that every required name is a job name, so renaming the `Example Gradle` job without changing the ruleset fails it.
+* `Dependency review`, `Scorecard`, `SCANOSS`, `External links` and `PR title` are not required.
+* Scorecard reports only; its score does not gate merges. Accepted findings are listed in <<section-technical-risks,chapter 11>>.
+
+=== Release Pipeline
 
 Releases run on CI and need no machine of the owner.
 
-* `.github/workflows/pr-title.yml` (required check `PR title`) enforces Conventional Commits on pull request titles, because the squash-merged title is the commit that release-please reads.
-* `.github/workflows/release.yml` runs on every push to `main`. release-please (type `simple`, default bump rules, configured in `release-please-config.json` and `.release-please-manifest.json`) keeps a Release PR up to date, using an App token so that the PR runs its checks and the new tag triggers the docs deployment. Tags have no `v` prefix (`6.0.0`), matching the `[0-9]*` trigger of `docs.yml`.
-The project version lives in the module poms (own and parent `<version>`), which release-please raises through one xml entry per pom in `extra-files`, and in the Gradle example (marker `x-release-please-version`). The `simple` type is used instead of `maven` because the Maven updater rewrites the `@project.version@` of the frozen 5.x suite and misses the parent versions. The `simple` type's optional `version.txt` is not created: its updater has `createIfMissing: false` and the release-please 17.11.2 simulation of the 6.0.0 release changed only `CHANGELOG.md`, the Gradle example and the 20 poms. Dependencies on project artifacts use `${project.version}`, the 5.x suite and its runner's consumer poms are filtered by the build (`@project.version@`). `scripts/ci/check-project-version.py` guards all of it.
-* Merging the Release PR creates the tag and the release page. In the same workflow the job `Release build` runs `mvnw verify` on the tag, and only if it is green the job `Publish to Maven Central` runs `mvnw -P release deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), attaches a build-provenance attestation (`actions/attest`) and makes sure the release page exists.
-* After a confirmed publish, the job `Announce release` comments on the merged Release PR with the App token, mentioning the owner and linking Maven Central, the release page and the CHANGELOG section.
+* `.github/workflows/pr-title.yml` (`PR title`) is a check that enforces Conventional Commits on pull request titles, because the squash-merged title is the commit that release-please reads. The `main` ruleset does not require it.
+* `.github/workflows/release.yml` runs on every push to `main`.
+** release-please (type `simple`, default bump rules, configured in `release-please-config.json` and `.release-please-manifest.json`) keeps a Release PR up to date. It uses an App token, so that the PR runs its checks and the new tag triggers the docs deployment.
+** Tags have no `v` prefix (`6.0.0`), matching the `[0-9]*` trigger of `docs.yml`.
+* The project version lives in the module poms (own and parent `<version>`) and in the Gradle example (marker `x-release-please-version`). release-please raises them through one xml entry per pom in `extra-files`.
+* The `simple` type is used instead of `maven` because the Maven updater rewrites the `@project.version@` of the frozen 5.x suite and misses the parent versions.
+* The `simple` type's optional `version.txt` is not created: its updater has `createIfMissing: false`. The release-please 17.11.2 simulation of the 6.0.0 release changed only `CHANGELOG.md`, the Gradle example and the 20 poms.
+* Dependencies on project artifacts use `${project.version}`. The 5.x suite and its runner's consumer poms are filtered by the build (`@project.version@`). `scripts/ci/check-project-version.py` guards all of it.
+* Merging the Release PR creates the tag and the release page. The same workflow then runs:
+** `Release build`: `mvnw verify` on the tag;
+** `Publish to Maven Central`, only if `Release build` is green: `mvnw -P release -DskipEndtoend -DskipTests deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), a build-provenance attestation (`actions/attest`), and it makes sure the release page exists.
+* After a confirmed publish, the job `Announce release` comments on the merged Release PR with the App token. The comment mentions the owner and links Maven Central, the release page and the CHANGELOG section.
 * A failed publish is re-run with `workflow_dispatch` and the existing tag as input; tags are never moved.
 * 6.0.0 is forced with `release-as` and merged by the owner. Auto-merge of Release PRs stays off until after 6.0.0.
 

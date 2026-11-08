@@ -20,13 +20,20 @@ The list is ordered by priority, the product of both values, highest first; entr
 |Risk: credentials expire
 |medium
 |disabling
-|The autopilot depends on four credentials: the SonarCloud token (a personal token with no fixed validity period, which SonarCloud removes after 60 days without use), the GPG signing key (three years), the Maven Central Portal token (from the legacy username/password account) and the private key of the GitHub App that creates release pull requests. When one expires or is revoked, either every merge stops (Sonar is a required check) or releases fail.
-|A weekly reminder workflow (`credential-reminder.yml`) validates the Sonar token and the Central token and reads the expiry of the GPG key and the Sonar token's `expirationDate` (the earliest among the user's tokens, because the API does not tell which one is `SONAR_TOKEN`); the Sonar token has no expiry date, so it raises no Sonar reminder, and the 60-day limit is covered by the CI runs and the weekly check that keep it in use; the Central token and the App key have their expiry dates in repository variables. 30 days before an expiry it opens or updates an issue that mentions the maintainer; the issue itself carries the renewal steps. The validation also catches a removed or revoked Sonar token, and CI runs keep it in use. Invalid credentials fail with an explicit message instead of an unclear red build. The maintainer runbook (`MAINTAINING.md`) lists every credential, where it is stored and how to renew it.
+|The autopilot depends on four credentials: the SonarQube Cloud token (a personal token with no fixed validity period, which SonarQube Cloud removes after 60 days without use), the GPG signing key (three years), the Maven Central Portal token (from the legacy username/password account) and the private key of the GitHub App that creates release pull requests. When one expires or is revoked, either every merge stops (Sonar is a required check) or releases fail.
+a|
+* A weekly reminder workflow (`credential-reminder.yml`) validates the Sonar and Central tokens. A removed or revoked token fails the check.
+* The reminder reads the expiry of the GPG key and the earliest `expirationDate` of all the user's SonarQube Cloud tokens. A token without one raises no reminder, so the Sonar token raises none.
+* The Central token and the App key have their expiry dates in repository variables, which the maintainer sets after each renewal.
+* 30 days before an expiry, the reminder opens or updates one issue that mentions the maintainer. The issue carries the renewal steps.
+* The CI runs and the weekly check keep the Sonar token in use, so the 60-day limit does not apply.
+* Invalid credentials fail with an explicit message instead of an unclear red build.
+* The maintainer runbook (`MAINTAINING.md`) lists every credential, where it is stored and how to renew it.
 
 |Risk: free external services change or fail
 |medium
 |disabling
-|The project relies on services that are free for open-source projects: GitHub Actions and Pages, SonarCloud, the Mend Renovate app, the Maven Central Portal and release-please. Any of them may change its terms, rate-limit (the free Renovate app already runs only every few hours) or be unavailable. Because Sonar is a required check, a SonarCloud outage blocks every merge.
+|The project relies on services that are free for open-source projects: GitHub Actions and Pages, SonarQube Cloud, the Mend Renovate app, the Maven Central Portal and release-please. Any of them may change its terms, rate-limit (the free Renovate app already runs only every few hours) or be unavailable. Because Sonar is a required check, a SonarQube Cloud outage blocks every merge.
 |Accepted. All required checks are the project's own workflow jobs, not checks posted by the vendors, so a failing service shows up as a clearly named red job. During an outage the maintainer may merge past the ruleset. Fallbacks are known: Renovate can run self-hosted in GitHub Actions, and the Sonar job can be made non-blocking.
 
 |Risk: JDK internals break the newest JDK leg
@@ -51,7 +58,7 @@ The list is ordered by priority, the product of both values, highest first; entr
 |low
 |catastrophic
 |Green pull requests are merged without a human, and releases are published without one. A malicious version of a dependency or a GitHub Action that passes every check would be released to Maven Central, signed with the project's GPG key, and reach every user who updates.
-|Renovate waits until a version is at least three days old (`minimumReleaseAge`), so most withdrawn or compromised releases never get proposed. Actions are pinned by commit SHA, workflow permissions are minimal, dependency review blocks known vulnerabilities, and OpenSSF Scorecard reports the repository's posture weekly. Every release carries a build-provenance attestation and an SBOM, so users can trace what was built from which commit, and every release notifies the maintainer.
+|Renovate waits until a version is at least three days old (`minimumReleaseAge`), so most withdrawn or compromised releases never get proposed. Actions are pinned by commit SHA, workflow permissions are minimal, the dependency review check fails on known vulnerabilities, and OpenSSF Scorecard reports the repository's posture weekly. Every release carries a build-provenance attestation and an SBOM, so users can trace what was built from which commit, and every release notifies the maintainer.
 
 |Technical debt: the 5.x compatibility layer stays forever
 |high
@@ -96,13 +103,13 @@ The list is ordered by priority, the product of both values, highest first; entr
 |The risk is accepted: projects configure far fewer types than that, and a run-time check on shared CI runners would produce unreliable results. Should users report slow builds, a benchmark module can be added later.
 |===
 
-=== Accepted OpenSSF Scorecard findings
+=== Accepted OpenSSF Scorecard Findings
 
 The OpenSSF Scorecard (`.github/workflows/scorecard.yml`) reports the repository's posture; its score does not gate merges. The table below lists every Scorecard check that was accepted instead of fixed, with the reason and the owner's decision. It is separate from the table above, because a Scorecard check measures a practice and not a risk that occurs, so the probability and impact scales do not apply. The entries rest on the Scorecard API result of 2026-10-31 (analysed commit `95d1727`, Scorecard v5.6.0, total score 7.7) and on the ruleset as the owner left it. The date is the owner's decision where one is recorded, otherwise the date of that result.
 
 `Fuzzing` (score 0 on 2026-10-31) has no entry: the project has a Jazzer fuzz test (`ItemsInAnyOrderFuzzTest`), and an entry is written only if a weekly Scorecard run after it still reports 0.
 
-CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #284) is still open. It gets an entry only after the owner has decided the unmet criteria of the passing level.
+CII-Best-Practices (score 0) has no entry yet. The project is registered and the README shows the OpenSSF Best Practices badge (issue #284 is closed). The entry follows only after the owner has decided the unmet criteria of the passing level.
 
 [options="header",cols="2,1,4,4,2"]
 |===
@@ -116,7 +123,7 @@ CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #28
 
 |`Branch-Protection`
 |3
-|Scorecard warns that `main` requires no approvers and no code owner review, dismisses no stale reviews, and does not apply its rules to administrators, among others. The ruleset `Development (Trunk)` requires 0 approvals and lets administrators bypass it, so auto-merge can merge a green pull request without a human review. Requiring one approval would make auto-merge wait for a review the single maintainer cannot give, for an expected gain of 3 to 4 points. The owner judged that not worth the auto-merge risk; the experiments E1 and E2 were not run.
+|Scorecard warns that `main` requires no approvers and no code owner review, dismisses no stale reviews, and does not apply its rules to administrators, among others. The ruleset `Development (Trunk)` requires 0 approvals and lets administrators bypass it, so auto-merge can merge a green pull request without a human review. Requiring one approval would make auto-merge wait for a review the single maintainer cannot give, for an expected gain of 3 to 4 points. The owner judged that not worth the auto-merge risk, so the two experiments that would have tested the setting (E1 and E2, described in issue #285) were not run.
 |Accepted (#285). The ruleset is unchanged.
 |2026-11-01
 
@@ -134,7 +141,7 @@ CII-Best-Practices (score 0) has no entry yet: the badge registration (issue #28
 
 |`Contributors`
 |6
-|Scorecard counts the contributing organizations: 2 companies or organizations. The project cannot influence this.
+|Scorecard counts the contributing organisations: 2 companies or organisations. The project cannot influence this.
 |Accepted (spec #104 plan).
 |2026-10-31 (Scorecard result)
 

@@ -9,35 +9,31 @@ Characteristics that are not a quality goal of their own were checked for gaps; 
 
 === Quality Requirements Overview
 
-The table maps every quality goal and every further relevant ISO/IEC 25010:2023 characteristic to its scenarios in <<section-quality-scenarios-list,chapter 10.2>>.
+The table maps every quality goal, with the ISO/IEC 25010:2023 characteristics its scenarios cover, to its scenarios in <<section-quality-scenarios-list,chapter 10.2>>.
 
 [options="header",cols="2,3,2"]
 |===
 | Quality goal | ISO/IEC 25010:2023 characteristic / sub-characteristic | Scenarios
 
 | 1 Correctness
-| Functional suitability / Functional correctness; Reliability / Faultlessness
-| <<qs-c1,QS-C1>>, <<qs-c2,QS-C2>>, <<qs-c3,QS-C3>>, <<qs-c4,QS-C4>>
+| Functional suitability / Functional correctness; Reliability / Faultlessness, Fault tolerance; Security / Integrity, Authenticity
+| <<qs-c1,QS-C1>>, <<qs-c2,QS-C2>>, <<qs-c3,QS-C3>>, <<qs-c4,QS-C4>>, <<qs-x3,QS-X3>>, <<qs-x4,QS-X4>>
 
 | 2 Non-intrusiveness
-| Compatibility / Co-existence
-| <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>
+| Compatibility / Co-existence; Performance efficiency / Time behaviour
+| <<qs-n1,QS-N1>>, <<qs-n2,QS-N2>>, <<qs-n3,QS-N3>>, <<qs-x1,QS-X1>>, <<qs-x5,QS-X5>>
 
 | 3 Usability
 | Interaction capability / User error protection, Self-descriptiveness, Learnability, Operability
 | <<qs-u1,QS-U1>>, <<qs-u2,QS-U2>>, <<qs-u3,QS-U3>>, <<qs-u4,QS-U4>>
 
 | 4 Build-tool agnosticism
-| Compatibility / Interoperability; Flexibility / Adaptability
-| <<qs-b1,QS-B1>>, <<qs-b2,QS-B2>>
+| Compatibility / Interoperability; Flexibility / Adaptability, Replaceability
+| <<qs-b1,QS-B1>>, <<qs-b2,QS-B2>>, <<qs-x2,QS-X2>>
 
 | 5 Maintainability
 | Maintainability / Modifiability, Modularity, Analysability
 | <<qs-m1,QS-M1>>, <<qs-m2,QS-M2>>, <<qs-m3,QS-M3>>, <<qs-m4,QS-M4>>
-
-| No quality goal
-| Compatibility / Co-existence; Flexibility / Replaceability; Security / Integrity, Authenticity; Reliability / Fault tolerance; Performance efficiency / Time behaviour
-| <<qs-x1,QS-X1>>, <<qs-x2,QS-X2>>, <<qs-x3,QS-X3>>, <<qs-x4,QS-X4>>, <<qs-x5,QS-X5>>
 |===
 
 The remaining characteristics have no scenarios, for these reasons:
@@ -52,7 +48,7 @@ The remaining characteristics have no scenarios, for these reasons:
 [[section-quality-scenarios-list]]
 === Quality Scenarios
 
-Each scenario is one sentence that names all elements of the SEI scenario form (source, stimulus, environment, artifact, response and response measure), following this pattern:
+Each scenario has a short title and one sentence that names all elements of the SEI scenario form (source, stimulus, environment, artifact, response and response measure), following this pattern:
 
 [quote]
 When _source_ _stimulus_ while _environment_, _artifact_ _response_; _response measure_.
@@ -87,7 +83,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n1]]QS-N1
 | Compatibility / Co-existence
-| *Production code stays untouched.* When a project adds the processor and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its configured types and runtime dependencies unchanged: the processor adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (<<section-solution-strategy,chapter 4>>) extends this to a configuration class in the production sources.
+| *Production code stays untouched.* When a project adds the processor and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its configured types and runtime dependencies unchanged: the processor adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources; the annotation's `SOURCE` retention (<<section-solution-strategy,chapter 4>>) extends this to a configuration class in the production sources.
 | `ProductionClassFootprintTest` (end-to-end `plain-java-minimal`: the compiled production class `PackageConfigurationProduction` contains neither `GenerateMatchers` nor `RuntimeInvisibleAnnotations`); `CoreProcessorIT` (both annotations leave no trace, with a foreign `RUNTIME` annotation as control). The dependency half of the scenario has no automated check yet
 
 | [[qs-n2]]QS-N2
@@ -117,13 +113,13 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-u4]]QS-U4
 | Interaction capability / Operability
-| *Kotlin properties feel native.* When a Kotlin developer configures a class with properties such as `val enabled: Boolean`, `val isX: Boolean?` or other nullable properties while the processor runs under KAPT, the generated matchers offer `withEnabled` and `withIsX` with matching nullability; every such property gets its methods, and the Kotlin compiler reports no platform-type warning for them. Because JSpecify mismatches are errors in Kotlin by default, `-Xjspecify-annotations=warn` is the documented escape hatch.
+| *Kotlin properties feel native.* When a Kotlin developer configures a class with properties such as `val enabled: Boolean`, `val isX: Boolean?` or other nullable properties while the processor runs under KAPT, the generated matchers offer `withEnabled` and `withIsX` with matching nullability; every such property gets its methods, and the Kotlin compiler reports no platform-type warning for them; `-Xjspecify-annotations=warn` is the documented escape hatch for JSpecify mismatches, which are errors in Kotlin by default.
 | Kotlin end-to-end modules
 
 | [[qs-b1]]QS-B1
 | Compatibility / Interoperability
-| *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`) or KAPT on any supported JDK, the annotation processor generates the same assertion API; all four example modules and the end-to-end modules build green on every JDK in the CI matrix.
-| Build; Verify JDK 17/21/25/latest
+| *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`) or KAPT on any supported JDK, the annotation processor generates the same assertion API; the three Maven example modules and the end-to-end modules build green on every JDK in the CI matrix, and the Gradle example builds on JDK 17 and 21.
+| Build; Verify JDK 17/21/25/latest; Example Gradle
 
 | [[qs-b2]]QS-B2
 | Flexibility / Adaptability
@@ -162,8 +158,8 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x3]]QS-X3
 | Security / Integrity, Authenticity
-| *Releases are verifiable.* When a user or their supply-chain tooling downloads a release from Maven Central, the artifacts' GPG signatures, the GitHub build-provenance attestation (`gh attestation verify`) and the CycloneDX SBOM all verify; and while a pull request adds a dependency with a known vulnerability, dependency review blocks its merge.
-| Release workflow (`release.yml`); Dependency review
+| *Releases are verifiable.* When a user or their supply-chain tooling downloads a release from Maven Central, the artifacts' GPG signatures, the GitHub build-provenance attestation (`gh attestation verify`) and the CycloneDX SBOM all verify; and a pull request that adds a dependency with a known vulnerability makes the dependency review check fail.
+| Release workflow (`release.yml`); Dependency review check (not required)
 
 | [[qs-x4]]QS-X4
 | Reliability / Fault tolerance

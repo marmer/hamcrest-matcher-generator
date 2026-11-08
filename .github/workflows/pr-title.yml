@@ -2,7 +2,7 @@ name: PR title
 
 # The squash-merged PR title becomes the commit message on main, and release-please derives the version bump and the
 # CHANGELOG from it, so it must follow Conventional Commits and name the ticket it closes (`(#284)`); bots are exempt
-# from the ticket number. The job name `PR title` is the required check.
+# from the ticket number. The job name `PR title` is a check (not required by the `main` ruleset).
 on:
   pull_request_target:
     types: [ opened, edited, synchronize, reopened ]
