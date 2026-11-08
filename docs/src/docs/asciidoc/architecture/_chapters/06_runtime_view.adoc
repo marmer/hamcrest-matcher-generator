@@ -84,8 +84,8 @@ Notable Aspects::
 * The counter is raised only by generated matchers. A generated matcher that a foreign matcher holds directly, as in
 `assertThat(list, contains(isOrderLine()))`, keeps the block format, because nothing generated has called the foreign
 matcher.
-* The properties printed for a type are the ones the first generated matcher of that type reported; properties every
-object has (`class`) are left out.
+* The properties printed for a type are the ones the first generated matcher of that type reported; only the `class`
+property (from `getClass()`) is left out. A property named like a method of `Object`, such as `hashCode`, is printed.
 
 === Describing a Mismatch (AssertJ)
 

@@ -61,7 +61,7 @@ The DSL delegates to the Java matcher, so the failure message is the one of the 
 
 == Which properties count
 
-Hamcrest matchers also list `class`, from `getClass()`, so `withClass(..)` and `ignoringClass()` exist. The Hamcrest completeness check never counts a property named `class`, so you never need to ignore it. The AssertJ backend generates nothing for `getClass()`. A type with its own boolean `isClass()` does have a `class` property in AssertJ, and the check counts it: check it with `isClass()` or `hasClass(..)`, or name it with `ignoringClass()`. Enum types also get `declaringClass`, and whether the check should count it is still open.
+Hamcrest matchers also list `class`, from `getClass()`, so `withClass(..)` and `ignoringClass()` exist. The Hamcrest completeness check never counts a property named `class`, so you never need to ignore it. A property named like a method of `Object`, such as `hashCode`, `toString`, `wait` or `notify`, counts like any other. The AssertJ backend generates nothing for `getClass()`. A type with its own boolean `isClass()` does have a `class` property in AssertJ, and the check counts it: check it with `isClass()` or `hasClass(..)`, or name it with `ignoringClass()`. Enum types also get `declaringClass`, and whether the check should count it is still open.
 
 == Next steps
 
