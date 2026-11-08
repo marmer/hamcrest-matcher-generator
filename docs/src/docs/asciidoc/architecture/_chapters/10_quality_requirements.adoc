@@ -68,7 +68,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-c2]]QS-C2
 | Functional suitability / Functional correctness
-| *A new property is not silently ignored.* When a developer adds a property to a configured type without touching a test that opted into the completeness check (`checkingAllProperties()` or `hasAllPropertiesChecked()`), while that test runs in the next build, the generated assertion fails the test and names the unchecked property; no test with the completeness check stays green while a property is unchecked.
+| *A new property is not silently ignored.* When a developer adds a property to a configured type without touching a test that opted into the completeness check (`checkingAllProperties()` or `hasAllPropertiesChecked()`), while that test runs in the next build, the generated assertion fails the test and names the unchecked property; no test with the completeness check stays green while a property is unchecked. In the Kotlin DSL, a property the DSL leaves out counts as ignored (see <<building-block-kotlin,chapter 5>>).
 | End-to-end modules
 
 | [[qs-c3]]QS-C3

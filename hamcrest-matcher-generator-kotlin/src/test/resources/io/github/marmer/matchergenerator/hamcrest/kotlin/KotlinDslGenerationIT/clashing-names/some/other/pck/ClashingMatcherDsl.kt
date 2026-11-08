@@ -15,6 +15,13 @@ public class ClashingSpec(
 ) {
   public fun checkingAllProperties() {
     delegate.checkingAllProperties()
+    delegate.ignoringCheckingAllProperties()
+    delegate.ignoringDelegate()
+    delegate.ignoringBlock()
+    delegate.ignoringMatcher()
+    delegate.ignoringEquals()
+    delegate.ignoringHashCode()
+    delegate.ignoringToString()
   }
 
   public fun name(`value`: String?) {
