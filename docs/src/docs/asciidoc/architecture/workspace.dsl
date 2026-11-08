@@ -23,6 +23,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             hamcrestBackend = container "hamcrest-matcher-generator" "The Hamcrest backend and its runtime library." "Java, JavaPoet, Maven module" {
                 backend = component "HamcrestGeneratorBackend" "Implements the SPI." "Java"
                 matcherGenerator = component "MatcherGenerator" "Builds the source of a <Type>Matcher class." "JavaPoet"
+                referencePresetPlanner = component "ReferencePresetPlanner" "Decides which ReferenceMatching helper compares each property of a reference object." "Java"
                 runtimeLibrary = component "BeanPropertyMatcher" "Runtime library that generated matchers call at test time." "Java"
             }
             assertjBackend = container "assertj-assertion-generator" "The AssertJ backend and its AssertionPath runtime." "Java, JavaPoet, Maven module"
@@ -84,6 +85,8 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         backend -> spi "Implements"
         matcherGenerator -> runtimeLibrary "Generates code calling"
         matcherGenerator -> propertyModel "Reads"
+        matcherGenerator -> referencePresetPlanner "Asks for the preset of every property of a reference object"
+        referencePresetPlanner -> propertyModel "Reads"
         runtimeLibrary -> hamcrest "Extends TypeSafeMatcher"
 
         release = deploymentEnvironment "Release" {

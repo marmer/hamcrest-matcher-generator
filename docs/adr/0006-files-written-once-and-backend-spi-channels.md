@@ -28,4 +28,4 @@ To make the failure modes visible, the published `GeneratorBackend` interface gr
 ## Open points (ideas, not decisions)
 
 - A `Diagnostics` interface instead of the growing list of channels (`errors`, `notes`, `warnings`, `verboseNotes`) in `GenerationContext`.
-- Unwrapping `Optional` for the `isXLike` preset: `MatcherGenerator.presetOf` unwraps arrays, collections, lists and the value type of maps, but not `Optional<X>`. `Optional` is a `java.` type, so `unmatchedUserType` treats it as a library type: the property is compared with `equals` and no verbose note is printed, even when `X` is a user class without a generated matcher.
+- Unwrapping `Optional` for the `isXLike` preset: `ReferencePresetPlanner.presetOf` unwraps arrays, collections, lists and the value type of maps, but not `Optional<X>`. `Optional` is a `java.` type, so `unmatchedUserType` treats it as a library type: the property is compared with `equals` and no verbose note is printed, even when `X` is a user class without a generated matcher.
