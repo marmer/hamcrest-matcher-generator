@@ -64,6 +64,19 @@ public record TypeModel(
                 .toList();
     }
 
+    /**
+     * Whether the name of the given property is shared by another property of this type, e.g.
+     * {@code isFoo()} next to {@code getFoo()}. Every property counts, the {@code getClass()}
+     * accessor included.
+     *
+     * @param property a property of this type
+     * @return {@code true} when two or more properties of this type have the name of the property
+     */
+    public boolean isNameShared(final PropertyModel property) {
+        return properties.stream().filter(other -> other.name().equals(property.name())).count()
+                > 1;
+    }
+
     /** The kind of a configured type. */
     public enum Kind {
         /** Any type whose properties are bean getters: classes, interfaces and enums. */

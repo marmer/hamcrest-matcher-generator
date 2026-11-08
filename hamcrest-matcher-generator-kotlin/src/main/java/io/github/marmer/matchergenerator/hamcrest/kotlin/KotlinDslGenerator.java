@@ -346,16 +346,11 @@ final class KotlinDslGenerator {
                             + " matcher keeps it");
             return;
         }
-        final boolean conflicting =
-                type.properties().stream()
-                                .filter(other -> other.name().equals(property.name()))
-                                .count()
-                        > 1;
         type.properties().stream()
                 .filter(other -> other.name().equals(property.name()))
                 .forEach(other -> scope.addFunction(valueFunction(other)));
         if (!MatcherNaming.isMatcherType(property.type())) {
-            scope.addFunction(matcherFunction(property, conflicting));
+            scope.addFunction(matcherFunction(property, type.isNameShared(property)));
             final @Nullable Scope nested = nestedScopeOf(property.type());
             if (nested != null) {
                 scope.addFunction(nestedFunction(property, nested));
@@ -378,10 +373,9 @@ final class KotlinDslGenerator {
                 .build();
     }
 
-    private static FunSpec matcherFunction(
-            final PropertyModel property, final boolean conflicting) {
+    private static FunSpec matcherFunction(final PropertyModel property, final boolean nameShared) {
         final TypeName matched;
-        if (conflicting) {
+        if (nameShared) {
             matched = WildcardTypeName.producerOf(KotlinTypes.any().copy(true, List.of()));
         } else {
             final TypeName type = KotlinTypes.of(property.type());
