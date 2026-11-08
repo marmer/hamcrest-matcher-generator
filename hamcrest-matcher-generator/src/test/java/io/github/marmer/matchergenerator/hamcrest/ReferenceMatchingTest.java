@@ -7,6 +7,7 @@ package io.github.marmer.matchergenerator.hamcrest;
 import static io.github.marmer.matchergenerator.hamcrest.GoldenMessages.messageOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -198,6 +199,33 @@ class ReferenceMatchingTest {
     @Test
     void aCyclicMatcherCanBeDescribed() {
         assertDoesNotThrow(() -> descriptionOf(isNodeLike(tree("root", "leaf"))));
+    }
+
+    /**
+     * A root with a child {@code b}, which has a child {@code c} of its own and a named
+     * back-reference {@code up} to the root. Walking the root, the walk is inside {@code b} when
+     * {@code c} finishes; {@code b} then meets the root again through {@code up}. The root is still
+     * in progress by then, so the walk must recognise it and not walk it again.
+     */
+    private static Node rootWithChildAndBackReference(final String childName) {
+        final Node root = new Node("root");
+        final Node child = new Node(childName).withChild(new Node("c")).withNamed("up", root);
+        return root.withChild(child);
+    }
+
+    @Test
+    void aFinishedChildDoesNotMakeTheMismatchWalkTheGraphAgain() {
+        final Node reference = rootWithChildAndBackReference("b");
+        final Node actual = rootWithChildAndBackReference("bX");
+
+        final String message = messageOf(actual, isNodeLike(reference));
+
+        assertEquals(1, message.split("\"bX\"", -1).length - 1, message);
+    }
+
+    @Test
+    void aFinishedChildDoesNotMakeTheDescriptionWalkTheGraphAgain() {
+        assertDoesNotThrow(() -> descriptionOf(isNodeLike(rootWithChildAndBackReference("b"))));
     }
 
     @Test

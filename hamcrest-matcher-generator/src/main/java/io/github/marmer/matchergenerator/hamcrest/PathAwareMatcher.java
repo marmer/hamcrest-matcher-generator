@@ -23,9 +23,9 @@ abstract class PathAwareMatcher extends BaseMatcher<Object> {
         return size == 1 ? "1 item" : size + " items";
     }
 
-    static List<?> elementsOf(final Object collectionOrArray) {
-        if (collectionOrArray instanceof Collection<?>) {
-            return new ArrayList<>((Collection<?>) collectionOrArray);
+    static List<Object> elementsOf(final Object collectionOrArray) {
+        if (collectionOrArray instanceof Collection<?> collection) {
+            return new ArrayList<>(collection);
         }
         final int length = Array.getLength(collectionOrArray);
         final List<Object> elements = new ArrayList<>(length);
