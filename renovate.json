@@ -63,7 +63,7 @@
       "allowedVersions": "<6"
     },
     {
-      "description": "The frozen 5.x compatibility suite keeps its own pom unchanged (tree hash guard, CLAUDE.md); Renovate must not touch it. The root dependencyManagement entry is still updated",
+      "description": "The frozen 5.x compatibility suite keeps its own pom unchanged (tree hash guard, docs/agents/5x-compatibility.md); Renovate must not touch it. The root dependencyManagement entry is still updated",
       "matchFileNames": ["hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml"],
       "enabled": false
     },

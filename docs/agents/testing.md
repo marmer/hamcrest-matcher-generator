@@ -4,7 +4,7 @@ Annotation processor tests (file `MatcherGenerationProcessorIT.java` in `hamcres
 
 Core processor tests (`CoreProcessorIT` in `matcher-generator-core`, run it with `-pl matcher-generator-core -Dit.test=CoreProcessorIT`) use the same harness with a **recording test backend** (registered via `META-INF/services` in the core test resources) and assert on the recorded `TypeModel` instead of generated Hamcrest code.
 
-The backend's golden ITs are `AssertionGenerationIT` (`-Dit.test=AssertionGenerationIT`, goldens under `assertj-assertion-generator/src/test/resources/.../AssertionGenerationIT/<scenario>/`); the end-to-end module is `hamcrest-matcher-generator-endtoend-assertj`.
+The AssertJ backend's golden IT is `AssertionGenerationIT` (`-Dit.test=AssertionGenerationIT`, goldens under `assertj-assertion-generator/src/test/resources/.../AssertionGenerationIT/<scenario>/`); the end-to-end module is `hamcrest-matcher-generator-endtoend-assertj`.
 
 Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit unit tests. Hamcrest mismatch messages are tested against golden `.txt` files in `BeanPropertyMatcherMessageTest` (and `PropertyDescriptionTest` for value rendering).
 

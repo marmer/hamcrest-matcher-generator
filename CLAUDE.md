@@ -55,7 +55,7 @@ README snippets are copied from the tagged regions of the example modules by `py
 
 ## Build pitfalls
 
-Read `docs/agents/build-pitfalls.md` when a build fails (HTTP 429, empty `~/.m2`), when building or testing, changing poms, CI or workflows, editing `.claude/` settings or hooks, or merging or committing after a squash merge.
+Read `docs/agents/build-pitfalls.md` when a build fails (HTTP 429, empty `~/.m2`), when building or testing, running a build on Windows or with a non-default JDK, changing poms, CI or workflows, editing `.claude/` settings or hooks, or merging or committing after a squash merge.
 
 ## Agent skills
 
