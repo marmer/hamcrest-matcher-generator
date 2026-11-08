@@ -59,6 +59,8 @@ include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/Cust
 
 The DSL delegates to the Java matcher, so the failure message is the one of the Hamcrest backend. The Kotlin chapter shows the complete setup.
 
+The DSL's completeness check ignores the properties the DSL leaves out. A property whose name clashes with a member of the scope or of `Any`, such as `hashCode`, gets no DSL function, so `checkingAllProperties()` ignores it on the Java matcher and the check does not wait for a call the DSL cannot make. The Kotlin chapter lists those names.
+
 == Which properties count
 
 Every generated matcher also lists `class`, from `getClass()`, so `withClass(..)` and `ignoringClass()` exist. The completeness check does not count `class`: you never need to ignore it. A property named like a method of `Object`, such as `hashCode`, `toString`, `wait` or `notify`, counts like any other. Enum types also get `declaringClass`, and whether the check should count it is still open.

@@ -141,7 +141,7 @@ Every scope delegates to the generated Java matcher, so the DSL and the Hamcrest
 The DSL follows these naming rules:
 
 * Kotlin keywords as property names are escaped with backticks, so a property `in` is checked by `` `in`("inside") ``.
-* A property whose name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with a member of `Any` (`equals`, `hashCode`, `toString`) gets no DSL function. The compiler reports a warning, and the Java matcher keeps the property.
+* A property whose name clashes with a member of the scope (`checkingAllProperties`, `delegate`, `block`, `matcher`) or with a member of `Any` (`equals`, `hashCode`, `toString`) gets no DSL function. The compiler reports a warning, and the Java matcher keeps the property. The DSL's completeness check ignores such a property, so `checkingAllProperties()` in the scope does not wait for it.
 * A nested type whose simple name another type of its package shares gets its enclosing type names in front, so `Outer.Inner` becomes `OuterInnerSpec` and `isOuterInner`. If that still collides, the processor reports an error at the annotation and writes no scope for the colliding types.
 * Collection and map properties use the runtime collection matchers, `itemsInOrder`, `itemsInAnyOrder` and `entries`, with the DSL entry functions as their items. The DSL has no collection syntax of its own.
 * A type without properties gets no DSL file, although its Java matcher exists.
