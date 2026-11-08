@@ -4,6 +4,8 @@
  */
 package io.github.marmer.matchergenerator.assertj;
 
+import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -12,6 +14,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
+import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
+import io.github.marmer.matchergenerator.core.model.TypeHierarchy.Supertype;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.ArrayList;
@@ -23,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -140,19 +142,10 @@ final class RepresentationGenerator {
     }
 
     private static void collectAncestors(final TypeElement type, final Set<String> ancestors) {
-        final List<TypeMirror> supertypes = new ArrayList<>(type.getInterfaces());
-        supertypes.add(type.getSuperclass());
-        for (final TypeMirror supertype : supertypes) {
-            if (supertype.getKind() == TypeKind.DECLARED) {
-                final TypeElement element = asTypeElement(supertype);
-                ancestors.add(element.getQualifiedName().toString());
-                collectAncestors(element, ancestors);
-            }
+        for (final Supertype supertype : TypeHierarchy.directSupertypes(type, List.of())) {
+            ancestors.add(supertype.element().getQualifiedName().toString());
+            collectAncestors(supertype.element(), ancestors);
         }
-    }
-
-    private static TypeElement asTypeElement(final TypeMirror type) {
-        return (TypeElement) ((DeclaredType) type).asElement();
     }
 
     /** One branch: {@code if (object instanceof Line actual) return ...;}. */

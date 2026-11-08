@@ -4,6 +4,8 @@
  */
 package io.github.marmer.matchergenerator.core;
 
+import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
+
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.ArrayList;
@@ -28,7 +30,6 @@ import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 
 /** Creates the {@link TypeModel} of a configured type. */
 class TypeModelFactory {
@@ -257,10 +258,6 @@ class TypeModelFactory {
                                 elements.addAll(
                                         transitiveInheritedElements(asTypeElement(anInterface))));
         return elements;
-    }
-
-    private TypeElement asTypeElement(final TypeMirror type) {
-        return (TypeElement) processingEnv.getTypeUtils().asElement(type);
     }
 
     /**

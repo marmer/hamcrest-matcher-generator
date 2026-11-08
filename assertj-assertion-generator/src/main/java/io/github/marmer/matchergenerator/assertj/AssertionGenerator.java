@@ -4,6 +4,8 @@
  */
 package io.github.marmer.matchergenerator.assertj;
 
+import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -16,6 +18,7 @@ import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
+import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.ArrayList;
@@ -30,7 +33,6 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -565,9 +567,8 @@ class AssertionGenerator {
         if (ITERABLE_OR_MAP.contains(type.getQualifiedName().toString())) {
             return true;
         }
-        return Stream.concat(Stream.of(type.getSuperclass()), type.getInterfaces().stream())
-                .filter(supertype -> supertype.getKind() == TypeKind.DECLARED)
-                .anyMatch(supertype -> isOrExtendsIterableOrMap(asTypeElement(supertype)));
+        return TypeHierarchy.directSupertypes(type, List.of()).stream()
+                .anyMatch(supertype -> isOrExtendsIterableOrMap(supertype.element()));
     }
 
     /** Overrides {@code isNotNull()} so that it fails with the path of the asserted value. */
@@ -779,9 +780,5 @@ class AssertionGenerator {
             return WildcardTypeName.subtypeOf(Object.class);
         }
         return WildcardTypeName.subtypeOf(typeVarsToWildcards(argument, boxPrimitives));
-    }
-
-    private static TypeElement asTypeElement(final TypeMirror type) {
-        return (TypeElement) ((DeclaredType) type).asElement();
     }
 }
