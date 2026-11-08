@@ -373,10 +373,9 @@ final class KotlinDslGenerator {
                 .build();
     }
 
-    private static FunSpec matcherFunction(
-            final PropertyModel property, final boolean conflicting) {
+    private static FunSpec matcherFunction(final PropertyModel property, final boolean nameShared) {
         final TypeName matched;
-        if (conflicting) {
+        if (nameShared) {
             matched = WildcardTypeName.producerOf(KotlinTypes.any().copy(true, List.of()));
         } else {
             final TypeName type = KotlinTypes.of(property.type());
