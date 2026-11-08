@@ -21,6 +21,14 @@ project at https://www.bestpractices.dev and pastes the answers from this file (
 
 Summary of what needs the owner: [Owner to-do list](#owner-to-do-list) at the end.
 
+**Outcome (2026-11-08, ticket #284)**: the owner filled the form at https://www.bestpractices.dev/projects/16444 and the
+project reached the passing level (100 %). The form deviates from the statuses below in these rows: `documentation_interface`
+(Met, the site and javadoc.io are online), `warnings_fixed` (Met, Sonar backlog tracked in #275), `dynamic_analysis` (Met by
+the owner's decision: the Jazzer fuzz test and PIT count), `sites_https` (Met after the repository homepage field was set to
+the HTTPS address), `no_leaked_credentials` (Met, confirmed by the owner; secret scanning and push protection were enabled afterwards, #304),
+`vulnerability_report_response` and `release_notes_vulns` (N/A, confirmed by the owner). The tables below keep the audit as
+of 2026-10-31.
+
 ## Renewal checklist
 
 Steps for the next badge renewal. Done when step 4 reports 100 and the owner has answered every item of step 3.
