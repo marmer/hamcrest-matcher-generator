@@ -38,7 +38,7 @@ mismatch messages, and the collection matchers: the factories in `CollectionMatc
 `entries`) return `ItemsInOrder`, `ItemsInAnyOrder` and `Entries`, which share the package-private base type
 `PathAwareMatcher`; `BeanPropertyMatcher` flattens them into indexed and keyed property paths. The walk along these
 paths and the rendering of its findings live in the package-private `PathWalk` and `MismatchReport`, which both
-`BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. The opt-in completeness check (`checkingAllProperties()`) is also in `BeanPropertyMatcher`: a property is addressed when a check or `ignoringFoo()` names it, `resetFoo()` removes both, and the properties that are neither are reported after the failing checks. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
+`BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. The package-private `ReferencePresetPlanner` chooses, for each property of a reference object, the helper that compares it (the rule is in <<section-runtime-view,chapter 6>>). The opt-in completeness check (`checkingAllProperties()`) is also in `BeanPropertyMatcher`: a property is addressed when a check or `ignoringFoo()` names it, `resetFoo()` removes both, and the properties that are neither are reported after the failing checks. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
 `GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
 check of another one is flattened into property paths; it is public because generated code lives in the user's
 packages) and passes its property names to the `BeanPropertyMatcher` constructor.
@@ -161,7 +161,8 @@ asks `MatcherGenerator` for the `<Type>Matcher` source and returns it as one `Ge
 
 `MatcherGenerator`::
 Builds the source of a `<Type>Matcher` class with JavaPoet from a `TypeModel`: the `isX()` entry point, `withFoo`,
-`resetFoo` and `ignoringFoo` for every property, `checkingAllProperties()` and the `isXLike(reference)` method.
+`resetFoo` and `ignoringFoo` for every property, `checkingAllProperties()` and the `isXLike(reference)` method. For the
+presets of `isXLike(reference)` it asks `ReferencePresetPlanner`, which is described in the building block table above.
 
 `BeanPropertyMatcher` and its helpers::
 The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object,
