@@ -22,7 +22,7 @@ order, are correctness, non-intrusiveness, usability, build-tool agnosticism and
 .Planned feature set of 6.0.0, the final feature release
 Version 6.0.0 adds a second backend for AssertJ next to Hamcrest. Both are driven by the same configuration. Its features are:
 
-* *Completeness check* (both backends): every property of a type is checked or consciously ignored, opt-in per assertion (link:../guide/completeness-check.html[completeness check guide]). The one exception is the Kotlin DSL, where a property the DSL leaves out counts as ignored (see <<building-block-kotlin,chapter 5>>).
+* *Completeness check* (both backends): every property of a type is checked or consciously ignored, opt-in per assertion (link:../guide/completeness-check.html[completeness check guide]). In the Kotlin DSL, a property the DSL leaves out counts as ignored (see <<building-block-kotlin,chapter 5>>).
 * *Reference-object matcher* (Hamcrest): compares a whole object with a reference object, with overrides; AssertJ users get the same with its recursive comparison (link:../guide/hamcrest-backend.html[Hamcrest backend guide], link:../guide/assertj-backend.html[AssertJ backend guide]).
 * *Readable mismatches* (Hamcrest): one line per failing check with its property path and both values (<<runtime-mismatch-hamcrest,chapter 6>>, link:../guide/mismatch-messages.html[mismatch messages]).
 * *Collection matchers* (Hamcrest runtime): `itemsInOrder(...)`, `itemsInAnyOrder(...)` and `entries(...)` check every item or entry; Hamcrest's own collection matchers keep working but print Hamcrest's less specific messages (link:../guide/mismatch-messages.html[mismatch messages]).
