@@ -908,7 +908,7 @@ import java.util.Set;
 
     @Test
     @DisplayName(
-            "A property named like a DSL member or an Any member is left out with a warning, the Java matcher keeps it")
+            "A property named like a DSL member or an Any member is left out with a warning, the Java matcher keeps it and the completeness check of the DSL ignores it")
     void aPropertyNamedLikeADslMemberIsLeftOutWithAWarning() throws IOException {
         final JavaFileObject configuration = configuration("some.other.pck.Clashing");
         final Compilation compilation =
@@ -967,7 +967,10 @@ import java.util.Set;
             CompilationSubject.assertThat(compilation)
                     .hadWarningContaining(
                             "The Kotlin DSL of some.other.pck.Clashing leaves out the property "
-                                    + name)
+                                    + name
+                                    + ", whose name clashes with a member of the DSL scope; the Java"
+                                    + " matcher keeps it, and the DSL's completeness check ignores"
+                                    + " it")
                     .inFile(configuration)
                     .onLine(3);
         }

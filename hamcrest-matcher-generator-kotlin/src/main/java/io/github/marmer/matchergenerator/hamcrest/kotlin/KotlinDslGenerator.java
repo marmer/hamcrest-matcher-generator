@@ -60,7 +60,8 @@ final class KotlinDslGenerator {
     /**
      * The names a DSL scope uses for its own members and parameters, and the members of {@code
      * Any}. A property of one of these names gets no DSL functions, which would hide or be hidden
-     * by those members. The Java matcher keeps the property.
+     * by those members. The Java matcher keeps the property, and the scope's completeness check
+     * ignores it.
      */
     private static final Set<String> RESERVED_NAMES =
             Set.of(
@@ -323,27 +324,45 @@ final class KotlinDslGenerator {
                                 PropertySpec.builder(DELEGATE, matcher, KModifier.PRIVATE)
                                         .initializer(DELEGATE)
                                         .build())
-                        .addFunction(
-                                FunSpec.builder(MatcherNaming.CHECKING_ALL_PROPERTIES)
-                                        .addStatement(
-                                                "%L.%L()",
-                                                DELEGATE, MatcherNaming.CHECKING_ALL_PROPERTIES)
-                                        .build());
+                        .addFunction(checkingAllPropertiesFunction(type));
         PropertyModel.distinctByName(type.properties())
                 .forEach(property -> addProperty(scope, type, property));
         return scope.build();
     }
 
+    /**
+     * The completeness check of a scope. It also ignores on the Java matcher every property the
+     * scope leaves out, since the scope has no function to check or ignore them with.
+     */
+    private static FunSpec checkingAllPropertiesFunction(final TypeModel type) {
+        final FunSpec.Builder function =
+                FunSpec.builder(MatcherNaming.CHECKING_ALL_PROPERTIES)
+                        .addStatement("%L.%L()", DELEGATE, MatcherNaming.CHECKING_ALL_PROPERTIES);
+        PropertyModel.distinctByName(type.properties()).stream()
+                .filter(KotlinDslGenerator::isLeftOut)
+                .forEach(
+                        property ->
+                                function.addStatement(
+                                        "%L.%L()",
+                                        DELEGATE, MatcherNaming.ignoringMethodName(property)));
+        return function.build();
+    }
+
+    /** Whether the scope leaves the property out, because its name is one of the reserved names. */
+    private static boolean isLeftOut(final PropertyModel property) {
+        return RESERVED_NAMES.contains(property.name());
+    }
+
     private void addProperty(
             final TypeSpec.Builder scope, final TypeModel type, final PropertyModel property) {
-        if (RESERVED_NAMES.contains(property.name())) {
+        if (isLeftOut(property)) {
             context.reportWarning(
                     "The Kotlin DSL of "
                             + type.qualifiedName()
                             + " leaves out the property "
                             + property.name()
                             + ", whose name clashes with a member of the DSL scope; the Java"
-                            + " matcher keeps it");
+                            + " matcher keeps it, and the DSL's completeness check ignores it");
             return;
         }
         type.properties().stream()
