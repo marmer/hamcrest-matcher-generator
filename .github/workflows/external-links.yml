@@ -1,6 +1,7 @@
 name: External links
 
-# Weekly check of the external links in the rendered docs. Non-blocking: a failure opens or updates an issue.
+# Weekly check of the external links in the rendered docs (lychee job) and of the README badges (badges job).
+# Non-blocking: a failing link opens or updates an issue; a broken badge fails the badges job red.
 on:
   schedule:
     - cron: "17 5 * * 1"
@@ -64,3 +65,13 @@ jobs:
           else
             gh issue create --title "$TITLE" --body-file lychee/report.md
           fi
+
+  badges:
+    name: Check the README badges
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # A badge answering HTTP 400+ or saying "not found" (SonarCloud: HTTP 200 "Project not found") fails this job.
+      - name: Check the README badges
+        run: python3 scripts/ci/check-readme-badges.py
