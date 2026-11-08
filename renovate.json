@@ -58,11 +58,6 @@
       "groupName": "JUnit"
     },
     {
-      "description": "ClassGraph 6.0.0 needs Java 25 (class file major 69); the Enforcer bytecode check (maxJdkVersion 17, ADR 0005) rejects it. 5.0.0 is the last version compiled for Java 17 (major 61), the version the root pom manages. Cap at <6 until the baseline is raised by a new ADR (MAINTAINING.md, 'Dependency that needs a newer Java')",
-      "matchPackageNames": ["io.github.classgraph:classgraph"],
-      "allowedVersions": "<6"
-    },
-    {
       "description": "The frozen 5.x compatibility suite keeps its own pom unchanged (tree hash guard, docs/agents/5x-compatibility.md); Renovate must not touch it. The root dependencyManagement entry is still updated",
       "matchFileNames": ["hamcrest-matcher-generator-endtoend-5x-compatibility/pom.xml"],
       "enabled": false

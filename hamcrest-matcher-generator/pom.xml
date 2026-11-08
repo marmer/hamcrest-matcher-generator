@@ -32,10 +32,6 @@
             <artifactId>jspecify</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.truth</groupId>
             <artifactId>truth</artifactId>
             <scope>test</scope>
