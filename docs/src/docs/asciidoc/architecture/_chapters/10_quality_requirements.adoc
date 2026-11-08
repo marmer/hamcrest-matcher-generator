@@ -72,7 +72,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-c2]]QS-C2
 | Functional suitability / Functional correctness
-| *A new property is not silently ignored.* When a developer adds a property to a model class without touching a test that opted into the completeness check (`checkingAllProperties()` or `hasAllPropertiesChecked()`), while that test runs in the next build, the generated assertion fails the test and names the unchecked property; no test with the completeness check stays green while a property is unchecked.
+| *A new property is not silently ignored.* When a developer adds a property to a configured type without touching a test that opted into the completeness check (`checkingAllProperties()` or `hasAllPropertiesChecked()`), while that test runs in the next build, the generated assertion fails the test and names the unchecked property; no test with the completeness check stays green while a property is unchecked.
 | End-to-end modules
 
 | [[qs-c3]]QS-C3
@@ -87,7 +87,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n1]]QS-N1
 | Compatibility / Co-existence
-| *Production code stays untouched.* When a project adds the generator and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its model classes and runtime dependencies unchanged: the generator adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (<<section-solution-strategy,chapter 4>>) extends this to a configuration class in the production sources.
+| *Production code stays untouched.* When a project adds the processor and `@GenerateMatchers` in test scope only while building with Maven, Gradle or KAPT, the production artifact keeps its configured types and runtime dependencies unchanged: the processor adds no runtime-scope dependency, and no production `.class` file carries the annotation, because it sits on a configuration class in the test sources. The annotation's `SOURCE` retention (<<section-solution-strategy,chapter 4>>) extends this to a configuration class in the production sources.
 | `ProductionClassFootprintTest` (end-to-end `plain-java-minimal`: the compiled production class `PackageConfigurationProduction` contains neither `GenerateMatchers` nor `RuntimeInvisibleAnnotations`); `CoreProcessorIT` (both annotations leave no trace, with a foreign `RUNTIME` annotation as control). The dependency half of the scenario has no automated check yet
 
 | [[qs-n2]]QS-N2
@@ -127,7 +127,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-b2]]QS-B2
 | Flexibility / Adaptability
-| *A new JDK shows up early.* When a new JDK version reaches general availability while the project runs on autopilot, Renovate moves the CI matrix's `latest` JDK to it without the owner, and the generator is built and tested on it; a break becomes visible on that CI run within 7 days of the release, before users report it.
+| *A new JDK shows up early.* When a new JDK version reaches general availability while the project runs on autopilot, Renovate moves the CI matrix's `latest` JDK to it without the owner, and the processor is built and tested on it; a break becomes visible on that CI run within 7 days of the release, before users report it.
 | Verify JDK latest (Renovate-managed)
 
 | [[qs-m1]]QS-M1
@@ -142,7 +142,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-m3]]QS-M3
 | Maintainability / Modularity
-| *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the backend SPI; no line changes in the core or in the existing backends.
+| *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the `GeneratorBackend` interface; no line changes in the core or in the existing backends.
 | ArchUnit tests; <<adr-0001,ADR 0001>>
 
 | [[qs-m4]]QS-M4
@@ -152,7 +152,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-x1]]QS-X1
 | Compatibility / Co-existence
-| *The generator works alongside other processors.* When a test developer runs the generator in the same compilation as Lombok and other annotation processors, the annotation processor sees the accessors Lombok generates and leaves the other processors' output unchanged; the generated matchers cover every Lombok-generated getter, and the build reports no processor error.
+| *The processor works alongside other processors.* When a test developer runs the processor in the same compilation as Lombok and other annotation processors, the annotation processor sees the accessors Lombok generates and leaves the other processors' output unchanged; the generated matchers cover every Lombok-generated getter, and the build reports no processor error.
 | `hamcrest-matcher-generator-endtoend-lombok` module, whose `LombokGettersTest` asserts the generated matchers against Lombok-generated getters
 
 | [[qs-x2]]QS-X2

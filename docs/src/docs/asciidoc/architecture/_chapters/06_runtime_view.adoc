@@ -22,7 +22,7 @@ matches neither a configured type nor one of their public member types is a warn
 own `@Generated` marker are skipped with a note.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
-a verbose note instead, since packages hold types that are no match target. Each skipped method is reported with its reason, but only when the processor option
+a verbose note instead, since packages also hold types that are not configured. Each skipped method is reported with its reason, but only when the processor option
 `matchergenerator.verbose` is given; without it the compiler prints no notes.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in <<building-block-important-interfaces,chapter 5>>, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
@@ -71,7 +71,7 @@ matched type recurses into it with the extended property path (`customer.address
 . A check that holds any other matcher is a foreign check: the runtime asks that matcher whether it matches and for its
 description and mismatch. Around these calls a per-thread depth counter is raised.
 . A generated matcher that Hamcrest's own matchers (`contains`, `hasItem`, `hasEntry`) call while that counter is above
-zero renders on one line (`OrderLine {sku "X-9", quantity <3>}`); otherwise it renders as a block (`Order with 4 property
+zero is shown in the one-line rendering (`OrderLine {sku "X-9", quantity <3>}`); otherwise it renders as a block (`Order with 4 property
 checks`, one failing check per line).
 . Values are printed by a `Description` that shows values of generated types from their properties, never via
 `toString()`.

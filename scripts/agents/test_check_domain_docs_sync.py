@@ -14,6 +14,45 @@ sys.path.insert(0, HERE)
 spec.loader.exec_module(check)
 
 
+class GlossaryDefinitionsTest(unittest.TestCase):
+    """Rule 1: a glossary row carries the GLOSSARY.md definition word for word (fixtures in a temp dir)."""
+
+    GLOSSARY_MD = "# Glossary\n\n**Backend**:\nA library-specific part of the processor.\n_Avoid_: plugin\n"
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    def write(self, adoc_row, glossary_md=GLOSSARY_MD):
+        (self.root / check.GLOSSARY_MD).write_text(glossary_md, encoding="utf-8")
+        path = self.root / check.GLOSSARY_ADOC
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "[cols=\"e,2\" options=\"header\"]\n|===\n|Term |Definition\n\n|Backend\n" + adoc_row + "\n\n|===\n",
+            encoding="utf-8")
+
+    def violations(self):
+        found = []
+        check.check_glossary(self.root, found)
+        return found
+
+    def test_identical_definition_passes(self):
+        self.write("|A library-specific part of the processor.")
+        self.assertEqual([], self.violations())
+
+    def test_cross_reference_and_anchor_are_ignored(self):
+        self.write("|[[term-backend]]A library-specific part, see <<section-runtime-view,arc42 chapter 6>>.",
+                   glossary_md="**Backend**:\nA library-specific part, see arc42 chapter 6.\n")
+        self.assertEqual([], self.violations())
+
+    def test_different_wording_fails_with_message(self):
+        self.write("|A generator that turns the property model into code.")
+        self.assertEqual(
+            [f"{check.GLOSSARY_ADOC}: definition of 'Backend' differs from {check.GLOSSARY_MD}"],
+            self.violations())
+
+
 class SpiTypesNamedTest(unittest.TestCase):
 
     def setUp(self):

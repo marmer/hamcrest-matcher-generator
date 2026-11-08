@@ -3,7 +3,9 @@
 
 Rules (see docs/agents/domain.md, "Redundancy rules"):
   1. Every term in GLOSSARY.md (lines of the form `**Term**:`) has a row in the table of
-     docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc (a `|Term` line followed by a `|definition` line).
+     docs/src/docs/asciidoc/architecture/_chapters/12_glossary.adoc (a `|Term` line followed by a `|definition` line),
+     and that row's definition is the GLOSSARY.md definition word for word (AsciiDoc anchors dropped, cross
+     references kept as their text).
   2. Every ADR file docs/adr/NNNN-*.md is linked from docs/src/docs/asciidoc/architecture/_chapters/09_architecture_decisions.adoc
      (matched by its filename).
   3. The glossary table contains no leftover template placeholder rows such as `<Term-1>`.
@@ -43,6 +45,8 @@ BUILDING_BLOCKS_ADOC = "docs/src/docs/asciidoc/architecture/_chapters/05_buildin
 CORE_MAIN_SOURCES = "matcher-generator-core/src/main/java"
 
 TERM_LINE = re.compile(r"^\*\*(.+?)\*\*:\s*$")
+ANCHOR = re.compile(r"\[\[[^\]]*\]\]")
+CROSS_REFERENCE = re.compile(r"<<[^,<>]*,([^<>]*)>>")
 ADR_FILE = re.compile(r"^\d{4}-.+\.md$")
 PLACEHOLDER = re.compile(r"<\s*Term[^>]*>|^<[^>]*>$", re.IGNORECASE)
 REQUIRED_CHECKS = re.compile(r"required checks of the `main` ruleset pass \(([^)]*)\)")
@@ -85,6 +89,25 @@ def glossary_table_rows(text):
     return rows
 
 
+def glossary_definitions(text):
+    """Return {term: definition} of GLOSSARY.md: the first non-empty line after each `**Term**:` line."""
+    lines = text.splitlines()
+    definitions = {}
+    for i, line in enumerate(lines):
+        if m := TERM_LINE.match(line):
+            definitions[m.group(1).strip()] = next((candidate.strip() for candidate in lines[i + 1:] if candidate.strip()), "")
+    return definitions
+
+
+def words(text):
+    return " ".join(text.split())
+
+
+def adoc_definition_words(definition):
+    """The words of an AsciiDoc table cell as GLOSSARY.md carries them: anchors go, cross references keep their text."""
+    return words(CROSS_REFERENCE.sub(r"\1", ANCHOR.sub("", definition)))
+
+
 def check_glossary(root, violations):
     terms = glossary_terms(root)
     if not terms:
@@ -101,6 +124,10 @@ def check_glossary(root, violations):
     for match in sorted(set(PLACEHOLDER.findall(text))):
         if not any(match == term for term, _ in rows):
             violations.append(f"{GLOSSARY_ADOC}: leftover template placeholder '{match}'")
+    definitions = glossary_definitions(read(root / GLOSSARY_MD))
+    for term, definition in rows:
+        if term in definitions and adoc_definition_words(definition) != words(definitions[term]):
+            violations.append(f"{GLOSSARY_ADOC}: definition of '{term}' differs from {GLOSSARY_MD}")
 
 
 def check_adrs(root, violations):

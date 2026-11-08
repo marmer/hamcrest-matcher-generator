@@ -4,77 +4,76 @@ An annotation processor that generates type-specific test assertions (Hamcrest m
 
 ## Language
 
-**Property model**:
-The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
-_Avoid_: bean model, metadata
-
-**Nullability**:
-Whether a property may be `null`, one of `NULLABLE`, `NON_NULL` and `UNSPECIFIED`. The core derives it from the accessor: primitives are non null, JSpecify `@Nullable`/`@NonNull` and the JetBrains `@Nullable`/`@NotNull` annotations that kotlinc emits decide explicitly, and otherwise the closest `@NullMarked`/`@NullUnmarked` scope does. A type variable stays `UNSPECIFIED`. Generated Hamcrest code is `@NullMarked` with `@Nullable` on equality values and on nullable property types, but only when JSpecify resolves at compile time. Kotlin reports a mismatch with those annotations as an error; `-Xjspecify-annotations=warn` lowers it to a warning.
-
-**Property**:
-A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Every generated matcher also lists `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x, but the completeness check does not count `class`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
-_Avoid_: field, attribute
-
-**Backend**:
-A generator that turns the property model into assertion code for one assertion library (Hamcrest or AssertJ).
-_Avoid_: plugin, flavour, target
-
 **Assertion class**:
 The pair of classes the AssertJ backend generates per configured type: `AbstractXAssert<SELF, ACTUAL>` on `AbstractObjectAssert`, which holds the generated assertions, and the concrete, non-final `XAssert` with a public `XAssert(X)` constructor and a static `assertThat(X)`. Neither is named `Assertions` or `SoftAssertions`, and none extends `org.assertj.core.api.Assertions`, so `assertThat(String)` stays unambiguous.
 _Avoid_: assert class, assertion wrapper
 
-**Soft assertions mixin**:
-The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. The mixin is written once per package and covers only the types generated in the same processing round, whichever configuration asked for them; a type from another round or compilation is not in it, which the processor reports (see arc42 chapter 6, "Files written once per package", and ADR 0006).
-_Avoid_: soft provider, BDD mixin
+**Assertion path**:
+The AssertJ counterpart of the property path: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). The generated assertion of the value a `hasFooSatisfying` requirement is run for continues the path of the enclosing property, carried by the runtime class `AssertionPath`. An assertion for any other object created inside the requirement (`OrderAssert.assertThat(other)`) starts at its own type, because the path is bound to the value by identity, not to everything created in the lambda. Known limits of the identity match: an unrelated assertion on `null` inside a requirement whose value is `null` inherits the path, and the same instance behind two properties reports the path of the property whose requirement is running. Inside an array, collection or map the path restarts at the element type (`OrderLine.sku`). Navigation with `extracting(.., as(X))` or `first(as(X))` starts a new path at the navigated type (`Customer.name`), while `hasFooSatisfying` keeps the root path (`Order.customer.name`). A missing asserted object reads `Expecting Order.customer not to be null`.
+_Avoid_: AssertJ path, nested path
 
-**Generated representation**:
-The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it is written once per package and covers only types generated in the same processing round; a later round gets the processor's "not written again" warning, but a second compilation gets no class-path note for it (only the mixin does).
-_Avoid_: representation class, property formatter
+**Backend**:
+A library-specific part of the processor that turns the property model into assertion code for one assertion library, such as Hamcrest or AssertJ. It implements the `GeneratorBackend` interface, which the processor finds with `ServiceLoader`.
+_Avoid_: plugin, flavour, target
 
 **Bridge jar**:
 The code-free jar that a 5.x artifact (`hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`) is published as in 6.0.0. It depends on `hamcrest-matcher-generator`, so old coordinates still resolve to a jar and the Hamcrest backend arrives transitively. A relocation POM is not used because older compiler plugins do not follow it in a processor path.
 _Avoid_: relocation POM, shim
 
+**Collection matcher**:
+A runtime matcher for a collection or map property, created by `itemsInOrder(...)`, `itemsInAnyOrder(...)` or `entries(...)` in `CollectionMatchers`. Mismatches name the size, the path of every failing item or entry, and missing, closest and unexpected items or keys. Arrays count as lists. With the completeness check, `itemsInAnyOrder(...)` assigns items by their value checks and reports the properties neither checked nor ignored of an assigned item with its position, as in `contacts[1].phone`.
+_Avoid_: collection assertion, container matcher
+
+**Completeness check**:
+The check that every property of a type is either checked or consciously ignored. It makes sure that a property added later cannot go unchecked without anyone noticing. Opt-in per assertion. A property counts as addressed by a check (`withFoo` in Hamcrest, `hasFoo`, `hasFooSatisfying`, `isFoo`, `isNotFoo` in AssertJ) or by `ignoringFoo()`, which both backends generate. Hamcrest runs the check with `checkingAllProperties()`; AssertJ runs it with the scope `satisfiesCheckingAllProperties(..)` or the closing call `hasAllPropertiesChecked()`. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. Value mismatches fail first, and the check then names the properties that are neither checked nor ignored. Navigation with `extracting(.., as(X))` or `first(as(X))` yields a new assertion for a new subject, which has its own set of addressed properties: checks made before the navigation do not count for it, and a `hasAllPropertiesChecked()` after the navigation covers only the navigated type.
+_Avoid_: strict mode, exhaustiveness
+
 **Configuration**:
 The single annotation-based declaration of which types assertions are generated for; it is the same for every backend.
 _Avoid_: backend settings
 
-**Reference object**:
-An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison, `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and by `equals` for the rest, including enums and types without properties. It turns the completeness check on, `withFoo`, `resetFoo` and `ignoringFoo` override single properties, and a cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; a type from another round or compilation is compared by `equals`, and `-Amatchergenerator.verbose` prints a note per property that names the type (see arc42 chapter 6, "Files written once per package"). A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
-_Avoid_: template, prototype object
-
-**Property path**:
-The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in Hamcrest mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
-_Avoid_: property chain, field path
-
-**Assertion path**:
-The AssertJ counterpart of the **Property path**: the path of an AssertJ failure, rooted at the asserted type (`Order.customer.address.city`). The generated assertion of the value a `hasFooSatisfying` requirement is run for continues the path of the enclosing property, carried by the runtime class `AssertionPath`. An assertion for any other object created inside the requirement (`OrderAssert.assertThat(other)`) starts at its own type, because the path is bound to the value by identity, not to everything created in the lambda. Known limits of the identity match: an unrelated assertion on `null` inside a requirement whose value is `null` inherits the path, and the same instance behind two properties reports the path of the property whose requirement is running. Inside an array, collection or map the path restarts at the element type (`OrderLine.sku`). Navigation with `extracting(.., as(X))` or `first(as(X))` starts a new path at the navigated type (`Customer.name`), while `hasFooSatisfying` keeps the root path (`Order.customer.name`). A missing asserted object reads `Expecting Order.customer not to be null`.
-_Avoid_: AssertJ path, nested path
+**DSL scope**:
+One scope class per type of the property model: a configured type or one of its nested types. Its Kotlin receiver block (`isOrder { … }`) accepts only that type's property checks; a property of another such type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in arc42 chapter 5 (building block view), which also says what happens when two names still collide.
+_Avoid_: builder, spec block
 
 **Generated bean matcher**:
 A generated Hamcrest `<Type>Matcher`, identified at runtime by the interface `GeneratedBeanMatcher`. When one is used as the check of a property of another, the runtime flattens it into property paths instead of treating it like a foreign matcher.
 _Avoid_: bean matcher, nested matcher
 
-**Collection matcher**:
-A runtime matcher for a collection or map property, created by `itemsInOrder(...)`, `itemsInAnyOrder(...)` or `entries(...)` in `CollectionMatchers`. Mismatches name the size, the path of every failing item or entry, and missing, closest and unexpected items or keys. Arrays count as lists. With the completeness check, `itemsInAnyOrder(...)` assigns items by their value checks and reports the properties neither checked nor ignored of an assigned item with its position, as in `contacts[1].phone`.
-_Avoid_: collection assertion, container matcher
-
-**One-line rendering**:
-The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
-_Avoid_: compact mode, inline mode
-
-**Completeness check**:
-The check that every property of a type is either checked or consciously ignored, so a newly added property cannot slip through unasserted. Opt-in per assertion. A property counts as addressed by a check (`withFoo` in Hamcrest, `hasFoo`, `hasFooSatisfying`, `isFoo`, `isNotFoo` in AssertJ) or by `ignoringFoo()`, which both backends generate. Hamcrest runs the check with `checkingAllProperties()`; AssertJ runs it with the scope `satisfiesCheckingAllProperties(..)` or the closing call `hasAllPropertiesChecked()`. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. Value mismatches fail first, and the check then names the properties that are neither checked nor ignored. Navigation with `extracting(.., as(X))` or `first(as(X))` yields a new assertion for a new subject, which has its own set of addressed properties: checks made before the navigation do not count for it, and a `hasAllPropertiesChecked()` after the navigation covers only the navigated type.
-_Avoid_: strict mode, exhaustiveness
-
-**DSL scope**:
-The Kotlin receiver block for one configured type (`isOrder { … }`), in which only that type's property checks can be written; a property of another configured type opens a nested DSL scope (`customer { … }`). Its class and entry function are named by the Kotlin DSL naming rule in arc42 chapter 5 (building block view), which also says what happens when two names still collide.
-_Avoid_: builder, spec block
-
 **Generated code**:
 The source files the processor writes into the user's project at compile time (matchers, assertions, Kotlin DSL files); they belong to the user and are not covered by the project license.
 _Avoid_: generated library, output artifact
 
+**Generated representation**:
+The class the AssertJ backend generates per target package, named `PropertyRepresentation`: an AssertJ `StandardRepresentation` that prints an instance of each configured type by its properties, such as `Line[sku="A-1", quantity=2]`, nested types included, and formats every other value as AssertJ does. The user registers it with `Assertions.useRepresentation`; it is never registered automatically. Like the mixin, it is written once per package (see arc42 chapter 6, "Files written once per package", and ADR 0006).
+_Avoid_: representation class, property formatter
+
+**Nullability**:
+Whether a property may be `null`, one of `NULLABLE`, `NON_NULL` and `UNSPECIFIED`. The core derives it from the accessor (see arc42 chapter 5). Generated Hamcrest code is `@NullMarked` with `@Nullable` on equality values and on nullable property types, but only when JSpecify resolves at compile time. Kotlin reports a mismatch with those annotations as an error; `-Xjspecify-annotations=warn` lowers it to a warning.
+
+**One-line rendering**:
+The form in which a generated matcher describes itself and its mismatch, `OrderLine {sku "X-9", quantity <3>}`, while it is held by one of Hamcrest's own matchers such as `contains(...)`. Outside such matchers it renders as a block with one failing check per line.
+
+**Property**:
+A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Every generated matcher also lists `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x, but the completeness check does not count `class`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
+_Avoid_: field, attribute
+
+**Property model**:
+The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
+_Avoid_: bean model, metadata
+
+**Property path**:
+The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in Hamcrest mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
+_Avoid_: property chain, field path
+
+**Reference object**:
+An instance of a configured type whose property values serve as the expected values for every property in one whole-object comparison, `isXLike(reference)`. The comparison is deep for properties whose type has a generated matcher (also in lists, other collections, arrays and maps) and by `equals` for the rest, including enums and types without properties. It turns the completeness check on, and `withFoo`, `resetFoo` and `ignoringFoo` override single properties. A cyclic object graph ends because a pair met again counts as equal. Deep comparison applies only to types whose matcher is generated in the same processing round; for other types, a property is compared by `equals` (see arc42 chapter 6, "Files written once per package"). A back-reference to the root reference object shares the root's matcher, so an override on the root applies there too.
+_Avoid_: template, prototype object
+
 **Runtime library**:
-The published artifact that generated code calls at test time (e.g. the Hamcrest `BeanPropertyMatcher`); like every other artifact of the project, it is under the project license.
+The published artifact that generated code calls while the user's tests run, such as the Hamcrest `BeanPropertyMatcher`. Like every other artifact of the project, it is under the project's license (Apache-2.0).
 _Avoid_: dependencies module, support code
+
+**Soft assertions mixin**:
+The interface the AssertJ backend generates per target package, named `SoftAssertionsProvider`, with a default `assertThat(X)` and a default `then(X)` for every generated type of the package. Mixed into a `SoftAssertions` or `BDDSoftAssertions` subclass, it makes the generated assertions soft and BDD assertions. It is written once per package (see arc42 chapter 6, "Files written once per package", and ADR 0006).
+_Avoid_: soft provider, BDD mixin
