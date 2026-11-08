@@ -6,8 +6,8 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Infrastructure Level 1
 
-.Deployment of the build artifacts and the documentation
-[structurizr,target=deployment,format=svg,view=Deployment,alt="Deployment of the build artifacts and the documentation",renderer=plantuml]
+.Deployment of the Hamcrest Matcher Generator
+[structurizr,target=deployment,format=svg,view=Deployment,alt="Deployment: GitHub Actions workflows upload the bundle to Maven Central and deploy the documentation to GitHub Pages",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----

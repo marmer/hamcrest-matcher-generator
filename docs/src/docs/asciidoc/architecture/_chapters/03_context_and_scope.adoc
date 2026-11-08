@@ -5,13 +5,15 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Business Context
 
-.System context
-[structurizr,target=context,format=svg,view=Context,alt="System context",renderer=plantuml]
+.System context of the Hamcrest Matcher Generator
+[structurizr,target=context,format=svg,view=Context,alt="System context: the test developer configures the processor, which runs in the Java compiler and generates matchers and assertions for Hamcrest and AssertJ; GitHub Actions builds it, publishes it to Maven Central and deploys the documentation to GitHub Pages after the maintainer merges the Release PR",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
 
 Test developers configure the types they need assertions for. Maintainers only appear through the release pipeline (see <<section-deployment-view,chapter 7>>).
+
+Legend for all diagrams: a dark blue figure is a person, a blue box is a software system or container of this project (a lighter blue box is a component), a grey box is an external system, and a white box is an infrastructure node (a deployment node or a workflow). Dashed arrows point from the element that acts to the element it acts on, and the label names the relationship.
 
 [options="header",cols="2,5"]
 |===

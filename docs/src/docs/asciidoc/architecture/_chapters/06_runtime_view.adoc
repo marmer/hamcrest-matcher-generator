@@ -6,7 +6,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 === Generation of matchers
 
 .Generation of matchers in one round
-[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round",renderer=plantuml]
+[structurizr,target=generation,format=svg,view=Generation,alt="Generation of matchers in one round: the Java compiler invokes the processor, which hands the round to the worker; the worker asks for the type model, calls the Hamcrest, AssertJ and Kotlin backends and writes the returned sources",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
@@ -102,8 +102,8 @@ sentence names the path of the asserted object from the root type, so a nested c
 
 === Release
 
-.Release
-[structurizr,target=release,format=svg,view=Release,alt="Release",renderer=plantuml]
+.Release of the Hamcrest Matcher Generator
+[structurizr,target=release,format=svg,view=Release,alt="Release: the maintainer merges the Release PR, GitHub Actions builds the tag, publishes the signed bundle to Maven Central, deploys the documentation to GitHub Pages and announces the release",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
