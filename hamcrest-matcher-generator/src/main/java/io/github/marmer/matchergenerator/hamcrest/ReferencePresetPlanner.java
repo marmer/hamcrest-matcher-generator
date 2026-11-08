@@ -4,9 +4,12 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
+import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,14 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import org.jspecify.annotations.Nullable;
 
@@ -239,43 +240,14 @@ class ReferencePresetPlanner {
         if (type.getQualifiedName().contentEquals(qualifiedName)) {
             return new ArrayList<>(arguments);
         }
-        final Map<String, TypeMirror> bindings = new HashMap<>();
-        for (var i = 0; i < Math.min(arguments.size(), type.getTypeParameters().size()); i++) {
-            bindings.put(
-                    type.getTypeParameters().get(i).getSimpleName().toString(), arguments.get(i));
-        }
-        return Stream.concat(Stream.of(type.getSuperclass()), type.getInterfaces().stream())
-                .filter(supertype -> supertype.getKind() == TypeKind.DECLARED)
+        return TypeHierarchy.directSupertypes(type, arguments).stream()
                 .map(
                         supertype ->
                                 argumentsAs(
-                                        asTypeElement(supertype),
-                                        boundArguments((DeclaredType) supertype, bindings),
-                                        qualifiedName))
+                                        supertype.element(), supertype.arguments(), qualifiedName))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
-    }
-
-    /** The arguments of a supertype with the type variables of the subtype replaced. */
-    private static List<TypeMirror> boundArguments(
-            final DeclaredType supertype, final Map<String, TypeMirror> bindings) {
-        return supertype.getTypeArguments().stream()
-                .map(
-                        argument ->
-                                argument.getKind() == TypeKind.TYPEVAR
-                                        ? bindings.getOrDefault(
-                                                ((TypeVariable) argument)
-                                                        .asElement()
-                                                        .getSimpleName()
-                                                        .toString(),
-                                                argument)
-                                        : argument)
-                .toList();
-    }
-
-    private static TypeElement asTypeElement(final TypeMirror type) {
-        return (TypeElement) ((DeclaredType) type).asElement();
     }
 
     /** The matcher generated for a type and the name of its method for reference objects. */

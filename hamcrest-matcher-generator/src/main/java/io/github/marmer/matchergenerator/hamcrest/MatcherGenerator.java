@@ -4,6 +4,8 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -21,7 +23,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -391,10 +392,6 @@ class MatcherGenerator {
                 .addMember("value", "$S", context.generatorName())
                 .addMember("date", "$S", context.generationTime())
                 .build();
-    }
-
-    private TypeElement asTypeElement(final TypeMirror type) {
-        return (TypeElement) ((DeclaredType) type).asElement();
     }
 
     private TypeName rawTypeName() {
