@@ -557,6 +557,29 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A boolean isClass property is no name clash, getClass is not counted for it")
+    void aBooleanIsClassPropertyIsNoNameClash() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Gadget"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Gadget",
+                                """
+                                package some.other.pck;
+
+                                public class Gadget {
+                                    public boolean isClass() {
+                                        return true;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(compilation, "class-property", "some.other.pck.AbstractGadgetAssert");
+        assertGolden(compilation, "class-property", "some.other.pck.GadgetAssert");
+    }
+
+    @Test
     @DisplayName("A generated method named like an inherited AssertJ method is a compile error")
     void aGeneratedMethodNamedLikeAnInheritedOneIsACompileError() {
         final JavaFileObject configuration = configuration("some.other.pck.Pojo");

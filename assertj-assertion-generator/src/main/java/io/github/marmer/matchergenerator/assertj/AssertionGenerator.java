@@ -545,7 +545,7 @@ class AssertionGenerator {
     /** Whether the property is a boolean, primitive or boxed, that has a single type. */
     private boolean isBoolean(final PropertyModel property) {
         final TypeMirror type = property.type();
-        return !model.isNameShared(property)
+        return !model.isNameSharedWithoutGetClass(property)
                 && (type.getKind() == TypeKind.BOOLEAN
                         || (type.getKind() == TypeKind.DECLARED
                                 && asTypeElement(type)
@@ -699,7 +699,8 @@ class AssertionGenerator {
     }
 
     private TypeName valueType(final PropertyModel property) {
-        if (model.isNameShared(property) || property.type().getKind() == TypeKind.TYPEVAR) {
+        if (model.isNameSharedWithoutGetClass(property)
+                || property.type().getKind() == TypeKind.TYPEVAR) {
             return nullable(TypeName.OBJECT);
         }
         return nullable(typeVarsToWildcards(property.type(), false));
@@ -707,7 +708,7 @@ class AssertionGenerator {
 
     private TypeName requirementsType(final PropertyModel property) {
         final TypeName value =
-                model.isNameShared(property)
+                model.isNameSharedWithoutGetClass(property)
                         ? TypeName.OBJECT
                         : nullableIf(
                                 property.nullability() == Nullability.NULLABLE,
