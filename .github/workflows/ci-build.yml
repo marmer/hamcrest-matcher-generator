@@ -207,8 +207,10 @@ jobs:
 
   example-gradle:
     # The Gradle example sits outside the reactor with its own wrapper; it resolves the reactor's artifacts from mavenLocal().
-    # A required check (ruleset), so it must not fail for reasons outside the repository: no Gradle cache (the build is
-    # small and a cache is state that can differ between runs), a time limit, and the distribution is pinned by its sha256.
+    # A required check (ruleset), so it must not fail for reasons outside the repository: no Gradle dependency cache (the
+    # build is small and a cache is state that can differ between runs), a time limit, and the distribution is pinned by
+    # its sha256. Only that pinned distribution is cached, so a slow or failing download (HTTP 504 on 2026-11-08) does not
+    # fail the check; the cached zip cannot differ from a fresh one, because the wrapper verifies its checksum.
     name: Example Gradle
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -236,6 +238,12 @@ jobs:
       - name: Install the reactor artifacts into mavenLocal()
         # -DskipEndtoend keeps the never-published end-to-end modules out; the libraries the example uses are installed.
         run: ./mvnw -B -DskipEndtoend -DskipTests install
+
+      - name: Cache the Gradle wrapper distribution
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-wrapper-${{ hashFiles('example-gradle-java/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build the Gradle example on JDK 21
         working-directory: example-gradle-java
