@@ -41,7 +41,6 @@ import javax.lang.model.type.TypeMirror;
  * stops a cycle of configured types.
  */
 final class RepresentationGenerator {
-    static final String NAME = "PropertyRepresentation";
     private static final ClassName STANDARD_REPRESENTATION =
             ClassName.get("org.assertj.core.presentation", "StandardRepresentation");
     private static final String FALLBACK_TO_STRING_OF = "fallbackToStringOf";
@@ -63,12 +62,14 @@ final class RepresentationGenerator {
     }
 
     TypeSpec typeSpec() {
-        final AssertionGenerator first = new AssertionGenerator(models.get(0), context);
         final MethodSpec.Builder fallback =
                 MethodSpec.methodBuilder(FALLBACK_TO_STRING_OF)
                         .addAnnotation(Override.class)
                         .addModifiers(Modifier.PROTECTED)
-                        .addParameter(first.nullable(TypeName.OBJECT), OBJECT, Modifier.FINAL)
+                        .addParameter(
+                                FileShell.nullable(TypeName.OBJECT, context),
+                                OBJECT,
+                                Modifier.FINAL)
                         .returns(String.class)
                         .beginControlFlow("if (!$L.get().add($L))", RENDERING, OBJECT)
                         .addStatement("return super.$L($L)", FALLBACK_TO_STRING_OF, OBJECT)
@@ -79,13 +80,14 @@ final class RepresentationGenerator {
                 .nextControlFlow("finally")
                 .addStatement("$L.get().remove($L)", RENDERING, OBJECT)
                 .endControlFlow();
-        return first.topLevel(
-                TypeSpec.classBuilder(NAME)
+        return FileShell.topLevel(
+                TypeSpec.classBuilder(AssertionNaming.PROPERTY_REPRESENTATION)
                         .addModifiers(Modifier.PUBLIC)
-                        .addAnnotation(first.generatedAnnotation())
+                        .addAnnotation(FileShell.generatedAnnotation(context))
                         .superclass(STANDARD_REPRESENTATION)
                         .addField(renderingField())
-                        .addMethod(fallback.build()));
+                        .addMethod(fallback.build()),
+                context);
     }
 
     /**
@@ -118,7 +120,7 @@ final class RepresentationGenerator {
     private List<TypeModel> branchModels() {
         final List<TypeModel> all = new ArrayList<>();
         models.forEach(model -> flatten(model, all));
-        all.removeIf(model -> new AssertionGenerator(model, context).properties().isEmpty());
+        all.removeIf(model -> model.accessorProperties().isEmpty());
         all.sort(
                 Comparator.comparingInt((TypeModel model) -> ancestorCount(model.type()))
                         .reversed()
@@ -149,11 +151,13 @@ final class RepresentationGenerator {
     }
 
     /** One branch: {@code if (object instanceof Line actual) return ...;}. */
-    private void addBranch(final MethodSpec.Builder fallback, final TypeModel model) {
-        final AssertionGenerator generator = new AssertionGenerator(model, context);
+    private static void addBranch(final MethodSpec.Builder fallback, final TypeModel model) {
         fallback.beginControlFlow(
-                        "if ($L instanceof $T $L)", OBJECT, generator.assertedType(), ACTUAL)
-                .addStatement("return $L", expression(model, generator.properties()))
+                        "if ($L instanceof $T $L)",
+                        OBJECT,
+                        AssertionGenerator.assertedType(model),
+                        ACTUAL)
+                .addStatement("return $L", expression(model, model.accessorProperties()))
                 .endControlFlow();
     }
 
