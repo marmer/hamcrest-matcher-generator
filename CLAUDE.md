@@ -16,16 +16,16 @@ scripts/agents/verify.sh
 # Docs module (docs profile, JDK 21+ only; a JDK 17 build skips it)
 ./mvnw -pl docs verify
 # Same build as CI's Build job (no tests; run it after changing a pom or .github/workflows/)
-./mvnw -B clean install -DskipTests
+./mvnw -B clean install -DskipTests -DskipITs
 # Gradle example (outside the reactor, own wrapper; CI job Example Gradle)
-./mvnw -DskipEndtoend -DskipTests install
+./mvnw -DskipEndtoend -DskipTests -DskipITs install
 (cd example-gradle-java && ./gradlew build)
 # Version consistency; run it after changing a pom or release-please-config.json
 python3 scripts/ci/check-project-version.py
 # Mutation testing (profile mutation, JDK 21+, about 10 min); scripts/ci/pit-scores.py prints the per-module score
 ./mvnw verify -Pmutation
 # Release dry run (verify only, no GPG, no deploy), then check the bundle contents
-./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log
+./mvnw -B -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 scripts/ci/check-release-artifacts.sh
 
 # Other JDKs in cloud sessions (the SessionStart hook installs pinned Temurin 17 and 27 releases, updated by hand: MAINTAINING.md)

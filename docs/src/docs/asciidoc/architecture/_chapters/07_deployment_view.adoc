@@ -82,7 +82,7 @@ Releases run on CI and need no machine of the owner.
 * Dependencies on project artifacts use `${project.version}`. The 5.x suite and its runner's consumer poms are filtered by the build (`@project.version@`). `scripts/ci/check-project-version.py` guards all of it.
 * Merging the Release PR creates the tag and the release page. The same workflow then runs:
 ** `Release build`: `mvnw verify` on the tag;
-** `Publish to Maven Central`, only if `Release build` is green: `mvnw -P release -DskipEndtoend -DskipTests deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), a build-provenance attestation (`actions/attest`), and it makes sure the release page exists.
+** `Publish to Maven Central`, only if `Release build` is green: `mvnw -P release -DskipEndtoend -DskipTests -DskipITs deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), a build-provenance attestation (`actions/attest`), and it makes sure the release page exists.
 * After a confirmed publish, the job `Announce release` comments on the merged Release PR with the App token. The comment mentions the owner and links Maven Central, the release page and the CHANGELOG section.
 * A failed publish is re-run with `workflow_dispatch` and the existing tag as input; tags are never moved.
 * 6.0.0 is forced with `release-as` and merged by the owner. Auto-merge of Release PRs stays off until after 6.0.0.
