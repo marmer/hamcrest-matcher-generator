@@ -20,7 +20,7 @@ jobs:
     steps:
       # pull_request_target is safe here: the job checks out the base branch only, never the pull request's code, and
       # runs only the scripts of the base branch. The title reaches the script through env, never through a shell line.
-      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+      - uses: amannn/action-semantic-pull-request@2252a14e810aa9b85c2d560bd7070c802206ecf6 # v6.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -15,16 +15,16 @@
 
     <properties>
         <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
-        <asciidoctorj.version>3.0.0</asciidoctorj.version>
-        <jsoup.version>1.23.2</jsoup.version>
+        <asciidoctorj.version>3.0.1</asciidoctorj.version>
+        <jsoup.version>1.24.1</jsoup.version>
         <!-- All Structurizr artifacts are updated together (ADR 0003): the rendering uses their jars as a CLI home. -->
         <structurizr.version>6.2.4</structurizr.version>
         <asciidoctorj.diagram.version>3.2.1</asciidoctorj.diagram.version>
         <asciidoctorj.diagram.plantuml.version>1.2026.2</asciidoctorj.diagram.plantuml.version>
-        <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
+        <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <!-- the version Maven 3.9 binds to every module by default; pinned here so the site-root copy below has a version -->
-        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
-        <properties.maven.plugin.version>1.2.1</properties.maven.plugin.version>
+        <maven.resources.plugin.version>3.5.0</maven.resources.plugin.version>
+        <properties.maven.plugin.version>1.3.1</properties.maven.plugin.version>
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
@@ -38,7 +38,7 @@
         <!-- Structurizr 6.2.3 pins jackson-databind 2.22.2, which carries four advisories fixed in 2.22.3 (OpenSSF Scorecard
             Vulnerabilities). Jackson reaches only the docs tooling, never a published jar. JacksonVersionTest keeps this at or
             above 2.22.3. A patch-level override keeps Structurizr 6.2.3 as the tested version (ADR 0003). -->
-        <jackson.version>2.22.3</jackson.version>
+        <jackson.version>2.22.4</jackson.version>
     </properties>
 
     <dependencyManagement>

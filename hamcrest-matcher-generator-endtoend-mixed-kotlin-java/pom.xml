@@ -115,7 +115,7 @@
                 <!-- javac compiles only the KAPT matchers that Java sources reference, unless the output is a test source root. -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.7.0</version>
                 <executions>
                     <execution>
                         <id>add-kapt-test-sources</id>
