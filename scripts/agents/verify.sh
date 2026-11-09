@@ -43,7 +43,7 @@ step_spotless() {
   fi
   ./mvnw -o -B "com.diffplug.spotless:spotless-maven-plugin:${version}:apply"
 }
-step_install() { ./mvnw -o -B clean install -DskipTests; }
+step_install() { ./mvnw -o -B clean install -DskipTests -DskipITs; }
 step_verify() { ./mvnw -o -B clean verify; }
 step_verify-jdk17() { JAVA_HOME="$HOME/.jdks/17" ./mvnw -o -B clean verify; }
 step_verify-latest() { JAVA_HOME="$HOME/.jdks/latest" ./mvnw -o -B clean verify; }
@@ -71,7 +71,7 @@ step_domain-docs() { python3 scripts/agents/check-domain-docs-sync.py; }
 step_release() {
   # The steps run inside `if`, where set -e is off: pipefail plus `|| return 1` stops at a failed Maven build
   # (tee hides nothing) before the artifact check reads the log.
-  ./mvnw -B -P release verify -DskipTests -Dgpg.skip=true 2>&1 | tee release-dry-run.log || return 1
+  ./mvnw -B -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log || return 1
   scripts/ci/check-release-artifacts.sh release-dry-run.log
 }
 

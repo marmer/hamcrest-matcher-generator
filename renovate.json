@@ -32,6 +32,28 @@
       "schedule": ["before 6am on monday"]
     },
     {
+      "description": "Surefire and Failsafe move in one PR: since 3.6.x, -DskipTests changes how it affects Failsafe, and a lone bump breaks the JaCoCo check",
+      "matchPackageNames": [
+        "org.apache.maven.plugins:maven-surefire-plugin",
+        "org.apache.maven.plugins:maven-failsafe-plugin"
+      ],
+      "groupName": "Surefire and Failsafe"
+    },
+    {
+      "description": "Kotlin compiler and KotlinPoet updates go as one group, so the Kotlin toolchain and the generator's KotlinPoet dependency stay in step",
+      "matchPackageNames": ["org.jetbrains.kotlin:*", "com.squareup:kotlinpoet-jvm"],
+      "groupName": "Kotlin"
+    },
+    {
+      "description": "JavaParser, compile-testing and ArchUnit each get their own PR: each is a large version jump",
+      "matchPackageNames": [
+        "com.github.javaparser:javaparser-core",
+        "com.google.testing.compile:compile-testing",
+        "com.tngtech.archunit:archunit"
+      ],
+      "groupName": null
+    },
+    {
       "description": "Majors stay in their own PRs, never grouped",
       "matchUpdateTypes": ["major"],
       "groupName": null

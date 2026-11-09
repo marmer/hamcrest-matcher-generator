@@ -26,7 +26,7 @@ jobs:
         run: chmod +x mvnw
 
       - name: Build
-        run: ./mvnw -B clean install -DskipTests
+        run: ./mvnw -B clean install -DskipTests -DskipITs
         if: success()
 
       - name: Test
@@ -200,7 +200,7 @@ jobs:
       # -DskipEndtoend leaves the never-published end-to-end modules (and the runner of the 5.x compatibility suite) out.
       - name: Release deploy lifecycle without signing and publishing
         shell: bash  # -eo pipefail, so a failing Maven build is not hidden by tee
-        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release -DskipEndtoend deploy -DskipTests -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
+        run: ./mvnw -B -s .github/ci-dummy-settings.xml -P release -DskipEndtoend deploy -DskipTests -DskipITs -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
 
       - name: Check release artifacts
         run: scripts/ci/check-release-artifacts.sh release-dry-run.log
@@ -237,7 +237,7 @@ jobs:
 
       - name: Install the reactor artifacts into mavenLocal()
         # -DskipEndtoend keeps the never-published end-to-end modules out; the libraries the example uses are installed.
-        run: ./mvnw -B -DskipEndtoend -DskipTests install
+        run: ./mvnw -B -DskipEndtoend -DskipTests -DskipITs install
 
       - name: Cache the Gradle wrapper distribution
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

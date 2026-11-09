@@ -16,7 +16,7 @@ blocked it. Pull requests and pushes to `main` run the workflows of the table on
 
 | Build and verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
 a|
-* `Build` runs `mvnw -B clean install -DskipTests`, then `mvnw -B verify`: the reactor installs without tests.
+* `Build` runs `mvnw -B clean install -DskipTests -DskipITs`, then `mvnw -B verify`: the reactor installs without tests.
 * `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest` run the build and verify matrix. `latest` follows the newest generally available JDK.
 * Together they guarantee that `./mvnw clean verify` is green on every supported JDK, including the newest generally available one.
 
@@ -48,7 +48,7 @@ code. Old code is not judged again when a rule changes.
 a|
 * The Gradle example outside the reactor builds against the artifacts of the reactor, so the guide's Gradle setup keeps
 working on JDK 21 and on JDK 17, because users copy the example on both.
-* The job validates the wrapper jar with the SHA-pinned `gradle/actions/wrapper-validation`, installs the reactor with `mvnw -B -DskipEndtoend -DskipTests install`, then runs `gradlew build` in `example-gradle-java` on JDK 21 and again on JDK 17. The example resolves the reactor's artifacts from `mavenLocal()`.
+* The job validates the wrapper jar with the SHA-pinned `gradle/actions/wrapper-validation`, installs the reactor with `mvnw -B -DskipEndtoend -DskipTests -DskipITs install`, then runs `gradlew build` in `example-gradle-java` on JDK 21 and again on JDK 17. The example resolves the reactor's artifacts from `mavenLocal()`.
 * The job has no Gradle dependency cache, because a cache is state that can differ between runs, and a 30-minute time limit. The wrapper distribution is pinned by `distributionSha256Sum`; only that distribution is cached (keyed on `gradle-wrapper.properties`), and the wrapper's `networkTimeout` is 60 seconds, so a slow download does not fail the check.
 
 | Dependency review (`Dependency review`)

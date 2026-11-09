@@ -305,14 +305,16 @@ class RepositoryWorkflowsTest(unittest.TestCase):
         self.assertIn("if: success() || failure()", text[test_step:])
         self.assertNotIn("continue-on-error", text)
 
-    def test_dependency_review_allows_exactly_the_three_junit_purls_in_the_test_scope_only(self):
+    def test_dependency_review_allows_exactly_the_confirmed_purls_per_scope(self):
         text = (HERE.parents[1] / ".github" / "workflows" / "dependency-review.yml").read_text(encoding="utf-8")
         test_step = text.index("name: Test scope")
         allow_lines = [line.strip() for line in text.splitlines() if line.strip().startswith("allow-dependencies-licenses:")]
         self.assertEqual(allow_lines, [
-            "allow-dependencies-licenses: pkg:maven/org.junit.jupiter/junit-jupiter, pkg:maven/org.junit.platform/junit-platform-launcher, pkg:maven/org.junit.platform/junit-platform-commons",
+            "allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin",
+            "allow-dependencies-licenses: pkg:maven/org.junit.jupiter/junit-jupiter, pkg:maven/org.junit.platform/junit-platform-launcher, pkg:maven/org.junit.platform/junit-platform-commons, pkg:maven/com.tngtech.archunit/archunit",
         ])
-        self.assertGreater(text.index(allow_lines[0]), test_step)
+        self.assertLess(text.index(allow_lines[0]), test_step)
+        self.assertGreater(text.index(allow_lines[1]), test_step)
 
 
 if __name__ == "__main__":
