@@ -14,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -144,13 +143,24 @@ public class MatcherGenerationProcessorWorker {
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
                 getAllTypeElementsFor(configuration);
         warnAboutUnmatchedExclusions(typesByGeneratedType, configuration, exclusions);
-        final Set<String> namedTypes = namedTypes(configurationMirror);
+        final Map<String, AnnotationValue> namedEntries =
+                namedEntries(distinctEntries(configurationMirror, VALUE_ATTRIBUTE));
+        final Set<String> namedTypes = namedEntries.keySet();
+        final TypeModelFactory factory =
+                new TypeModelFactory(processingEnv, diagnostics, configuration, excluded);
         final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
                 .forEach(
                         (typeElement, configuredTypes) -> {
                             if (isSelfGenerated(typeElement)) {
                                 printSkipNoteBecauseOfSelfGenerationFor(typeElement);
+                            } else if (factory.isNonPublicOutsideItsPackage(typeElement)) {
+                                reportNonPublicType(
+                                        typeElement,
+                                        configuredTypes,
+                                        namedEntries,
+                                        configuration,
+                                        factory);
                             } else {
                                 planned.add(
                                         planFor(
@@ -158,22 +168,62 @@ public class MatcherGenerationProcessorWorker {
                                                 configuredTypes,
                                                 namedTypes,
                                                 configuration,
-                                                excluded));
+                                                factory));
                             }
                         });
         return planned;
     }
 
     /**
-     * The qualified names of the types the configuration names explicitly. Names that are no type,
-     * packages, are not among them.
+     * A non public top level type is not generated into another package, since the generated code
+     * could not use it there. When the configuration names the type, or one of its nested types,
+     * that is one error for the type. It sits at the first value of the {@code value} attribute, in
+     * the order of the annotation, that names the type or one of its nested types. So with {@code
+     * {"p.Outer", "p.Outer.Inner"}} it sits at {@code "p.Outer"}, and with the values in the other
+     * order at {@code "p.Outer.Inner"}. A type only a package entry picked up is a verbose note.
      */
-    private Set<String> namedTypes(final AnnotationMirror configurationMirror) {
-        return distinctEntries(configurationMirror, VALUE_ATTRIBUTE).keySet().stream()
-                .map(name -> processingEnv.getElementUtils().getTypeElement(name))
-                .filter(Objects::nonNull)
-                .map(type -> type.getQualifiedName().toString())
-                .collect(Collectors.toSet());
+    private void reportNonPublicType(
+            final TypeElement typeElement,
+            final Set<TypeElement> configuredTypes,
+            final Map<String, AnnotationValue> namedEntries,
+            final ConfigurationSite configuration,
+            final TypeModelFactory factory) {
+        namedEntries.entrySet().stream()
+                .filter(
+                        entry ->
+                                configuredTypes.stream()
+                                        .anyMatch(
+                                                configuredType ->
+                                                        configuredType
+                                                                .getQualifiedName()
+                                                                .contentEquals(entry.getKey())))
+                .findFirst()
+                .ifPresentOrElse(
+                        entry ->
+                                diagnostics.nonPublicTypeNamed(
+                                        typeElement,
+                                        factory.targetPackageOf(typeElement),
+                                        configuration,
+                                        entry.getValue()),
+                        () -> diagnostics.nonPublicTypeSkipped(typeElement));
+    }
+
+    /**
+     * The entries of the {@code value} attribute that name a type, keyed by the qualified name of
+     * that type, in the order of the annotation. Names that are no type, packages, are not among
+     * them.
+     */
+    private Map<String, AnnotationValue> namedEntries(
+            final Map<String, AnnotationValue> configuredEntries) {
+        final Map<String, AnnotationValue> named = new LinkedHashMap<>();
+        configuredEntries.forEach(
+                (name, entry) -> {
+                    final TypeElement type = processingEnv.getElementUtils().getTypeElement(name);
+                    if (type != null) {
+                        named.putIfAbsent(type.getQualifiedName().toString(), entry);
+                    }
+                });
+        return named;
     }
 
     private PlannedType planFor(
@@ -181,10 +231,8 @@ public class MatcherGenerationProcessorWorker {
             final Set<TypeElement> configuredTypes,
             final Set<String> namedTypes,
             final ConfigurationSite configuration,
-            final Predicate<TypeElement> excluded) {
-        final TypeModel model =
-                new TypeModelFactory(processingEnv, configuration.mirror(), excluded)
-                        .create(typeElement);
+            final TypeModelFactory factory) {
+        final TypeModel model = factory.create(typeElement);
         configuredTypes.forEach(
                 configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
         return new PlannedType(typeElement, model, configuration);
