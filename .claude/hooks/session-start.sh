@@ -10,12 +10,12 @@ fast_forward_main() {
 }
 
 # A shallow clone hides the history the spec-wide review needs (`docs/agents/implementation.md`, "How a spec ends").
-# Up to 4 tries, pausing 2, 4 and 8 seconds; a failure only logs a warning, so the session start never fails.
+# Up to 4 tries of 120 s each (GNU timeout), pausing 2, 4 and 8 seconds; a failure only logs a warning, so the session start never fails.
 unshallow_history() {
   [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ] || return 0
   local attempt delay=2
   for attempt in 1 2 3 4; do
-    if git fetch -q --unshallow origin; then
+    if timeout 120 git fetch -q --unshallow origin; then
       echo "session-start: fetched the full history"
       return 0
     fi
