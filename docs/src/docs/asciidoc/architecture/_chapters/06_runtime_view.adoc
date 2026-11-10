@@ -19,7 +19,10 @@ and package names to types. Names that match nothing are a compiler error for `@
 5.x alias, which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types they name
 by class or package, and the public member types they name are not modelled as nested types. An `exclude` entry that
 matches neither a configured type nor one of their public member types is a warning. Types that carry the processor's
-own `@Generated` marker are skipped, and the compiler notes each skip only with the verbose option. A top level type that is not public is generated only into its own package: when a package prefix would move it, a package entry skips the type with a verbose note, and a configured name of the type or of one of its nested types is a compiler error at that name.
+own `@Generated` marker are skipped, and the compiler notes each skip only with the verbose option. A top level type
+that is not public is generated only into its own package: when a package prefix would move it, a package entry skips
+the type with a verbose note, and a configured name of the type or of one of its nested types is a compiler error at
+that name.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages also hold types that are not configured. Each skipped method is reported with its reason, but only when the processor option

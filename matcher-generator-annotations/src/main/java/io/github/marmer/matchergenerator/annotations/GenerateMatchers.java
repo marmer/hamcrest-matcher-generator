@@ -62,6 +62,9 @@ public @interface GenerateMatchers {
              * <p>Example Inputs and outputs for type some.pck.SomeType "some.praefix_" =
              * "some.praefix_some.pck" "some.praefix." = "some.praefix.some.pck" "" = "some.pck"
              *
+             * <p>A top level type that is not public keeps its own package: a prefix that would
+             * move it makes a package entry skip the type, and naming the type is a compiler error.
+             *
              * @return Which package to use for the generated types
              */
             String value();
