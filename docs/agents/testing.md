@@ -12,6 +12,10 @@ Runtime tests (`BeanPropertyMatcherTest.java`) are plain JUnit unit tests. Hamcr
 
 Regenerate golden files with `-Dgolden.update=true` and review `git diff --stat` and the diff of `src/test/resources` (it also rewrites unrelated goldens when other output changed); never edit them by script, and never revert them with `git checkout` (that drops hand edits too): regenerate. After a scripted change `git diff --numstat` shows 0 deleted lines when only additions were meant. Hamcrest goldens: reinstall core first (`-pl hamcrest-matcher-generator` reads core from `~/.m2`). JavaPoet quirks in the AssertJ goldens: `$W` leaves a trailing space after `=` (leave long field initializers unwrapped) and the output carries `import java.lang.X;` lines.
 
+**Red evidence for one test class**: `./mvnw -o -B verify -pl <module> -am -Djacoco.skip=true -DskipStaticAnalysis=true -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=<Class>[#method] -Dfailsafe.failIfNoSpecifiedTests=false` runs one golden IT alone. It gives red evidence only, never verification: verification is the full-reactor run in `docs/agents/implementer-brief.md` step 4. The `-am` flags are explained in the JaCoCo entry of `docs/agents/build-pitfalls.md`.
+
+Gotchas: a probe that makes JavaPoet throw at build time (an interface method without `default`, for instance) fails with an exception, not a golden diff. Mutate a return type for a clean golden-text failure. Mutating a helper to return `null` fails at compile time (NullAway).
+
 The plain-kotlin end-to-end module checks compile failures through maven-invoker consumer builds under `src/it` (`right-scope`, `wrong-scope`, `wrong-value-type`, BeanShell `postbuild.bsh` hooks); `-DskipTests` skips them, and they must pass on a fresh local repository (`scripts/agents/verify.sh --only fresh-repo`).
 
 End-to-end modules are the final validation layer: they apply `@GenerateMatchers` to real POJOs and exercise the generated matchers in actual test assertions. The 5.x suite is the exception, see `docs/agents/5x-compatibility.md`.
