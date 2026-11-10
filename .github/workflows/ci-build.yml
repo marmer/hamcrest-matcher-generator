@@ -153,7 +153,7 @@ jobs:
 
       - name: Mutation testing
         # Push to main has no history to read, so every mutant is analysed (4 threads, set in the pom).
-        # -T 1: PIT already uses the cores per module; a parallel reactor gained only about 6 % (docs/agents/build-pitfalls.md).
+        # -T 1: PIT already uses the cores per module; a parallel reactor gained only about 7 % (docs/agents/build-pitfalls.md).
         run: ./mvnw -B -T 1 -Pmutation verify
 
       - name: Save PIT history
