@@ -109,10 +109,27 @@ class TypeModelFactory {
     private void logTypeSkipped(final TypeElement element) {
         ElementSupport.logNote(
                 processingEnv,
-                "Matcher generation skipped for non public type: " + element.getQualifiedName(),
+                ProcessorDiagnostics.skippedNonPublicType(element.getQualifiedName().toString()),
                 element,
                 configurationMirror,
                 ElementSupport.valueAttribute(processingEnv, configurationMirror));
+    }
+
+    /**
+     * The package the generated code of a top level type goes to. It is known before the model of
+     * the type is created.
+     */
+    String targetPackageOf(final TypeElement type) {
+        return getTargetPackage(type);
+    }
+
+    /**
+     * Whether a non public top level type would be generated into another package. The generated
+     * code could not use the type there, so the worker does not generate it.
+     */
+    boolean isNonPublicOutsideItsPackage(final TypeElement type) {
+        return !ElementSupport.isPublic(type)
+                && !getTargetPackage(type).equals(packageNameOf(type));
     }
 
     private String getTargetPackage(final TypeElement type) {

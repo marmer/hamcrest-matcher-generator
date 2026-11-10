@@ -145,12 +145,21 @@ public class MatcherGenerationProcessorWorker {
                 getAllTypeElementsFor(configuration);
         warnAboutUnmatchedExclusions(typesByGeneratedType, configuration, exclusions);
         final Set<String> namedTypes = namedTypes(configurationMirror);
+        final TypeModelFactory factory =
+                new TypeModelFactory(processingEnv, configuration.mirror(), excluded);
         final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
                 .forEach(
                         (typeElement, configuredTypes) -> {
                             if (isSelfGenerated(typeElement)) {
                                 printSkipNoteBecauseOfSelfGenerationFor(typeElement);
+                            } else if (factory.isNonPublicOutsideItsPackage(typeElement)) {
+                                reportNonPublicType(
+                                        typeElement,
+                                        configuredTypes,
+                                        namedTypes,
+                                        configuration,
+                                        factory);
                             } else {
                                 planned.add(
                                         planFor(
@@ -158,10 +167,39 @@ public class MatcherGenerationProcessorWorker {
                                                 configuredTypes,
                                                 namedTypes,
                                                 configuration,
-                                                excluded));
+                                                factory));
                             }
                         });
         return planned;
+    }
+
+    /**
+     * A non public top level type is not generated into another package, since the generated code
+     * could not use it there. When the configuration names the type, or one of its nested types,
+     * that is one error at the configured value naming it. A type only a package entry picked up is
+     * a verbose note.
+     */
+    private void reportNonPublicType(
+            final TypeElement typeElement,
+            final Set<TypeElement> configuredTypes,
+            final Set<String> namedTypes,
+            final ConfigurationSite configuration,
+            final TypeModelFactory factory) {
+        final Map<String, AnnotationValue> entries =
+                distinctEntries(configuration.mirror(), VALUE_ATTRIBUTE);
+        configuredTypes.stream()
+                .map(configuredType -> configuredType.getQualifiedName().toString())
+                .filter(namedTypes::contains)
+                .findFirst()
+                .ifPresentOrElse(
+                        // a named type is an entry of the annotation, by its qualified name
+                        name ->
+                                diagnostics.nonPublicTypeNamed(
+                                        typeElement,
+                                        factory.targetPackageOf(typeElement),
+                                        configuration,
+                                        Objects.requireNonNull(entries.get(name))),
+                        () -> diagnostics.nonPublicTypeSkipped(typeElement));
     }
 
     /**
@@ -181,10 +219,8 @@ public class MatcherGenerationProcessorWorker {
             final Set<TypeElement> configuredTypes,
             final Set<String> namedTypes,
             final ConfigurationSite configuration,
-            final Predicate<TypeElement> excluded) {
-        final TypeModel model =
-                new TypeModelFactory(processingEnv, configuration.mirror(), excluded)
-                        .create(typeElement);
+            final TypeModelFactory factory) {
+        final TypeModel model = factory.create(typeElement);
         configuredTypes.forEach(
                 configuredType -> reportWithoutProperties(model, configuredType, namedTypes));
         return new PlannedType(typeElement, model, configuration);

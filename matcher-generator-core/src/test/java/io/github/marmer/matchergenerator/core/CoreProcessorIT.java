@@ -1047,6 +1047,186 @@ class CoreProcessorIT {
         assertEquals("prefix.some.other.pck", onlyModel().targetPackage());
     }
 
+    /**
+     * A configuration of either annotation with the given value and package prefix. The annotation
+     * is on line 3.
+     */
+    private static JavaFileObject packagePrefixedConfiguration(
+            final boolean deprecatedAlias, final String configuredTypes, final String prefix) {
+        final String annotation = deprecatedAlias ? "MatcherConfiguration" : "GenerateMatchers";
+        return JavaFileObjects.forSourceLines(
+                "some.pck.SomeConfiguration",
+                "package some.pck;",
+                "import "
+                        + (deprecatedAlias
+                                ? "io.github.marmer.testutils.generators.beanmatcher.dependencies."
+                                : "io.github.marmer.matchergenerator.annotations.")
+                        + annotation
+                        + ";",
+                "@"
+                        + annotation
+                        + "(value = "
+                        + configuredTypes
+                        + ", generation = @"
+                        + annotation
+                        + ".GenerationConfiguration(packageConfig = @"
+                        + annotation
+                        + ".GenerationConfiguration.PackageConfiguration(\""
+                        + prefix
+                        + "\")))",
+                "public final class SomeConfiguration {",
+                "}");
+    }
+
+    private static JavaFileObject packagePrivateBean(
+            final String packageName, final String simpleName) {
+        return JavaFileObjects.forSourceLines(
+                packageName + "." + simpleName,
+                "package " + packageName + ";",
+                "class " + simpleName + " {",
+                "    public String getName() { return \"\"; }",
+                "}");
+    }
+
+    /** The 1-based column at which the quoted name starts on the given line of the source. */
+    private static long columnOfQuotedName(
+            final JavaFileObject source, final int line, final String quotedName)
+            throws IOException {
+        return source.getCharContent(true)
+                        .toString()
+                        .lines()
+                        .skip(line - 1L)
+                        .findFirst()
+                        .orElseThrow()
+                        .indexOf(quotedName)
+                + 1L;
+    }
+
+    @Test
+    @DisplayName(
+            "A package entry with a package prefix skips a non public top level type and generates the public ones")
+    void aNonPublicTopLevelTypeIsNotGeneratedIntoAnotherPackage() {
+        final Compilation compilation =
+                compile(
+                        packagePrefixedConfiguration(false, "\"some.other.pck\"", "prefix."),
+                        packagePrivateBean("some.other.pck", "Hidden"),
+                        bean("some.other.pck", "Visible"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(List.of("some.other.pck.Visible"), recordedModelNames());
+        assertTrue(
+                compilation
+                        .generatedSourceFile("prefix.some.other.pck.VisibleRecorded")
+                        .isPresent());
+        assertFalse(
+                compilation
+                        .generatedSourceFile("prefix.some.other.pck.HiddenRecorded")
+                        .isPresent());
+    }
+
+    @Test
+    @DisplayName(
+            "A skipped non public top level type is a verbose note, which only the verbose option prints")
+    void aSkippedNonPublicTopLevelTypeIsAVerboseNote() {
+        final JavaFileObject configuration =
+                packagePrefixedConfiguration(false, "\"some.other.pck\"", "prefix.");
+        final JavaFileObject hidden = packagePrivateBean("some.other.pck", "Hidden");
+
+        final Compilation verbose = compileVerbose(configuration, hidden);
+        final Compilation quiet = compile(configuration, hidden);
+
+        CompilationSubject.assertThat(verbose).succeeded();
+        CompilationSubject.assertThat(verbose)
+                .hadNoteContaining(
+                        "Matcher generation skipped for non public type: some.other.pck.Hidden");
+        CompilationSubject.assertThat(quiet).succeeded();
+        assertEquals(
+                List.of(),
+                quiet.notes().stream()
+                        .map(d -> d.getMessage(null))
+                        .filter(message -> message.contains("non public type"))
+                        .collect(Collectors.toList()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A configured non public top level type that a package prefix moves is one error at its name, on both annotations")
+    void aConfiguredNonPublicTopLevelTypeIsOneErrorAtItsName(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                packagePrefixedConfiguration(
+                        deprecatedAlias, "\"some.other.pck.Hidden\"", "prefix.");
+
+        final Compilation compilation =
+                compile(configuration, packagePrivateBean("some.other.pck", "Hidden"));
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(
+                        "Type 'some.other.pck.Hidden' is not public and cannot be used from the target package 'prefix.some.other.pck'")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn((int) columnOfQuotedName(configuration, 3, "\"some.other.pck.Hidden\""));
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(List.of(), RecordingBackend.models());
+    }
+
+    @Test
+    @DisplayName(
+            "A configured nested type of a non public top level type is one error naming that top level type")
+    void aConfiguredNestedTypeOfANonPublicTopLevelTypeIsOneError() {
+        final JavaFileObject configuration =
+                packagePrefixedConfiguration(false, "\"some.other.pck.Outer.Inner\"", "prefix.");
+        final JavaFileObject outer =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Outer",
+                        "package some.other.pck;",
+                        "class Outer {",
+                        "    public static class Inner {",
+                        "        public String getName() { return \"\"; }",
+                        "    }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, outer);
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining(
+                        "Type 'some.other.pck.Outer' is not public and cannot be used from the target package 'prefix.some.other.pck'")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(List.of(), RecordingBackend.models());
+    }
+
+    @Test
+    @DisplayName(
+            "A non public top level type stays generated when no package prefix moves it, named or picked up")
+    void aNonPublicTopLevelTypeWithoutAPackagePrefixIsGenerated() {
+        final Compilation picked =
+                compile(
+                        generateMatchersConfiguration("\"some.other.pck\""),
+                        packagePrivateBean("some.other.pck", "Hidden"),
+                        bean("some.other.pck", "Visible"));
+
+        CompilationSubject.assertThat(picked).succeeded();
+        assertEquals(0, picked.warnings().size(), () -> "Warnings: " + picked.warnings());
+        assertEquals(
+                List.of("some.other.pck.Hidden", "some.other.pck.Visible"),
+                recordedModelNames().stream().sorted().collect(Collectors.toList()));
+        assertTrue(picked.generatedSourceFile("some.other.pck.HiddenRecorded").isPresent());
+
+        RecordingBackend.reset();
+        final Compilation named =
+                compile(
+                        generateMatchersConfiguration("\"some.other.pck.Hidden\""),
+                        packagePrivateBean("some.other.pck", "Hidden"));
+
+        CompilationSubject.assertThat(named).succeeded();
+        assertEquals(List.of("some.other.pck.Hidden"), recordedModelNames());
+    }
+
     private static JavaFileObject exclusionConfiguration(
             final boolean deprecatedAlias,
             final String configuredTypes,
