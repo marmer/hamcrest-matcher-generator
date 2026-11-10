@@ -23,7 +23,7 @@ The annotation's `exclude` value takes the same kinds of entries and removes typ
 
 == Package of the generated types
 
-The generation setting `packageConfig` decides the package of the generated types. Its value is a prefix, so the generated code of a type can live in a package other than the one of the type. The javadoc of the annotation gives the rule with examples: the prefix `some.praefix.` turns the package `some.pck` of `some.pck.SomeType` into `some.praefix.some.pck`, and an empty value keeps the package of the type.
+The generation setting `packageConfig` decides the package of the generated types. Its value is a prefix, so the generated code of a type can live in a package other than the one of the type. The javadoc of the annotation gives the rule with examples: the prefix `some.praefix.` turns the package `some.pck` of `some.pck.SomeType` into `some.praefix.some.pck`, and an empty value keeps the package of the type. A type that is not public keeps its own package: when a prefix would move it, a package entry skips the type, and naming the type in the configuration is a compiler error.
 
 == Where the generated code goes
 
