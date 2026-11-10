@@ -70,8 +70,8 @@ step_fresh-repo() {
 step_domain-docs() { python3 scripts/agents/check-domain-docs-sync.py; }
 step_release() {
   # The steps run inside `if`, where set -e is off: pipefail plus `|| return 1` stops at a failed Maven build
-  # (tee hides nothing) before the artifact check reads the log.
-  ./mvnw -B -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log || return 1
+  # (tee hides nothing) before the artifact check reads the log. -T 1: the release build stays serial.
+  ./mvnw -B -T 1 -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log || return 1
   scripts/ci/check-release-artifacts.sh release-dry-run.log
 }
 

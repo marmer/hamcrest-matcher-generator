@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Every check in the right order (Spotless, install, verify on JDK 21 and 17, docs sync); --latest, --release, --fresh, --only <step>
 scripts/agents/verify.sh
+# .mvn/maven.config sets -T 1C (parallel reactor); a command-line -T wins over it. Release and mutation builds pin -T 1.
 
 # Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set); verify also runs the integration tests
 ./mvnw clean install
@@ -23,9 +24,9 @@ scripts/agents/verify.sh
 # Version consistency; run it after changing a pom or release-please-config.json
 python3 scripts/ci/check-project-version.py
 # Mutation testing (profile mutation, JDK 21+, about 10 min); scripts/ci/pit-scores.py prints the per-module score
-./mvnw verify -Pmutation
+./mvnw -T 1 verify -Pmutation
 # Release dry run (verify only, no GPG, no deploy), then check the bundle contents
-./mvnw -B -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log
+./mvnw -B -T 1 -P release verify -DskipTests -DskipITs -Dgpg.skip=true 2>&1 | tee release-dry-run.log
 scripts/ci/check-release-artifacts.sh
 
 # Other JDKs in cloud sessions (the SessionStart hook installs pinned Temurin 17 and 27 releases, updated by hand: MAINTAINING.md)
