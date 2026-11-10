@@ -9,6 +9,24 @@ fast_forward_main() {
   (cd "$CLAUDE_PROJECT_DIR" && "$CLAUDE_PROJECT_DIR/scripts/agents/fast-forward-main.sh") || true
 }
 
+# A shallow clone hides the history the spec-wide review needs (`docs/agents/implementation.md`, "How a spec ends").
+# Up to 4 tries, pausing 2, 4 and 8 seconds; a failure only logs a warning, so the session start never fails.
+unshallow_history() {
+  [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ] || return 0
+  local attempt delay=2
+  for attempt in 1 2 3 4; do
+    if git fetch -q --unshallow origin; then
+      echo "session-start: fetched the full history"
+      return 0
+    fi
+    [ "$attempt" -eq 4 ] && break
+    sleep "$delay"
+    delay=$((delay * 2))
+  done
+  echo "session-start: warning: could not fetch the full history (git fetch --unshallow origin failed 4 times)" >&2
+  return 0
+}
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   fast_forward_main
   exit 0
@@ -20,6 +38,7 @@ cd "$CLAUDE_PROJECT_DIR"
 exec > >(tee /tmp/session-start.log) 2>&1
 echo "session-start: $(date -u +%FT%TZ)"
 fast_forward_main
+unshallow_history
 
 # Maven may store a 429 response body as a .pom or .jar, which breaks every later build
 # ("Non-parseable POM", NoClassDefFoundError). Drop the whole version directory so it is re-fetched.
