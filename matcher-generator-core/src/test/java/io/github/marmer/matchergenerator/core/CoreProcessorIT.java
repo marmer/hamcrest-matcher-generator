@@ -1139,8 +1139,8 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(verbose)
                 .hadNoteContaining(
                         "Matcher generation skipped for non public type: some.other.pck.Hidden")
-                .inFile(configuration)
-                .onLine(3);
+                .inFile(hidden)
+                .onLine(2);
         CompilationSubject.assertThat(quiet).succeeded();
         assertEquals(
                 List.of(),
@@ -1264,8 +1264,8 @@ class CoreProcessorIT {
 
     @Test
     @DisplayName(
-            "A skipped non public nested type is a verbose note at the configured value, as a top level type is")
-    void aSkippedNonPublicNestedTypeIsANoteAtTheConfiguredValue() {
+            "A skipped non public nested type is a verbose note at its declaration, as a top level type is")
+    void aSkippedNonPublicNestedTypeIsANoteAtItsDeclaration() {
         final JavaFileObject configuration = configuration("\"some.other.pck.Outer\"");
         final JavaFileObject outer =
                 JavaFileObjects.forSourceLines(
@@ -1283,8 +1283,8 @@ class CoreProcessorIT {
         CompilationSubject.assertThat(verbose)
                 .hadNoteContaining(
                         "Matcher generation skipped for non public type: some.other.pck.Outer.Hidden")
-                .inFile(configuration)
-                .onLine(3);
+                .inFile(outer)
+                .onLine(4);
     }
 
     @ParameterizedTest(name = "deprecated alias: {0}")

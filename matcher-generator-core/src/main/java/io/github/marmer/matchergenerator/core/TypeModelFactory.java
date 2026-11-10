@@ -110,7 +110,7 @@ class TypeModelFactory {
     }
 
     private void logTypeSkipped(final TypeElement element) {
-        diagnostics.nonPublicTypeSkipped(element, configuration);
+        diagnostics.nonPublicTypeSkipped(element);
     }
 
     /**

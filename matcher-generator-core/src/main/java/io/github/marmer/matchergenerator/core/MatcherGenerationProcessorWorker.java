@@ -205,7 +205,7 @@ public class MatcherGenerationProcessorWorker {
                                         factory.targetPackageOf(typeElement),
                                         configuration,
                                         entry.getValue()),
-                        () -> diagnostics.nonPublicTypeSkipped(typeElement, configuration));
+                        () -> diagnostics.nonPublicTypeSkipped(typeElement));
     }
 
     /**
