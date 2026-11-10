@@ -34,15 +34,18 @@ import javax.lang.model.type.TypeKind;
 /** Creates the {@link TypeModel} of a configured type. */
 class TypeModelFactory {
     private final ProcessingEnvironment processingEnv;
-    private final AnnotationMirror configurationMirror;
+    private final ProcessorDiagnostics diagnostics;
+    private final ConfigurationSite configuration;
     private final Predicate<TypeElement> excluded;
 
     TypeModelFactory(
             final ProcessingEnvironment processingEnv,
-            final AnnotationMirror configurationMirror,
+            final ProcessorDiagnostics diagnostics,
+            final ConfigurationSite configuration,
             final Predicate<TypeElement> excluded) {
         this.processingEnv = processingEnv;
-        this.configurationMirror = configurationMirror;
+        this.diagnostics = diagnostics;
+        this.configuration = configuration;
         this.excluded = excluded;
     }
 
@@ -70,7 +73,7 @@ class TypeModelFactory {
     }
 
     TypeModel create(final TypeElement type) {
-        return create(type, getTargetPackage(type));
+        return create(type, targetPackageOf(type));
     }
 
     private TypeModel create(final TypeElement type, final String targetPackage) {
@@ -107,20 +110,7 @@ class TypeModelFactory {
     }
 
     private void logTypeSkipped(final TypeElement element) {
-        ElementSupport.logNote(
-                processingEnv,
-                ProcessorDiagnostics.skippedNonPublicType(element.getQualifiedName().toString()),
-                element,
-                configurationMirror,
-                ElementSupport.valueAttribute(processingEnv, configurationMirror));
-    }
-
-    /**
-     * The package the generated code of a top level type goes to. It is known before the model of
-     * the type is created.
-     */
-    String targetPackageOf(final TypeElement type) {
-        return getTargetPackage(type);
+        diagnostics.nonPublicTypeSkipped(element, configuration);
     }
 
     /**
@@ -128,11 +118,14 @@ class TypeModelFactory {
      * code could not use the type there, so the worker does not generate it.
      */
     boolean isNonPublicOutsideItsPackage(final TypeElement type) {
-        return !ElementSupport.isPublic(type)
-                && !getTargetPackage(type).equals(packageNameOf(type));
+        return !ElementSupport.isPublic(type) && !targetPackageOf(type).equals(packageNameOf(type));
     }
 
-    private String getTargetPackage(final TypeElement type) {
+    /**
+     * The package the generated code of a type goes to. It is known before the model of the type is
+     * created.
+     */
+    String targetPackageOf(final TypeElement type) {
         final String configuredPackage = getConfiguredPackage();
         final String packageName = packageNameOf(type);
         if (configuredPackage.isBlank()) {
@@ -158,7 +151,7 @@ class TypeModelFactory {
 
     private String getConfiguredPackage() {
         final AnnotationMirror generation =
-                getAnnotationMirrorValue(configurationMirror, "generation");
+                getAnnotationMirrorValue(configuration.mirror(), "generation");
         final AnnotationMirror packageConfig =
                 getAnnotationMirrorValue(generation, "packageConfig");
         return (String) ElementSupport.valueAttribute(processingEnv, packageConfig).getValue();

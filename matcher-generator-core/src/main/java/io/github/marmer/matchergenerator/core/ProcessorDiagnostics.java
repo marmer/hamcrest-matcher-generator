@@ -98,20 +98,17 @@ final class ProcessorDiagnostics {
     }
 
     /**
-     * The verbose note for a non public type that is not generated. Nested and top level types
-     * share it.
+     * A type that is not public is not generated into another package, which is the same for a
+     * nested type and a top level type. A verbose note, placed at the configured value that picked
+     * it up, which is the {@code value} attribute of the configuration.
      */
-    static String skippedNonPublicType(final String qualifiedName) {
-        return "Matcher generation skipped for non public type: " + qualifiedName;
-    }
-
-    /**
-     * A package entry picks up a non public top level type that a package prefix moves into another
-     * package. A verbose note only.
-     */
-    void nonPublicTypeSkipped(final TypeElement type) {
+    void nonPublicTypeSkipped(final TypeElement type, final ConfigurationSite configuration) {
         ElementSupport.logNote(
-                processingEnv, skippedNonPublicType(type.getQualifiedName().toString()), type);
+                processingEnv,
+                "Matcher generation skipped for non public type: " + type.getQualifiedName(),
+                configuration.element(),
+                configuration.mirror(),
+                ElementSupport.valueAttribute(processingEnv, configuration.mirror()));
     }
 
     /**
