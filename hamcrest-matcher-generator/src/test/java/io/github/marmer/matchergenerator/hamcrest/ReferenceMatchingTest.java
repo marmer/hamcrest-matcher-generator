@@ -297,4 +297,21 @@ class ReferenceMatchingTest {
         assertEquals("Could not read property 'name'", error.getMessage());
         assertSame(cause, error.getCause());
     }
+
+    @Test
+    void anErrorThrownByAGetterPropagatesUnwrapped() {
+        final Error error = new Error("broken");
+
+        final Error thrown =
+                assertThrows(
+                        Error.class,
+                        () ->
+                                ReferenceMatching.read(
+                                        "name",
+                                        () -> {
+                                            throw error;
+                                        }));
+
+        assertSame(error, thrown);
+    }
 }
