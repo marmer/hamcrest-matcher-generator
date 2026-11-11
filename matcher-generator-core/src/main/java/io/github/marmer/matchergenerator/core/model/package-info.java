@@ -4,8 +4,8 @@
  */
 
 /**
- * The library-agnostic property model of a configured type: {@link TypeModel}, {@link PropertyModel}
- * and {@link Nullability}.
+ * The library-agnostic property model of a configured type: {@link TypeModel}, {@link
+ * PropertyModel} and {@link Nullability}.
  *
  * <p>This package is internal to the project. The project's own backends are its only users. It
  * makes no stability promise: its types may change in any release. The rule is stated in arc42
