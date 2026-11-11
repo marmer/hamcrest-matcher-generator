@@ -10,6 +10,7 @@ import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -64,6 +65,13 @@ public class MatcherGenerationProcessorWorker {
     private final ProcessorDiagnostics diagnostics;
     private final GeneratedSourceWriter sourceWriter;
 
+    /**
+     * The configuration classes, by qualified name, each with the configured names that matched
+     * neither a type nor a package when they were seen, in the order of the annotation. Strings
+     * only: an {@code Element}, a mirror or a value must not outlive the round it comes from.
+     */
+    private final Map<String, List<String>> unresolvedNames = new LinkedHashMap<>();
+
     public MatcherGenerationProcessorWorker(
             final Supplier<LocalDateTime> timeProvider,
             final ProcessingEnvironment processingEnv,
@@ -93,6 +101,9 @@ public class MatcherGenerationProcessorWorker {
     public boolean process(
             final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
+            // No type can appear after this round, and a file created now is not compiled. So the
+            // names that still match nothing are reported here, once, and nothing is generated.
+            reportUnresolvedNames();
             return false;
         }
         diagnostics.matcherGenerationStarted();
@@ -106,6 +117,9 @@ public class MatcherGenerationProcessorWorker {
                         annotation ->
                                 configurationElements.addAll(
                                         roundEnv.getElementsAnnotatedWith(annotation)));
+        final List<PlannedType> planned = new ArrayList<>(planUnresolvedNames());
+        configurationElements.forEach(element -> planned.addAll(planConfiguration(element)));
+        generate(planned);
         if (configurationElements.isEmpty()) {
             // The matchers written in an earlier round come back without configuration, carrying
             // the annotations the
@@ -122,29 +136,141 @@ public class MatcherGenerationProcessorWorker {
                                     GENERATED_OUTPUT_ANNOTATIONS.contains(
                                             annotation.getQualifiedName().toString()));
         }
-        final List<PlannedType> planned = new ArrayList<>();
-        configurationElements.forEach(element -> planned.addAll(planMatchers(element)));
-        generate(planned);
         return true;
     }
 
-    private List<PlannedType> planMatchers(final Element configurationElement) {
+    /**
+     * Plans a configuration of this round. The names that match a type or a package are planned
+     * now, as before. A name that matches neither is remembered, with the qualified name of the
+     * configuration, and planned in the first later round in which it resolves. The exclusion check
+     * of the configuration runs once: here when no name is remembered, otherwise where its last
+     * remembered name is planned, or when processing is over.
+     */
+    private List<PlannedType> planConfiguration(final Element configurationElement) {
         final List<AnnotationMirror> mirrors = getConfigurationMirrors(configurationElement);
         if (mirrors.size() != 1) {
             diagnostics.bothConfigurationAnnotations(configurationElement);
             return List.of();
         }
-        final AnnotationMirror configurationMirror = mirrors.get(0);
         final ConfigurationSite configuration =
-                new ConfigurationSite(configurationElement, configurationMirror);
-        final Map<String, AnnotationValue> exclusions =
-                distinctEntries(configurationMirror, EXCLUDE_ATTRIBUTE);
-        final Predicate<TypeElement> excluded = excludedBy(exclusions);
+                new ConfigurationSite(configurationElement, mirrors.get(0));
+        final Map<String, AnnotationValue> entries =
+                distinctEntries(mirrors.get(0), VALUE_ATTRIBUTE);
+        final List<String> unresolved = namesMatchingNothing(entries.keySet());
+        if (unresolved.isEmpty()) {
+            warnAboutUnmatchedExclusions(configuration, entries.keySet());
+        } else {
+            unresolvedNames.put(qualifiedNameOf(configurationElement), unresolved);
+        }
+        return planNames(configuration, resolvedEntries(entries));
+    }
+
+    /**
+     * Plans the remembered names that resolve by now, each once, and forgets them. Each remembered
+     * configuration is looked up again by its qualified name. When its last remembered name
+     * resolves, its exclusion check runs, over all of its names.
+     */
+    private List<PlannedType> planUnresolvedNames() {
+        final List<PlannedType> planned = new ArrayList<>();
+        new LinkedHashMap<>(unresolvedNames)
+                .forEach(
+                        (qualifiedName, remembered) -> {
+                            final ConfigurationSite configuration = siteOf(qualifiedName);
+                            final Map<String, AnnotationValue> entries =
+                                    distinctEntries(configuration.mirror(), VALUE_ATTRIBUTE);
+                            final List<String> stillUnresolved = namesMatchingNothing(remembered);
+                            final List<String> nowResolved =
+                                    remembered.stream()
+                                            .filter(name -> !stillUnresolved.contains(name))
+                                            .toList();
+                            planned.addAll(
+                                    planNames(configuration, entriesNamed(entries, nowResolved)));
+                            if (stillUnresolved.isEmpty()) {
+                                unresolvedNames.remove(qualifiedName);
+                                warnAboutUnmatchedExclusions(configuration, entries.keySet());
+                            } else {
+                                unresolvedNames.put(qualifiedName, stillUnresolved);
+                            }
+                        });
+        return planned;
+    }
+
+    /** The entries of the given names, in the order of the entries. */
+    private static Map<String, AnnotationValue> entriesNamed(
+            final Map<String, AnnotationValue> entries, final Collection<String> names) {
+        final Map<String, AnnotationValue> named = new LinkedHashMap<>();
+        entries.forEach(
+                (name, entry) -> {
+                    if (names.contains(name)) {
+                        named.put(name, entry);
+                    }
+                });
+        return named;
+    }
+
+    /**
+     * Processing is over, so nothing is generated. Each name that is still remembered matches
+     * nothing and gets its diagnostic once, at its value. The exclusion check of such a
+     * configuration has not run yet, so it runs here, once, over all of its names.
+     */
+    private void reportUnresolvedNames() {
+        unresolvedNames.forEach(
+                (qualifiedName, names) -> {
+                    final ConfigurationSite configuration = siteOf(qualifiedName);
+                    final Map<String, AnnotationValue> entries =
+                            distinctEntries(configuration.mirror(), VALUE_ATTRIBUTE);
+                    entriesNamed(entries, names)
+                            .forEach(
+                                    (name, configuredValue) ->
+                                            reportNotExistingTypeConfigured(
+                                                    configuration, configuredValue, name));
+                    warnAboutUnmatchedExclusions(configuration, entries.keySet());
+                });
+    }
+
+    /** The names, in their order, that match neither a type nor a package in this round. */
+    private List<String> namesMatchingNothing(final Collection<String> names) {
+        return names.stream().filter(name -> typesNamed(name).isEmpty()).toList();
+    }
+
+    /** The entries of the configured names that match a type or a package, in their order. */
+    private Map<String, AnnotationValue> resolvedEntries(
+            final Map<String, AnnotationValue> entries) {
+        final Map<String, AnnotationValue> resolved = new LinkedHashMap<>();
+        entries.forEach(
+                (name, entry) -> {
+                    if (!typesNamed(name).isEmpty()) {
+                        resolved.put(name, entry);
+                    }
+                });
+        return resolved;
+    }
+
+    /** The configuration class with its annotation, looked up again by its qualified name. */
+    private ConfigurationSite siteOf(final String qualifiedName) {
+        final TypeElement configurationType =
+                processingEnv.getElementUtils().getTypeElement(qualifiedName);
+        return new ConfigurationSite(
+                configurationType, getConfigurationMirrors(configurationType).get(0));
+    }
+
+    /**
+     * The qualified name of a configuration class, which is all a later round keeps of it. The
+     * annotation targets types only, so the element is a type.
+     */
+    private static String qualifiedNameOf(final Element configurationElement) {
+        return ((TypeElement) configurationElement).getQualifiedName().toString();
+    }
+
+    /** Plans the given configured names of a configuration, which all match a type or a package. */
+    private List<PlannedType> planNames(
+            final ConfigurationSite configuration, final Map<String, AnnotationValue> entries) {
+        final AnnotationMirror configurationMirror = configuration.mirror();
+        final Predicate<TypeElement> excluded =
+                excludedBy(distinctEntries(configurationMirror, EXCLUDE_ATTRIBUTE));
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
-                getAllTypeElementsFor(configuration);
-        warnAboutUnmatchedExclusions(typesByGeneratedType, configuration, exclusions);
-        final Map<String, AnnotationValue> namedEntries =
-                namedEntries(distinctEntries(configurationMirror, VALUE_ATTRIBUTE));
+                getAllTypeElementsFor(entries.keySet());
+        final Map<String, AnnotationValue> namedEntries = namedEntries(entries);
         final Set<String> namedTypes = namedEntries.keySet();
         final TypeModelFactory factory =
                 new TypeModelFactory(
@@ -362,17 +488,21 @@ public class MatcherGenerationProcessorWorker {
     }
 
     /**
-     * The types to generate for, each with the configured types it stands for. A nested configured
-     * type is generated with its highest nesting type, which then is not a configured type itself.
+     * The types to generate for the given configured names, each with the configured types it
+     * stands for. A nested configured type is generated with its highest nesting type, which then
+     * is not a configured type itself.
      */
     private Map<TypeElement, Set<TypeElement>> getAllTypeElementsFor(
-            final ConfigurationSite configuration) {
+            final Collection<String> names) {
         final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        distinctEntries(configuration.mirror(), VALUE_ATTRIBUTE)
-                .forEach(
-                        (name, configuredValue) ->
-                                getAllTypeElementsFor(
-                                        name, configuration, configuredValue, result));
+        names.forEach(
+                name ->
+                        typesNamed(name)
+                                .forEach(
+                                        (type, configured) ->
+                                                result.computeIfAbsent(
+                                                                type, key -> new LinkedHashSet<>())
+                                                        .addAll(configured)));
         return result;
     }
 
@@ -400,15 +530,16 @@ public class MatcherGenerationProcessorWorker {
     }
 
     /**
-     * Every exclusion that names none of the types the processor models, neither a generated type
-     * nor one of their public member types, is one warning at the exclusion.
+     * Every exclusion that names none of the types the processor models for the configured names,
+     * neither a generated type nor one of their public member types, is one warning at the
+     * exclusion. The caller runs it once per configuration, when all of its names are final.
      */
     private void warnAboutUnmatchedExclusions(
-            final Map<TypeElement, Set<TypeElement>> typesByGeneratedType,
-            final ConfigurationSite configuration,
-            final Map<String, AnnotationValue> exclusions) {
+            final ConfigurationSite configuration, final Collection<String> names) {
+        final Map<String, AnnotationValue> exclusions =
+                distinctEntries(configuration.mirror(), EXCLUDE_ATTRIBUTE);
         final List<TypeElement> modelledTypes =
-                typesByGeneratedType.keySet().stream()
+                getAllTypeElementsFor(names).keySet().stream()
                         .flatMap(generatedType -> withPublicMemberTypes(generatedType).stream())
                         .toList();
         exclusions.forEach(
@@ -469,11 +600,12 @@ public class MatcherGenerationProcessorWorker {
                                 .toString());
     }
 
-    private void getAllTypeElementsFor(
-            final String currentQualifiedTypeOrPackageName,
-            final ConfigurationSite configuration,
-            final AnnotationValue configuredValue,
-            final Map<TypeElement, Set<TypeElement>> result) {
+    /**
+     * The types a configured name stands for, each with the configured types it stands for. Empty
+     * when the name matches neither a type nor a package in this round.
+     */
+    private Map<TypeElement, Set<TypeElement>> typesNamed(
+            final String currentQualifiedTypeOrPackageName) {
         final Map<TypeElement, Set<TypeElement>> found = new LinkedHashMap<>();
         processingEnv
                 .getElementUtils()
@@ -493,15 +625,7 @@ public class MatcherGenerationProcessorWorker {
             found.computeIfAbsent(highestNestingType, key -> new LinkedHashSet<>())
                     .add(configuredType);
         }
-
-        if (found.isEmpty()) {
-            reportNotExistingTypeConfigured(
-                    configuration, configuredValue, currentQualifiedTypeOrPackageName);
-        }
-        found.forEach(
-                (type, configured) ->
-                        result.computeIfAbsent(type, key -> new LinkedHashSet<>())
-                                .addAll(configured));
+        return found;
     }
 
     private TypeElement getHighestNestingType(final TypeElement typeElement) {
