@@ -229,4 +229,45 @@ class ReferencePresetPlannerTest {
                                 + " is generated in this processing round"),
                 verboseNotes);
     }
+
+    @Test
+    @DisplayName(
+            "A property whose getter declares a checked exception is read through the read helper")
+    void aPropertyWhoseGetterDeclaresACheckedExceptionIsReadThroughTheReadHelper() {
+        final PropertyModel name =
+                new PropertyModel(
+                        "name", TypeMirrors.stringType(), "getName", Nullability.UNSPECIFIED, true);
+        final TypeModel customer = generated(CUSTOMER, name);
+
+        assertEquals(
+                REFERENCE_MATCHING
+                        + ".value("
+                        + REFERENCE_MATCHING
+                        + ".read(\"name\", reference::getName))",
+                plannerFor(customer).presetOf(name).toString());
+        assertEquals(List.of(), verboseNotes);
+    }
+
+    @Test
+    @DisplayName(
+            "A generated type whose getter declares a checked exception is read before it is preset")
+    void aGeneratedTypeWhoseGetterDeclaresACheckedExceptionIsReadBeforeItIsPreset() {
+        final PropertyModel address =
+                new PropertyModel(
+                        "address",
+                        TypeMirrors.typeNamed(ADDRESS),
+                        "getAddress",
+                        Nullability.UNSPECIFIED,
+                        true);
+        final TypeModel customer = generated(CUSTOMER, address);
+
+        assertEquals(
+                REFERENCE_MATCHING
+                        + ".nested("
+                        + REFERENCE_MATCHING
+                        + ".read(\"address\", reference::getAddress), "
+                        + ADDRESS_MATCHER
+                        + ")",
+                plannerFor(customer, addressModel()).presetOf(address).toString());
+    }
 }

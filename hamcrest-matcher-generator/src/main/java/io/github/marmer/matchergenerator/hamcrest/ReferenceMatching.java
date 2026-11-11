@@ -11,6 +11,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -84,6 +85,19 @@ public final class ReferenceMatching {
      */
     public static Matcher<?> value(final @Nullable Object value) {
         return value == null ? Matchers.nullValue() : Matchers.equalTo(value);
+    }
+
+    /**
+     * Reads a property of a reference object for the generated {@code isXLike(reference)} methods
+     * where the getter declares a checked exception. A getter that throws fails like a reflective
+     * read, with {@code Could not read property 'name'} and the exception as cause.
+     *
+     * @param propertyName the name of the property, for the failure
+     * @param getter reads the property from the reference object
+     * @return the value of the property
+     */
+    public static <V> @Nullable V read(final String propertyName, final Callable<V> getter) {
+        return PropertyAccess.call(propertyName, getter);
     }
 
     /**
