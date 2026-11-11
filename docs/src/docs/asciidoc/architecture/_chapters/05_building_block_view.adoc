@@ -92,7 +92,7 @@ configured type. The core has no compile dependency on any backend, so it loads 
 guard this.
 
 The backend interface is internal to the project. `GeneratorBackend`, `GenerationContext`, `GeneratedSource` and the property model
-(`TypeModel`, `PropertyModel`) are used by the project's own backends only. They make no stability promise and may change in any
+(`TypeModel`, `PropertyModel`, `Nullability`, and the helper `TypeHierarchy` of the same package) are used by the project's own backends only. They make no stability promise and may change in any
 release, including a patch release. The package Javadoc
 of `core.spi` and `core.model` says the same, and <<adr-0001,ADR 0001>> records the amendment.
 

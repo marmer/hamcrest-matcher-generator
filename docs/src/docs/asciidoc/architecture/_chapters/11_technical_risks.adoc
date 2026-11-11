@@ -54,7 +54,7 @@ a|
 |medium
 |disabling
 |The processor knows the types generated in the running round and nothing else: there is no registry of generated types across rounds and compilations. A file that is written once per package, such as the AssertJ mixin or the `PropertyRepresentation`, therefore knows only the types of the round or compilation that wrote it. Under KAPT the main and the test compilation of one package each write their own (<<files-once-per-package,chapter 6>>, <<adr-0006,ADR 0006>>).
-|<<adr-0006,ADR 0006>> makes the visible cases diagnostics: a later round gets a warning at the annotation, and a class of the same package from another compilation gets a note. The representation of a second compilation gets no note, and the types of the first stay unknown to it. The user adds the types to the configuration of the first round, or generates the configuration class before the processor runs, as the warning says.
+|<<adr-0006,ADR 0006>> makes the visible cases diagnostics: a later round gets a warning at the annotation, and a class of the same package from another compilation gets a note. The representation of a second compilation gets no note, and the types of the first stay unknown to it. The warning names the file and the types it does not know, but not a remedy. The remedy this document recommends is to add those types to the configuration of the first round, or to generate the configuration class before the processor runs.
 
 |Risk: a compromised dependency is released automatically
 |low
