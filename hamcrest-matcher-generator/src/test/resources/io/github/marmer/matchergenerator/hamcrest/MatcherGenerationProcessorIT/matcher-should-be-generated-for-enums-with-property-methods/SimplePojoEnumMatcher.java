@@ -28,7 +28,8 @@ public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> imple
     return this;
   }
 
-  public SimplePojoEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
+  public SimplePojoEnumMatcher withDeclaringClass(
+      final Matcher<? super Class<? extends SimplePojoEnum>> matcher) {
     beanPropertyMatcher.with("declaringClass", matcher);
     return this;
   }
@@ -58,7 +59,7 @@ public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> imple
     return this;
   }
 
-  public SimplePojoEnumMatcher withDeclaringClass(final Class<?> value) {
+  public SimplePojoEnumMatcher withDeclaringClass(final Class<? extends SimplePojoEnum> value) {
     beanPropertyMatcher.with("declaringClass", Matchers.equalTo(value));
     return this;
   }
