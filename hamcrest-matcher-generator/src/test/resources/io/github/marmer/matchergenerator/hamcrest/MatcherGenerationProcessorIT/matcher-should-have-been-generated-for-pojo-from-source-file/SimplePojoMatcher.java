@@ -21,7 +21,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, "someStringProperty", "somePrimitiveBooleanProperty", "someNonePrimitiveBooleanProperty", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, BeanPropertyMatcher.property("someStringProperty", SimplePojo::getSomeStringProperty), BeanPropertyMatcher.property("somePrimitiveBooleanProperty", SimplePojo::isSomePrimitiveBooleanProperty), BeanPropertyMatcher.property("someNonePrimitiveBooleanProperty", SimplePojo::getSomeNonePrimitiveBooleanProperty), BeanPropertyMatcher.property("class", SimplePojo::getClass));
   }
 
   public SimplePojoMatcher withSomeStringProperty(final Matcher<? super String> matcher) {
@@ -154,7 +154,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;
 
     public InnerStaticPojoMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class, "innerStaticPojoProperty", "class");
+      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo>(SimplePojo.InnerStaticPojo.class, BeanPropertyMatcher.property("innerStaticPojoProperty", SimplePojo.InnerStaticPojo::getInnerStaticPojoProperty), BeanPropertyMatcher.property("class", SimplePojo.InnerStaticPojo::getClass));
     }
 
     public InnerStaticPojoMatcher withInnerStaticPojoProperty(
@@ -246,7 +246,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
 
       public InnerInnerStaticPojoMatcher() {
-        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class, "class");
+        beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo>(SimplePojo.InnerStaticPojo.InnerInnerStaticPojo.class, BeanPropertyMatcher.property("class", SimplePojo.InnerStaticPojo.InnerInnerStaticPojo::getClass));
       }
 
       public InnerInnerStaticPojoMatcher withClass(final Matcher<? super Class<?>> matcher) {

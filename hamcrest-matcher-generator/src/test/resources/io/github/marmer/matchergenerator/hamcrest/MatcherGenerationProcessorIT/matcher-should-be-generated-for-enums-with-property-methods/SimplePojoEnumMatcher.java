@@ -20,7 +20,7 @@ public class SimplePojoEnumMatcher extends TypeSafeMatcher<SimplePojoEnum> imple
   private final BeanPropertyMatcher<SimplePojoEnum> beanPropertyMatcher;
 
   public SimplePojoEnumMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoEnum>(SimplePojoEnum.class, "someStringProperty", "declaringClass", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoEnum>(SimplePojoEnum.class, BeanPropertyMatcher.property("someStringProperty", SimplePojoEnum::getSomeStringProperty), BeanPropertyMatcher.property("declaringClass", SimplePojoEnum::getDeclaringClass), BeanPropertyMatcher.property("class", SimplePojoEnum::getClass));
   }
 
   public SimplePojoEnumMatcher withSomeStringProperty(final Matcher<? super String> matcher) {

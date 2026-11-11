@@ -27,7 +27,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
   private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class, "name", "nickname", "count", "limit", "tags", "parts", "payload", "entry", "requiredEntry", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class, BeanPropertyMatcher.property("name", SimplePojo::getName), BeanPropertyMatcher.property("nickname", SimplePojo::getNickname), BeanPropertyMatcher.property("count", SimplePojo::getCount), BeanPropertyMatcher.property("limit", SimplePojo::getLimit), BeanPropertyMatcher.property("tags", SimplePojo::getTags), BeanPropertyMatcher.property("parts", SimplePojo::getParts), BeanPropertyMatcher.property("payload", SimplePojo::getPayload), BeanPropertyMatcher.property("entry", SimplePojo::getEntry), BeanPropertyMatcher.property("requiredEntry", SimplePojo::getRequiredEntry), BeanPropertyMatcher.property("class", SimplePojo::getClass));
   }
 
   public SimplePojoMatcher withName(final Matcher<? super String> matcher) {
@@ -289,7 +289,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     private final BeanPropertyMatcher<SimplePojo.Inner> beanPropertyMatcher;
 
     public InnerMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class, "innerName", "class");
+      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class, BeanPropertyMatcher.property("innerName", SimplePojo.Inner::getInnerName), BeanPropertyMatcher.property("class", SimplePojo.Inner::getClass));
     }
 
     public InnerMatcher withInnerName(final Matcher<? super String> matcher) {

@@ -19,7 +19,7 @@ public class SimplePojo1Matcher extends TypeSafeMatcher<SimplePojo1> implements 
   private final BeanPropertyMatcher<SimplePojo1> beanPropertyMatcher;
 
   public SimplePojo1Matcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo1>(SimplePojo1.class, "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo1>(SimplePojo1.class, BeanPropertyMatcher.property("class", SimplePojo1::getClass));
   }
 
   public SimplePojo1Matcher withClass(final Matcher<? super Class<?>> matcher) {

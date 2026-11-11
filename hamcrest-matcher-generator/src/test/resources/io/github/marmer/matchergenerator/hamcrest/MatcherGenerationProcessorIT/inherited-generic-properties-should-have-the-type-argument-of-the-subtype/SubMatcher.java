@@ -24,7 +24,7 @@ public class SubMatcher extends TypeSafeMatcher<Sub> implements GeneratedBeanMat
   private final BeanPropertyMatcher<Sub> beanPropertyMatcher;
 
   public SubMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Sub>(Sub.class, "value", "items", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<Sub>(Sub.class, BeanPropertyMatcher.property("value", Sub::getValue), BeanPropertyMatcher.property("items", Sub::getItems), BeanPropertyMatcher.property("class", Sub::getClass));
   }
 
   public SubMatcher withValue(final Matcher<? super @Nullable String> matcher) {

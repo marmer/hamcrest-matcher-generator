@@ -24,7 +24,7 @@ public class PersonRecordMatcher extends TypeSafeMatcher<PersonRecord> implement
   private final BeanPropertyMatcher<PersonRecord> beanPropertyMatcher;
 
   public PersonRecordMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<PersonRecord>(PersonRecord.class, "name", "nickname", "age", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<PersonRecord>(PersonRecord.class, BeanPropertyMatcher.property("name", PersonRecord::name), BeanPropertyMatcher.property("nickname", PersonRecord::nickname), BeanPropertyMatcher.property("age", PersonRecord::age), BeanPropertyMatcher.property("class", PersonRecord::getClass));
   }
 
   public PersonRecordMatcher withName(final Matcher<? super String> matcher) {

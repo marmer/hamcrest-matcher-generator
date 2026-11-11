@@ -19,7 +19,7 @@ public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterf
   private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
 
   public SimplePojoInterfaceMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class, "someStringArray", "someMultidimensionalStringArray", "someInnerTypeArray", "somePrimitiveArray", "someMultidimensionalPrimitiveArray");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class, BeanPropertyMatcher.property("someStringArray", SimplePojoInterface::getSomeStringArray), BeanPropertyMatcher.property("someMultidimensionalStringArray", SimplePojoInterface::getSomeMultidimensionalStringArray), BeanPropertyMatcher.property("someInnerTypeArray", SimplePojoInterface::getSomeInnerTypeArray), BeanPropertyMatcher.property("somePrimitiveArray", SimplePojoInterface::getSomePrimitiveArray), BeanPropertyMatcher.property("someMultidimensionalPrimitiveArray", SimplePojoInterface::getSomeMultidimensionalPrimitiveArray));
   }
 
   public SimplePojoInterfaceMatcher withSomeStringArray(final Matcher<? super String[]> matcher) {

@@ -24,7 +24,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?, ?>> impleme
   private final BeanPropertyMatcher<SimplePojo<?, ?>> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?, ?>>(SimplePojo.class, "property", "nestedGenericProperty", "wildcardProperty");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?, ?>>(SimplePojo.class, BeanPropertyMatcher.property("property", SimplePojo::getProperty), BeanPropertyMatcher.property("nestedGenericProperty", SimplePojo::getNestedGenericProperty), BeanPropertyMatcher.property("wildcardProperty", SimplePojo::getWildcardProperty));
   }
 
   public SimplePojoMatcher withProperty(final Matcher<? super Object> matcher) {
