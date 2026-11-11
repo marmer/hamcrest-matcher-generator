@@ -24,7 +24,7 @@
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <!-- the version Maven 3.9 binds to every module by default; pinned here so the site-root copy below has a version -->
         <maven.resources.plugin.version>3.5.0</maven.resources.plugin.version>
-        <properties.maven.plugin.version>1.3.1</properties.maven.plugin.version>
+        <!-- Also named in .mvn/jvm.config (diagram.structurizrcli.home) so the Maven JVM knows the home from its start; keep the two in step. -->
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
@@ -133,7 +133,9 @@
                 </configuration>
             </plugin>
             <!-- asciidoctorj-diagram's structurizr block wants the home of a Structurizr CLI. A folder whose lib/ holds
-                the jars is enough, so no CLI download and no Docker is needed. -->
+                the jars is enough, so no CLI download and no Docker is needed. The home is named to the Maven JVM in
+                .mvn/jvm.config, not by a plugin during the build: surefire and failsafe of other modules restore a
+                snapshot of the JVM's system properties, which in a parallel reactor drops a property set in between. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -178,29 +180,6 @@
                                     </includes>
                                 </resource>
                             </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- asciidoctorj-diagram reads the home from this system property of the Maven JVM. -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-                <version>${properties.maven.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>structurizr-cli-home</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>set-system-properties</goal>
-                        </goals>
-                        <configuration>
-                            <properties>
-                                <property>
-                                    <name>diagram.structurizrcli.home</name>
-                                    <value>${structurizr.home}</value>
-                                </property>
-                            </properties>
                         </configuration>
                     </execution>
                 </executions>
