@@ -15,7 +15,6 @@ import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import org.junit.jupiter.api.Test;
 
 class MatcherGenerationProcessorIT {
 
-    private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
     private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
 
     @Test
@@ -2264,7 +2262,7 @@ class MatcherGenerationProcessorIT {
                 Compiler.javac()
                         .withClasspath(
                                 withJSpecify ? classPathWithJSpecify() : classPathWithoutJSpecify())
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .withOptions("-Xlint:all")
                         .compile(Arrays.asList(configuration, pojo));
 
@@ -2279,13 +2277,13 @@ class MatcherGenerationProcessorIT {
     private static Compilation compile(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withClasspath(classPathWithoutJSpecify())
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
     private static Compilation compileWithJSpecify(final JavaFileObject... sources) {
         return Compiler.javac()
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
@@ -2305,7 +2303,7 @@ class MatcherGenerationProcessorIT {
     private static Compilation compileVerbose(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withClasspath(classPathWithoutJSpecify())
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .withOptions("-Amatchergenerator.verbose")
                 .compile(Arrays.asList(sources));
     }

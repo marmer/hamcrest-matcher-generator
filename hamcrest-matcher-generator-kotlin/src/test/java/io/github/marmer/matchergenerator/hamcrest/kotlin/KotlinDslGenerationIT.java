@@ -18,7 +18,6 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,7 +42,6 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class KotlinDslGenerationIT {
 
-    private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
     private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
     private static final String SIMPLE_POJO_DSL = "some/other/pck/SimplePojoMatcherDsl.kt";
     private static final String SCENARIOS =
@@ -326,7 +324,7 @@ class KotlinDslGenerationIT {
         CompilationSubject.assertThat(
                         Compiler.javac()
                                 .withOptions("-Akapt.kotlin.generated=" + reordered)
-                                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                                .withProcessors(new MatcherGenerationProcessor())
                                 .compile(
                                         configuration(
                                                 "some.other.pck.B",
@@ -775,7 +773,7 @@ import java.util.Set;
 
         final Compilation withoutKapt =
                 Compiler.javac()
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .compile(configuration, first, second);
         final Compilation withKapt = compileWithKapt(configuration, first, second);
 
@@ -836,8 +834,7 @@ import java.util.Set;
         final Compilation compilation =
                 Compiler.javac()
                         .withProcessors(
-                                new MatcherGenerationProcessor(() -> NOW),
-                                new LateConfigurationProcessor())
+                                new MatcherGenerationProcessor(), new LateConfigurationProcessor())
                         .compile(
                                 configuration("some.other.pck.First"),
                                 simpleBean("First"),
@@ -1100,7 +1097,7 @@ import java.util.Set;
     private Compilation compileWithKapt(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 

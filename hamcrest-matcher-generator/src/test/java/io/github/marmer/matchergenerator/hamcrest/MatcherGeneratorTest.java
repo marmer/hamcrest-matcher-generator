@@ -10,7 +10,6 @@ import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
-import java.time.LocalDateTime;
 import java.util.List;
 import javax.lang.model.type.TypeMirror;
 import org.junit.jupiter.api.Test;
@@ -33,10 +32,7 @@ class MatcherGeneratorTest {
                         List.of());
 
         final List<String> methodNames =
-                new MatcherGenerator(
-                                model,
-                                new GenerationContext(
-                                        "generator", LocalDateTime.of(2020, 1, 1, 0, 0), false))
+                new MatcherGenerator(model, new GenerationContext("generator", false))
                         .getPreparedTypeSpecBuilder().build().methodSpecs.stream()
                                 .map(method -> method.name)
                                 .toList();
