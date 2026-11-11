@@ -83,7 +83,7 @@ a|
 |Technical debt: the processor and the runtime library share one artifact
 |high
 |tolerable
-|`hamcrest-matcher-generator` is both the Hamcrest backend and the runtime library that the generated matchers call. Every user who adds it also puts the processor's libraries on the test class path: JavaPoet, `matcher-generator-core`, `matcher-generator-annotations` and JSpecify (<<qs-n2,QS-N2>>).
+|`hamcrest-matcher-generator` is both the Hamcrest backend and the runtime library that the generated matchers call. Every user who adds it also puts the processor's libraries on the test class path: JavaPoet (`com.palantir.javapoet:javapoet`), `matcher-generator-core`, `matcher-generator-annotations` and JSpecify (<<qs-n2,QS-N2>>).
 |Accepted for the coordinates promise of <<adr-0002,ADR 0002>>: `hamcrest-matcher-generator` keeps both roles, so 5.x users find the runtime under the coordinates they already use. The extra libraries are listed in QS-N2 and the dependency tree shows them.
 
 |Risk: a release builds with a wrong module version
