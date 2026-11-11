@@ -88,7 +88,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n2]]QS-N2
 | Compatibility / Co-existence
-| *A small footprint on Java 17.* When a test developer runs tests on Java 17 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify, JavaPoet and the project's own artifacts `matcher-generator-core` and `matcher-generator-annotations`, which the backend artifacts bring in transitively (the Kotlin DSL artifact also brings KotlinPoet); bytecode level 17 and this dependency list are verified on every build.
+| *A small footprint on Java 17.* When a test developer runs tests on Java 17 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify, JavaPoet and the project's own artifacts `matcher-generator-core` and `matcher-generator-annotations`, which the backend artifacts bring in transitively (the Kotlin DSL artifact also brings KotlinPoet). Bytecode level 17 is verified on every build.
 | Maven Enforcer; Verify JDK 17
 
 | [[qs-n3]]QS-N3
