@@ -33,8 +33,8 @@ class MatcherGeneratorTest {
 
         final List<String> methodNames =
                 new MatcherGenerator(model, new GenerationContext("generator", false))
-                        .getPreparedTypeSpecBuilder().build().methodSpecs.stream()
-                                .map(method -> method.name)
+                        .getPreparedTypeSpecBuilder().build().methodSpecs().stream()
+                                .map(method -> method.name())
                                 .toList();
 
         assertTrue(methodNames.contains("with"), () -> "Methods: " + methodNames);

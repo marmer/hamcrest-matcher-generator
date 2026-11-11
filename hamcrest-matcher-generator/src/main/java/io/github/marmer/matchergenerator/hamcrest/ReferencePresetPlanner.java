@@ -6,8 +6,8 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
 import io.github.marmer.matchergenerator.core.model.TypeModel;

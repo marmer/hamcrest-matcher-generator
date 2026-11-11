@@ -6,13 +6,13 @@ package io.github.marmer.matchergenerator.assertj;
 
 import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
+import com.palantir.javapoet.FieldSpec;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeSpec;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
 import io.github.marmer.matchergenerator.core.model.TypeHierarchy.Supertype;
@@ -67,7 +67,7 @@ final class RepresentationGenerator {
                         .addAnnotation(Override.class)
                         .addModifiers(Modifier.PROTECTED)
                         .addParameter(
-                                FileShell.nullable(TypeName.OBJECT, context),
+                                FileShell.nullable(ClassName.OBJECT, context),
                                 OBJECT,
                                 Modifier.FINAL)
                         .returns(String.class)
@@ -96,7 +96,7 @@ final class RepresentationGenerator {
      */
     private static FieldSpec renderingField() {
         final TypeName objectSet =
-                ParameterizedTypeName.get(ClassName.get(Set.class), TypeName.OBJECT);
+                ParameterizedTypeName.get(ClassName.get(Set.class), ClassName.OBJECT);
         return FieldSpec.builder(
                         ParameterizedTypeName.get(ClassName.get(ThreadLocal.class), objectSet),
                         RENDERING,
