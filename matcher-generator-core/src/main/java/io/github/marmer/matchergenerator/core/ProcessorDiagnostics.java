@@ -97,9 +97,9 @@ final class ProcessorDiagnostics {
     }
 
     /**
-     * A type that is not public is not generated into another package, which is the same for a
-     * nested type and a top level type. A verbose note at the declaration of the type, where the
-     * note for a nested type has always been.
+     * A type that is not public is not generated into another package, whether it is nested or top
+     * level. A verbose note at the declaration of the type. Before that rule, the note for a nested
+     * type was placed at the configured value instead.
      */
     void nonPublicTypeSkipped(final TypeElement type) {
         ElementSupport.logNote(
