@@ -12,10 +12,7 @@ import org.assertj.core.presentation.StandardRepresentation;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 @NullMarked
 public class PropertyRepresentation extends StandardRepresentation {
   private static final ThreadLocal<Set<Object>> RENDERING = ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>()));

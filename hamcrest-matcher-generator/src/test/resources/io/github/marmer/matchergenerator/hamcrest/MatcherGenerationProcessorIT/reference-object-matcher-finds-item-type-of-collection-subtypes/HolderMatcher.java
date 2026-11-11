@@ -18,10 +18,7 @@ import some.lib.Index;
 import some.lib.Lines;
 import some.lib.Named;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<Holder> beanPropertyMatcher;
 

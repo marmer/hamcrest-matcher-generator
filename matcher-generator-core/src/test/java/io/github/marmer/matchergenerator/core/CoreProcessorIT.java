@@ -22,7 +22,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +45,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  * SPI.
  */
 class CoreProcessorIT {
-
-    private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     /**
      * 5.x detects {@code Object.getClass()} as a property, and the generated matchers rely on it.
@@ -116,7 +113,7 @@ class CoreProcessorIT {
     }
 
     private static Compilation compile(final Compiler compiler, final JavaFileObject... sources) {
-        return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW))
+        return compiler.withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
@@ -124,7 +121,7 @@ class CoreProcessorIT {
             final Compiler compiler,
             final Processor otherProcessor,
             final JavaFileObject... sources) {
-        return compiler.withProcessors(new MatcherGenerationProcessor(() -> NOW), otherProcessor)
+        return compiler.withProcessors(new MatcherGenerationProcessor(), otherProcessor)
                 .compile(Arrays.asList(sources));
     }
 
@@ -641,7 +638,7 @@ class CoreProcessorIT {
                                     "-Akapt.kotlin.generated=" + kotlinOutput),
                             null,
                             Arrays.asList(sources));
-            task.setProcessors(List.of(new MatcherGenerationProcessor(() -> NOW)));
+            task.setProcessors(List.of(new MatcherGenerationProcessor()));
             assertTrue(task.call(), () -> "Diagnostics: " + diagnostics.getDiagnostics());
         }
     }
@@ -1880,8 +1877,8 @@ class CoreProcessorIT {
     }
 
     @Test
-    @DisplayName("Backends get the generator name and the generation time")
-    void backendsGetTheGeneratorNameAndTheGenerationTime() {
+    @DisplayName("Backends get the generator name")
+    void backendsGetTheGeneratorName() {
         final JavaFileObject bean =
                 JavaFileObjects.forSourceLines(
                         "some.other.pck.SomePojo",
@@ -1895,7 +1892,6 @@ class CoreProcessorIT {
         assertEquals(
                 "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
                 RecordingBackend.contexts().get(0).generatorName());
-        assertEquals(NOW, RecordingBackend.contexts().get(0).generationTime());
     }
 
     @Test
@@ -2052,7 +2048,7 @@ class CoreProcessorIT {
                 javacWith()
                         .withProcessors(
                                 new FirstRoundTypeProcessor("gen.Made"),
-                                new MatcherGenerationProcessor(() -> NOW))
+                                new MatcherGenerationProcessor())
                         .compile(List.of(configuration));
 
         CompilationSubject.assertThat(compilation).succeeded();
@@ -2071,7 +2067,7 @@ class CoreProcessorIT {
     private Compilation compileWithOtherFirst(
             final Processor other, final JavaFileObject... sources) {
         return javacWith()
-                .withProcessors(other, new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(other, new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
@@ -3044,29 +3040,6 @@ class CoreProcessorIT {
         assertEquals("", model.packageName());
         assertEquals("", model.targetPackage());
         assertTrue(compilation.generatedSourceFile("DefaultPojoRecorded").isPresent());
-    }
-
-    @Test
-    @DisplayName("Without an injected clock the processor stamps the current time")
-    void theDefaultProcessorStampsTheCurrentTime() {
-        final JavaFileObject bean =
-                JavaFileObjects.forSourceLines(
-                        "some.other.pck.SomePojo",
-                        "package some.other.pck;",
-                        "public class SomePojo {",
-                        "}");
-
-        final LocalDateTime before = LocalDateTime.now();
-        final Compilation compilation =
-                javacWith()
-                        .withProcessors(new MatcherGenerationProcessor())
-                        .compile(Arrays.asList(configuration("\"some.other.pck.SomePojo\""), bean));
-        final LocalDateTime after = LocalDateTime.now();
-
-        CompilationSubject.assertThat(compilation).succeeded();
-        final LocalDateTime stamped = RecordingBackend.contexts().get(0).generationTime();
-        assertFalse(stamped.isBefore(before));
-        assertFalse(stamped.isAfter(after));
     }
 
     @Test

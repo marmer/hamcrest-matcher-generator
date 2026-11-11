@@ -17,10 +17,7 @@ import org.assertj.core.presentation.Representation;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 @NullMarked
 public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF, ACTUAL>, ACTUAL extends Order> extends AbstractObjectAssert<SELF, ACTUAL> {
   private static final List<String> PROPERTY_NAMES = List.of("customer");
@@ -91,10 +88,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
     return myself;
   }
 
-  @Generated(
-      value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-      date = "2020-01-01T00:00"
-  )
+  @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
   public abstract static class AbstractCustomerAssert<SELF extends AbstractCustomerAssert<SELF, ACTUAL>, ACTUAL extends Order.Customer> extends AbstractObjectAssert<SELF, ACTUAL> {
     private static final List<String> PROPERTY_NAMES = List.of("name");
 
@@ -163,10 +157,7 @@ public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF,
       return myself;
     }
 
-    @Generated(
-        value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-        date = "2020-01-01T00:00"
-    )
+    @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
     public abstract static class AbstractAddressAssert<SELF extends AbstractAddressAssert<SELF, ACTUAL>, ACTUAL extends Order.Customer.Address> extends AbstractObjectAssert<SELF, ACTUAL> {
       private static final List<String> PROPERTY_NAMES = List.of("city");
 

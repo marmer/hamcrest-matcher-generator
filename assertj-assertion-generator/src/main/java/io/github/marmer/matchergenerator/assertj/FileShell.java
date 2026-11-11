@@ -25,11 +25,10 @@ final class FileShell {
 
     private FileShell() {}
 
-    /** The {@code @Generated} annotation naming the generator and the time of the generation. */
+    /** The {@code @Generated} annotation naming the generator. */
     static AnnotationSpec generatedAnnotation(final GenerationContext context) {
         return AnnotationSpec.builder(Generated.class)
                 .addMember(VALUE, "$S", context.generatorName())
-                .addMember("date", "$S", context.generationTime())
                 .build();
     }
 

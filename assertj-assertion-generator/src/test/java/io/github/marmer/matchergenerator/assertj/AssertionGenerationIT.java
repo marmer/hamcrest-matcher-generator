@@ -19,10 +19,11 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -42,7 +43,6 @@ class AssertionGenerationIT {
     private static final Pattern CLASS_DECLARATION =
             Pattern.compile("class (\\w+)(?:<.*?>)?\\s+extends\\s+(\\w+)", Pattern.DOTALL);
     private static final Pattern TYPE_DECLARATION = Pattern.compile("(?:class|interface) (\\w+)");
-    private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     @Test
     @DisplayName("A bean gets an abstract assertion class and a concrete one")
@@ -1164,7 +1164,7 @@ class AssertionGenerationIT {
         final Compilation test =
                 Compiler.javac()
                         .withClasspath(classPath)
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .compile(
                                 configurationNamed("SecondConfiguration", "some.other.pck.Order"),
                                 beanWithAName("Order"));
@@ -1214,7 +1214,7 @@ class AssertionGenerationIT {
                                     String.join(File.pathSeparator, classPath)),
                             null,
                             Arrays.asList(sources));
-            task.setProcessors(List.of(new MatcherGenerationProcessor(() -> NOW)));
+            task.setProcessors(List.of(new MatcherGenerationProcessor()));
             assertTrue(task.call(), () -> "Diagnostics: " + diagnostics.getDiagnostics());
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
@@ -1260,7 +1260,7 @@ class AssertionGenerationIT {
         final Compilation compilation =
                 Compiler.javac()
                         .withProcessors(
-                                new MatcherGenerationProcessor(() -> NOW),
+                                new MatcherGenerationProcessor(),
                                 new LateConfigurationProcessor(
                                         "some.pck.LateConfiguration", "some.other.pck.Order"))
                         .compile(
@@ -1553,7 +1553,7 @@ class AssertionGenerationIT {
         final Compilation compilation =
                 Compiler.javac()
                         .withClasspath(classPathWithJSpecify())
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .withOptions("-Xlint:all")
                         .compile(
                                 configuration("some.other.pck.Box"),
@@ -1613,7 +1613,7 @@ class AssertionGenerationIT {
         final Compilation compilation =
                 Compiler.javac()
                         .withClasspath(classPath)
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .withOptions("-Xlint:all")
                         .compile(
                                 configuration("some.other.pck.Pojo"),
@@ -1637,6 +1637,45 @@ class AssertionGenerationIT {
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
     }
 
+    /**
+     * Nothing in a generated source may depend on when or how often the processor runs, so two
+     * compilations of the same sources give the same files.
+     */
+    @Test
+    @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
+    void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
+        final JavaFileObject[] sources = {
+            configuration("some.other.pck.SimplePojo"), beanWithAName("SimplePojo")
+        };
+
+        final Map<String, String> first = generatedSources(compileWithJSpecify(sources));
+        final Map<String, String> second = generatedSources(compileWithJSpecify(sources));
+
+        assertEquals(
+                List.of(
+                        "AbstractSimplePojoAssert.java",
+                        "PropertyRepresentation.java",
+                        "SimplePojoAssert.java",
+                        "SoftAssertionsProvider.java"),
+                simpleNames(first));
+        assertEquals(first, second);
+    }
+
+    private static Map<String, String> generatedSources(final Compilation compilation)
+            throws IOException {
+        final Map<String, String> sources = new TreeMap<>();
+        for (final JavaFileObject generated : compilation.generatedSourceFiles()) {
+            sources.put(generated.getName(), generated.getCharContent(true).toString());
+        }
+        return sources;
+    }
+
+    private static List<String> simpleNames(final Map<String, String> sources) {
+        return sources.keySet().stream()
+                .map(name -> name.substring(name.lastIndexOf('/') + 1))
+                .toList();
+    }
+
     private static JavaFileObject configuration(final String... configuredTypes) {
         return JavaFileObjects.forSourceLines(
                 "some.pck.SomeConfiguration",
@@ -1653,14 +1692,14 @@ class AssertionGenerationIT {
 
     private static Compilation compileWithJSpecify(final JavaFileObject... sources) {
         return Compiler.javac()
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
     private static Compilation compileWithoutJSpecify(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withClasspath(classPathWithoutJSpecify())
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 

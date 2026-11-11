@@ -15,17 +15,16 @@ import com.google.testing.compile.JavaFileObjects;
 import io.github.marmer.matchergenerator.core.MatcherGenerationProcessor;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class MatcherGenerationProcessorIT {
-
-    private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
@@ -1935,6 +1934,45 @@ class MatcherGenerationProcessorIT {
                 .generatedSourceFile("some.other.pck.HolderMatcher");
     }
 
+    /**
+     * Nothing in a generated source may depend on when or how often the processor runs, so two
+     * compilations of the same sources give the same files.
+     */
+    @Test
+    @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
+    void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
+        final JavaFileObject[] sources = {
+            generateMatchersConfiguration("some.other.pck.SimplePojo"),
+            JavaFileObjects.forSourceLines(
+                    "some.other.pck.SimplePojo",
+                    "package some.other.pck;",
+                    "public class SimplePojo {",
+                    "    public String getName() { return null; }",
+                    "}")
+        };
+
+        final Map<String, String> first = generatedSources(compileWithJSpecify(sources));
+        final Map<String, String> second = generatedSources(compileWithJSpecify(sources));
+
+        assertEquals(List.of("SimplePojoMatcher.java"), simpleNames(first));
+        assertEquals(first, second);
+    }
+
+    private static Map<String, String> generatedSources(final Compilation compilation)
+            throws IOException {
+        final Map<String, String> sources = new TreeMap<>();
+        for (final JavaFileObject generated : compilation.generatedSourceFiles()) {
+            sources.put(generated.getName(), generated.getCharContent(true).toString());
+        }
+        return sources;
+    }
+
+    private static List<String> simpleNames(final Map<String, String> sources) {
+        return sources.keySet().stream()
+                .map(name -> name.substring(name.lastIndexOf('/') + 1))
+                .toList();
+    }
+
     private static JavaFileObject orderWithPropertiesOfUnconfiguredTypes() {
         return JavaFileObjects.forSourceLines(
                 "some.other.pck.Order",
@@ -2211,7 +2249,7 @@ class MatcherGenerationProcessorIT {
                 Compiler.javac()
                         .withClasspath(
                                 withJSpecify ? classPathWithJSpecify() : classPathWithoutJSpecify())
-                        .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                        .withProcessors(new MatcherGenerationProcessor())
                         .withOptions("-Xlint:all")
                         .compile(Arrays.asList(configuration, pojo));
 
@@ -2226,13 +2264,13 @@ class MatcherGenerationProcessorIT {
     private static Compilation compile(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withClasspath(classPathWithoutJSpecify())
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
     private static Compilation compileWithJSpecify(final JavaFileObject... sources) {
         return Compiler.javac()
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .compile(Arrays.asList(sources));
     }
 
@@ -2252,7 +2290,7 @@ class MatcherGenerationProcessorIT {
     private static Compilation compileVerbose(final JavaFileObject... sources) {
         return Compiler.javac()
                 .withClasspath(classPathWithoutJSpecify())
-                .withProcessors(new MatcherGenerationProcessor(() -> NOW))
+                .withProcessors(new MatcherGenerationProcessor())
                 .withOptions("-Amatchergenerator.verbose")
                 .compile(Arrays.asList(sources));
     }

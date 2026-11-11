@@ -17,10 +17,7 @@ import org.assertj.core.presentation.Representation;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 @NullMarked
 public abstract class AbstractSubAssert<SELF extends AbstractSubAssert<SELF, ACTUAL>, ACTUAL extends Sub> extends AbstractObjectAssert<SELF, ACTUAL> {
   private static final List<String> PROPERTY_NAMES = List.of("value", "items");

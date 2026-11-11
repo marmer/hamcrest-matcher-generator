@@ -7,7 +7,6 @@ package io.github.marmer.matchergenerator.core;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -58,7 +56,6 @@ public class MatcherGenerationProcessorWorker {
     private static final String LEGACY_GENERATOR_NAME =
             "io.github.marmer.annotationprocessing.MatcherGenerationProcessor";
 
-    private final Supplier<LocalDateTime> timeProvider;
     private final ProcessingEnvironment processingEnv;
     private final String generatorName;
     private final List<GeneratorBackend> backends;
@@ -73,11 +70,9 @@ public class MatcherGenerationProcessorWorker {
     private final Map<String, List<String>> unresolvedNames = new LinkedHashMap<>();
 
     public MatcherGenerationProcessorWorker(
-            final Supplier<LocalDateTime> timeProvider,
             final ProcessingEnvironment processingEnv,
             final String generatorName,
             final List<GeneratorBackend> backends) {
-        this.timeProvider = timeProvider;
         this.processingEnv = processingEnv;
         this.generatorName = generatorName;
         this.backends = List.copyOf(backends);
@@ -372,14 +367,12 @@ public class MatcherGenerationProcessorWorker {
     private void generate(final List<PlannedType> planned) {
         final List<TypeModel> models = planned.stream().map(PlannedType::model).toList();
         sourceWriter.startRound(typesByPackage(models));
-        final LocalDateTime generationTime = timeProvider.get();
         final boolean jspecifyAvailable = isJspecifyAvailable();
         planned.forEach(
                 type -> {
                     final GenerationContext context =
                             new GenerationContext(
                                     generatorName,
-                                    generationTime,
                                     jspecifyAvailable,
                                     models,
                                     this::inheritedMethodNames,

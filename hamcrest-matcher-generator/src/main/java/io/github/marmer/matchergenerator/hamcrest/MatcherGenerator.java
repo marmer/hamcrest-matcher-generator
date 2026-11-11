@@ -402,7 +402,6 @@ class MatcherGenerator {
     private AnnotationSpec getGeneratedAnnotation() {
         return AnnotationSpec.builder(Generated.class)
                 .addMember("value", "$S", context.generatorName())
-                .addMember("date", "$S", context.generationTime())
                 .build();
     }
 
