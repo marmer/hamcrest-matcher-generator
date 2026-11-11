@@ -125,8 +125,9 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         /**
          * @param bean the bean to read the property from
          * @return the value of the property
+         * @throws Exception when the getter declares a checked exception and throws it
          */
-        @Nullable Object read(T bean);
+        @Nullable Object read(T bean) throws Exception;
     }
 
     /**
@@ -309,7 +310,10 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         if (accessor == null || !expectedClass.isInstance(item)) {
             return PropertyAccess.read(item, name);
         }
-        return PropertyAccess.readWith(name, () -> accessor.read((T) item));
+        // The item is an instance of the matched class: the check above.
+        @SuppressWarnings("unchecked")
+        final T bean = (T) item;
+        return PropertyAccess.readWith(name, accessor, bean);
     }
 
     private boolean isAddressed(final String name) {

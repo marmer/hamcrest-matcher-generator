@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.util.List;
 import lombok.Value;
 import org.hamcrest.Description;
@@ -471,6 +472,21 @@ class BeanPropertyMatcherTest {
     }
 
     @Test
+    void testMatches_AccessorThatThrowsACheckedException_ShouldFailNamingTheProperty() {
+        final BeanPropertyMatcher<CheckedGetter> classUnderTest =
+                new BeanPropertyMatcher<CheckedGetter>(
+                        CheckedGetter.class, property("checked", CheckedGetter::getChecked));
+        final Matcher<CheckedGetter> matcher = classUnderTest.with("checked", is("someValue"));
+
+        final AssertionError error =
+                assertThrows(AssertionError.class, () -> matcher.matches(new CheckedGetter()));
+
+        assertThat(
+                "message", error.getMessage(), containsString("Could not read property 'checked'"));
+        assertThat("cause", error.getCause(), instanceOf(IOException.class));
+    }
+
+    @Test
     void testDescribeMismatch_WithAccessors_ShouldReportTheSameAsWithoutAccessors() {
         final BeanPropertyMatcher<ClassTwoProperties> reflective =
                 new BeanPropertyMatcher<ClassTwoProperties>(
@@ -546,6 +562,12 @@ class BeanPropertyMatcherTest {
                 "printed properties",
                 PropertyAccess.propertiesOfGeneratedType(RegisteredWithAccessors.class),
                 is(List.of("name")));
+    }
+
+    public static class CheckedGetter {
+        public String getChecked() throws IOException {
+            throw new IOException("checked on purpose");
+        }
     }
 
     public static class TextOnly {
