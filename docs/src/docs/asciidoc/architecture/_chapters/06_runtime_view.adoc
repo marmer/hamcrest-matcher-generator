@@ -15,8 +15,20 @@ The compiler runs the processor in every round in which it finds `@GenerateMatch
 the following happens:
 
 . `MatcherGenerationProcessor` hands the round to `MatcherGenerationProcessorWorker`, which resolves the configured class
-and package names to types. Names that match nothing are a compiler error for `@GenerateMatchers` and a warning for the
-5.x alias, which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types they name
+and package names to types. The names that match a type or a package are planned in the round in which the configuration is
+seen, as before. A name that matches neither is not an error yet, because a type that another processor writes in a later
+round can make it resolve. The worker remembers such a name with the qualified name of its configuration, and keeps no
+`Element` or mirror of an earlier round. In every later round that is not the last, it looks the configuration up again
+by that name and plans each remembered name that now resolves, once, and forgets it. When processing is over, nothing is
+generated: each name that still matches nothing is reported once, at its value, as a compiler error for `@GenerateMatchers`
+and as a warning for the 5.x alias, which keeps 5.x configurations compiling. The `exclude` check of a configuration runs
+exactly once: in its round when no name is remembered, otherwise when its last remembered name resolves, or when processing
+is over. A package entry that resolves in its round does not pick up the types that a later round generates into that
+package. A late type is not in a package-level file that an earlier round has already written, and the once-per-package
+warning described under Files Written Once per Package names it instead. A processor listed after this one never sees `@GenerateMatchers` or
+`@MatcherConfiguration` in the round where this processor claims them, because javac hides a claimed annotation from the
+processors after it, so a processor that generates a configured type must run on its own annotation or be listed first.
+The `exclude` entries then leave out the configured types they name
 by class or package, and the public member types they name are not modelled as nested types. An `exclude` entry that
 matches neither a configured type nor one of their public member types is a warning. Types that carry the processor's
 own `@Generated` marker are skipped, and the compiler notes each skip only with the verbose option. A top level type
