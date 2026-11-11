@@ -50,6 +50,12 @@ a|
 |6.0.0 requires Java 17 (<<section-architecture-constraints,chapter 2>>, <<adr-0005,ADR 0005>>). Libraries and tools keep raising their own minimum; Structurizr and Error Prone already need Java 21. When a dependency on the users' classpath or a build tool needed on the JDK 17 leg requires a newer Java version, its update cannot be merged automatically.
 |The case shows up as one red Renovate pull request (Maven Enforcer's bytecode check or the JDK 17 leg). The maintainer either caps that dependency in the Renovate configuration with a comment naming the reason, or raises the baseline in a new major version. Tools that are only needed for analysis or documentation run in the JDK 21+ profile and do not affect the baseline.
 
+|Technical debt: the processor sees only the types of its own round
+|medium
+|disabling
+|The processor knows the types generated in the running round and nothing else: there is no registry of generated types across rounds and compilations. A file that is written once per package, such as the AssertJ mixin or the `PropertyRepresentation`, therefore knows only the types of the round or compilation that wrote it. Under KAPT the main and the test compilation of one package each write their own (<<files-once-per-package,chapter 6>>, <<adr-0006,ADR 0006>>).
+|ADR 0006 makes the visible cases diagnostics: a later round gets a warning at the annotation, and a class of the same package from another compilation gets a note. The representation of a second compilation gets no note, and the types of the first stay unknown to it. The user adds the types to the configuration of the first round, or generates the configuration class before the processor runs, as the warning says.
+
 |Risk: a compromised dependency is released automatically
 |low
 |catastrophic
@@ -73,6 +79,12 @@ a|
 |tolerable
 |The weekly Scorecard run reports practices that the project has accepted instead of fixing, for example no required approval and write access in the release job. Its score does not gate merges, so the report is informational.
 |Every accepted check, with its reason and the owner's decision, is listed in <<concepts-scorecard-findings,chapter 8>>.
+
+|Technical debt: the processor and the runtime library share one artifact
+|high
+|tolerable
+|`hamcrest-matcher-generator` is both the Hamcrest backend and the runtime library that the generated matchers call. Every user who adds it also puts the processor's libraries on the test class path: JavaPoet, `matcher-generator-core`, `matcher-generator-annotations` and JSpecify (<<qs-n2,QS-N2>>).
+|Accepted for the coordinates promise of <<adr-0002,ADR 0002>>: `hamcrest-matcher-generator` keeps both roles, so 5.x users find the runtime under the coordinates they already use. The extra libraries are listed in QS-N2 and the dependency tree shows them.
 
 |Risk: a release builds with a wrong module version
 |low
