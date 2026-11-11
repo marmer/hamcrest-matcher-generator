@@ -19,15 +19,37 @@ import javax.lang.model.type.TypeMirror;
  * @param type the type of the property value
  * @param accessor the name of the method that reads the property
  * @param nullability whether the value may be {@code null}
+ * @param declaresCheckedException whether the accessor declares a checked exception, which the
+ *     generated code has to catch where it calls the accessor
  */
 public record PropertyModel(
-        String name, TypeMirror type, String accessor, Nullability nullability) {
+        String name,
+        TypeMirror type,
+        String accessor,
+        Nullability nullability,
+        boolean declaresCheckedException) {
 
     public PropertyModel {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(accessor, "accessor");
         Objects.requireNonNull(nullability, "nullability");
+    }
+
+    /**
+     * A property whose accessor declares no checked exception.
+     *
+     * @param name the property name
+     * @param type the type of the property value
+     * @param accessor the name of the method that reads the property
+     * @param nullability whether the value may be {@code null}
+     */
+    public PropertyModel(
+            final String name,
+            final TypeMirror type,
+            final String accessor,
+            final Nullability nullability) {
+        this(name, type, accessor, nullability, false);
     }
 
     /**

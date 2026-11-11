@@ -34,6 +34,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 /** Creates the {@link TypeModel} of a configured type. */
 class TypeModelFactory {
@@ -44,6 +45,9 @@ class TypeModelFactory {
     /** The skip reason of an {@code is} getter that does not return a boolean. */
     private static final String IS_PREFIX_NEEDS_BOOLEAN =
             "the 'is' prefix requires a boolean return type";
+
+    private static final String RUNTIME_EXCEPTION = "java.lang.RuntimeException";
+    private static final String ERROR = "java.lang.Error";
 
     private final ProcessingEnvironment processingEnv;
     private final ProcessorDiagnostics diagnostics;
@@ -216,8 +220,29 @@ class TypeModelFactory {
                                         element.getSimpleName().toString(),
                                         propertyType(type, element),
                                         element.getSimpleName().toString(),
-                                        NullabilityResolver.of(element)))
+                                        NullabilityResolver.of(element),
+                                        declaresCheckedException(element)))
                 .toList();
+    }
+
+    /**
+     * Whether the accessor declares a checked exception. Generated code calls the accessor where it
+     * has no handler for one, so it has to catch it; an unchecked exception or an error needs no
+     * handling.
+     */
+    private boolean declaresCheckedException(final ExecutableElement accessor) {
+        final Types types = processingEnv.getTypeUtils();
+        final TypeMirror runtimeException = typeOf(RUNTIME_EXCEPTION);
+        final TypeMirror error = typeOf(ERROR);
+        return accessor.getThrownTypes().stream()
+                .anyMatch(
+                        thrown ->
+                                !types.isSubtype(thrown, runtimeException)
+                                        && !types.isSubtype(thrown, error));
+    }
+
+    private TypeMirror typeOf(final String qualifiedName) {
+        return processingEnv.getElementUtils().getTypeElement(qualifiedName).asType();
     }
 
     /**
@@ -278,7 +303,8 @@ class TypeModelFactory {
                                                 propertyName(element),
                                                 propertyType(type, element),
                                                 element.getSimpleName().toString(),
-                                                NullabilityResolver.of(element)))
+                                                NullabilityResolver.of(element),
+                                                declaresCheckedException(element)))
                         .toList();
 
         if (type.getKind() == ElementKind.RECORD) {

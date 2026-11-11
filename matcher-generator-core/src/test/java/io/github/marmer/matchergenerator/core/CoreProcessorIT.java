@@ -129,6 +129,14 @@ class CoreProcessorIT {
         return compile(javacWith("-Amatchergenerator.verbose"), sources);
     }
 
+    private static boolean declaresCheckedException(final TypeModel model, final String name) {
+        return model.properties().stream()
+                .filter(property -> property.name().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No property " + name))
+                .declaresCheckedException();
+    }
+
     private static TypeModel onlyModel() {
         final List<TypeModel> models = RecordingBackend.models();
         assertEquals(1, models.size(), () -> "Recorded models: " + models);
@@ -862,6 +870,32 @@ class CoreProcessorIT {
                         "nickname:java.lang.String:getNickname",
                         CLASS_PROPERTY),
                 describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("A getter declaring a checked exception is a property that says so")
+    void aGetterDeclaringACheckedExceptionIsAPropertyThatSaysSo() {
+        final JavaFileObject pojo =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Pojo",
+                        "package some.other.pck;",
+                        "import java.io.IOException;",
+                        "public class Pojo {",
+                        "    public String getName() throws IOException { return \"\"; }",
+                        "    public String getAlias() throws Exception { return \"\"; }",
+                        "    public int getAge() throws IllegalStateException { return 1; }",
+                        "    public String getNickname() throws AssertionError { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Pojo\""), pojo);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertTrue(declaresCheckedException(model, "name"));
+        assertTrue(declaresCheckedException(model, "alias"));
+        assertFalse(declaresCheckedException(model, "age"));
+        assertFalse(declaresCheckedException(model, "nickname"));
+        assertFalse(declaresCheckedException(model, "class"));
     }
 
     @Test
