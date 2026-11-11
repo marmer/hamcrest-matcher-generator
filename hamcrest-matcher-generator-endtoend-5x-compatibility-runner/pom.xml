@@ -37,6 +37,23 @@
             <artifactId>hamcrest-matcher-generator-dependencies</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- The suite resolves the next two from the outer local repository, and nothing orders this module after the
+            module that downloads them there: example-maven-kotlin fetches annotations 13.0 in its kapt goal, and in the
+            parallel reactor the runner can start before it (cold repository: "Could not find artifact
+            org.jetbrains:annotations:jar:13.0 in outer-local-repository"). Resolving them here, as this module's own
+            dependencies, puts them there before the invoker goals run. Versions as in the suite's pom. -->
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>13.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.48</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
