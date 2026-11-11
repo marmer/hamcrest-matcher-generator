@@ -9,7 +9,7 @@ To make the failure modes visible, the published `GeneratorBackend` interface gr
 - `GenerationContext.reportVerboseNote(String)`: a compiler note that the core prints only with `-Amatchergenerator.verbose`. The Hamcrest backend uses it for one note per property that `isXLike(reference)` compares with `equals` because no matcher for its type is generated in the round.
 - `GenerationContext.classExistsOutsideOwnOutput(String)`: whether a class is on the class path or source path without being in the output directory of the running compilation. The AssertJ backend uses it for the mixin only: it notes a `SoftAssertionsProvider` written by another compilation. `PropertyRepresentation` gets no class-path note.
 - `GeneratedSource.qualifiedName()`.
-- The convenience constructor of `GenerationContext` (generator name and JSpecify flag; it took a generation time until #362 removed that component) drops verbose notes and answers `false` for `classExistsOutsideOwnOutput`.
+- The convenience constructor of `GenerationContext` (generator name and JSpecify flag) drops verbose notes and answers `false` for `classExistsOutsideOwnOutput`.
 - The rule "a source an earlier round wrote is not written again, the core warns at the annotation instead" is generic in the core worker and applies to every `GeneratedSource` of every backend, not only to the files written once per package.
 
 ## Considered Options

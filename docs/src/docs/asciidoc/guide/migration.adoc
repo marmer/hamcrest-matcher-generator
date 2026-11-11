@@ -110,7 +110,7 @@ A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0
 
 == Generated code carries no date
 
-The `@Generated` annotation of generated code has no `date` element any more, so two builds of the same sources write identical files.
+The `@Generated` annotation of generated code has no `date` element any more, so generated sources no longer differ from build to build in a time stamp. Nothing needs to change unless a tool of yours reads that element.
 
 == What does not change
 
