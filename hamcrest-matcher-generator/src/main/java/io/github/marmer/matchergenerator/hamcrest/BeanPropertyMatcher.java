@@ -80,7 +80,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      * @param expectedClass the type to match
      * @param properties all properties of the type in declaration order, each with the accessor
      *     that reads it. The values are read through the accessors, so the type does not have to be
-     *     accessible by reflection. A property without accessor is read by name.
+     *     accessible by reflection. A name that is not listed is read by name.
      */
     @SafeVarargs
     public BeanPropertyMatcher(
