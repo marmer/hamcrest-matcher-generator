@@ -19,7 +19,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, BeanPropertyMatcher.property("class", SimplePojo::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, BeanPropertyMatcher.property("class", (SimplePojo bean) -> bean.getClass()));
   }
 
   public SimplePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {

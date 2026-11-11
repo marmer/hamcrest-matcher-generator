@@ -19,7 +19,7 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
   private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
 
   public SomePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class, BeanPropertyMatcher.property("class", SomePojo::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<SomePojo>(SomePojo.class, BeanPropertyMatcher.property("class", (SomePojo bean) -> bean.getClass()));
   }
 
   public SomePojoMatcher withClass(final Matcher<? super Class<?>> matcher) {

@@ -26,7 +26,7 @@ public class HolderMatcher extends TypeSafeMatcher<Holder> implements GeneratedB
   private final BeanPropertyMatcher<Holder> beanPropertyMatcher;
 
   public HolderMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Holder>(Holder.class, BeanPropertyMatcher.property("lines", Holder::getLines), BeanPropertyMatcher.property("index", Holder::getIndex), BeanPropertyMatcher.property("named", Holder::getNamed), BeanPropertyMatcher.property("flipped", Holder::getFlipped), BeanPropertyMatcher.property("rawList", Holder::getRawList), BeanPropertyMatcher.property("rawMap", Holder::getRawMap), BeanPropertyMatcher.property("anyList", Holder::getAnyList), BeanPropertyMatcher.property("class", Holder::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<Holder>(Holder.class, BeanPropertyMatcher.property("lines", (Holder bean) -> bean.getLines()), BeanPropertyMatcher.property("index", (Holder bean) -> bean.getIndex()), BeanPropertyMatcher.property("named", (Holder bean) -> bean.getNamed()), BeanPropertyMatcher.property("flipped", (Holder bean) -> bean.getFlipped()), BeanPropertyMatcher.property("rawList", (Holder bean) -> bean.getRawList()), BeanPropertyMatcher.property("rawMap", (Holder bean) -> bean.getRawMap()), BeanPropertyMatcher.property("anyList", (Holder bean) -> bean.getAnyList()), BeanPropertyMatcher.property("class", (Holder bean) -> bean.getClass()));
   }
 
   public HolderMatcher withLines(final Matcher<? super Lines> matcher) {

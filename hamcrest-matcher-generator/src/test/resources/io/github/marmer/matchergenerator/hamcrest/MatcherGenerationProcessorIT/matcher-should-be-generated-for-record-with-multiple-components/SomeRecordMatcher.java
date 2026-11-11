@@ -21,7 +21,7 @@ public class SomeRecordMatcher extends TypeSafeMatcher<SomeRecord> implements Ge
   private final BeanPropertyMatcher<SomeRecord> beanPropertyMatcher;
 
   public SomeRecordMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SomeRecord>(SomeRecord.class, BeanPropertyMatcher.property("name", SomeRecord::name), BeanPropertyMatcher.property("age", SomeRecord::age), BeanPropertyMatcher.property("class", SomeRecord::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<SomeRecord>(SomeRecord.class, BeanPropertyMatcher.property("name", (SomeRecord bean) -> bean.name()), BeanPropertyMatcher.property("age", (SomeRecord bean) -> bean.age()), BeanPropertyMatcher.property("class", (SomeRecord bean) -> bean.getClass()));
   }
 
   public SomeRecordMatcher withName(final Matcher<? super String> matcher) {

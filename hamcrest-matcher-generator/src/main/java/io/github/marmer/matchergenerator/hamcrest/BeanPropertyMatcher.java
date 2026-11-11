@@ -123,6 +123,8 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     @FunctionalInterface
     public interface Accessor<T> {
         /**
+         * Reads the value of the property from the bean.
+         *
          * @param bean the bean to read the property from
          * @return the value of the property
          * @throws Exception when the getter declares a checked exception and throws it

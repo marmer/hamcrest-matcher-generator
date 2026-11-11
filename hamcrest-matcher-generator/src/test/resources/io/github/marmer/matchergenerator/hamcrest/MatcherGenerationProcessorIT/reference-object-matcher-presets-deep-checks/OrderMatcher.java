@@ -25,7 +25,7 @@ public class OrderMatcher extends TypeSafeMatcher<Order> implements GeneratedBea
   private final BeanPropertyMatcher<Order> beanPropertyMatcher;
 
   public OrderMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Order>(Order.class, BeanPropertyMatcher.property("id", Order::getId), BeanPropertyMatcher.property("quantity", Order::getQuantity), BeanPropertyMatcher.property("firstLine", Order::getFirstLine), BeanPropertyMatcher.property("lines", Order::getLines), BeanPropertyMatcher.property("lineSet", Order::getLineSet), BeanPropertyMatcher.property("wildcardLines", Order::getWildcardLines), BeanPropertyMatcher.property("linesBySku", Order::getLinesBySku), BeanPropertyMatcher.property("skuByLine", Order::getSkuByLine), BeanPropertyMatcher.property("lineArray", Order::getLineArray), BeanPropertyMatcher.property("tags", Order::getTags), BeanPropertyMatcher.property("color", Order::getColor), BeanPropertyMatcher.property("marker", Order::getMarker), BeanPropertyMatcher.property("detail", Order::getDetail), BeanPropertyMatcher.property("class", Order::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<Order>(Order.class, BeanPropertyMatcher.property("id", (Order bean) -> bean.getId()), BeanPropertyMatcher.property("quantity", (Order bean) -> bean.getQuantity()), BeanPropertyMatcher.property("firstLine", (Order bean) -> bean.getFirstLine()), BeanPropertyMatcher.property("lines", (Order bean) -> bean.getLines()), BeanPropertyMatcher.property("lineSet", (Order bean) -> bean.getLineSet()), BeanPropertyMatcher.property("wildcardLines", (Order bean) -> bean.getWildcardLines()), BeanPropertyMatcher.property("linesBySku", (Order bean) -> bean.getLinesBySku()), BeanPropertyMatcher.property("skuByLine", (Order bean) -> bean.getSkuByLine()), BeanPropertyMatcher.property("lineArray", (Order bean) -> bean.getLineArray()), BeanPropertyMatcher.property("tags", (Order bean) -> bean.getTags()), BeanPropertyMatcher.property("color", (Order bean) -> bean.getColor()), BeanPropertyMatcher.property("marker", (Order bean) -> bean.getMarker()), BeanPropertyMatcher.property("detail", (Order bean) -> bean.getDetail()), BeanPropertyMatcher.property("class", (Order bean) -> bean.getClass()));
   }
 
   public OrderMatcher withId(final Matcher<? super String> matcher) {
@@ -368,7 +368,7 @@ public class OrderMatcher extends TypeSafeMatcher<Order> implements GeneratedBea
     private final BeanPropertyMatcher<Order.Detail> beanPropertyMatcher;
 
     public DetailMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<Order.Detail>(Order.Detail.class, BeanPropertyMatcher.property("order", Order.Detail::getOrder), BeanPropertyMatcher.property("class", Order.Detail::getClass));
+      beanPropertyMatcher = new BeanPropertyMatcher<Order.Detail>(Order.Detail.class, BeanPropertyMatcher.property("order", (Order.Detail bean) -> bean.getOrder()), BeanPropertyMatcher.property("class", (Order.Detail bean) -> bean.getClass()));
     }
 
     public DetailMatcher withOrder(final Matcher<? super Order> matcher) {

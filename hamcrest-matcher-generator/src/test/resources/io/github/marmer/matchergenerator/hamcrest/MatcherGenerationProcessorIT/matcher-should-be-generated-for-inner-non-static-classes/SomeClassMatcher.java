@@ -19,7 +19,7 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
   private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;
 
   public SomeClassMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class, BeanPropertyMatcher.property("class", SomeClass::getClass));
+    beanPropertyMatcher = new BeanPropertyMatcher<SomeClass>(SomeClass.class, BeanPropertyMatcher.property("class", (SomeClass bean) -> bean.getClass()));
   }
 
   public SomeClassMatcher withClass(final Matcher<? super Class<?>> matcher) {
@@ -87,7 +87,7 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
     private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;
 
     public SomeNonStaticInnerClassMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class, BeanPropertyMatcher.property("class", SomeClass.SomeNonStaticInnerClass::getClass));
+      beanPropertyMatcher = new BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass>(SomeClass.SomeNonStaticInnerClass.class, BeanPropertyMatcher.property("class", (SomeClass.SomeNonStaticInnerClass bean) -> bean.getClass()));
     }
 
     public SomeNonStaticInnerClassMatcher withClass(final Matcher<? super Class<?>> matcher) {

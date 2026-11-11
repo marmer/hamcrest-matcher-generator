@@ -302,17 +302,21 @@ class MatcherGenerator {
                 .build();
     }
 
-    /** The type, then every property with the method reference that reads it, in order. */
+    /**
+     * The type, then every property with the lambda that reads it, in order. The lambda states the
+     * parameter type, since a method reference is ambiguous when a static method overloads the
+     * accessor.
+     */
     private CodeBlock constructorArguments() {
         final CodeBlock.Builder arguments = CodeBlock.builder().add("$T.class", rawTypeName());
         PropertyModel.distinctByName(model.properties())
                 .forEach(
                         property ->
                                 arguments.add(
-                                        ", $T.property($S, $T::$L)",
+                                        ", $T.property($S, ($T bean) -> bean.$L())",
                                         BeanPropertyMatcher.class,
                                         property.name(),
-                                        rawTypeName(),
+                                        typeNameWithWildCards(),
                                         property.accessor()));
         return arguments.build();
     }

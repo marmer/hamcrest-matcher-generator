@@ -19,7 +19,7 @@ public class SimplePojoInterfaceMatcher extends TypeSafeMatcher<SimplePojoInterf
   private final BeanPropertyMatcher<SimplePojoInterface> beanPropertyMatcher;
 
   public SimplePojoInterfaceMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class, BeanPropertyMatcher.property("conflictProperty", SimplePojoInterface::getConflictProperty));
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojoInterface>(SimplePojoInterface.class, BeanPropertyMatcher.property("conflictProperty", (SimplePojoInterface bean) -> bean.getConflictProperty()));
   }
 
   public SimplePojoInterfaceMatcher withConflictProperty(final Matcher<?> matcher) {
