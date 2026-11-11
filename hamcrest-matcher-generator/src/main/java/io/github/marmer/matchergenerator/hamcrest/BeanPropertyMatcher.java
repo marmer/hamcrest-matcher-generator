@@ -5,6 +5,7 @@
 package io.github.marmer.matchergenerator.hamcrest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -55,10 +57,13 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
 
     private final List<String> propertyNames;
 
+    /** The accessors of the properties built with {@link #property}, by property name. */
+    private final Map<String, Function<? super T, ?>> accessors;
+
     private boolean checkingAllProperties;
 
     public BeanPropertyMatcher(final Class<? super T> expectedClass) {
-        this(expectedClass, List.of(), false);
+        this(expectedClass, List.of(), Map.of(), false);
     }
 
     /**
@@ -69,18 +74,67 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      */
     public BeanPropertyMatcher(
             final Class<? super T> expectedClass, final String... propertyNames) {
-        this(expectedClass, List.of(propertyNames), true);
+        this(expectedClass, List.of(propertyNames), Map.of(), true);
+    }
+
+    /**
+     * @param expectedClass the type to match
+     * @param properties all properties of the type in declaration order, each with the accessor
+     *     that reads it. The values are read through the accessors, so the type does not have to be
+     *     accessible by reflection. A property without accessor is read by name.
+     */
+    @SafeVarargs
+    public BeanPropertyMatcher(
+            final Class<? super T> expectedClass, final Property<T>... properties) {
+        this(
+                expectedClass,
+                Arrays.stream(properties).map(Property::name).toList(),
+                accessorsOf(properties),
+                true);
     }
 
     private BeanPropertyMatcher(
             final Class<? super T> expectedClass,
             final List<String> propertyNames,
+            final Map<String, Function<? super T, ?>> accessors,
             final boolean printsPropertyNames) {
         this.expectedClass = expectedClass;
         this.propertyNames = propertyNames;
+        this.accessors = accessors;
         if (printsPropertyNames) {
             PropertyAccess.registerGeneratedType(expectedClass, propertyNames);
         }
+    }
+
+    /**
+     * A property of the matched type with the accessor that reads it.
+     *
+     * @param <T> the type of the bean
+     * @param name the name of the property, as the matcher methods name it
+     * @param accessor reads the value of the property from a bean of the type
+     */
+    public record Property<T>(String name, Function<? super T, ?> accessor) {}
+
+    /**
+     * Names a property of the matched type and the accessor that reads it, e.g. {@code
+     * property("done", Sub::isDone)}.
+     *
+     * @param name the name of the property, as the matcher methods name it
+     * @param accessor reads the value of the property from a bean of the type
+     * @return the property, for the constructor of the matcher
+     */
+    public static <T> Property<T> property(
+            final String name, final Function<? super T, ?> accessor) {
+        return new Property<>(name, accessor);
+    }
+
+    private static <V> Map<String, Function<? super V, ?>> accessorsOf(
+            final Property<V>[] properties) {
+        final Map<String, Function<? super V, ?>> accessors = new LinkedHashMap<>();
+        for (final Property<V> property : properties) {
+            accessors.putIfAbsent(property.name(), property.accessor());
+        }
+        return accessors;
     }
 
     @Override
@@ -225,11 +279,24 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         }
         propertyChecks.forEach(
                 (name, matchers) -> {
-                    final Object value = PropertyAccess.read(item, name);
+                    final Object value = valueOf(item, name);
                     for (final Matcher<?> matcher : matchers) {
                         collectFailure(name, matcher, value, prefix + name, report);
                     }
                 });
+    }
+
+    /**
+     * @return the value of the property: read through its accessor when the item is of the matched
+     *     type, otherwise (and for a property without accessor) by name, see {@link
+     *     PropertyAccess#read}
+     */
+    private @Nullable Object valueOf(final Object item, final String name) {
+        final @Nullable Function<? super T, ?> accessor = accessors.get(name);
+        if (accessor == null || !expectedClass.isInstance(item)) {
+            return PropertyAccess.read(item, name);
+        }
+        return PropertyAccess.readWith(name, () -> accessor.apply((T) item));
     }
 
     private boolean isAddressed(final String name) {

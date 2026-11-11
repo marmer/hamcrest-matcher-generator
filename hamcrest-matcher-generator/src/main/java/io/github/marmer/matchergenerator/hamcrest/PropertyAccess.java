@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 import org.hamcrest.beans.PropertyUtil;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -63,6 +64,21 @@ final class PropertyAccess {
             return invoke(item.getClass().getMethod(propertyName), item, propertyName);
         } catch (final NoSuchMethodException e) {
             return NO_SUCH_PROPERTY;
+        }
+    }
+
+    /**
+     * Reads a property through its accessor. A failing accessor fails like a failing reflective
+     * read, with the same message.
+     *
+     * @return the property value
+     */
+    static @Nullable Object readWith(
+            final String propertyName, final Supplier<@Nullable Object> accessor) {
+        try {
+            return accessor.get();
+        } catch (final RuntimeException e) {
+            throw new AssertionError("Could not read property '" + propertyName + "'", e);
         }
     }
 
