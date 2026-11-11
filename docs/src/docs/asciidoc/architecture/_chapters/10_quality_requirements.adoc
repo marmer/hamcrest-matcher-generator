@@ -88,7 +88,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-n2]]QS-N2
 | Compatibility / Co-existence
-| *A small footprint on Java 17.* When a test developer runs tests on Java 17 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify and the project's own runtime artifact; bytecode level 17 and this dependency list are verified on every build.
+| *A small footprint on Java 17.* When a test developer runs tests on Java 17 while the generated code and its runtime are on the test classpath, they run with no dependencies beyond Hamcrest or AssertJ, JSpecify, JavaPoet and the project's own artifacts `matcher-generator-core` and `matcher-generator-annotations`, which the backend artifacts bring in transitively (the Kotlin DSL artifact also brings KotlinPoet); bytecode level 17 and this dependency list are verified on every build.
 | Maven Enforcer; Verify JDK 17
 
 | [[qs-n3]]QS-N3
@@ -138,7 +138,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-m3]]QS-M3
 | Maintainability / Modularity
-| *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the `GeneratorBackend` interface; no line changes in the core or in the existing backends.
+| *A new backend plugs in.* When a contributor adds a third backend (such as one for Google Truth) to the main branch, it is a new module behind the `GeneratorBackend` interface, and the dependency rules that keep backends apart from the core and from each other are enforced. The interface itself may have to grow, as it did for the AssertJ backend (<<adr-0006,ADR 0006>>).
 | ArchUnit tests; <<adr-0001,ADR 0001>>
 
 | [[qs-m4]]QS-M4
