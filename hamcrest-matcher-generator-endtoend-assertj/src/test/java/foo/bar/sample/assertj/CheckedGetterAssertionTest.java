@@ -8,13 +8,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import foo.bar.sample.assertj.checked.PropertyRepresentation;
 import foo.bar.sample.assertj.checked.Reading;
 import foo.bar.sample.assertj.checked.ReadingAssert;
 import java.io.IOException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class CheckedGetterAssertionTest {
+
+    @AfterEach
+    void useTheDefaultRepresentation() {
+        Assertions.useDefaultRepresentation();
+    }
+
+    @Test
+    @DisplayName(
+            "Once the generated representation is registered, a failure that prints the reading"
+                    + " shows the read failure instead of the mismatch")
+    void onceTheRepresentationIsRegisteredAFailurePrintingTheReadingShowsTheReadFailure() {
+        Assertions.useRepresentation(new PropertyRepresentation());
+        final Reading reading = new Reading();
+
+        final Throwable thrown =
+                catchThrowable(() -> ReadingAssert.assertThat(reading).isEqualTo(new Reading()));
+
+        assertThat(thrown)
+                .isInstanceOf(AssertionError.class)
+                .hasMessage("Could not read property 'name'")
+                .hasCauseInstanceOf(IOException.class);
+    }
 
     @Test
     @DisplayName(
