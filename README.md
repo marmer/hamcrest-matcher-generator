@@ -121,10 +121,12 @@ AssertJ, the same way:
     <groupId>io.github.marmer.testutils</groupId>
     <artifactId>assertj-assertion-generator</artifactId>
     <version>${assertj-assertion-generator.version}</version>
+    <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.assertj</groupId>
     <artifactId>assertj-core</artifactId>
+    <scope>test</scope>
 </dependency>
 ```
 <!-- end snippet -->
