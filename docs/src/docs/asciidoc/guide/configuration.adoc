@@ -29,6 +29,10 @@ The generation setting `packageConfig` decides the package of the generated type
 
 With Maven, the generated sources of a configuration in `src/main/java` go to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` go to `target/generated-test-sources/test-annotations`. The example module's own configuration is in `src/main/java`; the test-scope location was checked with a temporary test configuration in that module, not kept in the example. Because the example's matchers are generated into the main output, they are available to test code as well as to production code.
 
+== Using both backends for different types
+
+Every backend on the processor path generates for every configured type. A configuration that has the Hamcrest and the AssertJ artifact on the processor path therefore gets a matcher and an assertion for each of its types. To generate Hamcrest matchers for some types and AssertJ assertions for others, put the configurations in separate modules, or in separate compiler executions that each have their own processor path and name only the backend they need.
+
 == Next steps
 
 * link:hamcrest-backend.html[Hamcrest backend] for the matchers the configuration produces.

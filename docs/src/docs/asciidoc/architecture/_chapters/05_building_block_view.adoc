@@ -91,6 +91,11 @@ Backends are discovered with `java.util.ServiceLoader` from the processor path, 
 configured type. The core has no compile dependency on any backend, so it loads them only at run time. Backends depend only on the core, never the other way round, with one exception: the Kotlin DSL backend depends on the Hamcrest backend. The Enforcer plugin and ArchUnit tests
 guard this.
 
+The backend interface is internal to the project. `GeneratorBackend`, `GenerationContext`, `GeneratedSource` and the property model
+(`TypeModel`, `PropertyModel`, `Nullability`, and the helper `TypeHierarchy` of the same package) are used by the project's own backends only. They make no stability promise and may change in any
+release, including a patch release. The package Javadoc
+of `core.spi` and `core.model` says the same, and <<adr-0001,ADR 0001>> records the amendment.
+
 ==== Build-Only Modules
 
 .Build-only modules of the Hamcrest Matcher Generator
