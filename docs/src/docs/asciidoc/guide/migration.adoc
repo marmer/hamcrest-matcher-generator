@@ -101,6 +101,8 @@ An inherited generic property has its real type: the type argument that its subt
 
 This is a breaking change for a test that passes a value of another type to such a method. For example, `withValue(42)` does not compile against `String`. Such a test must pass a value of the property's type. A test that already passes a value of the property's type is not affected.
 
+Every enum has such a property. `getDeclaringClass()` is inherited from `java.lang.Enum<E>`, so the property `declaringClass` is `Class<? extends TheEnum>` where it was `Class<?>`. A `Class<?>` value passed to `withDeclaringClass` in the Hamcrest matcher, or to `declaringClass` in the Kotlin DSL, no longer compiles; pass a `Class<? extends TheEnum>`, for example `TheEnum.class`.
+
 [#mismatch-format]
 == The new form of mismatch messages
 
