@@ -10,7 +10,7 @@ The annotation's value lists package names and fully qualified class names. A pa
 
 [source,java]
 ----
-include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
 ----
 
 This configuration generates a matcher for every model class in `example.hamcrest.model`. The model classes can be beans with getters, records or Kotlin classes: the processor reads bean getters, record component accessors and Kotlin getters.
@@ -27,7 +27,7 @@ The generation setting `packageConfig` decides the package of the generated type
 
 == Where the generated code goes
 
-With Maven, the generated sources of a configuration in `src/main/java` go to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` go to `target/generated-test-sources/test-annotations`. The example module's own configuration is in `src/main/java`; the test-scope location was checked with a temporary test configuration in that module, not kept in the example. Because the example's matchers are generated into the main output, they are available to test code as well as to production code.
+With Maven, the generated sources of a configuration in `src/main/java` go to `target/generated-sources/annotations`, and those of a configuration in `src/test/java` go to `target/generated-test-sources/test-annotations`. The example modules keep their configuration in `src/test/java`, so their matchers are generated into the test output only, and the production artifact contains neither them nor the configuration. A configuration in `src/main/java` is the special case: its matchers join the production code, so the generator needs the `provided` scope with `<optional>true</optional>`, as the link:getting-started.html[getting started chapter] describes.
 
 == Using both backends for different types
 

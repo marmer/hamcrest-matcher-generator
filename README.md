@@ -60,7 +60,7 @@ Quick start
 
 Generate the matchers or assertions for the packages of your model classes with `@GenerateMatchers`:
 
-<!-- snippet: example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java#configuration -->
+<!-- snippet: example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java#configuration -->
 ```java
 import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
 
@@ -91,10 +91,12 @@ Hamcrest: the dependencies, then the annotation processor in the compiler plugin
     <groupId>io.github.marmer.testutils</groupId>
     <artifactId>hamcrest-matcher-generator</artifactId>
     <version>${hamcrest-matcher-generator.version}</version>
+    <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.hamcrest</groupId>
     <artifactId>hamcrest</artifactId>
+    <scope>test</scope>
 </dependency>
 ```
 <!-- end snippet -->

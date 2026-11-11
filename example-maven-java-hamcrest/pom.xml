@@ -25,15 +25,18 @@
     </properties>
 
     <dependencies>
+        <!-- The configuration sits in src/test/java, so the generator and the library have the test scope. -->
         <!-- tag::maven-dependencies[] -->
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator</artifactId>
             <version>${hamcrest-matcher-generator.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
         </dependency>
         <!-- end::maven-dependencies[] -->
         <dependency>
