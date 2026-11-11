@@ -83,8 +83,9 @@ jobs:
         run: chmod +x mvnw
 
       # Nothing is published unless this is green: the publish job needs this job.
+      # -T 1: signing and publishing are not worth the risk of a parallel build, so the release build stays serial.
       - name: Verify
-        run: ./mvnw -B clean verify
+        run: ./mvnw -B -T 1 clean verify
 
   publish:
     name: Publish to Maven Central
@@ -123,8 +124,9 @@ jobs:
       # Javadoc and the CycloneDX SBOM. central-publishing-maven-plugin waits until Central reports `published`, so
       # this step only succeeds for a confirmed publish. The tests ran in the release-build job.
       # -DskipEndtoend: the end-to-end modules (and the runner of the 5.x compatibility suite) are never published.
+      # -T 1: signing and publishing are not worth the risk of a parallel build, so the deploy stays serial.
       - name: Deploy to Maven Central
-        run: ./mvnw -B -P release -DskipEndtoend -DskipTests -DskipITs deploy
+        run: ./mvnw -B -T 1 -P release -DskipEndtoend -DskipTests -DskipITs deploy
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
