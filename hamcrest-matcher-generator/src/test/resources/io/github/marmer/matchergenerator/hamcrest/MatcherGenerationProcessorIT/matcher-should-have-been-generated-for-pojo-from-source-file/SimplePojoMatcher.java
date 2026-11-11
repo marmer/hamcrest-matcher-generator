@@ -13,10 +13,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
@@ -146,10 +143,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return new SimplePojoMatcher();
   }
 
-  @Generated(
-      value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-      date = "2020-01-01T00:00"
-  )
+  @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
   public static class InnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo> beanPropertyMatcher;
 
@@ -238,10 +232,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
       return new InnerStaticPojoMatcher();
     }
 
-    @Generated(
-        value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-        date = "2020-01-01T00:00"
-    )
+    @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
     public static class InnerInnerStaticPojoMatcher extends TypeSafeMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> implements GeneratedBeanMatcher {
       private final BeanPropertyMatcher<SimplePojo.InnerStaticPojo.InnerInnerStaticPojo> beanPropertyMatcher;
 

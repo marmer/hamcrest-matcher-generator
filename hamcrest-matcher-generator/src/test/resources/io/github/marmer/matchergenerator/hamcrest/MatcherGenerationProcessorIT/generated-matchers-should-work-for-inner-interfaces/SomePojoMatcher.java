@@ -11,10 +11,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SomePojo> beanPropertyMatcher;
 
@@ -79,10 +76,7 @@ public class SomePojoMatcher extends TypeSafeMatcher<SomePojo> implements Genera
     return new SomePojoMatcher();
   }
 
-  @Generated(
-      value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-      date = "2020-01-01T00:00"
-  )
+  @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
   public static class InnerInterfaceMatcher extends TypeSafeMatcher<SomePojo.InnerInterface> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SomePojo.InnerInterface> beanPropertyMatcher;
 

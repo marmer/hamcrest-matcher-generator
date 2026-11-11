@@ -108,6 +108,10 @@ Every enum has such a property. `getDeclaringClass()` is inherited from `java.la
 
 A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0 writes one line per failing check, each with its property path, nested paths included, as the link:mismatch-messages.html[mismatch messages chapter] shows. This is a breaking change for a test that parses a message or pins its exact text. Such a test must be updated to the new form. A test that only checks that an assertion fails is not affected.
 
+== Generated code carries no date
+
+The `@Generated` annotation of generated code has no `date` element any more, so generated sources no longer differ from build to build in a time stamp. Nothing needs to change unless a tool of yours reads that element.
+
 == What does not change
 
 The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>).

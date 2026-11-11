@@ -5,12 +5,10 @@
 package io.github.marmer.matchergenerator.core;
 
 import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -26,23 +24,14 @@ import javax.lang.model.element.TypeElement;
 })
 public class MatcherGenerationProcessor extends AbstractProcessor {
 
-    private final Supplier<LocalDateTime> timeProvider;
     private MatcherGenerationProcessorWorker worker;
-
-    public MatcherGenerationProcessor() {
-        this(LocalDateTime::now);
-    }
-
-    public MatcherGenerationProcessor(final Supplier<LocalDateTime> timeProvider) {
-        this.timeProvider = timeProvider;
-    }
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         worker =
                 new MatcherGenerationProcessorWorker(
-                        timeProvider::get, processingEnv, getClass().getName(), loadBackends());
+                        processingEnv, getClass().getName(), loadBackends());
     }
 
     private List<GeneratorBackend> loadBackends() {

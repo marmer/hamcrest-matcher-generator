@@ -18,10 +18,7 @@ import org.hamcrest.TypeSafeMatcher;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 @NullMarked
 public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
@@ -281,10 +278,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     return new SimplePojoMatcher();
   }
 
-  @Generated(
-      value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-      date = "2020-01-01T00:00"
-  )
+  @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
   public static class InnerMatcher extends TypeSafeMatcher<SimplePojo.Inner> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SimplePojo.Inner> beanPropertyMatcher;
 

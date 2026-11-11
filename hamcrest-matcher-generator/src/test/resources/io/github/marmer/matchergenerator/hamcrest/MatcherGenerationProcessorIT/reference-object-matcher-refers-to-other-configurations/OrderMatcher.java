@@ -12,10 +12,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import prefixed.some.other.pck.CustomerMatcher;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class OrderMatcher extends TypeSafeMatcher<Order> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<Order> beanPropertyMatcher;
 

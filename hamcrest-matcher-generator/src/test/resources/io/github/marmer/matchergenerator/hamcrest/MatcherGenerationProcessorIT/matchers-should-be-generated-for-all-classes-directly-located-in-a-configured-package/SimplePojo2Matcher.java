@@ -11,10 +11,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class SimplePojo2Matcher extends TypeSafeMatcher<SimplePojo2> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SimplePojo2> beanPropertyMatcher;
 
