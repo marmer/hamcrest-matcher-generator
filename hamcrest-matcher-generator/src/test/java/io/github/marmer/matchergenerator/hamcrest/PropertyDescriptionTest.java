@@ -147,6 +147,11 @@ class PropertyDescriptionTest {
     }
 
     @Test
+    void testReadPrinted_ValueOfAnUnregisteredType_ShouldReadItByName() {
+        assertEquals("unregistered", PropertyAccess.readPrinted(new Unregistered(), "text"));
+    }
+
+    @Test
     void testRegisterGeneratedType_SecondRegistration_ShouldKeepTheFirst() {
         PropertyAccess.registerGeneratedType(Twice.class, List.of("id"));
         final List<String> first = PropertyAccess.propertiesOfGeneratedType(Twice.class);
@@ -181,6 +186,12 @@ class PropertyDescriptionTest {
     public static class Registered {}
 
     public static class Twice {}
+
+    public static class Unregistered {
+        public String getText() {
+            return "unregistered";
+        }
+    }
 
     public static class Described {
         private final String text;
