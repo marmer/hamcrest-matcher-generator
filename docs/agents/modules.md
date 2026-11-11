@@ -14,5 +14,6 @@ The published modules' roles: `matcher-generator-annotations` (`@GenerateMatcher
 - The CI job `example-gradle` builds it after `mvn install`.
 - It resolves the project's own artifacts from `mavenLocal()` only, so a missing install fails the build.
 - release-please bumps its version through `release-please-config.json` (`extra-files`, marker `x-release-please-version`).
+- Do not add `META-INF/gradle/incremental.annotation.processors` for the processor: on Gradle 9.8.2 an `aggregating` or `isolating` line still forces a full recompilation, because Gradle's incremental processors may read only annotations of CLASS or RUNTIME retention and the processor claims `@javax.annotation.processing.Generated`, which has source retention (`isolating` also fails because each generated Java file has two originating elements). Declaring it needs an owner decision on the claimed annotations and on the retention of `@GenerateMatchers` (#363).
 
 A new module pom needs its own xml entry in `extra-files` of `release-please-config.json` (own and parent version are raised together); dependencies on project artifacts use `${project.version}`. `scripts/ci/check-project-version.py` fails otherwise. The release type is `simple`: `maven` would rewrite the frozen 5.x suite's `@project.version@`.
