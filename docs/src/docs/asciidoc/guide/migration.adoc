@@ -94,6 +94,15 @@ Everything in this list is off unless you use it. Your existing tests keep compi
 * *AssertJ.* The `assertj-assertion-generator` artifact generates an assertion per type, as the link:assertj-backend.html[AssertJ backend chapter] describes. It runs next to the Hamcrest backend.
 * *Kotlin DSL.* The `hamcrest-matcher-generator-kotlin` artifact generates the DSL under KAPT, as the link:kotlin.html[Kotlin chapter] describes.
 
+[#inherited-generic-properties]
+== Inherited generic properties have their real type
+
+An inherited generic property has its real type: the type argument that its subtype gives its supertype. For `class Base<T> { T getValue(); }` and `class Sub extends Base<String>`, the generated Hamcrest matcher of `Sub` takes a `String`: `withValue(Matcher<? super String>)` and `withValue(String)`. The AssertJ assertion offers `hasValue(String)`, and the Kotlin DSL `value(String?)`.
+
+This is a breaking change for a test that passes a value of another type to such a method. For example, `withValue(42)` does not compile against `String`. Such a test must pass a value of the property's type. A test that already passes a value of the property's type is not affected.
+
+Every enum has such a property. `getDeclaringClass()` is inherited from `java.lang.Enum<E>`, so the property `declaringClass` is `Class<? extends TheEnum>` where it was `Class<?>`. A `Class<?>` value passed to `withDeclaringClass` in the Hamcrest matcher, or to `declaringClass` in the Kotlin DSL, no longer compiles; pass a `Class<? extends TheEnum>`, for example `TheEnum.class`.
+
 [#mismatch-format]
 == The new form of mismatch messages
 
@@ -101,7 +110,7 @@ A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0
 
 == What does not change
 
-The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump.
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>).
 
 == Next steps
 

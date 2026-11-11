@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -29,24 +30,42 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /** Creates the {@link TypeModel} of a configured type. */
 class TypeModelFactory {
+    /** The skip reason of a boolean {@code get} getter, which must use the {@code is} prefix. */
+    private static final String BOOLEAN_NEEDS_IS_PREFIX =
+            "a boolean property must use the 'is' prefix";
+
+    /** The skip reason of an {@code is} getter that does not return a boolean. */
+    private static final String IS_PREFIX_NEEDS_BOOLEAN =
+            "the 'is' prefix requires a boolean return type";
+
     private final ProcessingEnvironment processingEnv;
     private final ProcessorDiagnostics diagnostics;
     private final ConfigurationSite configuration;
     private final Predicate<TypeElement> excluded;
+    private final Map<String, AnnotationValue> namedEntries;
 
+    /**
+     * {@code namedEntries} are the configured values that name a type, keyed by its qualified name,
+     * so a skipped getter of a named type can be placed at the value that names it.
+     */
     TypeModelFactory(
             final ProcessingEnvironment processingEnv,
             final ProcessorDiagnostics diagnostics,
             final ConfigurationSite configuration,
-            final Predicate<TypeElement> excluded) {
+            final Predicate<TypeElement> excluded,
+            final Map<String, AnnotationValue> namedEntries) {
         this.processingEnv = processingEnv;
         this.diagnostics = diagnostics;
         this.configuration = configuration;
         this.excluded = excluded;
+        this.namedEntries = namedEntries;
     }
 
     private static String decapitalized(final String value) {
@@ -195,10 +214,23 @@ class TypeModelFactory {
                         element ->
                                 new PropertyModel(
                                         element.getSimpleName().toString(),
-                                        element.getReturnType(),
+                                        propertyType(type, element),
                                         element.getSimpleName().toString(),
                                         NullabilityResolver.of(element)))
                 .toList();
+    }
+
+    /**
+     * The type of a property as a member of the configured type, so the type argument a subtype
+     * gives its supertype replaces the type variable of the declaring element.
+     */
+    private TypeMirror propertyType(final TypeElement type, final ExecutableElement accessor) {
+        final ExecutableType member =
+                (ExecutableType)
+                        processingEnv
+                                .getTypeUtils()
+                                .asMemberOf((DeclaredType) type.asType(), accessor);
+        return member.getReturnType();
     }
 
     private Set<ExecutableElement> recordComponentAccessors(final TypeElement type) {
@@ -244,7 +276,7 @@ class TypeModelFactory {
                                 element ->
                                         new PropertyModel(
                                                 propertyName(element),
-                                                element.getReturnType(),
+                                                propertyType(type, element),
                                                 element.getSimpleName().toString(),
                                                 NullabilityResolver.of(element)))
                         .toList();
@@ -317,31 +349,57 @@ class TypeModelFactory {
                             + "' prefix");
         }
         if (name.startsWith("get") && returnKind == TypeKind.BOOLEAN && !kotlin) {
-            return Optional.of("a boolean property must use the 'is' prefix");
+            return Optional.of(BOOLEAN_NEEDS_IS_PREFIX);
         }
         if (name.startsWith("is") && returnKind != TypeKind.BOOLEAN && !kotlin) {
-            return Optional.of("the 'is' prefix requires a boolean return type");
+            return Optional.of(IS_PREFIX_NEEDS_BOOLEAN);
         }
         return Optional.empty();
     }
 
+    /**
+     * Whether a skip reason says that a getter has the wrong prefix for its return type. A getter
+     * like that is a property the author probably meant, so a named type warns about it.
+     */
+    private static boolean isWrongPrefix(final String reason) {
+        return reason.equals(BOOLEAN_NEEDS_IS_PREFIX) || reason.equals(IS_PREFIX_NEEDS_BOOLEAN);
+    }
+
+    /**
+     * The configured value that names the type, if the configuration names it, nested types
+     * included.
+     */
+    private Optional<AnnotationValue> namedValueOf(final TypeElement type) {
+        return Optional.ofNullable(namedEntries.get(type.getQualifiedName().toString()));
+    }
+
+    /**
+     * A skipped getter is a verbose note. A getter with the wrong prefix of a type the
+     * configuration names is a warning at the value that names the type, since the completeness
+     * check does not see it. An accessor overridden by an accepted one is not skipped, the property
+     * exists.
+     */
     private void logSkippedProperties(
             final TypeElement type,
             final Map<String, SkippedCandidate> skipped,
             final Set<String> acceptedNames) {
         skipped.forEach(
                 (name, candidate) -> {
-                    // an accessor overridden by an accepted one is not skipped, the property exists
                     if (!acceptedNames.contains(name)) {
-                        ElementSupport.logNote(
-                                processingEnv,
+                        final String message =
                                 "Skipped property '"
                                         + name
                                         + "' of "
                                         + type.getQualifiedName()
                                         + ": "
-                                        + candidate.reason(),
-                                candidate.element());
+                                        + candidate.reason();
+                        final Optional<AnnotationValue> namedBy = namedValueOf(type);
+                        if (namedBy.isPresent() && isWrongPrefix(candidate.reason())) {
+                            diagnostics.skippedPropertyOfNamedType(
+                                    message, configuration, namedBy.get());
+                        } else {
+                            ElementSupport.logNote(processingEnv, message, candidate.element());
+                        }
                     }
                 });
     }

@@ -17,6 +17,7 @@ blocked it. Pull requests and pushes to `main` run the workflows of the table on
 | Build and verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
 a|
 * `Build` runs `mvnw -B clean install -DskipTests -DskipITs`, then `mvnw -B verify`: the reactor installs without tests.
+* The reactor builds in parallel: `.mvn/maven.config` sets `-T 1C`, so modules build side by side on the four cores of a runner (`clean verify` on JDK 21 was about 23 % faster in a local measurement). The release build, the release dry run, the `Mutation testing` job and the `Sonar` job pin `-T 1` and stay serial: signing and publishing are not worth the risk of a parallel build, the dry run has to behave like the release, the mutation gain was within run-to-run noise, and the Sonar goal was not tried in parallel mode.
 * `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest` run the build and verify matrix. `latest` follows the newest generally available JDK.
 * Together they guarantee that `./mvnw clean verify` is green on every supported JDK, including the newest generally available one.
 
@@ -139,6 +140,14 @@ A backend that leaves something out of its generated code without failing the bu
 `GenerationContext.reportWarning(message)`: the core prints the message as a compiler warning at the same annotation. The
 Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out
 of the DSL (what the DSL does with it is in <<building-block-kotlin,chapter 5>>).
+
+The core warns about one kind of skipped getter as well. A getter with the `get` prefix that returns a boolean, such as
+`boolean getActive()`, and an `is` method that does not return a boolean, such as `String isName()`, are no properties in
+Java. When the configuration names the type itself, that skip is one compiler warning at the configured value that names
+the type. A nested type counts when the configuration names it by its own qualified name; a nested type that comes with
+its named container gets the verbose note instead. The warning has the text of the verbose note and says that the
+completeness check does not see the getter, so no matcher checks its value. A type that only a package entry picks up
+gets the verbose note instead, and so does every other skipped method, such as a private or a static one.
 
 [[concepts-scorecard-findings]]
 === Accepted OpenSSF Scorecard Findings

@@ -588,6 +588,42 @@ import java.util.Set;
     }
 
     @Test
+    @DisplayName("An inherited generic property has the type argument of the subtype")
+    void anInheritedGenericPropertyHasTheTypeArgumentOfTheSubtype() throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.Sub"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Base",
+                                """
+                                package some.other.pck;
+
+                                import java.util.List;
+
+                                public class Base<T> {
+                                    public T getValue() {
+                                        return null;
+                                    }
+
+                                    public List<T> getItems() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Sub",
+                                """
+                                package some.other.pck;
+
+                                public class Sub extends Base<String> {
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden("inherited-generic-property", "some/other/pck/SubMatcherDsl.kt");
+    }
+
+    @Test
     @DisplayName("Java types are written as their Kotlin counterparts")
     void javaTypesAreWrittenAsTheirKotlinCounterparts() throws IOException {
         final Compilation compilation =

@@ -76,11 +76,11 @@ public class StatusSpec(
     delegate.checkingAllProperties()
   }
 
-  public fun declaringClass(`value`: Class<*>?) {
+  public fun declaringClass(`value`: Class<out Order.Status>?) {
     delegate.withDeclaringClass(value)
   }
 
-  public fun declaringClass(matcher: Matcher<in Class<*>>) {
+  public fun declaringClass(matcher: Matcher<in Class<out Order.Status>>) {
     delegate.withDeclaringClass(matcher)
   }
 

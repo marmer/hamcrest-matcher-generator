@@ -15,8 +15,9 @@ The compiler runs the processor in every round in which it finds `@GenerateMatch
 the following happens:
 
 . `MatcherGenerationProcessor` hands the round to `MatcherGenerationProcessorWorker`, which resolves the configured class
-and package names to types. Names that match nothing are a compiler error for `@GenerateMatchers` and a warning for the
-5.x alias, which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types they name
+and package names to types. A name that matches nothing waits for later rounds, see <<runtime-deferred-names>>. A name that
+still matches nothing when processing is over is a compiler error for `@GenerateMatchers` and a warning for the 5.x alias,
+which keeps 5.x configurations compiling. The `exclude` entries then leave out the configured types they name
 by class or package, and the public member types they name are not modelled as nested types. An `exclude` entry that
 matches neither a configured type nor one of their public member types is a warning. Types that carry the processor's
 own `@Generated` marker are skipped, and the compiler notes each skip only with the verbose option. A top level type
@@ -26,7 +27,8 @@ that name.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages also hold types that are not configured. Each skipped method is reported with its reason, but only when the processor option
-`matchergenerator.verbose` is given; without it the compiler prints no note for them.
+`matchergenerator.verbose` is given; without it the compiler prints no note for them. Some skipped getters are
+warnings instead, see <<concepts-diagnostics,chapter 8>>.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in <<building-block-important-interfaces,chapter 5>>, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one
@@ -52,6 +54,7 @@ What a round cannot see is the file of an earlier round or compilation (decision
 * A second compilation of the same package (main and test, KAPT) writes its own file, and the compiler prefers it for that compilation. When the AssertJ backend finds a `SoftAssertionsProvider` of that package already on the class path outside the output directory of the running compilation, it reports a note naming the types the new mixin knows; `PropertyRepresentation` gets no such note. A class that a previous build of the same module left in its own output is replaced by this build, so it gets no note. The mixin of the second compilation does not contain the types of the first.
 * The Hamcrest `isXLike(reference)` compares a property deeply only when the matcher for its type is generated in the same round. A property whose type is a class of the user without a generated matcher in the round is compared with `equals`; with `-Amatchergenerator.verbose` a note names the property and the type. Library types (`java.`, `javax.`, `kotlin.`), enums and types generated in the round, also those without properties, do not get a note. `Optional<X>` is a `java.` type and is not unwrapped: it is compared with `equals` without a note.
 
+[[claimed-annotations]]
 A round without configuration can still reach the processor: the matchers written in an earlier round come back carrying `javax.annotation.processing.Generated` and `org.jspecify.annotations.NullMarked`. The processor claims these two annotation types in that round, and returns without generating anything. Without the claim, javac's `-Xlint:all -Werror` builds would fail on annotations nobody claims. The side effect is that javac skips a later processor in that round when that processor supports exactly these annotation types and nothing else.
 
 Notable Aspects::
@@ -59,6 +62,17 @@ Notable Aspects::
 * The model is built once per type and shared by all backends, so detection rules such as record components or
 getter naming exist only once.
 * A backend problem shows up as a compile error of the user's build, not as a failure of the user's tests (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
+
+[[runtime-deferred-names]]
+=== Names That Match Nothing Yet
+
+A configured name that matches neither a type nor a package in its round is not planned in that round, because another processor may write the type in a later round. The worker remembers the qualified name of the configuration and the unresolved names as strings, and never an element, mirror or value of an earlier round. In every later round that is not the last, it looks the configuration up again by its name, plans each remembered name that now resolves once, and forgets it. When processing is over, nothing is generated: each name that still matches nothing is reported once at its value, and the exclusion check of the configuration runs once, in the round in which its last remembered name is planned or, for a name that never resolves, when processing is over. A configuration without a remembered name runs its exclusion check in its round, as before.
+
+The deferral has three limits:
+
+* A package entry that resolves in its round does not pick up the types that a later round generates into that package.
+* A late type is not in a package-level file that an earlier round has already written; the once-per-package warning described under <<files-once-per-package>> names it, and the file is not written again.
+* The processor claims `@GenerateMatchers` and `@MatcherConfiguration` in the round in which it sees them, so javac does not hand them to a processor listed after it (the claim of the generated matchers' annotations is described under <<claimed-annotations>>); a processor that generates a configured type must therefore run on its own annotation or be listed before the matcher generator.
 
 [[runtime-mismatch-hamcrest]]
 === Describing a Mismatch (Hamcrest)

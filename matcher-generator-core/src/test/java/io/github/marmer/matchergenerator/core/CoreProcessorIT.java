@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -976,6 +977,199 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("An inherited generic property has the type argument its subtype gives")
+    void inheritedGenericPropertiesHaveTheTypeArgumentOfTheSubtype() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base<String> {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Sub\""), base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(
+                        "value:java.lang.String:getValue",
+                        "items:java.util.List<java.lang.String>:getItems",
+                        CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic property is resolved through every level of the hierarchy")
+    void inheritedGenericPropertiesAreResolvedThroughEveryLevel() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "}");
+        final JavaFileObject mid =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Mid",
+                        "package some.other.pck;",
+                        "public class Mid<U> extends Base<U> {}");
+        final JavaFileObject leaf =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Leaf",
+                        "package some.other.pck;",
+                        "public class Leaf extends Mid<Integer> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Leaf\""), base, mid, leaf);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of("value:java.lang.Integer:getValue", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic interface property has the type argument of the class")
+    void inheritedGenericInterfacePropertiesHaveTheTypeArgumentOfTheClass() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    default T getName() { return null; }",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public class Person implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic property of a generic type keeps its type variable")
+    void inheritedGenericPropertiesOfAGenericTypeKeepTheTypeVariable() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject box =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Box",
+                        "package some.other.pck;",
+                        "public class Box<T> extends Base<T> {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Box\""), base, box);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(List.of("T"), model.typeParameters());
+        assertEquals(
+                List.of("value:T:getValue", "items:java.util.List<T>:getItems", CLASS_PROPERTY),
+                describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic getter of a record has the type argument of the record")
+    void anInheritedGenericGetterOfARecordHasTheTypeArgumentOfTheRecord() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    default T getName() { return null; }",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public record Person() implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(TypeModel.Kind.RECORD, model.kind());
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited abstract generic getter has the type argument of the abstract class")
+    void anInheritedAbstractGenericGetterHasTheTypeArgumentOfTheClass() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    T getName();",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public abstract class Person implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("A raw supertype does not throw and its type variables are not kept")
+    void aRawSupertypeDoesNotThrowAndItsTypeVariablesAreNotKept() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Sub\""), base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(
+                        "value:java.lang.Object:getValue",
+                        "items:java.util.List:getItems",
+                        CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
     @DisplayName(
             "Public member types are nested models and other member types are skipped with a note")
     void publicMemberTypesAreNestedModels() {
@@ -1846,8 +2040,273 @@ class CoreProcessorIT {
                 .atColumn((int) secondColumn);
     }
 
+    @Test
+    @DisplayName(
+            "A configured type that another processor writes in the first round is modelled, and its matchers are generated")
+    void aConfiguredTypeWrittenByAnotherProcessorInTheFirstRoundIsModelled() {
+        final JavaFileObject configuration = generateMatchersConfiguration("\"gen.Made\"");
+
+        // The other processor comes first: a processor that claims the annotation hides it from the
+        // processors after it in the same round, so only the first one writes in round 1.
+        final Compilation compilation =
+                javacWith()
+                        .withProcessors(
+                                new FirstRoundTypeProcessor("gen.Made"),
+                                new MatcherGenerationProcessor(() -> NOW))
+                        .compile(List.of(configuration));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals("gen.Made", model.qualifiedName());
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(model.properties()));
+    }
+
+    /**
+     * Compiles with the other processor before the matcher generator, so that the other one runs in
+     * the first round: a processor that claims the annotation hides it from the processors after
+     * it.
+     */
+    private Compilation compileWithOtherFirst(
+            final Processor other, final JavaFileObject... sources) {
+        return javacWith()
+                .withProcessors(other, new MatcherGenerationProcessor(() -> NOW))
+                .compile(Arrays.asList(sources));
+    }
+
+    private static List<String> qualifiedNamesOf(final List<TypeModel> models) {
+        return models.stream().map(TypeModel::qualifiedName).sorted().toList();
+    }
+
+    @Test
+    @DisplayName(
+            "A name that resolves in a later round is modelled once, next to a name that resolves in the first round")
+    void aNameOfALaterRoundIsModelledOnceNextToANameOfTheFirstRound() throws IOException {
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("gen.Made"),
+                        generateMatchersConfiguration("{\"some.summarized.First\", \"gen.Made\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("gen.Made", "some.summarized.First"),
+                qualifiedNamesOf(RecordingBackend.models()));
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+    }
+
+    @Test
+    @DisplayName(
+            "A package file of a configuration with a name that never resolves is written once, in its round")
+    void aPackageFileOfAConfigurationWithANeverResolvingNameIsWrittenOnceInItsRound()
+            throws IOException {
+        final Compilation compilation =
+                compile(
+                        configuration("{\"some.summarized.First\", \"not.existing.Type\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Neither a type nor a package exists for 'not.existing.Type'");
+    }
+
+    @Test
+    @DisplayName(
+            "A resolvable name next to a name that never resolves is generated in its round, for GenerateMatchers")
+    void aResolvableNameOfAFailingGenerateMatchersIsGeneratedInItsRound() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration(
+                        "{\"some.other.pck.SomePojo\", \"not.existing.Type\"}");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A resolvable name next to a name that never resolves is generated in its round, for the deprecated alias")
+    void aResolvableNameOfAFailingDeprecatedAliasIsGeneratedInItsRound() {
+        final JavaFileObject configuration =
+                configuration("{\"some.other.pck.SomePojo\", \"not.existing.Type\"}");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that still matches nothing after a later round is reported once, at its own value, for GenerateMatchers")
+    void aNameThatNeverResolvesIsReportedOnceAtTheEndAfterALaterRound() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("{\"gen.Made\", \"not.existing.Type\"}");
+
+        final Compilation compilation =
+                compileWithOtherFirst(new FirstRoundTypeProcessor("gen.Made"), configuration);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn((int) columnOf(compilation, "'not.existing.Type'"));
+        assertEquals(List.of("gen.Made"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that still matches nothing after a later round is reported once, at its own value, for the deprecated alias")
+    void aNameOfTheAliasThatNeverResolvesIsWarnedOnceAtTheEndAfterALaterRound() {
+        final JavaFileObject configuration = configuration("{\"gen.Made\", \"not.existing.Type\"}");
+
+        final Compilation compilation =
+                compileWithOtherFirst(new FirstRoundTypeProcessor("gen.Made"), configuration);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                warningsContaining(
+                        compilation, "Neither a type nor a package exists for 'not.existing.Type'"),
+                () -> "Warnings: " + compilation.warnings());
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn((int) columnOf(compilation, "'not.existing.Type'"));
+        assertEquals(List.of("gen.Made"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A type with both configuration annotations is one error, even when a name matches nothing")
+    void aTypeWithBothAnnotationsIsOneErrorEvenWithAnUnresolvableName() {
+        final JavaFileObject both =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.BothConfiguration",
+                        "package some.pck;",
+                        "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                        "import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;",
+                        "@GenerateMatchers(\"not.existing.Type\")",
+                        "@MatcherConfiguration(\"not.existing.Type\")",
+                        "public final class BothConfiguration {",
+                        "}");
+
+        final Compilation compilation = compile(both);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Use either @GenerateMatchers or @MatcherConfiguration");
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "An unmatched exclude entry of a configuration with a name that never resolves is warned about once")
+    void anUnmatchedExcludeEntryOfAConfigurationWithANeverResolvingNameIsWarnedOnce(
+            final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                exclusionConfiguration(
+                        deprecatedAlias,
+                        "{\"some.other.pck.SomePojo\", \"not.existing.Type\"}",
+                        "\"not.existing.Excluded\"");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        assertEquals(
+                deprecatedAlias ? 0 : 1,
+                compilation.errors().size(),
+                () -> "Errors: " + compilation.errors());
+        assertEquals(
+                1,
+                warningsContaining(compilation, "Exclusion 'not.existing.Excluded'"),
+                () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "An exclude entry that names a type of a name that resolves in a later round is no warning")
+    void anExcludeEntryOfANameOfALaterRoundIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                exclusionConfiguration(
+                        deprecatedAlias,
+                        "{\"some.other.pck.SomePojo\", \"gen.Made\"}",
+                        "\"gen.Made\"");
+
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("gen.Made"), configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that resolves in a later round into a package whose file an earlier round wrote is warned about, and the file is not written again")
+    void aLateTypeOfAPackageWrittenByAnEarlierRoundIsWarnedAboutAndNotWrittenAgain()
+            throws IOException {
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("some.summarized.Late"),
+                        generateMatchersConfiguration(
+                                "{\"some.summarized.First\", \"some.summarized.Late\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.summarized.PackageSummary was already written in an earlier"
+                                + " processing round and is not written again. It does not know"
+                                + " the types generated in this round: some.summarized.Late");
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.summarized.First", "some.summarized.Late"),
+                qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    private static long warningsContaining(final Compilation compilation, final String text) {
+        return compilation.warnings().stream()
+                .filter(diagnostic -> diagnostic.getMessage(null).contains(text))
+                .count();
+    }
+
     private static long columnOf(final Compilation compilation, final String messagePart) {
-        return compilation.errors().stream()
+        return Stream.concat(compilation.errors().stream(), compilation.warnings().stream())
                 .filter(diagnostic -> diagnostic.getMessage(null).contains(messagePart))
                 .mapToLong(javax.tools.Diagnostic::getColumnNumber)
                 .findFirst()
@@ -2095,11 +2554,28 @@ class CoreProcessorIT {
     }
 
     @Test
-    @DisplayName("The verbose option emits one note per skipped property with its reason")
-    void theVerboseOptionEmitsOneNotePerSkippedProperty() {
-        final Compilation compilation = compileVerbose(skippingConfiguration(), skippingPojo());
+    @DisplayName(
+            "A named type's skipped getters are verbose notes, except its two wrong prefix getters, which are warnings at its name")
+    void aNamedTypesSkippedGettersAreNotesExceptTheWrongPrefixOnesWhichAreWarnings()
+            throws IOException {
+        final JavaFileObject configuration = skippingConfiguration();
+
+        final Compilation compilation = compileVerbose(configuration, skippingPojo());
 
         CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(2);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getBooleanWithGet' of some.other.pck.SkippingPojo: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.SkippingPojo\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'isNotBoolean' of some.other.pck.SkippingPojo: the 'is' prefix requires a boolean return type; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.SkippingPojo\""));
         final List<String> skipNotes = skipNotes(compilation);
         assertEquals(
                 List.of(
@@ -2108,10 +2584,6 @@ class CoreProcessorIT {
                         "Skipped property 'getStatic' of some.other.pck.SkippingPojo: method is static",
                         "Skipped property 'getWithParameter' of some.other.pck.SkippingPojo: method takes parameters",
                         "Skipped property 'getVoid' of some.other.pck.SkippingPojo: method returns void",
-                        "Skipped property 'getBooleanWithGet' of some.other.pck.SkippingPojo: "
-                                + "a boolean property must use the 'is' prefix",
-                        "Skipped property 'isNotBoolean' of some.other.pck.SkippingPojo: "
-                                + "the 'is' prefix requires a boolean return type",
                         "Skipped property 'get' of some.other.pck.SkippingPojo: no property name follows the 'get' prefix"),
                 skipNotes);
         assertEquals(
@@ -2124,6 +2596,357 @@ class CoreProcessorIT {
                 .map(d -> d.getMessage(null))
                 .filter(message -> message.startsWith("Skipped property"))
                 .collect(Collectors.toList());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with a boolean get getter is one warning at its name, naming the method, on both annotations")
+    void aNamedTypeWithABooleanGetterIsOneWarningAtItsName(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(configuration, subWith("    public boolean getActive() { return true; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with an is method that returns no boolean is one warning at its name, naming the method, on both annotations")
+    void aNamedTypeWithAnIsMethodWithoutBooleanIsOneWarningAtItsName(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(configuration, subWith("    public String isName() { return \"\"; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'isName' of some.other.pck.Sub: the 'is' prefix requires a boolean return type; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A type a package entry picks up with the same skipped getters is no warning, its notes stay verbose")
+    void aPackagePickedUpTypeWithTheSkippedGettersIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck\"");
+        final JavaFileObject sub =
+                subWith(
+                        "    public boolean getActive() { return true; }",
+                        "    public String isName() { return \"\"; }");
+
+        final Compilation quiet = compile(configuration, sub);
+        final Compilation verbose = compileVerbose(configuration, sub);
+
+        CompilationSubject.assertThat(quiet).succeeded();
+        CompilationSubject.assertThat(quiet).hadWarningCount(0);
+        assertEquals(List.of(), skipNotes(quiet));
+        CompilationSubject.assertThat(verbose).succeeded();
+        CompilationSubject.assertThat(verbose).hadWarningCount(0);
+        assertEquals(
+                List.of(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix",
+                        "Skipped property 'isName' of some.other.pck.Sub: the 'is' prefix requires a boolean return type"),
+                skipNotes(verbose));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with a private, a static, a parameterised or a void get getter is no warning, on both annotations")
+    void aNamedTypeWithAnotherSkippedGetterIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(
+                        configuration,
+                        subWith(
+                                "    private String getPrivate() { return \"\"; }",
+                                "    public static String getStatic() { return \"\"; }",
+                                "    public String getWithParameter(int param) { return \"\"; }",
+                                "    public void getVoid() { }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A skipped boolean get getter that a Kotlin subtype overrides with an accepted getter is no warning, on both annotations")
+    void aSkippedGetterOverriddenByAnAcceptedOneIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "@kotlin.Metadata",
+                        "public class Sub extends Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub, KOTLIN_METADATA);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+        assertEquals(
+                List.of("active:boolean:getActive", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named nested type with a skipped boolean get getter is one warning at the value that names it, on both annotations")
+    void aNamedNestedTypeWithABooleanGetterIsOneWarningAtItsValue(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Outer.Inner\"");
+
+        final Compilation compilation = compile(configuration, outerWithInner());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Outer.Inner\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A nested type that only its named container brings in is a verbose note at its getter, not a warning, on both annotations")
+    void aNestedTypeOfANamedTypeIsOnlyAVerboseNote(final boolean deprecatedAlias) {
+        final JavaFileObject outer = outerWithInner();
+
+        final Compilation compilation =
+                compileVerbose(
+                        configurationNaming(deprecatedAlias, "\"some.other.pck.Outer\""), outer);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+        assertEquals(
+                List.of(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix"),
+                skipNotes(compilation));
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix")
+                .inFile(outer)
+                .onLine(6);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type whose only getter is a boolean get getter has two warnings: the skipped getter and the missing properties")
+    void aNamedTypeWhoseOnlyGetterIsSkippedHasTwoWarnings(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(2);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Type 'some.other.pck.Sub' has no properties to match")
+                .inFile(sub)
+                .onLine(2);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "Under the verbose option a wrong prefix getter of a named type is the warning only, no note with the same text")
+    void aWrongPrefixGetterOfANamedTypeIsTheWarningAndNoNote(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compileVerbose(
+                        configuration, subWith("    public boolean getActive() { return true; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(List.of(), skipNotes(compilation));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named subtype that inherits a wrong prefix getter from an unnamed supertype has the warning at its own name")
+    void aWrongPrefixGetterInheritedFromAnUnnamedSupertypeWarnsAtTheNamedSubtype(
+            final boolean deprecatedAlias) throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {",
+                        "    public String getName() { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "When the supertype is named too, an inherited wrong prefix getter warns at the name of each named type that has it")
+    void anInheritedWrongPrefixGetterWarnsAtEachNamedTypeThatHasIt(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(
+                        deprecatedAlias, "{\"some.other.pck.Sub\", \"some.other.pck.Base\"}");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {",
+                        "    public String getName() { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(3);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Base: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Base\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Type 'some.other.pck.Base' has no properties to match")
+                .inFile(base)
+                .onLine(2);
+    }
+
+    /** The configuration names the given values with the annotation the flag selects. */
+    private static JavaFileObject configurationNaming(
+            final boolean deprecatedAlias, final String configuredTypes) {
+        return deprecatedAlias
+                ? configuration(configuredTypes)
+                : generateMatchersConfiguration(configuredTypes);
+    }
+
+    /**
+     * A public class some.other.pck.Sub with the given members. It has the property name besides
+     * them, since a type without any property is a warning of its own.
+     */
+    private static JavaFileObject subWith(final String... members) {
+        final List<String> lines = new ArrayList<>();
+        lines.add("package some.other.pck;");
+        lines.add("public class Sub {");
+        lines.add("    public String getName() { return \"\"; }");
+        lines.addAll(Arrays.asList(members));
+        lines.add("}");
+        return JavaFileObjects.forSourceLines("some.other.pck.Sub", lines.toArray(String[]::new));
+    }
+
+    /**
+     * A public class Outer with a public nested class Inner. Inner has a boolean get getter, and
+     * the property label besides it.
+     */
+    private static JavaFileObject outerWithInner() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Outer",
+                "package some.other.pck;",
+                "public class Outer {",
+                "    public String getName() { return \"\"; }",
+                "    public static class Inner {",
+                "        public String getLabel() { return \"\"; }",
+                "        public boolean getActive() { return true; }",
+                "    }",
+                "}");
     }
 
     @Test

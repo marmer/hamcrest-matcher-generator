@@ -130,6 +130,25 @@ final class ProcessorDiagnostics {
                         configuredValue);
     }
 
+    /**
+     * A getter of a type the configuration names is skipped for its prefix, so no matcher checks
+     * the value. One warning at the configured value that names the type, with the text of the
+     * verbose note.
+     */
+    void skippedPropertyOfNamedType(
+            final String skippedProperty,
+            final ConfigurationSite configuration,
+            final AnnotationValue configuredValue) {
+        processingEnv
+                .getMessager()
+                .printMessage(
+                        Diagnostic.Kind.WARNING,
+                        skippedProperty + "; the completeness check does not see it",
+                        configuration.element(),
+                        configuration.mirror(),
+                        configuredValue);
+    }
+
     /** The message form of a type name: the word Type and the name in single quotes. */
     private static String typeNamed(final CharSequence qualifiedName) {
         return "Type '" + qualifiedName + "'";

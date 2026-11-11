@@ -4,7 +4,6 @@ import io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher;
 import io.github.marmer.matchergenerator.hamcrest.GeneratedBeanMatcher;
 import io.github.marmer.matchergenerator.hamcrest.ReferenceMatching;
 import java.lang.Class;
-import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
 import javax.annotation.processing.Generated;
@@ -29,7 +28,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
-  public SimplePojoMatcher withParentPojoProperty(final Matcher<? super Object> matcher) {
+  public SimplePojoMatcher withParentPojoProperty(final Matcher<? super String> matcher) {
     beanPropertyMatcher.with("parentPojoProperty", matcher);
     return this;
   }
@@ -59,7 +58,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
     return this;
   }
 
-  public SimplePojoMatcher withParentPojoProperty(final Object value) {
+  public SimplePojoMatcher withParentPojoProperty(final String value) {
     beanPropertyMatcher.with("parentPojoProperty", Matchers.equalTo(value));
     return this;
   }
