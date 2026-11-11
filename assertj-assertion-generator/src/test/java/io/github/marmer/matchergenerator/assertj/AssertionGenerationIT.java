@@ -1496,6 +1496,44 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("An inherited generic property has the type argument of the subtype")
+    void anInheritedGenericPropertyHasTheTypeArgumentOfTheSubtype() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.Sub"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Base",
+                                """
+                                package some.other.pck;
+
+                                import java.util.List;
+                                import org.jspecify.annotations.Nullable;
+
+                                public class Base<T> {
+                                    public @Nullable T getValue() {
+                                        return null;
+                                    }
+
+                                    public List<T> getItems() {
+                                        return null;
+                                    }
+                                }
+                                """),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.Sub",
+                                """
+                                package some.other.pck;
+
+                                public class Sub extends Base<String> {
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(compilation, "inherited-generic-property", "some.other.pck.AbstractSubAssert");
+        assertGolden(compilation, "inherited-generic-property", "some.other.pck.SubAssert");
+    }
+
+    @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all with JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithJSpecify() {
         assertNoWarningUnderLintAll(classPathWithJSpecify());

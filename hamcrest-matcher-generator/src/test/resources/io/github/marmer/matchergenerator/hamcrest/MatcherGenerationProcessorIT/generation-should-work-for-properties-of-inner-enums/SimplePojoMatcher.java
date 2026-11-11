@@ -141,7 +141,8 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
         beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.InnerType.InnerEnum>(SimplePojo.InnerType.InnerEnum.class, "declaringClass", "class");
       }
 
-      public InnerEnumMatcher withDeclaringClass(final Matcher<? super Class<?>> matcher) {
+      public InnerEnumMatcher withDeclaringClass(
+          final Matcher<? super Class<? extends SimplePojo.InnerType.InnerEnum>> matcher) {
         beanPropertyMatcher.with("declaringClass", matcher);
         return this;
       }
@@ -161,7 +162,8 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
         return this;
       }
 
-      public InnerEnumMatcher withDeclaringClass(final Class<?> value) {
+      public InnerEnumMatcher withDeclaringClass(
+          final Class<? extends SimplePojo.InnerType.InnerEnum> value) {
         beanPropertyMatcher.with("declaringClass", Matchers.equalTo(value));
         return this;
       }

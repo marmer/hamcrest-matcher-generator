@@ -134,7 +134,9 @@ by the processor option `kapt.kotlin.generated`, and keeps the rule for files wr
 
 `TypeModelFactory`::
 Reads a type with the compiler's element API and creates the `TypeModel`: getters for beans, components and accessors
-for records, inherited properties and public member types.
+for records, inherited properties and public member types. The type of a property is the return type of its accessor
+as a member of the configured type (`Types.asMemberOf`), so a type argument that a subtype gives its supertype
+replaces the supertype's type variable: `Sub extends Base<String>` gives `String` for an inherited `T getValue()`.
 
 `NullabilityResolver`::
 Derives the `Nullability` of a property for the `TypeModel`: primitives are non null, JSpecify and JetBrains

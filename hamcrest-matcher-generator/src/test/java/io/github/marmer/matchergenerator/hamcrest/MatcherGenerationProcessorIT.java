@@ -545,6 +545,63 @@ class MatcherGenerationProcessorIT {
     }
 
     @Test
+    @DisplayName("Inherited generic properties have the type argument of the subtype")
+    void inheritedGenericPropertiesShouldHaveTheTypeArgumentOfTheSubtype() throws IOException {
+        // Preparation
+        JavaFileObject configuration =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.SomeConfiguration",
+                        """
+            package some.pck;
+
+            import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;
+
+            @MatcherConfiguration("some.other.pck.Sub")
+            public final class SomeConfiguration{
+
+            }
+            """);
+        JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        """
+            package some.other.pck;
+
+            import java.util.List;
+            import org.jspecify.annotations.Nullable;
+
+            public class Base<T>{
+                public @Nullable T getValue(){
+                    return null;
+                }
+
+                public List<T> getItems(){
+                    return null;
+                }
+            }
+            """);
+        JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        """
+            package some.other.pck;
+
+            public class Sub extends Base<String>{
+            }
+            """);
+
+        // Execution
+        Compilation compilation = compileWithJSpecify(configuration, base, sub);
+
+        // Assertion
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGeneratedSource(
+                compilation,
+                "inherited-generic-properties-should-have-the-type-argument-of-the-subtype",
+                "some.other.pck.SubMatcher");
+    }
+
+    @Test
     @DisplayName(
             "Matcher and matcher methods should not be generated for non public types and properties")
     void matcherAndMatcherMethodsShouldNotBeGeneratedForNonPublicTypesAndProperties()

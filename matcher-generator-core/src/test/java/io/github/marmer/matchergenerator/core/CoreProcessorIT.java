@@ -976,6 +976,199 @@ class CoreProcessorIT {
     }
 
     @Test
+    @DisplayName("An inherited generic property has the type argument its subtype gives")
+    void inheritedGenericPropertiesHaveTheTypeArgumentOfTheSubtype() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base<String> {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Sub\""), base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(
+                        "value:java.lang.String:getValue",
+                        "items:java.util.List<java.lang.String>:getItems",
+                        CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic property is resolved through every level of the hierarchy")
+    void inheritedGenericPropertiesAreResolvedThroughEveryLevel() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "}");
+        final JavaFileObject mid =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Mid",
+                        "package some.other.pck;",
+                        "public class Mid<U> extends Base<U> {}");
+        final JavaFileObject leaf =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Leaf",
+                        "package some.other.pck;",
+                        "public class Leaf extends Mid<Integer> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Leaf\""), base, mid, leaf);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of("value:java.lang.Integer:getValue", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic interface property has the type argument of the class")
+    void inheritedGenericInterfacePropertiesHaveTheTypeArgumentOfTheClass() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    default T getName() { return null; }",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public class Person implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic property of a generic type keeps its type variable")
+    void inheritedGenericPropertiesOfAGenericTypeKeepTheTypeVariable() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject box =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Box",
+                        "package some.other.pck;",
+                        "public class Box<T> extends Base<T> {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Box\""), base, box);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(List.of("T"), model.typeParameters());
+        assertEquals(
+                List.of("value:T:getValue", "items:java.util.List<T>:getItems", CLASS_PROPERTY),
+                describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited generic getter of a record has the type argument of the record")
+    void anInheritedGenericGetterOfARecordHasTheTypeArgumentOfTheRecord() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    default T getName() { return null; }",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public record Person() implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals(TypeModel.Kind.RECORD, model.kind());
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(model.properties()));
+    }
+
+    @Test
+    @DisplayName("An inherited abstract generic getter has the type argument of the abstract class")
+    void anInheritedAbstractGenericGetterHasTheTypeArgumentOfTheClass() {
+        final JavaFileObject named =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Named",
+                        "package some.other.pck;",
+                        "public interface Named<T> {",
+                        "    T getName();",
+                        "}");
+        final JavaFileObject person =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Person",
+                        "package some.other.pck;",
+                        "public abstract class Person implements Named<String> {}");
+
+        final Compilation compilation =
+                compile(configuration("\"some.other.pck.Person\""), named, person);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(CLASS_PROPERTY, "name:java.lang.String:getName"),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
+    @DisplayName("A raw supertype does not throw and its type variables are not kept")
+    void aRawSupertypeDoesNotThrowAndItsTypeVariablesAreNotKept() {
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "import java.util.List;",
+                        "public class Base<T> {",
+                        "    public T getValue() { return null; }",
+                        "    public List<T> getItems() { return null; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {}");
+
+        final Compilation compilation = compile(configuration("\"some.other.pck.Sub\""), base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                List.of(
+                        "value:java.lang.Object:getValue",
+                        "items:java.util.List:getItems",
+                        CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @Test
     @DisplayName(
             "Public member types are nested models and other member types are skipped with a note")
     void publicMemberTypesAreNestedModels() {
