@@ -32,9 +32,11 @@ final class PropertyAccess {
             Map<String, ? extends BeanPropertyMatcher.Accessor<?>> accessors) {}
 
     /**
-     * What is printed of each generated type, held by the type itself. A map keyed by the type
-     * would keep the class loader of a type alive: its accessors reference that loader, and the map
-     * would hold them as long as the type is reachable through the map.
+     * What is printed of each generated type, held by the type itself. In a map keyed by the type,
+     * the value would keep the key alive: its accessors reference the class loader of the type, and
+     * that loader references the type, so the entry would never be removed. The holder is created
+     * on the first lookup of any class, registered or not, and stays empty for the ones no
+     * generated matcher has registered.
      */
     private static final ClassValue<AtomicReference<@Nullable PrintedType>> PRINTED_TYPES =
             new ClassValue<>() {
