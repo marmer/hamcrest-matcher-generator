@@ -26,7 +26,8 @@ that name.
 . `TypeModelFactory` creates the `TypeModel` of the type, including its public nested types. A configured type without
 properties produces a compiler warning when the configuration names it; a type that only a package entry picks up gets
 a verbose note instead, since packages also hold types that are not configured. Each skipped method is reported with its reason, but only when the processor option
-`matchergenerator.verbose` is given; without it the compiler prints no note for them.
+`matchergenerator.verbose` is given; without it the compiler prints no note for them. Some skipped getters are
+warnings instead, see <<concepts-diagnostics,chapter 8>>.
 . The worker calls every `GeneratorBackend` found through `ServiceLoader` with that model and a `GenerationContext` (its content is listed in <<building-block-important-interfaces,chapter 5>>, Important Interfaces). The worker models every configured type of the round first and generates afterwards, so a backend knows the types of other configurations too.
 There is no selection: the backends on the processor path are the user's choice.
 . Each backend returns its `GeneratedSource` files, one per generated class. The AssertJ backend also returns one

@@ -2288,11 +2288,28 @@ class CoreProcessorIT {
     }
 
     @Test
-    @DisplayName("The verbose option emits one note per skipped property with its reason")
-    void theVerboseOptionEmitsOneNotePerSkippedProperty() {
-        final Compilation compilation = compileVerbose(skippingConfiguration(), skippingPojo());
+    @DisplayName(
+            "A named type's skipped getters are verbose notes, except its two wrong prefix getters, which are warnings at its name")
+    void aNamedTypesSkippedGettersAreNotesExceptTheWrongPrefixOnesWhichAreWarnings()
+            throws IOException {
+        final JavaFileObject configuration = skippingConfiguration();
+
+        final Compilation compilation = compileVerbose(configuration, skippingPojo());
 
         CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(2);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getBooleanWithGet' of some.other.pck.SkippingPojo: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.SkippingPojo\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'isNotBoolean' of some.other.pck.SkippingPojo: the 'is' prefix requires a boolean return type; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.SkippingPojo\""));
         final List<String> skipNotes = skipNotes(compilation);
         assertEquals(
                 List.of(
@@ -2301,10 +2318,6 @@ class CoreProcessorIT {
                         "Skipped property 'getStatic' of some.other.pck.SkippingPojo: method is static",
                         "Skipped property 'getWithParameter' of some.other.pck.SkippingPojo: method takes parameters",
                         "Skipped property 'getVoid' of some.other.pck.SkippingPojo: method returns void",
-                        "Skipped property 'getBooleanWithGet' of some.other.pck.SkippingPojo: "
-                                + "a boolean property must use the 'is' prefix",
-                        "Skipped property 'isNotBoolean' of some.other.pck.SkippingPojo: "
-                                + "the 'is' prefix requires a boolean return type",
                         "Skipped property 'get' of some.other.pck.SkippingPojo: no property name follows the 'get' prefix"),
                 skipNotes);
         assertEquals(
@@ -2317,6 +2330,357 @@ class CoreProcessorIT {
                 .map(d -> d.getMessage(null))
                 .filter(message -> message.startsWith("Skipped property"))
                 .collect(Collectors.toList());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with a boolean get getter is one warning at its name, naming the method, on both annotations")
+    void aNamedTypeWithABooleanGetterIsOneWarningAtItsName(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(configuration, subWith("    public boolean getActive() { return true; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with an is method that returns no boolean is one warning at its name, naming the method, on both annotations")
+    void aNamedTypeWithAnIsMethodWithoutBooleanIsOneWarningAtItsName(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(configuration, subWith("    public String isName() { return \"\"; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'isName' of some.other.pck.Sub: the 'is' prefix requires a boolean return type; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A type a package entry picks up with the same skipped getters is no warning, its notes stay verbose")
+    void aPackagePickedUpTypeWithTheSkippedGettersIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck\"");
+        final JavaFileObject sub =
+                subWith(
+                        "    public boolean getActive() { return true; }",
+                        "    public String isName() { return \"\"; }");
+
+        final Compilation quiet = compile(configuration, sub);
+        final Compilation verbose = compileVerbose(configuration, sub);
+
+        CompilationSubject.assertThat(quiet).succeeded();
+        CompilationSubject.assertThat(quiet).hadWarningCount(0);
+        assertEquals(List.of(), skipNotes(quiet));
+        CompilationSubject.assertThat(verbose).succeeded();
+        CompilationSubject.assertThat(verbose).hadWarningCount(0);
+        assertEquals(
+                List.of(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix",
+                        "Skipped property 'isName' of some.other.pck.Sub: the 'is' prefix requires a boolean return type"),
+                skipNotes(verbose));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type with a private, a static, a parameterised or a void get getter is no warning, on both annotations")
+    void aNamedTypeWithAnotherSkippedGetterIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compile(
+                        configuration,
+                        subWith(
+                                "    private String getPrivate() { return \"\"; }",
+                                "    public static String getStatic() { return \"\"; }",
+                                "    public String getWithParameter(int param) { return \"\"; }",
+                                "    public void getVoid() { }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A skipped boolean get getter that a Kotlin subtype overrides with an accepted getter is no warning, on both annotations")
+    void aSkippedGetterOverriddenByAnAcceptedOneIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "@kotlin.Metadata",
+                        "public class Sub extends Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub, KOTLIN_METADATA);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+        assertEquals(
+                List.of("active:boolean:getActive", CLASS_PROPERTY),
+                describe(onlyModel().properties()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named nested type with a skipped boolean get getter is one warning at the value that names it, on both annotations")
+    void aNamedNestedTypeWithABooleanGetterIsOneWarningAtItsValue(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Outer.Inner\"");
+
+        final Compilation compilation = compile(configuration, outerWithInner());
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Outer.Inner\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A nested type that only its named container brings in is a verbose note at its getter, not a warning, on both annotations")
+    void aNestedTypeOfANamedTypeIsOnlyAVerboseNote(final boolean deprecatedAlias) {
+        final JavaFileObject outer = outerWithInner();
+
+        final Compilation compilation =
+                compileVerbose(
+                        configurationNaming(deprecatedAlias, "\"some.other.pck.Outer\""), outer);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(0);
+        assertEquals(
+                List.of(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix"),
+                skipNotes(compilation));
+        CompilationSubject.assertThat(compilation)
+                .hadNoteContaining(
+                        "Skipped property 'getActive' of some.other.pck.Outer.Inner: a boolean property must use the 'is' prefix")
+                .inFile(outer)
+                .onLine(6);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named type whose only getter is a boolean get getter has two warnings: the skipped getter and the missing properties")
+    void aNamedTypeWhoseOnlyGetterIsSkippedHasTwoWarnings(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(2);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Type 'some.other.pck.Sub' has no properties to match")
+                .inFile(sub)
+                .onLine(2);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "Under the verbose option a wrong prefix getter of a named type is the warning only, no note with the same text")
+    void aWrongPrefixGetterOfANamedTypeIsTheWarningAndNoNote(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+
+        final Compilation compilation =
+                compileVerbose(
+                        configuration, subWith("    public boolean getActive() { return true; }"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+        assertEquals(List.of(), skipNotes(compilation));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "A named subtype that inherits a wrong prefix getter from an unnamed supertype has the warning at its own name")
+    void aWrongPrefixGetterInheritedFromAnUnnamedSupertypeWarnsAtTheNamedSubtype(
+            final boolean deprecatedAlias) throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(deprecatedAlias, "\"some.other.pck.Sub\"");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {",
+                        "    public String getName() { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation).hadWarningCount(1);
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "When the supertype is named too, an inherited wrong prefix getter warns at the name of each named type that has it")
+    void anInheritedWrongPrefixGetterWarnsAtEachNamedTypeThatHasIt(final boolean deprecatedAlias)
+            throws IOException {
+        final JavaFileObject configuration =
+                configurationNaming(
+                        deprecatedAlias, "{\"some.other.pck.Sub\", \"some.other.pck.Base\"}");
+        final JavaFileObject base =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Base",
+                        "package some.other.pck;",
+                        "public class Base {",
+                        "    public boolean getActive() { return true; }",
+                        "}");
+        final JavaFileObject sub =
+                JavaFileObjects.forSourceLines(
+                        "some.other.pck.Sub",
+                        "package some.other.pck;",
+                        "public class Sub extends Base {",
+                        "    public String getName() { return \"\"; }",
+                        "}");
+
+        final Compilation compilation = compile(configuration, base, sub);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation).hadWarningCount(3);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Sub: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Sub\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Skipped property 'getActive' of some.other.pck.Base: a boolean property must use the 'is' prefix; the completeness check does not see it")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn(columnOfQuotedName(configuration, 3, "\"some.other.pck.Base\""));
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Type 'some.other.pck.Base' has no properties to match")
+                .inFile(base)
+                .onLine(2);
+    }
+
+    /** The configuration names the given values with the annotation the flag selects. */
+    private static JavaFileObject configurationNaming(
+            final boolean deprecatedAlias, final String configuredTypes) {
+        return deprecatedAlias
+                ? configuration(configuredTypes)
+                : generateMatchersConfiguration(configuredTypes);
+    }
+
+    /**
+     * A public class some.other.pck.Sub with the given members. It has the property name besides
+     * them, since a type without any property is a warning of its own.
+     */
+    private static JavaFileObject subWith(final String... members) {
+        final List<String> lines = new ArrayList<>();
+        lines.add("package some.other.pck;");
+        lines.add("public class Sub {");
+        lines.add("    public String getName() { return \"\"; }");
+        lines.addAll(Arrays.asList(members));
+        lines.add("}");
+        return JavaFileObjects.forSourceLines("some.other.pck.Sub", lines.toArray(String[]::new));
+    }
+
+    /**
+     * A public class Outer with a public nested class Inner. Inner has a boolean get getter, and
+     * the property label besides it.
+     */
+    private static JavaFileObject outerWithInner() {
+        return JavaFileObjects.forSourceLines(
+                "some.other.pck.Outer",
+                "package some.other.pck;",
+                "public class Outer {",
+                "    public String getName() { return \"\"; }",
+                "    public static class Inner {",
+                "        public String getLabel() { return \"\"; }",
+                "        public boolean getActive() { return true; }",
+                "    }",
+                "}");
     }
 
     @Test
