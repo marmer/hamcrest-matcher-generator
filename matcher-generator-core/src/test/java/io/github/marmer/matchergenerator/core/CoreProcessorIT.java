@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -2039,8 +2040,273 @@ class CoreProcessorIT {
                 .atColumn((int) secondColumn);
     }
 
+    @Test
+    @DisplayName(
+            "A configured type that another processor writes in the first round is modelled, and its matchers are generated")
+    void aConfiguredTypeWrittenByAnotherProcessorInTheFirstRoundIsModelled() {
+        final JavaFileObject configuration = generateMatchersConfiguration("\"gen.Made\"");
+
+        // The other processor comes first: a processor that claims the annotation hides it from the
+        // processors after it in the same round, so only the first one writes in round 1.
+        final Compilation compilation =
+                javacWith()
+                        .withProcessors(
+                                new FirstRoundTypeProcessor("gen.Made"),
+                                new MatcherGenerationProcessor(() -> NOW))
+                        .compile(List.of(configuration));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        final TypeModel model = onlyModel();
+        assertEquals("gen.Made", model.qualifiedName());
+        assertEquals(
+                List.of("name:java.lang.String:getName", CLASS_PROPERTY),
+                describe(model.properties()));
+    }
+
+    /**
+     * Compiles with the other processor before the matcher generator, so that the other one runs in
+     * the first round: a processor that claims the annotation hides it from the processors after
+     * it.
+     */
+    private Compilation compileWithOtherFirst(
+            final Processor other, final JavaFileObject... sources) {
+        return javacWith()
+                .withProcessors(other, new MatcherGenerationProcessor(() -> NOW))
+                .compile(Arrays.asList(sources));
+    }
+
+    private static List<String> qualifiedNamesOf(final List<TypeModel> models) {
+        return models.stream().map(TypeModel::qualifiedName).sorted().toList();
+    }
+
+    @Test
+    @DisplayName(
+            "A name that resolves in a later round is modelled once, next to a name that resolves in the first round")
+    void aNameOfALaterRoundIsModelledOnceNextToANameOfTheFirstRound() throws IOException {
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("gen.Made"),
+                        generateMatchersConfiguration("{\"some.summarized.First\", \"gen.Made\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("gen.Made", "some.summarized.First"),
+                qualifiedNamesOf(RecordingBackend.models()));
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+    }
+
+    @Test
+    @DisplayName(
+            "A package file of a configuration with a name that never resolves is written once, in its round")
+    void aPackageFileOfAConfigurationWithANeverResolvingNameIsWrittenOnceInItsRound()
+            throws IOException {
+        final Compilation compilation =
+                compile(
+                        configuration("{\"some.summarized.First\", \"not.existing.Type\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "Neither a type nor a package exists for 'not.existing.Type'");
+    }
+
+    @Test
+    @DisplayName(
+            "A resolvable name next to a name that never resolves is generated in its round, for GenerateMatchers")
+    void aResolvableNameOfAFailingGenerateMatchersIsGeneratedInItsRound() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration(
+                        "{\"some.other.pck.SomePojo\", \"not.existing.Type\"}");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).failed();
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A resolvable name next to a name that never resolves is generated in its round, for the deprecated alias")
+    void aResolvableNameOfAFailingDeprecatedAliasIsGeneratedInItsRound() {
+        final JavaFileObject configuration =
+                configuration("{\"some.other.pck.SomePojo\", \"not.existing.Type\"}");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3);
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that still matches nothing after a later round is reported once, at its own value, for GenerateMatchers")
+    void aNameThatNeverResolvesIsReportedOnceAtTheEndAfterALaterRound() {
+        final JavaFileObject configuration =
+                generateMatchersConfiguration("{\"gen.Made\", \"not.existing.Type\"}");
+
+        final Compilation compilation =
+                compileWithOtherFirst(new FirstRoundTypeProcessor("gen.Made"), configuration);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn((int) columnOf(compilation, "'not.existing.Type'"));
+        assertEquals(List.of("gen.Made"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that still matches nothing after a later round is reported once, at its own value, for the deprecated alias")
+    void aNameOfTheAliasThatNeverResolvesIsWarnedOnceAtTheEndAfterALaterRound() {
+        final JavaFileObject configuration = configuration("{\"gen.Made\", \"not.existing.Type\"}");
+
+        final Compilation compilation =
+                compileWithOtherFirst(new FirstRoundTypeProcessor("gen.Made"), configuration);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                warningsContaining(
+                        compilation, "Neither a type nor a package exists for 'not.existing.Type'"),
+                () -> "Warnings: " + compilation.warnings());
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
+                .inFile(configuration)
+                .onLine(3)
+                .atColumn((int) columnOf(compilation, "'not.existing.Type'"));
+        assertEquals(List.of("gen.Made"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A type with both configuration annotations is one error, even when a name matches nothing")
+    void aTypeWithBothAnnotationsIsOneErrorEvenWithAnUnresolvableName() {
+        final JavaFileObject both =
+                JavaFileObjects.forSourceLines(
+                        "some.pck.BothConfiguration",
+                        "package some.pck;",
+                        "import io.github.marmer.matchergenerator.annotations.GenerateMatchers;",
+                        "import io.github.marmer.testutils.generators.beanmatcher.dependencies.MatcherConfiguration;",
+                        "@GenerateMatchers(\"not.existing.Type\")",
+                        "@MatcherConfiguration(\"not.existing.Type\")",
+                        "public final class BothConfiguration {",
+                        "}");
+
+        final Compilation compilation = compile(both);
+
+        CompilationSubject.assertThat(compilation).failed();
+        assertEquals(1, compilation.errors().size(), () -> "Errors: " + compilation.errors());
+        CompilationSubject.assertThat(compilation)
+                .hadErrorContaining("Use either @GenerateMatchers or @MatcherConfiguration");
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "An unmatched exclude entry of a configuration with a name that never resolves is warned about once")
+    void anUnmatchedExcludeEntryOfAConfigurationWithANeverResolvingNameIsWarnedOnce(
+            final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                exclusionConfiguration(
+                        deprecatedAlias,
+                        "{\"some.other.pck.SomePojo\", \"not.existing.Type\"}",
+                        "\"not.existing.Excluded\"");
+
+        final Compilation compilation = compile(configuration, SOME_POJO);
+
+        assertEquals(
+                deprecatedAlias ? 0 : 1,
+                compilation.errors().size(),
+                () -> "Errors: " + compilation.errors());
+        assertEquals(
+                1,
+                warningsContaining(compilation, "Exclusion 'not.existing.Excluded'"),
+                () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @ParameterizedTest(name = "deprecated alias: {0}")
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+            "An exclude entry that names a type of a name that resolves in a later round is no warning")
+    void anExcludeEntryOfANameOfALaterRoundIsNoWarning(final boolean deprecatedAlias) {
+        final JavaFileObject configuration =
+                exclusionConfiguration(
+                        deprecatedAlias,
+                        "{\"some.other.pck.SomePojo\", \"gen.Made\"}",
+                        "\"gen.Made\"");
+
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("gen.Made"), configuration, SOME_POJO);
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.other.pck.SomePojo"), qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    @Test
+    @DisplayName(
+            "A name that resolves in a later round into a package whose file an earlier round wrote is warned about, and the file is not written again")
+    void aLateTypeOfAPackageWrittenByAnEarlierRoundIsWarnedAboutAndNotWrittenAgain()
+            throws IOException {
+        final Compilation compilation =
+                compileWithOtherFirst(
+                        new FirstRoundTypeProcessor("some.summarized.Late"),
+                        generateMatchersConfiguration(
+                                "{\"some.summarized.First\", \"some.summarized.Late\"}"),
+                        summarizedType("First"));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(1, countGenerated(compilation, "PackageSummary.java"));
+        final String summary = summary(compilation);
+        assertTrue(summary.contains("[some.summarized.First]"), () -> "Summary: " + summary);
+        CompilationSubject.assertThat(compilation)
+                .hadWarningContaining(
+                        "some.summarized.PackageSummary was already written in an earlier"
+                                + " processing round and is not written again. It does not know"
+                                + " the types generated in this round: some.summarized.Late");
+        assertEquals(1, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+        assertEquals(
+                List.of("some.summarized.First", "some.summarized.Late"),
+                qualifiedNamesOf(RecordingBackend.models()));
+    }
+
+    private static long warningsContaining(final Compilation compilation, final String text) {
+        return compilation.warnings().stream()
+                .filter(diagnostic -> diagnostic.getMessage(null).contains(text))
+                .count();
+    }
+
     private static long columnOf(final Compilation compilation, final String messagePart) {
-        return compilation.errors().stream()
+        return Stream.concat(compilation.errors().stream(), compilation.warnings().stream())
                 .filter(diagnostic -> diagnostic.getMessage(null).contains(messagePart))
                 .mapToLong(javax.tools.Diagnostic::getColumnNumber)
                 .findFirst()
