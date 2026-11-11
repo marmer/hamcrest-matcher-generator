@@ -2188,6 +2188,11 @@ class CoreProcessorIT {
                 compileWithOtherFirst(new FirstRoundTypeProcessor("gen.Made"), configuration);
 
         CompilationSubject.assertThat(compilation).succeeded();
+        assertEquals(
+                1,
+                warningsContaining(
+                        compilation, "Neither a type nor a package exists for 'not.existing.Type'"),
+                () -> "Warnings: " + compilation.warnings());
         CompilationSubject.assertThat(compilation)
                 .hadWarningContaining("Neither a type nor a package exists for 'not.existing.Type'")
                 .inFile(configuration)
