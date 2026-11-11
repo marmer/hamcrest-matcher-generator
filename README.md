@@ -153,16 +153,16 @@ val matcherGeneratorVersion = "5.1.0" // x-release-please-version
 
 <!-- snippet: example-gradle-java/build.gradle.kts#gradle-dependencies -->
 ```kotlin
-implementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-implementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+testImplementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+testImplementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
 ```
 <!-- end snippet -->
 
 <!-- snippet: example-gradle-java/build.gradle.kts#gradle-processor -->
 ```kotlin
-// Both backends run as annotation processors; the Gradle annotationProcessor configuration puts them on the processor path.
-annotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-annotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+// Both backends run as annotation processors; the Gradle testAnnotationProcessor configuration puts them on the processor path of the test compilation.
+testAnnotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+testAnnotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
 ```
 <!-- end snippet -->
 
