@@ -121,6 +121,35 @@ class KotlinDslGenerationIT {
     }
 
     @Test
+    @DisplayName("A getter that declares a checked exception compiles and its property is checked")
+    void aGetterDeclaringACheckedExceptionCompiles() throws IOException {
+        final Compilation compilation =
+                compileWithKapt(
+                        configuration("some.other.pck.SimplePojo"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.SimplePojo",
+                                """
+                                package some.other.pck;
+
+                                import java.io.IOException;
+
+                                public class SimplePojo {
+                                    public String getName() throws IOException {
+                                        return "name";
+                                    }
+
+                                    public int getAge() {
+                                        return 1;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(
+                "getter-declaring-a-checked-exception", "some/other/pck/SimplePojoMatcherDsl.kt");
+    }
+
+    @Test
     @DisplayName("A property of a configured type gets a nested scope, also from another package")
     void aPropertyOfAConfiguredTypeGetsANestedScope() throws IOException {
         final Compilation compilation =
