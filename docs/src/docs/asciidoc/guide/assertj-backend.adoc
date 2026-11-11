@@ -30,7 +30,7 @@ A boolean property also gets `isX` and `isNotX` methods. The scope example in th
 
 == Completeness check
 
-The completeness check fails when a property was neither checked nor ignored. Check the properties you care about, name the ones you deliberately leave out with `ignoringX()`, and finish with `hasAllPropertiesChecked()`:
+The completeness check fails when a property was neither checked nor ignored. A `hasXSatisfying` call counts its property as checked whatever its requirements do, an empty lambda included. Check the properties you care about, name the ones you deliberately leave out with `ignoringX()`, and finish with `hasAllPropertiesChecked()`:
 
 [source,java]
 ----

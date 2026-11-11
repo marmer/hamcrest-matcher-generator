@@ -30,7 +30,7 @@ A matcher made with `isCustomerLike(reference)` turns the check on as well. The 
 
 == AssertJ
 
-The AssertJ backend has two forms. The closing call `hasAllPropertiesChecked()` checks the whole chain of the assertion. Each `hasX`, `hasXSatisfying` and boolean `isX` or `isNotX` counts as a check, and `ignoringX()` counts as ignoring:
+The AssertJ backend has two forms. The closing call `hasAllPropertiesChecked()` checks the whole chain of the assertion. Each `hasX`, `hasXSatisfying` and boolean `isX` or `isNotX` counts as a check, and `ignoringX()` counts as ignoring. A `hasXSatisfying` call counts its property as checked whatever its requirements do, an empty lambda included:
 
 [source,java]
 ----
