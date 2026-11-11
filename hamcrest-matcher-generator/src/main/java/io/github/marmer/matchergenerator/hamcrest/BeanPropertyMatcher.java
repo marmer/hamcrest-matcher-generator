@@ -13,7 +13,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -58,7 +57,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private final List<String> propertyNames;
 
     /** The accessors of the properties built with {@link #property}, by property name. */
-    private final Map<String, Function<? super T, ?>> accessors;
+    private final Map<String, Accessor<? super T>> accessors;
 
     private boolean checkingAllProperties;
 
@@ -96,7 +95,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private BeanPropertyMatcher(
             final Class<? super T> expectedClass,
             final List<String> propertyNames,
-            final Map<String, Function<? super T, ?>> accessors,
+            final Map<String, Accessor<? super T>> accessors,
             final boolean printsPropertyNames) {
         this.expectedClass = expectedClass;
         this.propertyNames = propertyNames;
@@ -113,7 +112,22 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      * @param name the name of the property, as the matcher methods name it
      * @param accessor reads the value of the property from a bean of the type
      */
-    public record Property<T>(String name, Function<? super T, ?> accessor) {}
+    public record Property<T>(String name, Accessor<? super T> accessor) {}
+
+    /**
+     * Reads the value of a property from a bean, e.g. with the method reference {@code
+     * Sub::isDone}. The value may be {@code null}, as the property may be.
+     *
+     * @param <T> the type of the bean
+     */
+    @FunctionalInterface
+    public interface Accessor<T> {
+        /**
+         * @param bean the bean to read the property from
+         * @return the value of the property
+         */
+        @Nullable Object read(T bean);
+    }
 
     /**
      * Names a property of the matched type and the accessor that reads it, e.g. {@code
@@ -123,14 +137,13 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      * @param accessor reads the value of the property from a bean of the type
      * @return the property, for the constructor of the matcher
      */
-    public static <T> Property<T> property(
-            final String name, final Function<? super T, ?> accessor) {
+    public static <T> Property<T> property(final String name, final Accessor<? super T> accessor) {
         return new Property<>(name, accessor);
     }
 
-    private static <V> Map<String, Function<? super V, ?>> accessorsOf(
+    private static <V> Map<String, Accessor<? super V>> accessorsOf(
             final Property<V>[] properties) {
-        final Map<String, Function<? super V, ?>> accessors = new LinkedHashMap<>();
+        final Map<String, Accessor<? super V>> accessors = new LinkedHashMap<>();
         for (final Property<V> property : properties) {
             accessors.putIfAbsent(property.name(), property.accessor());
         }
@@ -292,11 +305,11 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
      *     PropertyAccess#read}
      */
     private @Nullable Object valueOf(final Object item, final String name) {
-        final @Nullable Function<? super T, ?> accessor = accessors.get(name);
+        final @Nullable Accessor<? super T> accessor = accessors.get(name);
         if (accessor == null || !expectedClass.isInstance(item)) {
             return PropertyAccess.read(item, name);
         }
-        return PropertyAccess.readWith(name, () -> accessor.apply((T) item));
+        return PropertyAccess.readWith(name, () -> accessor.read((T) item));
     }
 
     private boolean isAddressed(final String name) {
