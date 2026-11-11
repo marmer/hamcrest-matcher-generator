@@ -146,8 +146,8 @@ as a member of the configured type (`Types.asMemberOf`), so a type argument that
 replaces the supertype's type variable: `Sub extends Base<String>` gives `String` for an inherited `T getValue()`.
 A getter that declares a checked exception stays a property and is marked as such on its `PropertyModel`. Generated code
 has no handler for that exception, so the backends call such a getter through a helper that turns the exception into the
-failure a check reports, `Could not read property 'name'` with the exception as cause: `ReferenceMatching.read` in the
-reference presets of the Hamcrest backend, `PropertyRead.of` in the AssertJ assertions and the property representation.
+failure a check reports, `Could not read property 'name'` with the exception as cause: `PropertyAccess.call` in the
+Hamcrest backend, which the reference presets reach through `ReferenceMatching.read`, and `PropertyRead.of` in the AssertJ assertions and the property representation. The two are separate copies, because the AssertJ backend does not depend on the Hamcrest one (<<adr-0001,ADR 0001>>).
 Unchecked exceptions and errors need no helper, so their getters are called directly, as before.
 
 `NullabilityResolver`::
@@ -203,7 +203,7 @@ abstract class carries `hasFoo(value)` (deep equality) and `hasFooSatisfying(req
 
 Every property also gets `ignoringFoo()`, and the abstract class has the opt-in completeness check: `satisfiesCheckingAllProperties(..)`
 and `hasAllPropertiesChecked()`. The assertion object keeps the names it has addressed, and the check fails with the properties
-that are neither addressed nor ignored, after the value checks have passed. The failure reads AssertJ's wording, `Expecting every property of Order to be checked or ignored, but these were neither: tags`, and a nested check names its path. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
+that are neither addressed nor ignored, after the value checks have passed. The failure message and the path it names are described in <<runtime-mismatch-assertj,chapter 6>>. The scope form counts only the calls its requirements make, while the closing call counts the whole chain. The property names are a constant of the class.
 
 Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` navigation.
 

@@ -108,6 +108,7 @@ reference the class loader of their type, so a map would keep that loader alive;
 a class loader that is no longer referenced is released, as a continuous test runner that loads the test classes again
 and again needs.
 
+[[runtime-mismatch-assertj]]
 === Describing a Mismatch (AssertJ)
 
 The generated `AbstractXAssert` fails through AssertJ's own failure, so the message keeps AssertJ's form, with the path of
