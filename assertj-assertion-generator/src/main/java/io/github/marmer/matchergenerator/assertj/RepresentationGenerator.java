@@ -171,10 +171,9 @@ final class RepresentationGenerator {
         String literal = model.simpleName() + "[";
         for (final PropertyModel property : properties) {
             expression.add(
-                    "$S + toStringOf($L.$L()) + ",
+                    "$S + toStringOf($L) + ",
                     literal + property.name() + "=",
-                    ACTUAL,
-                    property.accessor());
+                    AssertionGenerator.readOf(property, ACTUAL));
             literal = ", ";
         }
         return expression.add("$S", "]").build();

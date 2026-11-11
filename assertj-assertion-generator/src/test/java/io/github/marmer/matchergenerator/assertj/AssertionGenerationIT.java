@@ -106,6 +106,45 @@ class AssertionGenerationIT {
     }
 
     @Test
+    @DisplayName("A getter that declares a checked exception compiles and its property is checked")
+    void aGetterDeclaringACheckedExceptionCompiles() throws IOException {
+        final Compilation compilation =
+                compileWithJSpecify(
+                        configuration("some.other.pck.SimplePojo"),
+                        JavaFileObjects.forSourceLines(
+                                "some.other.pck.SimplePojo",
+                                """
+                                package some.other.pck;
+
+                                import java.io.IOException;
+
+                                public class SimplePojo {
+                                    public String getName() throws IOException {
+                                        return "name";
+                                    }
+
+                                    public int getAge() {
+                                        return 1;
+                                    }
+                                }
+                                """));
+
+        CompilationSubject.assertThat(compilation).succeeded();
+        assertGolden(
+                compilation,
+                "getter-declaring-a-checked-exception",
+                "some.other.pck.AbstractSimplePojoAssert");
+        assertGolden(
+                compilation,
+                "getter-declaring-a-checked-exception",
+                "some.other.pck.SimplePojoAssert");
+        assertGolden(
+                compilation,
+                "getter-declaring-a-checked-exception",
+                "some.other.pck.PropertyRepresentation");
+    }
+
+    @Test
     @DisplayName("Nested types get nested assertion classes and nullable properties are marked")
     void nestedTypesGetNestedAssertionClasses() throws IOException {
         final Compilation compilation =
@@ -1536,13 +1575,25 @@ class AssertionGenerationIT {
     @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all with JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithJSpecify() {
-        assertNoWarningUnderLintAll(classPathWithJSpecify());
+        assertNoWarningUnderLintAll(
+                classPathWithJSpecify(), "public String getName() { return null; }");
     }
 
     @Test
     @DisplayName("Generated assertions produce no javac warning under -Xlint:all without JSpecify")
     void generatedAssertionsProduceNoWarningUnderLintAllWithoutJSpecify() {
-        assertNoWarningUnderLintAll(classPathWithoutJSpecify());
+        assertNoWarningUnderLintAll(
+                classPathWithoutJSpecify(), "public String getName() { return null; }");
+    }
+
+    @Test
+    @DisplayName(
+            "Generated assertions of a getter that declares a checked exception produce no javac"
+                    + " warning under -Xlint:all")
+    void generatedAssertionsOfAGetterDeclaringACheckedExceptionProduceNoWarningUnderLintAll() {
+        assertNoWarningUnderLintAll(
+                classPathWithJSpecify(),
+                "public String getName() throws java.io.IOException { return null; }");
     }
 
     @Test
@@ -1609,7 +1660,8 @@ class AssertionGenerationIT {
                         .contains("new Type[] {Object.class, Object.class}"));
     }
 
-    private static void assertNoWarningUnderLintAll(final List<File> classPath) {
+    private static void assertNoWarningUnderLintAll(
+            final List<File> classPath, final String getName) {
         final Compilation compilation =
                 Compiler.javac()
                         .withClasspath(classPath)
@@ -1623,15 +1675,14 @@ class AssertionGenerationIT {
                                         package some.other.pck;
 
                                         public class Pojo {
-                                            public String getName() {
-                                                return null;
-                                            }
+                                            %s
 
                                             public java.util.List<Pojo> getChildren() {
                                                 return null;
                                             }
                                         }
-                                        """));
+                                        """
+                                                .formatted(getName)));
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
