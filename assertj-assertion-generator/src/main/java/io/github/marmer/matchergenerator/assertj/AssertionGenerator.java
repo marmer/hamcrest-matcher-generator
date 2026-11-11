@@ -140,7 +140,7 @@ class AssertionGenerator {
                             final List<MethodSpec> methods = methodsByProperty.get(index);
                             final List<String> clashing =
                                     methods.stream()
-                                            .map(method -> method.name())
+                                            .map(MethodSpec::name)
                                             .filter(inherited::contains)
                                             .toList();
                             if (!clashing.isEmpty()) {
@@ -348,7 +348,7 @@ class AssertionGenerator {
                 .forEach(
                         index ->
                                 methodsByProperty.get(index).stream()
-                                        .map(method -> method.name())
+                                        .map(MethodSpec::name)
                                         .filter(name -> !inherited.contains(name))
                                         .forEach(
                                                 name ->
