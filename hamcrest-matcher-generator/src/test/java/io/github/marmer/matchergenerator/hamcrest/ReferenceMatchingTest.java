@@ -274,4 +274,44 @@ class ReferenceMatchingTest {
         assertTrue(matcher.matches(new ArrayList<>(reference)));
         assertFalse(matcher.matches(List.of(new Node("x"))));
     }
+
+    @Test
+    void aReadOfAGetterReturnsItsValue() {
+        assertEquals("name", ReferenceMatching.read("name", () -> "name"));
+    }
+
+    @Test
+    void aGetterThatThrowsACheckedExceptionFailsLikeAReflectiveRead() {
+        final IOException cause = new IOException("disk gone");
+
+        final AssertionError error =
+                assertThrows(
+                        AssertionError.class,
+                        () ->
+                                ReferenceMatching.read(
+                                        "name",
+                                        () -> {
+                                            throw cause;
+                                        }));
+
+        assertEquals("Could not read property 'name'", error.getMessage());
+        assertSame(cause, error.getCause());
+    }
+
+    @Test
+    void anErrorThrownByAGetterPropagatesUnwrapped() {
+        final Error error = new Error("broken");
+
+        final Error thrown =
+                assertThrows(
+                        Error.class,
+                        () ->
+                                ReferenceMatching.read(
+                                        "name",
+                                        () -> {
+                                            throw error;
+                                        }));
+
+        assertSame(error, thrown);
+    }
 }

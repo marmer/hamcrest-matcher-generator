@@ -33,7 +33,13 @@ class ReferencePresetPlannerTest {
 
     private static PropertyModel property(
             final String name, final String accessor, final TypeMirror type) {
-        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED);
+        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED, false);
+    }
+
+    /** A property whose accessor declares a checked exception. */
+    private static PropertyModel throwingProperty(
+            final String name, final String accessor, final TypeMirror type) {
+        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED, true);
     }
 
     /** A type of the class path with the given properties and nested types. */
@@ -228,5 +234,39 @@ class ReferencePresetPlannerTest {
                                 + CONTACT
                                 + " is generated in this processing round"),
                 verboseNotes);
+    }
+
+    @Test
+    @DisplayName(
+            "A property whose getter declares a checked exception is read through the read helper")
+    void aPropertyWhoseGetterDeclaresACheckedExceptionIsReadThroughTheReadHelper() {
+        final PropertyModel name = throwingProperty("name", "getName", TypeMirrors.stringType());
+        final TypeModel customer = generated(CUSTOMER, name);
+
+        assertEquals(
+                REFERENCE_MATCHING
+                        + ".value("
+                        + REFERENCE_MATCHING
+                        + ".read(\"name\", reference::getName))",
+                plannerFor(customer).presetOf(name).toString());
+        assertEquals(List.of(), verboseNotes);
+    }
+
+    @Test
+    @DisplayName(
+            "A generated type whose getter declares a checked exception is read before it is preset")
+    void aGeneratedTypeWhoseGetterDeclaresACheckedExceptionIsReadBeforeItIsPreset() {
+        final PropertyModel address =
+                throwingProperty("address", "getAddress", TypeMirrors.typeNamed(ADDRESS));
+        final TypeModel customer = generated(CUSTOMER, address);
+
+        assertEquals(
+                REFERENCE_MATCHING
+                        + ".nested("
+                        + REFERENCE_MATCHING
+                        + ".read(\"address\", reference::getAddress), "
+                        + ADDRESS_MATCHER
+                        + ")",
+                plannerFor(customer, addressModel()).presetOf(address).toString());
     }
 }

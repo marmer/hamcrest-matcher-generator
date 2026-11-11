@@ -28,7 +28,9 @@ class MatcherGeneratorTest {
                         List.of(),
                         TypeModel.Kind.POJO,
                         string,
-                        List.of(new PropertyModel("", string, "get", Nullability.UNSPECIFIED)),
+                        List.of(
+                                new PropertyModel(
+                                        "", string, "get", Nullability.UNSPECIFIED, false)),
                         List.of());
 
         final List<String> methodNames =

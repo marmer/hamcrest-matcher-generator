@@ -439,13 +439,29 @@ class AssertionGenerator {
                 .addParameter(valueType(property), VALUE, Modifier.FINAL)
                 .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
-                        "return $L($S, $L.$L(), value)",
+                        "return $L($S, $L, value)",
                         CHECK_PROPERTY,
                         property.name(),
-                        ACTUAL_FIELD,
-                        property.accessor())
+                        readOf(property, ACTUAL_FIELD))
                 .returns(SELF)
                 .build();
+    }
+
+    /**
+     * The code that reads a property of the object, such as {@code actual.getFoo()}. A getter that
+     * declares a checked exception is read through {@link PropertyRead}, since generated code has
+     * no handler for the exception.
+     */
+    static CodeBlock readOf(final PropertyModel property, final String object) {
+        if (!property.declaresCheckedException()) {
+            return CodeBlock.of("$L.$L()", object, property.accessor());
+        }
+        return CodeBlock.of(
+                "$T.of($S, $L::$L)",
+                PropertyRead.class,
+                property.name(),
+                object,
+                property.accessor());
     }
 
     /**
@@ -462,18 +478,16 @@ class AssertionGenerator {
                         .addStatement("$L.add($S)", ADDRESSED, property.name());
         if (isIterableOrMap(property.type())) {
             method.addStatement(
-                    "$T.restartingWithin($L.$L(), requirements)",
+                    "$T.restartingWithin($L, requirements)",
                     AssertionPath.class,
-                    ACTUAL_FIELD,
-                    property.accessor());
+                    readOf(property, ACTUAL_FIELD));
         } else {
             method.addStatement(
-                    "$T.within($L + $S, $L.$L(), requirements)",
+                    "$T.within($L + $S, $L, requirements)",
                     AssertionPath.class,
                     PATH,
                     "." + property.name(),
-                    ACTUAL_FIELD,
-                    property.accessor());
+                    readOf(property, ACTUAL_FIELD));
         }
         return method.addStatement(RETURN_MYSELF).returns(SELF).build();
     }
@@ -485,11 +499,10 @@ class AssertionGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("$L()", IS_NOT_NULL)
                 .addStatement(
-                        "return $L($S, $L.$L(), $L)",
+                        "return $L($S, $L, $L)",
                         CHECK_PROPERTY,
                         property.name(),
-                        ACTUAL_FIELD,
-                        property.accessor(),
+                        readOf(property, ACTUAL_FIELD),
                         expected)
                 .returns(SELF)
                 .build();

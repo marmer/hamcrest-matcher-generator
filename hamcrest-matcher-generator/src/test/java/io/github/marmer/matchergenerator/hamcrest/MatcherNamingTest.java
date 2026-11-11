@@ -53,7 +53,8 @@ class MatcherNamingTest {
     }
 
     private static PropertyModel propertyNamed(final String name) {
-        return new PropertyModel(name, TypeMirrors.stringType(), "get", Nullability.UNSPECIFIED);
+        return new PropertyModel(
+                name, TypeMirrors.stringType(), "get", Nullability.UNSPECIFIED, false);
     }
 
     @Test
@@ -78,7 +79,8 @@ class MatcherNamingTest {
                                                 accessor.substring(3).toLowerCase(Locale.ROOT),
                                                 TypeMirrors.stringType(),
                                                 accessor,
-                                                Nullability.UNSPECIFIED))
+                                                Nullability.UNSPECIFIED,
+                                                false))
                         .toList(),
                 List.of());
     }

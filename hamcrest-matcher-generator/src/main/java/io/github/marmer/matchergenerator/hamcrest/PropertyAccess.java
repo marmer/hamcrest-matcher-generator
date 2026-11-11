@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 import org.hamcrest.beans.PropertyUtil;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -121,8 +122,19 @@ final class PropertyAccess {
             final String propertyName,
             final BeanPropertyMatcher.Accessor<? super T> accessor,
             final T bean) {
+        return call(propertyName, () -> accessor.read(bean));
+    }
+
+    /**
+     * Calls a getter that may declare a checked exception, with the failure of {@link #readWith}:
+     * any {@link Exception} fails with {@code Could not read property 'name'} and the exception as
+     * cause. An {@link Error} propagates unwrapped.
+     *
+     * @return the value the getter returns
+     */
+    static <V> @Nullable V call(final String propertyName, final Callable<V> getter) {
         try {
-            return accessor.read(bean);
+            return getter.call();
         } catch (final Exception e) {
             throw new AssertionError("Could not read property '" + propertyName + "'", e);
         }

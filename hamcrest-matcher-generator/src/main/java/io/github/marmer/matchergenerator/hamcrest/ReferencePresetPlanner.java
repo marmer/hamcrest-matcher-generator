@@ -63,7 +63,7 @@ class ReferencePresetPlanner {
      * @return the code that presets the property of the matcher from the reference object
      */
     CodeBlock presetOf(final PropertyModel property) {
-        final CodeBlock value = CodeBlock.of("$L.$L()", REFERENCE, property.accessor());
+        final CodeBlock value = readOf(property);
         final TypeMirror type = property.type();
         final MatcherType direct = matcherTypeOf(type);
         if (direct != null) {
@@ -96,6 +96,23 @@ class ReferencePresetPlanner {
             }
         }
         return equalsPreset(property, compared, value);
+    }
+
+    /**
+     * The code that reads the property of the reference object. A getter that declares a checked
+     * exception is read through {@link ReferenceMatching#read}, since generated code has no handler
+     * for the exception.
+     */
+    private static CodeBlock readOf(final PropertyModel property) {
+        if (!property.declaresCheckedException()) {
+            return CodeBlock.of("$L.$L()", REFERENCE, property.accessor());
+        }
+        return CodeBlock.of(
+                "$T.read($S, $L::$L)",
+                ReferenceMatching.class,
+                property.name(),
+                REFERENCE,
+                property.accessor());
     }
 
     /**
