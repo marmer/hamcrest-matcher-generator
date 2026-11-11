@@ -2277,7 +2277,8 @@ class MatcherGenerationProcessorIT {
      * generator wrote on them. With JSpecify on the class path that is {@code @NullMarked}. The
      * pojo declares the given getter.
      */
-    private static void assertNoWarningUnderLintAll(final boolean withJSpecify, final String getter) {
+    private static void assertNoWarningUnderLintAll(
+            final boolean withJSpecify, final String getter) {
         JavaFileObject configuration =
                 JavaFileObjects.forSourceLines(
                         "some.pck.SomeConfiguration",
