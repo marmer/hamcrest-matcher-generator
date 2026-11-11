@@ -23,18 +23,40 @@ import org.jspecify.annotations.Nullable;
 final class PropertyAccess {
     static final Object NO_SUCH_PROPERTY = new Object();
 
-    private static final Map<Class<?>, List<String>> PROPERTIES_OF_GENERATED_TYPES =
+    /**
+     * What printing knows of a generated type: its printed properties and, when the matcher of the
+     * type gave them, the accessors that read them.
+     */
+    private record PrintedType(
+            List<String> propertyNames,
+            Map<String, ? extends BeanPropertyMatcher.Accessor<?>> accessors) {}
+
+    private static final Map<Class<?>, PrintedType> PRINTED_TYPES =
             Collections.synchronizedMap(new WeakHashMap<>());
 
     private PropertyAccess() {}
 
     /**
-     * Registers the printed properties of a type. The first registration wins, so several matchers
-     * of one type never change how its values print. The {@code class} property is not printed.
+     * Registers the printed properties of a type without accessors, which are then read by name.
      */
     static void registerGeneratedType(final Class<?> type, final List<String> propertyNames) {
-        PROPERTIES_OF_GENERATED_TYPES.putIfAbsent(
-                type, propertyNames.stream().filter(name -> !isClassProperty(name)).toList());
+        registerGeneratedType(type, propertyNames, Map.of());
+    }
+
+    /**
+     * Registers the printed properties of a type and the accessors that read them. The first
+     * registration wins, so several matchers of one type never change how its values print. The
+     * {@code class} property is not printed.
+     */
+    static void registerGeneratedType(
+            final Class<?> type,
+            final List<String> propertyNames,
+            final Map<String, ? extends BeanPropertyMatcher.Accessor<?>> accessors) {
+        PRINTED_TYPES.putIfAbsent(
+                type,
+                new PrintedType(
+                        propertyNames.stream().filter(name -> !isClassProperty(name)).toList(),
+                        accessors));
     }
 
     /**
@@ -46,7 +68,28 @@ final class PropertyAccess {
     }
 
     static @Nullable List<String> propertiesOfGeneratedType(final Class<?> type) {
-        return PROPERTIES_OF_GENERATED_TYPES.get(type);
+        final @Nullable PrintedType printed = PRINTED_TYPES.get(type);
+        return printed == null ? null : printed.propertyNames();
+    }
+
+    /**
+     * Reads a property of a value that is printed: through the accessor the matcher of its type
+     * gave, otherwise by name.
+     *
+     * @return the property value or {@link #NO_SUCH_PROPERTY}
+     */
+    static @Nullable Object readPrinted(final Object item, final String propertyName) {
+        final @Nullable PrintedType printed = PRINTED_TYPES.get(item.getClass());
+        final BeanPropertyMatcher.@Nullable Accessor<?> accessor =
+                printed == null ? null : printed.accessors().get(propertyName);
+        if (accessor == null) {
+            return read(item, propertyName);
+        }
+        // The accessors of a type are registered for its exact class, which the item has.
+        @SuppressWarnings("unchecked")
+        final BeanPropertyMatcher.Accessor<Object> typed =
+                (BeanPropertyMatcher.Accessor<Object>) accessor;
+        return readWith(propertyName, typed, item);
     }
 
     /**

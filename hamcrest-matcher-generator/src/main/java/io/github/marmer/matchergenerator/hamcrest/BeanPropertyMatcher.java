@@ -101,7 +101,7 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
         this.propertyNames = propertyNames;
         this.accessors = accessors;
         if (printsPropertyNames) {
-            PropertyAccess.registerGeneratedType(expectedClass, propertyNames);
+            PropertyAccess.registerGeneratedType(expectedClass, propertyNames, accessors);
         }
     }
 
