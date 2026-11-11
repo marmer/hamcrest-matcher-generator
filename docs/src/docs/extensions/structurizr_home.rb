@@ -12,8 +12,8 @@
 # The home is docs/target/structurizr; the converter reads the Structurizr jars from its lib/ folder, which the
 # structurizr-home execution of the docs pom fills. The path derives from this file's location, so it works from any
 # working directory and in any absolute path, spaces included. Keep it in step with the structurizr.home property of
-# docs/pom.xml. A value the user set in the environment wins, as it did before this file.
-unless ENV['DIAGRAM_STRUCTURIZRCLI_HOME']
+# docs/pom.xml. A non-empty value the user set in the environment wins.
+if ENV['DIAGRAM_STRUCTURIZRCLI_HOME'].to_s.empty?
   home = File.expand_path('../../../target/structurizr', __dir__)
   raise "Structurizr home #{home}/lib does not exist: the structurizr-home execution of docs/pom.xml has not run" unless File.directory?(File.join(home, 'lib'))
 
