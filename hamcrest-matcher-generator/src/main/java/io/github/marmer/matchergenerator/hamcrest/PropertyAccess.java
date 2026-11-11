@@ -7,11 +7,10 @@ package io.github.marmer.matchergenerator.hamcrest;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import org.hamcrest.beans.PropertyUtil;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -32,8 +31,18 @@ final class PropertyAccess {
             List<String> propertyNames,
             Map<String, ? extends BeanPropertyMatcher.Accessor<?>> accessors) {}
 
-    private static final Map<Class<?>, PrintedType> PRINTED_TYPES =
-            Collections.synchronizedMap(new WeakHashMap<>());
+    /**
+     * What is printed of each generated type, held by the type itself. A map keyed by the type
+     * would keep the class loader of a type alive: its accessors reference that loader, and the map
+     * would hold them as long as the type is reachable through the map.
+     */
+    private static final ClassValue<AtomicReference<@Nullable PrintedType>> PRINTED_TYPES =
+            new ClassValue<>() {
+                @Override
+                protected AtomicReference<@Nullable PrintedType> computeValue(final Class<?> type) {
+                    return new AtomicReference<>();
+                }
+            };
 
     private PropertyAccess() {}
 
@@ -53,11 +62,15 @@ final class PropertyAccess {
             final Class<?> type,
             final List<String> propertyNames,
             final Map<String, ? extends BeanPropertyMatcher.Accessor<?>> accessors) {
-        PRINTED_TYPES.putIfAbsent(
-                type,
-                new PrintedType(
-                        propertyNames.stream().filter(name -> !isClassProperty(name)).toList(),
-                        accessors));
+        PRINTED_TYPES
+                .get(type)
+                .compareAndSet(
+                        null,
+                        new PrintedType(
+                                propertyNames.stream()
+                                        .filter(name -> !isClassProperty(name))
+                                        .toList(),
+                                accessors));
     }
 
     /**
@@ -69,7 +82,7 @@ final class PropertyAccess {
     }
 
     static @Nullable List<String> propertiesOfGeneratedType(final Class<?> type) {
-        final @Nullable PrintedType printed = PRINTED_TYPES.get(type);
+        final @Nullable PrintedType printed = PRINTED_TYPES.get(type).get();
         return printed == null ? null : printed.propertyNames();
     }
 
@@ -80,7 +93,7 @@ final class PropertyAccess {
      * @return the property value or {@link #NO_SUCH_PROPERTY}
      */
     static @Nullable Object readPrinted(final Object item, final String propertyName) {
-        final @Nullable PrintedType printed = PRINTED_TYPES.get(item.getClass());
+        final @Nullable PrintedType printed = PRINTED_TYPES.get(item.getClass()).get();
         final BeanPropertyMatcher.@Nullable Accessor<?> accessor =
                 printed == null ? null : printed.accessors().get(propertyName);
         if (accessor == null) {
