@@ -7,7 +7,7 @@ The published modules' roles: `matcher-generator-annotations` (`@GenerateMatcher
 - They are documentation examples: parent `matcher-generator-parent`, in the root `<modules>` unconditionally, `maven.deploy.skip`, listed in the release `excludeArtifact` list.
 - Their tagged regions feed the docs and README.
 - Like the end-to-end exceptions named above, they compile with `-Xlint:all,-processing -Werror`.
-- `example-maven-kotlin` runs the processors through KAPT with explicit `<sourceDirs>` (see `docs/agents/kapt.md`).
+- Their configuration sits in the test sources and the generator and the libraries have the test scope, so the production jar holds neither the generated code nor the configuration; `example-maven-kotlin` runs the processors through the `test-kapt` execution with explicit `<sourceDirs>` (see `docs/agents/kapt.md`).
 
 `example-gradle-java` is the Gradle example, outside the reactor.
 - It has its own wrapper, with `distributionSha256Sum` pinned; Renovate updates the wrapper.

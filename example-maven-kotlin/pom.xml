@@ -19,29 +19,33 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
-        <!-- The release profile's javadoc reads the Java sources only, here the KAPT output, which refers to the Kotlin
-            model classes it cannot resolve (Unresolved reference: Customer). Never published, so no javadoc jar is needed. -->
+        <!-- The release profile's javadoc would run over the main sources, which hold Kotlin only, and the example is never
+            published, so no javadoc jar is needed. -->
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <!-- The generated DSL promises Kotlin 1.9 language features only (spec 104). -->
         <kotlin.language.version>1.9</kotlin.language.version>
     </properties>
 
     <dependencies>
+        <!-- The configuration sits in src/test/kotlin, so the generators and the Kotlin DSL artifact have the test scope. -->
         <!-- tag::maven-dependencies[] -->
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>assertj-assertion-generator</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.github.marmer.testutils</groupId>
             <artifactId>hamcrest-matcher-generator-kotlin</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <!-- end::maven-dependencies[] -->
         <dependency>
@@ -51,10 +55,12 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -74,17 +80,19 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <!-- tag::maven-kapt[] -->
-                        <!-- KAPT runs the processors over the Kotlin sources. The Java matchers, the assertions and the
-                            Kotlin DSL (*MatcherDsl.kt, written to kapt.kotlin.generated) all land in target/generated-sources. -->
-                        <id>kapt</id>
+                        <!-- tag::maven-test-kapt[] -->
+                        <!-- KAPT runs the processors over the Kotlin test sources. The Java matchers, the assertions and the
+                            Kotlin DSL (*MatcherDsl.kt, written to kapt.kotlin.generated) all land in target/generated-sources:
+                            the Java output of the tests in kapt/test, the DSL in kaptKotlin/test. -->
+                        <id>test-kapt</id>
                         <goals>
-                            <goal>kapt</goal>
+                            <goal>test-kapt</goal>
                         </goals>
                         <configuration>
                             <correctErrorTypes>true</correctErrorTypes>
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
                             </sourceDirs>
                             <annotationProcessorPaths>
                                 <annotationProcessorPath>
@@ -104,43 +112,41 @@
                                 </annotationProcessorPath>
                             </annotationProcessorPaths>
                         </configuration>
-                        <!-- end::maven-kapt[] -->
+                        <!-- end::maven-test-kapt[] -->
                     </execution>
                     <execution>
                         <id>compile</id>
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <!-- Explicit sourceDirs replace the defaults. KAPT writes the Java matchers to kapt/compile and the
-                                Kotlin DSL to kaptKotlin/compile; both are listed here. The plugin registers the same two
-                                directories itself, so the build passes without them too, and a "Duplicate source root"
-                                warning shows either way. -->
-                            <!-- tag::compile-source-dirs[] -->
-                            <sourceDirs>
-                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                <sourceDir>${project.build.directory}/generated-sources/kapt/compile</sourceDir>
-                                <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/compile</sourceDir>
-                            </sourceDirs>
-                            <!-- end::compile-source-dirs[] -->
-                        </configuration>
                     </execution>
                     <execution>
                         <id>test-compile</id>
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
+                        <configuration>
+                            <!-- Explicit sourceDirs replace the defaults. The KAPT output of the tests, the Java matchers in
+                                kapt/test and the Kotlin DSL in kaptKotlin/test, is listed next to the Kotlin test sources. -->
+                            <!-- tag::test-compile-source-dirs[] -->
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/kapt/test</sourceDir>
+                                <sourceDir>${project.build.directory}/generated-sources/kaptKotlin/test</sourceDir>
+                            </sourceDirs>
+                            <!-- end::test-compile-source-dirs[] -->
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <!-- javac runs after kotlinc and gets no processors: KAPT has generated everything already. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <!-- javac runs after kotlinc and gets no processors: KAPT has generated everything already. -->
+                    <proc>none</proc>
                     <!-- The processing lint stays off: javac warns that no processor claims the test sources' own
                         annotations (JUnit), which is not about generated code. Every other lint category stays fatal. -->
-                    <proc>none</proc>
                     <compilerArgs combine.children="append">
                         <arg>-Xlint:all,-processing</arg>
                         <arg>-Werror</arg>
