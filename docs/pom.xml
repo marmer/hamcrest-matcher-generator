@@ -24,7 +24,7 @@
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <!-- the version Maven 3.9 binds to every module by default; pinned here so the site-root copy below has a version -->
         <maven.resources.plugin.version>3.5.0</maven.resources.plugin.version>
-        <properties.maven.plugin.version>1.3.1</properties.maven.plugin.version>
+        <!-- Also named in src/docs/extensions/structurizr_home.rb (see its header). -->
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
@@ -133,7 +133,8 @@
                 </configuration>
             </plugin>
             <!-- asciidoctorj-diagram's structurizr block wants the home of a Structurizr CLI. A folder whose lib/ holds
-                the jars is enough, so no CLI download and no Docker is needed. -->
+                the jars is enough, so no CLI download and no Docker is needed. How the render learns the folder:
+                src/docs/extensions/structurizr_home.rb. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -178,29 +179,6 @@
                                     </includes>
                                 </resource>
                             </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- asciidoctorj-diagram reads the home from this system property of the Maven JVM. -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-                <version>${properties.maven.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>structurizr-cli-home</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>set-system-properties</goal>
-                        </goals>
-                        <configuration>
-                            <properties>
-                                <property>
-                                    <name>diagram.structurizrcli.home</name>
-                                    <value>${structurizr.home}</value>
-                                </property>
-                            </properties>
                         </configuration>
                     </execution>
                 </executions>
@@ -253,7 +231,9 @@
                             </resources>
                             <!-- The site layout (top bar, generated sidebar, pager, footer) is an Asciidoctor extension,
                                 see the header of the script. -->
+                            <!-- Order matters, see src/docs/extensions/structurizr_home.rb. -->
                             <requires>
+                                <require>${project.basedir}/src/docs/extensions/structurizr_home.rb</require>
                                 <require>asciidoctor-diagram</require>
                                 <require>${project.basedir}/src/docs/extensions/site_layout.rb</require>
                             </requires>
