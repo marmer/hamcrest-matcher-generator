@@ -327,7 +327,7 @@ class RepositoryReadmeTest(unittest.TestCase):
             ("example-maven-java-hamcrest/src/test/java/example/hamcrest/CustomerMatcherTest.java", "nested-property"),
             ("example-maven-java-assertj/src/test/java/example/assertj/CustomerAssertTest.java", "basic-assertion"),
             ("example-maven-kotlin/src/test/kotlin/example/kotlin/CustomerDslTest.kt", "basic-assertion"),
-            ("example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java",
+            ("example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java",
              "configuration"),
             ("example-maven-java-hamcrest/pom.xml", "maven-dependencies"),
             ("example-maven-java-hamcrest/pom.xml", "maven-processor"),
