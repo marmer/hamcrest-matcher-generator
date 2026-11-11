@@ -29,7 +29,10 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /** Creates the {@link TypeModel} of a configured type. */
 class TypeModelFactory {
@@ -195,10 +198,23 @@ class TypeModelFactory {
                         element ->
                                 new PropertyModel(
                                         element.getSimpleName().toString(),
-                                        element.getReturnType(),
+                                        propertyType(type, element),
                                         element.getSimpleName().toString(),
                                         NullabilityResolver.of(element)))
                 .toList();
+    }
+
+    /**
+     * The type of a property as a member of the configured type, so the type argument a subtype
+     * gives its supertype replaces the type variable of the declaring element.
+     */
+    private TypeMirror propertyType(final TypeElement type, final ExecutableElement accessor) {
+        final ExecutableType member =
+                (ExecutableType)
+                        processingEnv
+                                .getTypeUtils()
+                                .asMemberOf((DeclaredType) type.asType(), accessor);
+        return member.getReturnType();
     }
 
     private Set<ExecutableElement> recordComponentAccessors(final TypeElement type) {
@@ -244,7 +260,7 @@ class TypeModelFactory {
                                 element ->
                                         new PropertyModel(
                                                 propertyName(element),
-                                                element.getReturnType(),
+                                                propertyType(type, element),
                                                 element.getSimpleName().toString(),
                                                 NullabilityResolver.of(element)))
                         .toList();
