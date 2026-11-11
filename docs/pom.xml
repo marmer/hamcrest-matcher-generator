@@ -24,8 +24,7 @@
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <!-- the version Maven 3.9 binds to every module by default; pinned here so the site-root copy below has a version -->
         <maven.resources.plugin.version>3.5.0</maven.resources.plugin.version>
-        <!-- The Structurizr home for asciidoctor-diagram. The render names it in its JRuby ENV through
-            src/docs/extensions/structurizr_home.rb, which derives the same folder from its own location: keep the two in step. -->
+        <!-- Also named in src/docs/extensions/structurizr_home.rb (see its header). -->
         <structurizr.home>${project.build.directory}/structurizr</structurizr.home>
         <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
         <docs.output.directory>${project.build.directory}/generated-docs</docs.output.directory>
@@ -134,10 +133,8 @@
                 </configuration>
             </plugin>
             <!-- asciidoctorj-diagram's structurizr block wants the home of a Structurizr CLI. A folder whose lib/ holds
-                the jars is enough, so no CLI download and no Docker is needed. The jars are copied here, and the
-                render names the folder in the JRuby ENV (src/docs/extensions/structurizr_home.rb, required first below),
-                never in a JVM system property: surefire and failsafe of other modules restore a snapshot of the JVM's
-                system properties, which in a parallel reactor drops a property set in between. -->
+                the jars is enough, so no CLI download and no Docker is needed. How the render learns the folder:
+                src/docs/extensions/structurizr_home.rb. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -234,7 +231,7 @@
                             </resources>
                             <!-- The site layout (top bar, generated sidebar, pager, footer) is an Asciidoctor extension,
                                 see the header of the script. -->
-                            <!-- Order matters: the home is named before asciidoctor-diagram loads its Structurizr converter (#382). -->
+                            <!-- Order matters, see src/docs/extensions/structurizr_home.rb. -->
                             <requires>
                                 <require>${project.basedir}/src/docs/extensions/structurizr_home.rb</require>
                                 <require>asciidoctor-diagram</require>
