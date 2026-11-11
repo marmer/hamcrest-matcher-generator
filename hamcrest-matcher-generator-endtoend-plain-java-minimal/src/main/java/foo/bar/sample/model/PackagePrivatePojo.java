@@ -2,9 +2,13 @@
  * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-package foo.bar.sample.records.model;
+package foo.bar.sample.model;
 
-/** A package-private type with a public getter: its matcher must read it from its own package. */
+/**
+ * A package-private type with a public getter. The runtime must not read it reflectively from
+ * another package, so its matcher, which lives in this package, reads the getter through an
+ * accessor.
+ */
 final class PackagePrivatePojo {
     private final String name;
 
