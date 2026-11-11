@@ -5,10 +5,7 @@ import org.assertj.core.api.InstanceOfAssertFactory;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 @NullMarked
 public class LineAssert extends AbstractLineAssert<LineAssert, Line> {
   public static final InstanceOfAssertFactory<Line, LineAssert> LINE = new InstanceOfAssertFactory<>(Line.class, LineAssert::new);

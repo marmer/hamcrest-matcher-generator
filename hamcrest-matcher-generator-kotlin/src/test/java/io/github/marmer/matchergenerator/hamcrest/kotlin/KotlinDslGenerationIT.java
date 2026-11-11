@@ -24,7 +24,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -42,6 +44,8 @@ import org.junit.jupiter.api.io.TempDir;
 class KotlinDslGenerationIT {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
+    private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
+    private static final String SIMPLE_POJO_DSL = "some/other/pck/SimplePojoMatcherDsl.kt";
     private static final String SCENARIOS =
             KotlinDslGenerationIT.class.getPackageName().replace('.', '/')
                     + "/KotlinDslGenerationIT/";
@@ -1015,6 +1019,54 @@ import java.util.Set;
         assertTrue(
                 compilation.generatedSourceFile("some.other.pck.ClashingMatcher").isPresent(),
                 "The Java matcher keeps every property");
+    }
+
+    @Test
+    @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
+    void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
+        final JavaFileObject[] sources = {
+            configuration("some.other.pck.SimplePojo"), simpleBean("SimplePojo")
+        };
+
+        final Map<String, String> firstJava =
+                generatedSources(compileWithDefaultProcessor(sources));
+        final String firstKotlin = Files.readString(kotlinOutput.resolve(SIMPLE_POJO_DSL));
+        pauseBetweenRuns();
+        final Map<String, String> secondJava =
+                generatedSources(compileWithDefaultProcessor(sources));
+        final String secondKotlin = Files.readString(kotlinOutput.resolve(SIMPLE_POJO_DSL));
+
+        assertEquals(firstJava, secondJava);
+        assertEquals(firstKotlin, secondKotlin);
+    }
+
+    private Compilation compileWithDefaultProcessor(final JavaFileObject... sources) {
+        return Compiler.javac()
+                .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
+                .withProcessors(new MatcherGenerationProcessor())
+                .compile(Arrays.asList(sources));
+    }
+
+    private static Map<String, String> generatedSources(final Compilation compilation)
+            throws IOException {
+        final Map<String, String> sources = new TreeMap<>();
+        for (final JavaFileObject generated : compilation.generatedSourceFiles()) {
+            sources.put(generated.getName(), generated.getCharContent(true).toString());
+        }
+        return sources;
+    }
+
+    /**
+     * The processor stamps each run with the time it runs at. The pause makes sure the second run
+     * stamps a later time than the first one, so a stamp in the output would differ.
+     */
+    private static void pauseBetweenRuns() {
+        try {
+            Thread.sleep(PAUSE_BETWEEN_RUNS_MILLIS);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted between two processor runs", e);
+        }
     }
 
     private static JavaFileObject simpleBean(final String name) {

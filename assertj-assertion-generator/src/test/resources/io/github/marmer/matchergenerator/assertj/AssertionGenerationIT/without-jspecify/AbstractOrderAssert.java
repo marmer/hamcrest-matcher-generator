@@ -16,10 +16,7 @@ import javax.annotation.processing.Generated;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.presentation.Representation;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public abstract class AbstractOrderAssert<SELF extends AbstractOrderAssert<SELF, ACTUAL>, ACTUAL extends Order> extends AbstractObjectAssert<SELF, ACTUAL> {
   private static final List<String> PROPERTY_NAMES = List.of("id", "quantity");
 

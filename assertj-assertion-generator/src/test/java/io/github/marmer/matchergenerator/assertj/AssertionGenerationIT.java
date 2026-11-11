@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ class AssertionGenerationIT {
             Pattern.compile("class (\\w+)(?:<.*?>)?\\s+extends\\s+(\\w+)", Pattern.DOTALL);
     private static final Pattern TYPE_DECLARATION = Pattern.compile("(?:class|interface) (\\w+)");
     private static final LocalDateTime NOW = LocalDateTime.of(2020, 1, 1, 0, 0);
+    private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
 
     @Test
     @DisplayName("A bean gets an abstract assertion class and a concrete one")
@@ -1635,6 +1638,56 @@ class AssertionGenerationIT {
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
+    }
+
+    @Test
+    @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
+    void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
+        final JavaFileObject[] sources = {
+            configuration("some.other.pck.SimplePojo"),
+            JavaFileObjects.forSourceLines(
+                    "some.other.pck.SimplePojo",
+                    "package some.other.pck;",
+                    "public class SimplePojo {",
+                    "    public String getName() { return null; }",
+                    "}")
+        };
+
+        final Map<String, String> first = generatedSources(compileWithDefaultProcessor(sources));
+        pauseBetweenRuns();
+        final Map<String, String> second = generatedSources(compileWithDefaultProcessor(sources));
+
+        assertTrue(
+                first.keySet().stream().anyMatch(name -> name.endsWith("SimplePojoAssert.java")));
+        assertEquals(first, second);
+    }
+
+    private static Compilation compileWithDefaultProcessor(final JavaFileObject... sources) {
+        return Compiler.javac()
+                .withProcessors(new MatcherGenerationProcessor())
+                .compile(Arrays.asList(sources));
+    }
+
+    private static Map<String, String> generatedSources(final Compilation compilation)
+            throws IOException {
+        final Map<String, String> sources = new TreeMap<>();
+        for (final JavaFileObject generated : compilation.generatedSourceFiles()) {
+            sources.put(generated.getName(), generated.getCharContent(true).toString());
+        }
+        return sources;
+    }
+
+    /**
+     * The processor stamps each run with the time it runs at. The pause makes sure the second run
+     * stamps a later time than the first one, so a stamp in the output would differ.
+     */
+    private static void pauseBetweenRuns() {
+        try {
+            Thread.sleep(PAUSE_BETWEEN_RUNS_MILLIS);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted between two processor runs", e);
+        }
     }
 
     private static JavaFileObject configuration(final String... configuredTypes) {

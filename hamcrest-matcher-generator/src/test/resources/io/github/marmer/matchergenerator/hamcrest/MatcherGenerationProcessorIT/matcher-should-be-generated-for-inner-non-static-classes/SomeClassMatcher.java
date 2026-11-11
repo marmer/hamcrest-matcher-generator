@@ -11,10 +11,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 
-@Generated(
-    value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-    date = "2020-01-01T00:00"
-)
+@Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
 public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements GeneratedBeanMatcher {
   private final BeanPropertyMatcher<SomeClass> beanPropertyMatcher;
 
@@ -79,10 +76,7 @@ public class SomeClassMatcher extends TypeSafeMatcher<SomeClass> implements Gene
     return new SomeClassMatcher();
   }
 
-  @Generated(
-      value = "io.github.marmer.matchergenerator.core.MatcherGenerationProcessor",
-      date = "2020-01-01T00:00"
-  )
+  @Generated("io.github.marmer.matchergenerator.core.MatcherGenerationProcessor")
   public static class SomeNonStaticInnerClassMatcher extends TypeSafeMatcher<SomeClass.SomeNonStaticInnerClass> implements GeneratedBeanMatcher {
     private final BeanPropertyMatcher<SomeClass.SomeNonStaticInnerClass> beanPropertyMatcher;
 
