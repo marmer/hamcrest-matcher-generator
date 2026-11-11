@@ -141,6 +141,13 @@ A backend that leaves something out of its generated code without failing the bu
 Kotlin DSL backend uses it for a property whose name clashes with a member of its DSL scope; that property is left out
 of the DSL (what the DSL does with it is in <<building-block-kotlin,chapter 5>>).
 
+The core warns about one kind of skipped getter as well. A getter with the `get` prefix that returns a boolean, such as
+`boolean getActive()`, and an `is` method that does not return a boolean, such as `String isName()`, are no properties in
+Java. When the configuration names the type, or one of its nested types, that skip is one compiler warning at the
+configured value that names the type. The warning has the text of the verbose note and says that the completeness check
+does not see the getter, so no matcher checks its value. A type that only a package entry picks up gets the verbose note
+instead, and so does every other skipped method, such as a private or a static one.
+
 [[concepts-scorecard-findings]]
 === Accepted OpenSSF Scorecard Findings
 
