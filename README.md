@@ -83,7 +83,7 @@ the release keeps them current.
 
 ### Maven
 
-Hamcrest: the dependencies, then the annotation processor in the compiler plugin:
+Hamcrest: the dependencies, then the annotation processor in the compiler plugin. The snippets use the test scope, for a configuration in `src/test/java`; the guide covers a configuration in `src/main/java`:
 
 <!-- snippet: example-maven-java-hamcrest/pom.xml#maven-dependencies -->
 ```xml
