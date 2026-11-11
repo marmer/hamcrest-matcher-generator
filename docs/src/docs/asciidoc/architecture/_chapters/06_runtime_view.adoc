@@ -72,7 +72,7 @@ The deferral has three limits:
 
 * A package entry that resolves in its round does not pick up the types that a later round generates into that package.
 * A late type is not in a package-level file that an earlier round has already written; the once-per-package warning described under <<files-once-per-package>> names it, and the file is not written again.
-* The claim described under <<claimed-annotations>> applies to the configuration annotations too, so a processor that generates a configured type must run on its own annotation or be listed before the matcher generator.
+* The processor claims `@GenerateMatchers` and `@MatcherConfiguration` in the round in which it sees them, so javac does not hand them to a processor listed after it (the claim of the generated matchers' annotations is described under <<claimed-annotations>>); a processor that generates a configured type must therefore run on its own annotation or be listed before the matcher generator.
 
 [[runtime-mismatch-hamcrest]]
 === Describing a Mismatch (Hamcrest)
