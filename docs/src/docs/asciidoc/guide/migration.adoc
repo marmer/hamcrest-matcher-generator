@@ -112,9 +112,14 @@ A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0
 
 The `@Generated` annotation of generated code has no `date` element any more, so generated sources no longer differ from build to build in a time stamp. Nothing needs to change unless a tool of yours reads that element.
 
+[#skipped-getters]
+== A skipped getter of a named type is a warning
+
+A getter the generator skips for its prefix, such as `boolean getActive()`, is no property and is invisible to the completeness check. When the configuration names its type, 6.0.0 reports it as a compiler warning at the configured value, and a build with `-Werror` fails on that warning (the example modules build with `-Werror`). Either rename the getter to the `is` prefix (`isActive()`), or configure the type through a package entry instead of by its name: the skip is then only a verbose note, and the getter still stays out of the completeness check. The link:completeness-check.html[completeness check chapter] describes the rule.
+
 == What does not change
 
-The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>).
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>) and names no type that has a skipped getter (see <<skipped-getters,A skipped getter of a named type is a warning>>).
 
 == Next steps
 
