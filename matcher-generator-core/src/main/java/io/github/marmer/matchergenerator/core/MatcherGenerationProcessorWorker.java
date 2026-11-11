@@ -147,7 +147,8 @@ public class MatcherGenerationProcessorWorker {
                 namedEntries(distinctEntries(configurationMirror, VALUE_ATTRIBUTE));
         final Set<String> namedTypes = namedEntries.keySet();
         final TypeModelFactory factory =
-                new TypeModelFactory(processingEnv, diagnostics, configuration, excluded);
+                new TypeModelFactory(
+                        processingEnv, diagnostics, configuration, excluded, namedEntries);
         final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
                 .forEach(
