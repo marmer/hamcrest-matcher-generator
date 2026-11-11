@@ -42,7 +42,6 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class KotlinDslGenerationIT {
 
-    private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
     private static final String SIMPLE_POJO_DSL = "some/other/pck/SimplePojoMatcherDsl.kt";
     private static final String SCENARIOS =
             KotlinDslGenerationIT.class.getPackageName().replace('.', '/')
@@ -1018,6 +1017,10 @@ import java.util.Set;
                 "The Java matcher keeps every property");
     }
 
+    /**
+     * Nothing in a generated source may depend on when or how often the processor runs, so two
+     * compilations of the same sources give the same Java matchers and the same Kotlin DSL.
+     */
     @Test
     @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
     void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
@@ -1025,23 +1028,19 @@ import java.util.Set;
             configuration("some.other.pck.SimplePojo"), simpleBean("SimplePojo")
         };
 
-        final Map<String, String> firstJava =
-                generatedSources(compileWithDefaultProcessor(sources));
+        final Compilation first = compileWithKapt(sources);
+        final Path dsl = kotlinOutput.resolve(SIMPLE_POJO_DSL);
+        assertTrue(Files.isRegularFile(dsl), "No Kotlin DSL file written to " + dsl);
+        final Map<String, String> firstJava = generatedSources(first);
         final String firstKotlin = Files.readString(kotlinOutput.resolve(SIMPLE_POJO_DSL));
-        pauseBetweenRuns();
-        final Map<String, String> secondJava =
-                generatedSources(compileWithDefaultProcessor(sources));
+
+        final Compilation second = compileWithKapt(sources);
+        final Map<String, String> secondJava = generatedSources(second);
         final String secondKotlin = Files.readString(kotlinOutput.resolve(SIMPLE_POJO_DSL));
 
+        assertEquals(List.of("SimplePojoMatcher.java"), simpleNames(firstJava));
         assertEquals(firstJava, secondJava);
         assertEquals(firstKotlin, secondKotlin);
-    }
-
-    private Compilation compileWithDefaultProcessor(final JavaFileObject... sources) {
-        return Compiler.javac()
-                .withOptions("-Akapt.kotlin.generated=" + kotlinOutput)
-                .withProcessors(new MatcherGenerationProcessor())
-                .compile(Arrays.asList(sources));
     }
 
     private static Map<String, String> generatedSources(final Compilation compilation)
@@ -1053,17 +1052,10 @@ import java.util.Set;
         return sources;
     }
 
-    /**
-     * The processor stamps each run with the time it runs at. The pause makes sure the second run
-     * stamps a later time than the first one, so a stamp in the output would differ.
-     */
-    private static void pauseBetweenRuns() {
-        try {
-            Thread.sleep(PAUSE_BETWEEN_RUNS_MILLIS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted between two processor runs", e);
-        }
+    private static List<String> simpleNames(final Map<String, String> sources) {
+        return sources.keySet().stream()
+                .map(name -> name.substring(name.lastIndexOf('/') + 1))
+                .toList();
     }
 
     private static JavaFileObject simpleBean(final String name) {

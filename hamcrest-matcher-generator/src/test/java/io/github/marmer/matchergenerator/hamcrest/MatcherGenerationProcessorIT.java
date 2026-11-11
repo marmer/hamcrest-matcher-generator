@@ -26,8 +26,6 @@ import org.junit.jupiter.api.Test;
 
 class MatcherGenerationProcessorIT {
 
-    private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
-
     @Test
     @DisplayName("Matcher should have been generated for Pojo from Source file")
     void matcherShouldHaveBeenGeneratedForPojoFromSourceFile() throws IOException {
@@ -1936,6 +1934,10 @@ class MatcherGenerationProcessorIT {
                 .generatedSourceFile("some.other.pck.HolderMatcher");
     }
 
+    /**
+     * Nothing in a generated source may depend on when or how often the processor runs, so two
+     * compilations of the same sources give the same files.
+     */
     @Test
     @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
     void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
@@ -1949,19 +1951,11 @@ class MatcherGenerationProcessorIT {
                     "}")
         };
 
-        final Map<String, String> first = generatedSources(compileWithDefaultProcessor(sources));
-        pauseBetweenRuns();
-        final Map<String, String> second = generatedSources(compileWithDefaultProcessor(sources));
+        final Map<String, String> first = generatedSources(compileWithJSpecify(sources));
+        final Map<String, String> second = generatedSources(compileWithJSpecify(sources));
 
-        assertTrue(
-                first.keySet().stream().anyMatch(name -> name.endsWith("SimplePojoMatcher.java")));
+        assertEquals(List.of("SimplePojoMatcher.java"), simpleNames(first));
         assertEquals(first, second);
-    }
-
-    private static Compilation compileWithDefaultProcessor(final JavaFileObject... sources) {
-        return Compiler.javac()
-                .withProcessors(new MatcherGenerationProcessor())
-                .compile(Arrays.asList(sources));
     }
 
     private static Map<String, String> generatedSources(final Compilation compilation)
@@ -1973,17 +1967,10 @@ class MatcherGenerationProcessorIT {
         return sources;
     }
 
-    /**
-     * The processor stamps each run with the time it runs at. The pause makes sure the second run
-     * stamps a later time than the first one, so a stamp in the output would differ.
-     */
-    private static void pauseBetweenRuns() {
-        try {
-            Thread.sleep(PAUSE_BETWEEN_RUNS_MILLIS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted between two processor runs", e);
-        }
+    private static List<String> simpleNames(final Map<String, String> sources) {
+        return sources.keySet().stream()
+                .map(name -> name.substring(name.lastIndexOf('/') + 1))
+                .toList();
     }
 
     private static JavaFileObject orderWithPropertiesOfUnconfiguredTypes() {

@@ -43,7 +43,6 @@ class AssertionGenerationIT {
     private static final Pattern CLASS_DECLARATION =
             Pattern.compile("class (\\w+)(?:<.*?>)?\\s+extends\\s+(\\w+)", Pattern.DOTALL);
     private static final Pattern TYPE_DECLARATION = Pattern.compile("(?:class|interface) (\\w+)");
-    private static final long PAUSE_BETWEEN_RUNS_MILLIS = 10;
 
     @Test
     @DisplayName("A bean gets an abstract assertion class and a concrete one")
@@ -1638,32 +1637,28 @@ class AssertionGenerationIT {
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
     }
 
+    /**
+     * Nothing in a generated source may depend on when or how often the processor runs, so two
+     * compilations of the same sources give the same files.
+     */
     @Test
     @DisplayName("Compiling the same sources twice gives byte-identical generated sources")
     void compilingTheSameSourcesTwiceGivesByteIdenticalSources() throws IOException {
         final JavaFileObject[] sources = {
-            configuration("some.other.pck.SimplePojo"),
-            JavaFileObjects.forSourceLines(
-                    "some.other.pck.SimplePojo",
-                    "package some.other.pck;",
-                    "public class SimplePojo {",
-                    "    public String getName() { return null; }",
-                    "}")
+            configuration("some.other.pck.SimplePojo"), beanWithAName("SimplePojo")
         };
 
-        final Map<String, String> first = generatedSources(compileWithDefaultProcessor(sources));
-        pauseBetweenRuns();
-        final Map<String, String> second = generatedSources(compileWithDefaultProcessor(sources));
+        final Map<String, String> first = generatedSources(compileWithJSpecify(sources));
+        final Map<String, String> second = generatedSources(compileWithJSpecify(sources));
 
-        assertTrue(
-                first.keySet().stream().anyMatch(name -> name.endsWith("SimplePojoAssert.java")));
+        assertEquals(
+                List.of(
+                        "AbstractSimplePojoAssert.java",
+                        "PropertyRepresentation.java",
+                        "SimplePojoAssert.java",
+                        "SoftAssertionsProvider.java"),
+                simpleNames(first));
         assertEquals(first, second);
-    }
-
-    private static Compilation compileWithDefaultProcessor(final JavaFileObject... sources) {
-        return Compiler.javac()
-                .withProcessors(new MatcherGenerationProcessor())
-                .compile(Arrays.asList(sources));
     }
 
     private static Map<String, String> generatedSources(final Compilation compilation)
@@ -1675,17 +1670,10 @@ class AssertionGenerationIT {
         return sources;
     }
 
-    /**
-     * The processor stamps each run with the time it runs at. The pause makes sure the second run
-     * stamps a later time than the first one, so a stamp in the output would differ.
-     */
-    private static void pauseBetweenRuns() {
-        try {
-            Thread.sleep(PAUSE_BETWEEN_RUNS_MILLIS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted between two processor runs", e);
-        }
+    private static List<String> simpleNames(final Map<String, String> sources) {
+        return sources.keySet().stream()
+                .map(name -> name.substring(name.lastIndexOf('/') + 1))
+                .toList();
     }
 
     private static JavaFileObject configuration(final String... configuredTypes) {
