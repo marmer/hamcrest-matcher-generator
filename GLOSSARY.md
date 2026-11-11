@@ -59,7 +59,7 @@ A readable value of a bean (getter) or record (component accessor) that generate
 _Avoid_: field, attribute
 
 **Property model**:
-The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
+The library-agnostic description of a configured type and its properties (name, type, accessor, nullability, and whether the accessor declares a checked exception, `declaresCheckedException`; see arc42 chapter 5), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
 _Avoid_: bean model, metadata
 
 **Property path**:

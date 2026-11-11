@@ -50,7 +50,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |A readable value of a bean (getter) or record (component accessor) that generated assertions can check. Hamcrest matchers also list `class` (from `getClass()`) as a property, so `withClass(...)` and `ignoringClass()` are generated, as in 5.x. The Hamcrest completeness check never counts a property named `class`, so you never need to ignore it. The AssertJ backend generates nothing for `getClass()`, but a type's own boolean `isClass()` is a `class` property there, and its completeness check counts it: check it with `isClass()` or `hasClass(...)`, or name it with `ignoringClass()`. Enums also get `declaringClass`; whether the completeness check should count it is still undecided.
 
 |Property model
-|[[term-property-model]]The library-agnostic description of a configured type and its properties (name, type, accessor, nullability), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
+|[[term-property-model]]The library-agnostic description of a configured type and its properties (name, type, accessor, nullability, and whether the accessor declares a checked exception, `declaresCheckedException`; see <<section-building-block-view,arc42 chapter 5>>), shared by all backends. In code it is `TypeModel` (a whole type, with its nested types), `PropertyModel` (one property) and `TypeModel.Kind` (`POJO` or `RECORD`).
 
 |Property path
 |The dot-separated route from the asserted object to a checked value, with `[index]` for list items and `[key]` for map entries, used in Hamcrest mismatch messages (`customer.address.city`, `lines[1].quantity`, `bySku["B-2"].quantity`).
