@@ -119,7 +119,7 @@ A getter whose prefix does not fit its return type, such as `boolean getActive()
 
 == What does not change
 
-The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>) and names no type with a getter of the wrong prefix (see <<skipped-getters,A getter with the wrong prefix on a named type is a warning>>), which only `-Werror` turns into a failure.
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>). A type with a getter of the wrong prefix that the configuration names is a new warning (see <<skipped-getters,A getter with the wrong prefix on a named type is a warning>>), and only `-Werror` turns it into a failure.
 
 == Next steps
 
