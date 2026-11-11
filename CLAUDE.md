@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Every check in the right order (Spotless, install, verify on JDK 21 and 17, docs sync); --latest, --release, --fresh, --only <step>
 scripts/agents/verify.sh
-# .mvn/maven.config sets -T 1C (parallel reactor); a command-line -T wins over it. Release and mutation builds pin -T 1.
+
+# Builds run in parallel by default (.mvn/maven.config, -T 1C); the release, release dry run, mutation and Sonar builds pin -T 1.
 
 # Full build (dev profile: adds the end-to-end modules unless -DskipEndtoend is set); verify also runs the integration tests
 ./mvnw clean install

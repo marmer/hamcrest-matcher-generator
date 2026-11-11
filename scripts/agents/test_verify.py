@@ -64,7 +64,7 @@ class ReleaseStepTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout)
         self.assertIn("ok release", result.stdout)
         log = (self.root / "release-dry-run.log").read_text(encoding="utf-8")
-        self.assertIn("args: -B -P release verify -DskipTests -DskipITs -Dgpg.skip=true", log)
+        self.assertIn("args: -B -T 1 -P release verify -DskipTests -DskipITs -Dgpg.skip=true", log)
         self.assertIn("[INFO] BUILD SUCCESS", log)
         self.assertEqual("release-dry-run.log\n", (self.root / "check-calls.txt").read_text(encoding="utf-8"))
 

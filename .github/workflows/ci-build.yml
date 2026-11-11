@@ -84,7 +84,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # -T 1: the sonar goal cannot run locally (no token), so it stays serial; the job is not on the critical path.
+        # -T 1: the sonar goal was not tried with a parallel reactor (it needs the token), so it stays serial.
         run: ./mvnw -B -T 1 verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.qualitygate.wait=true -am --projects "hamcrest-matcher-generator,assertj-assertion-generator,hamcrest-matcher-generator-kotlin,matcher-generator-core,matcher-generator-annotations"
 
   verify-matrix:
@@ -153,7 +153,7 @@ jobs:
 
       - name: Mutation testing
         # Push to main has no history to read, so every mutant is analysed (4 threads, set in the pom).
-        # -T 1: PIT already uses the cores per module; a parallel reactor gained only about 7 % (docs/agents/build-pitfalls.md).
+        # -T 1: PIT already uses 4 threads per module. A parallel reactor gained about 7 % in one run each, within run-to-run noise (docs/agents/build-pitfalls.md).
         run: ./mvnw -B -T 1 -Pmutation verify
 
       - name: Save PIT history
@@ -202,6 +202,7 @@ jobs:
       # -DskipEndtoend leaves the never-published end-to-end modules (and the runner of the 5.x compatibility suite) out.
       - name: Release deploy lifecycle without signing and publishing
         shell: bash  # -eo pipefail, so a failing Maven build is not hidden by tee
+        # -T 1: the dry run runs the release's deploy lifecycle, so it stays serial like the release; signing and publishing are not worth the risk of a parallel build.
         run: ./mvnw -B -T 1 -s .github/ci-dummy-settings.xml -P release -DskipEndtoend deploy -DskipTests -DskipITs -Dgpg.skip=true -DskipPublishing=true 2>&1 | tee release-dry-run.log
 
       - name: Check release artifacts
