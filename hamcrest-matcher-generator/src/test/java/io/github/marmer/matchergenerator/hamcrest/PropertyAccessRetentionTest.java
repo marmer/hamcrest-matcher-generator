@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -62,12 +60,12 @@ class PropertyAccessRetentionTest {
         return loader.get() == null;
     }
 
-    private static void allocatePressure() {
-        final List<byte[]> arrays = new ArrayList<>();
+    private static int allocatePressure() {
+        int allocated = 0;
         for (int i = 0; i < PRESSURE_ARRAYS; i++) {
-            arrays.add(new byte[PRESSURE_ARRAY_SIZE]);
+            allocated += new byte[PRESSURE_ARRAY_SIZE].length;
         }
-        arrays.clear();
+        return allocated;
     }
 
     /**
