@@ -103,6 +103,10 @@ Notable Aspects::
 matcher.
 * The properties printed for a type are the ones the first generated matcher of that type reported; only the `class`
 property (from `getClass()`) is left out. A property named like a method of `Object`, such as `hashCode`, is printed.
+* What is printed of a type is held by the type itself (a `ClassValue`), not by a map keyed by the type. The accessors
+reference the class loader of their type, so a map would keep that loader alive; with the registration held by the type,
+a class loader that is no longer referenced is released, as a continuous test runner that loads the test classes again
+and again needs.
 
 === Describing a Mismatch (AssertJ)
 
