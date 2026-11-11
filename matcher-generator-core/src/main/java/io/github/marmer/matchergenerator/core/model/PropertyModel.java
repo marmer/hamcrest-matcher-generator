@@ -37,22 +37,6 @@ public record PropertyModel(
     }
 
     /**
-     * A property whose accessor declares no checked exception.
-     *
-     * @param name the property name
-     * @param type the type of the property value
-     * @param accessor the name of the method that reads the property
-     * @param nullability whether the value may be {@code null}
-     */
-    public PropertyModel(
-            final String name,
-            final TypeMirror type,
-            final String accessor,
-            final Nullability nullability) {
-        this(name, type, accessor, nullability, false);
-    }
-
-    /**
      * The property name with its first letter in upper case, as the generated method names use it,
      * e.g. {@code Foo} for {@code foo}. An empty name stays empty.
      *

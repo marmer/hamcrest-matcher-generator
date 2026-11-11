@@ -33,7 +33,13 @@ class ReferencePresetPlannerTest {
 
     private static PropertyModel property(
             final String name, final String accessor, final TypeMirror type) {
-        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED);
+        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED, false);
+    }
+
+    /** A property whose accessor declares a checked exception. */
+    private static PropertyModel throwingProperty(
+            final String name, final String accessor, final TypeMirror type) {
+        return new PropertyModel(name, type, accessor, Nullability.UNSPECIFIED, true);
     }
 
     /** A type of the class path with the given properties and nested types. */
@@ -234,9 +240,7 @@ class ReferencePresetPlannerTest {
     @DisplayName(
             "A property whose getter declares a checked exception is read through the read helper")
     void aPropertyWhoseGetterDeclaresACheckedExceptionIsReadThroughTheReadHelper() {
-        final PropertyModel name =
-                new PropertyModel(
-                        "name", TypeMirrors.stringType(), "getName", Nullability.UNSPECIFIED, true);
+        final PropertyModel name = throwingProperty("name", "getName", TypeMirrors.stringType());
         final TypeModel customer = generated(CUSTOMER, name);
 
         assertEquals(
@@ -253,12 +257,7 @@ class ReferencePresetPlannerTest {
             "A generated type whose getter declares a checked exception is read before it is preset")
     void aGeneratedTypeWhoseGetterDeclaresACheckedExceptionIsReadBeforeItIsPreset() {
         final PropertyModel address =
-                new PropertyModel(
-                        "address",
-                        TypeMirrors.typeNamed(ADDRESS),
-                        "getAddress",
-                        Nullability.UNSPECIFIED,
-                        true);
+                throwingProperty("address", "getAddress", TypeMirrors.typeNamed(ADDRESS));
         final TypeModel customer = generated(CUSTOMER, address);
 
         assertEquals(

@@ -21,6 +21,6 @@ final class ModelTestSupport {
     }
 
     static PropertyModel property(final String name, final String accessor) {
-        return new PropertyModel(name, anyType(), accessor, Nullability.UNSPECIFIED);
+        return new PropertyModel(name, anyType(), accessor, Nullability.UNSPECIFIED, false);
     }
 }
