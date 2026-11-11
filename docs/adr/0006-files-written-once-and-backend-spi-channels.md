@@ -9,7 +9,7 @@ To make the failure modes visible, the published `GeneratorBackend` interface gr
 - `GenerationContext.reportVerboseNote(String)`: a compiler note that the core prints only with `-Amatchergenerator.verbose`. The Hamcrest backend uses it for one note per property that `isXLike(reference)` compares with `equals` because no matcher for its type is generated in the round.
 - `GenerationContext.classExistsOutsideOwnOutput(String)`: whether a class is on the class path or source path without being in the output directory of the running compilation. The AssertJ backend uses it for the mixin only: it notes a `SoftAssertionsProvider` written by another compilation. `PropertyRepresentation` gets no class-path note.
 - `GeneratedSource.qualifiedName()`.
-- The 3-argument convenience constructor of `GenerationContext` drops verbose notes and answers `false` for `classExistsOutsideOwnOutput`.
+- The convenience constructor of `GenerationContext` (generator name and JSpecify flag; it took a generation time until #362 removed that component) drops verbose notes and answers `false` for `classExistsOutsideOwnOutput`.
 - The rule "a source an earlier round wrote is not written again, the core warns at the annotation instead" is generic in the core worker and applies to every `GeneratedSource` of every backend, not only to the files written once per package.
 
 ## Considered Options
@@ -22,7 +22,7 @@ To make the failure modes visible, the published `GeneratorBackend` interface gr
 - A later round that adds types to a package whose file an earlier round wrote gets one warning at the annotation, naming the file and the types it does not know. A build with `-Xlint:all -Werror` (or `-Werror` generally) fails on it; the user adds the types to the configuration of the first round or generates the configuration class before the matcher generator runs.
 - The second-compilation case is a NOTE, not a warning, and it cannot tell every case apart: the processor sees only that a class of that name is on the class path outside its own output. A class left by a previous, non clean build of the same module is excluded by looking into the class output, but other legitimate constellations (for example a dependency that ships its own mixin on purpose) get the same note. The mixin of the second compilation does not contain the types of the first. The class-path NOTE covers the mixin only; the representation of a second compilation is written without a note, and it does not know the types of the first either.
 - The "not written again" warning of the core worker covers every source of every backend, so a later round gets it for `PropertyRepresentation` as well as for the mixin.
-- `GenerationContext` is a record, so the two new components change its canonical constructor. External backends written against the published `GeneratorBackend` interface must adapt, or switch to the 3-argument convenience constructor in their tests.
+- `GenerationContext` is a record, so the two new components change its canonical constructor. External backends written against the published `GeneratorBackend` interface must adapt, or switch to the convenience constructor in their tests.
 - The behaviour is described in arc42 chapter 6, "Files written once per package"; the glossary entries "Soft assertions mixin" and "Reference object" point there.
 
 ## Open points (ideas, not decisions)
