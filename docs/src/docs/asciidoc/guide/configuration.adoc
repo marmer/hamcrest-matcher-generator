@@ -13,7 +13,7 @@ The annotation's value lists package names and fully qualified class names. A pa
 include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
 ----
 
-This configuration generates a matcher for every model class in `example.hamcrest.model`. The model classes can be beans with getters, records or Kotlin classes: the processor reads bean getters, record component accessors and Kotlin getters.
+This configuration generates a matcher for every model class in `example.hamcrest.model`. The model classes can be beans with getters, records or Kotlin classes: the processor reads bean getters, record component accessors and Kotlin getters. A getter that declares a checked exception is still a property: a check of it fails with `Could not read property 'name'` and the exception as cause.
 
 Lombok-generated getters are read as well, provided the Lombok annotation processor runs before the generator. Put Lombok first on the processor path, as the Lombok end-to-end module `hamcrest-matcher-generator-endtoend-lombok` does, so that the generator sees the getters Lombok adds in the same compilation. That module is tested with the Lombok version of the project's root pom.
 

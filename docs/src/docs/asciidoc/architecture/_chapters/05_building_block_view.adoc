@@ -144,6 +144,11 @@ Reads a type with the compiler's element API and creates the `TypeModel`: getter
 for records, inherited properties and public member types. The type of a property is the return type of its accessor
 as a member of the configured type (`Types.asMemberOf`), so a type argument that a subtype gives its supertype
 replaces the supertype's type variable: `Sub extends Base<String>` gives `String` for an inherited `T getValue()`.
+A getter that declares a checked exception stays a property and is marked as such on its `PropertyModel`. Generated code
+has no handler for that exception, so the backends call such a getter through a helper that turns the exception into the
+failure a check reports, `Could not read property 'name'` with the exception as cause: `ReferenceMatching.read` in the
+reference presets of the Hamcrest backend, `PropertyRead.of` in the AssertJ assertions and the property representation.
+Unchecked exceptions and errors need no helper, so their getters are called directly, as before.
 
 `NullabilityResolver`::
 Derives the `Nullability` of a property for the `TypeModel`: primitives are non null, JSpecify and JetBrains
@@ -205,7 +210,7 @@ Each concrete class has an `InstanceOfAssertFactory` constant for `as(X)` naviga
 Each target package gets one `SoftAssertionsProvider` mixin (written once per package, see <<files-once-per-package,chapter 6>> and <<adr-0006,ADR 0006>>) with a default `assertThat` and `then` per type,
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
 that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "<<term-assertion-path,Assertion path>>"); inside an array, collection or map the path
-restarts at the element type. Name clashes in the generated code are reported as compiler errors (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
+restarts at the element type. The runtime class `PropertyRead` reads a property whose getter declares a checked exception, for the assertions and the representation (the rule is under `TypeModelFactory` above). Name clashes in the generated code are reported as compiler errors (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
 
 The generated code needs AssertJ on the test class path.
 
