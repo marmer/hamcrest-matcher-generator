@@ -118,7 +118,7 @@ The column "Protected by" names the check that decides whether the scenario is m
 
 | [[qs-b1]]QS-B1
 | Compatibility / Interoperability
-| *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`) or KAPT on any supported JDK, the annotation processor generates the same assertion API; the three Maven example modules and the end-to-end modules build green on every JDK in the CI matrix, and the Gradle example builds on JDK 17 and 21.
+| *The same API with every build tool.* When a test developer applies the same configuration with Maven (classpath discovery or `annotationProcessorPaths`), Gradle (`annotationProcessor`, and `testAnnotationProcessor` for test sources, as the Gradle example uses it) or KAPT on any supported JDK, the annotation processor generates the same assertion API; the three Maven example modules and the end-to-end modules build green on every JDK in the CI matrix, and the Gradle example builds on JDK 17 and 21.
 | Build; Verify JDK 17/21/25/latest; Example Gradle
 
 | [[qs-b2]]QS-B2

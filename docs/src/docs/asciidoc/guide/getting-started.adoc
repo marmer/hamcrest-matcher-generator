@@ -25,7 +25,7 @@ Declare the processor on the processor path of the compiler plugin, as the examp
 include::../../../../../example-maven-java-hamcrest/pom.xml[tag=maven-processor,indent=0]
 ----
 
-The scope of the generator decides where the generated code can be compiled. The examples declare it without a scope, which is the compile scope, because their configuration sits in `src/main`: the matchers are generated into the main output. Only a configuration in `src/test` takes the `test` scope. When the configuration sits in your production sources, the generated code is compiled with production code too, so the generator must be on the compile classpath of production code: declare it with the `provided` scope and `<optional>true</optional>` then, so that it does not travel with your production artifact.
+The scope of the generator decides where the generated code can be compiled. The examples declare the generator and the library with the `test` scope, because their configuration sits in `src/test/java`: the matchers are generated into the test output, and the production artifact carries neither them nor the configuration. A configuration in your production sources is the special case: the generated code is compiled with production code too, so the generator must be on the compile classpath of production code. Declare it with the `provided` scope and `<optional>true</optional>` then, so that it does not travel with your production artifact.
 
 For AssertJ, use the `assertj-assertion-generator` artifact with the same two steps and the property `assertj-assertion-generator.version`. The link:assertj-backend.html[AssertJ backend chapter] shows its snippets from `example-maven-java-assertj`.
 
@@ -35,7 +35,7 @@ The processor generates for the types you configure. Put one annotation on a cla
 
 [source,java]
 ----
-include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
 ----
 
 The link:configuration.html[configuration chapter] lists the options.

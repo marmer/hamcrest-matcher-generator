@@ -60,7 +60,7 @@ Quick start
 
 Generate the matchers or assertions for the packages of your model classes with `@GenerateMatchers`:
 
-<!-- snippet: example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java#configuration -->
+<!-- snippet: example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java#configuration -->
 ```java
 import io.github.marmer.matchergenerator.annotations.GenerateMatchers;
 
@@ -83,7 +83,7 @@ the release keeps them current.
 
 ### Maven
 
-Hamcrest: the dependencies, then the annotation processor in the compiler plugin:
+Hamcrest: the dependencies, then the annotation processor in the compiler plugin. The snippets use the test scope, for a configuration in `src/test/java`; the guide covers a configuration in `src/main/java`:
 
 <!-- snippet: example-maven-java-hamcrest/pom.xml#maven-dependencies -->
 ```xml
@@ -91,10 +91,12 @@ Hamcrest: the dependencies, then the annotation processor in the compiler plugin
     <groupId>io.github.marmer.testutils</groupId>
     <artifactId>hamcrest-matcher-generator</artifactId>
     <version>${hamcrest-matcher-generator.version}</version>
+    <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.hamcrest</groupId>
     <artifactId>hamcrest</artifactId>
+    <scope>test</scope>
 </dependency>
 ```
 <!-- end snippet -->
@@ -119,10 +121,12 @@ AssertJ, the same way:
     <groupId>io.github.marmer.testutils</groupId>
     <artifactId>assertj-assertion-generator</artifactId>
     <version>${assertj-assertion-generator.version}</version>
+    <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.assertj</groupId>
     <artifactId>assertj-core</artifactId>
+    <scope>test</scope>
 </dependency>
 ```
 <!-- end snippet -->
@@ -149,16 +153,16 @@ val matcherGeneratorVersion = "5.1.0" // x-release-please-version
 
 <!-- snippet: example-gradle-java/build.gradle.kts#gradle-dependencies -->
 ```kotlin
-implementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-implementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+testImplementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+testImplementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
 ```
 <!-- end snippet -->
 
 <!-- snippet: example-gradle-java/build.gradle.kts#gradle-processor -->
 ```kotlin
-// Both backends run as annotation processors; the Gradle annotationProcessor configuration puts them on the processor path.
-annotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-annotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+// Both backends run as annotation processors; the Gradle testAnnotationProcessor configuration puts them on the processor path of the test compilation.
+testAnnotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+testAnnotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
 ```
 <!-- end snippet -->
 

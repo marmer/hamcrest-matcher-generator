@@ -48,7 +48,7 @@ The group ID stays `io.github.marmer.testutils`. 6.0.0 has neutral artifact name
 
 The bridge jars let a 5.x build resolve without a change of coordinates. Keep the scope you declared for a 5.x artifact, as the scope advice in the link:getting-started.html[getting started chapter] describes: the Hamcrest backend arrives transitively with the scope of the bridge jar. The reason is the compiler plugin: `maven-compiler-plugin` before 3.12 does not follow a relocation POM in its processor path, so the 5.x artifacts are jars and not relocations. A project that keeps the 5.x coordinates gets the Hamcrest backend through them, and the processor arrives with it.
 
-The Maven dependencies name the artifacts as follows, in the snippet of the Hamcrest example:
+The Maven dependencies name the artifacts as follows, in the snippet of the Hamcrest example. Its `test` scope follows the configuration in the test sources; your scope follows your configuration, as the getting started chapter describes:
 
 [source,xml]
 ----
@@ -62,7 +62,7 @@ The configuration annotation is `@GenerateMatchers`, in the package `io.github.m
 
 [source,java]
 ----
-include::../../../../../example-maven-java-hamcrest/src/main/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
+include::../../../../../example-maven-java-hamcrest/src/test/java/example/hamcrest/configuration/HamcrestConfiguration.java[tag=configuration,indent=0]
 ----
 
 The 5.x `@MatcherConfiguration` stays as a deprecated alias in its old package, `io.github.marmer.testutils.generators.beanmatcher.dependencies`. It is a full alias: it has the same attributes, including `exclude`, so you can use the new feature before you rename the annotation. Its retention is source only, so it leaves no trace in the compiled classes, as in 5.x; the new `@GenerateMatchers` has source retention too.

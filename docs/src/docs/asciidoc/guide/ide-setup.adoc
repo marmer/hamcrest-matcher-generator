@@ -6,7 +6,7 @@ Use the IDE of your choice. An IDE with annotation processing support generates 
 
 == Eclipse
 
-Eclipse runs annotation processing for Maven projects only with the m2e-apt plugin, and it needs to know where the generated test sources are. The `build-helper-maven-plugin` tells the IDE where to look. It adds the directory of the generated test sources as a test source root:
+Eclipse runs annotation processing for Maven projects only with the m2e-apt plugin, and it needs to know where the generated test sources are. The `build-helper-maven-plugin` tells the IDE where to look. It adds the directory of the generated test sources as a test source root. The example's configuration sits in `src/test/java`, so its matchers are generated into that directory:
 
 [source,xml]
 ----

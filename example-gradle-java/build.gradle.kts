@@ -28,17 +28,18 @@ repositories {
 }
 
 dependencies {
+    // The configuration sits in src/test/java, so the generators and the libraries have the test scope (testImplementation).
     // tag::gradle-dependencies[]
-    implementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-    implementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+    testImplementation("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+    testImplementation("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
     // end::gradle-dependencies[]
-    implementation("org.hamcrest:hamcrest:3.0")
-    implementation("org.assertj:assertj-core:3.27.7")
+    testImplementation("org.hamcrest:hamcrest:3.0")
+    testImplementation("org.assertj:assertj-core:3.27.7")
 
     // tag::gradle-processor[]
-    // Both backends run as annotation processors; the Gradle annotationProcessor configuration puts them on the processor path.
-    annotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
-    annotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
+    // Both backends run as annotation processors; the Gradle testAnnotationProcessor configuration puts them on the processor path of the test compilation.
+    testAnnotationProcessor("io.github.marmer.testutils:hamcrest-matcher-generator:$matcherGeneratorVersion")
+    testAnnotationProcessor("io.github.marmer.testutils:assertj-assertion-generator:$matcherGeneratorVersion")
     // end::gradle-processor[]
 
     testImplementation(platform("org.junit:junit-bom:6.1.3"))

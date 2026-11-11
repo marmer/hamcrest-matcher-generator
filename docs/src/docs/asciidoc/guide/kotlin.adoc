@@ -2,7 +2,7 @@
 :description: Kotlin projects with KAPT: the processor path and the classpath of the Kotlin DSL artifact with their gotchas, the source directories that KAPT output needs, Kotlin properties and their matcher names, the generated Kotlin DSL and its Kotlin 1.9 language level.
 :page-order: 7
 
-The generators work with Kotlin classes as they work with Java beans. Java tests need nothing else. Kotlin tests need the processors run by KAPT, the annotation processing tool of Kotlin, and the generated Kotlin DSL is written by KAPT only. The examples here come from `example-maven-kotlin`, which runs KAPT for its main sources, and from the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin`, which runs KAPT for its test sources.
+The generators work with Kotlin classes as they work with Java beans. Java tests need nothing else. Kotlin tests need the processors run by KAPT, the annotation processing tool of Kotlin, and the generated Kotlin DSL is written by KAPT only. The examples here come from `example-maven-kotlin`, which runs KAPT for its test sources, and from the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin`, which does the same and adds the consumer checks of its compile failures.
 
 == Requirements
 
@@ -24,70 +24,62 @@ Add the generator artifacts for the backends you use and the Kotlin DSL artifact
 * On the classpath of the Kotlin sources, as a dependency. The generated DSL uses the `@MatcherDsl` marker and the runtime classes of that artifact, and kotlinc must resolve them.
 * On the KAPT processor path. The artifact writes the Kotlin DSL files, so KAPT must run it.
 
-The example declares the dependency once, in the compile scope, and lists the three processors on the processor path of the `kapt` execution:
+The example declares the generators and the Kotlin DSL artifact in the test scope, because its configuration sits in the test sources, and lists the three processors on the processor path of the `test-kapt` execution:
 
 [source,xml]
 ----
 include::../../../../../example-maven-kotlin/pom.xml[tag=maven-dependencies,indent=0]
 ----
 
-KAPT runs the three processors over the Kotlin sources. It writes the Java matchers below `target/generated-sources/kapt/compile` and the Kotlin DSL files below `target/generated-sources/kaptKotlin/compile`:
+KAPT runs the three processors over the Kotlin test sources. It writes the Java matchers below `target/generated-sources/kapt/test` and the Kotlin DSL files below `target/generated-sources/kaptKotlin/test`:
 
 [source,xml]
 ----
-include::../../../../../example-maven-kotlin/pom.xml[tag=maven-kapt,indent=0]
+include::../../../../../example-maven-kotlin/pom.xml[tag=maven-test-kapt,indent=0]
 ----
 
 The gotchas of this setup:
 
 * With the DSL artifact on the processor path only, kotlinc fails on the generated DSL files with `Unresolved reference: MatcherDsl`, at the `@MatcherDsl` annotation and at the import of the marker. Add the artifact as a dependency, as above.
-* A dependency in test scope alone is not enough for the main sources. KAPT also finds processors on the test classpath, so the DSL can appear for the tests, but the main Kotlin sources still need the artifact on their compile classpath.
+* The main sources need none of it. The test scope is enough for the tests, as the example shows. Only a configuration in the main sources, the special case below, needs the artifacts on the compile classpath of the main code.
 
 == Configure the types
 
-The configuration is the same annotation as in Java. It goes on any class, here in the main sources:
+The configuration is the same annotation as in Java. It goes on any class, here in the test sources:
 
 [source,kotlin]
 ----
-include::../../../../../example-maven-kotlin/src/main/kotlin/example/kotlin/configuration/KotlinConfiguration.kt[tag=configuration,indent=0]
+include::../../../../../example-maven-kotlin/src/test/kotlin/example/kotlin/configuration/KotlinConfiguration.kt[tag=configuration,indent=0]
 ----
 
-== Source directories of the compilation
+== Source directories of the test compilation
 
-The `kotlin-maven-plugin` compiles the Kotlin sources and the KAPT output together. Two gotchas follow from that:
+The `kotlin-maven-plugin` compiles the Kotlin test sources and the KAPT output together. The KAPT output of the tests has to reach the Kotlin and the javac test compilation, and the example lists it in the `test-compile` execution:
 
-* The `sourceDirs` of an execution replace the default source directories. The example lists the KAPT output of the Java matchers (`kapt/compile`) and of the Kotlin DSL (`kaptKotlin/compile`) next to the Kotlin sources, so nothing depends on the defaults. The plugin registers the two directories itself, so a build passes without them too, and a "Duplicate source root" warning shows either way.
+* The `sourceDirs` of the `test-compile` execution replace the default source directories. The example lists the KAPT output of the Java matchers (`kapt/test`) and of the Kotlin DSL (`kaptKotlin/test`) next to the Kotlin test sources, so nothing depends on the defaults:
++
+[source,xml]
+----
+include::../../../../../example-maven-kotlin/pom.xml[tag=test-compile-source-dirs,indent=0]
+----
 * Javac runs after kotlinc and gets no processors, because KAPT has generated everything already. The example therefore switches javac's annotation processing off and keeps every other lint category fatal.
 
-[source,xml]
-----
-include::../../../../../example-maven-kotlin/pom.xml[tag=compile-source-dirs,indent=0]
-----
+A configuration in the test sources is processed by `test-kapt`, so its matchers go to `target/generated-sources/kapt/test`. The `target/generated-test-sources/test-annotations` directory, which javac fills for Java configurations, stays empty for a Kotlin one.
 
-== Kotlin test sources
+The end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` also registers `kapt/test` as a test source root with the `build-helper-maven-plugin`:
 
-Kotlin tests run KAPT over the test sources with the `test-kapt` goal. The KAPT output of the tests has to reach the Kotlin and the javac test compilation, and the end-to-end module `hamcrest-matcher-generator-endtoend-plain-kotlin` shows the three pieces that do it:
-
-* the `test-kapt` execution, with the processor path of the Hamcrest backend and the Kotlin DSL:
-+
-[source,xml]
-----
-include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-kapt,indent=0]
-----
-* the `test-compile` execution, whose source directories include the KAPT output of the tests (`kapt/test` and `kaptKotlin/test`):
-+
-[source,xml]
-----
-include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=test-compile-source-dirs,indent=0]
-----
-* the `build-helper-maven-plugin`, which registers the KAPT test output as a test source root, so javac compiles every generated matcher:
-+
 [source,xml]
 ----
 include::../../../../../hamcrest-matcher-generator-endtoend-plain-kotlin/pom.xml[tag=add-kapt-test-source,indent=0]
 ----
 
-A configuration class in your test sources writes its generated Java to `target/generated-test-sources/test-annotations`, as in Java. The end-to-end module keeps its configuration in `src/test/kotlin` and its `test-compile` execution lists the Kotlin test sources and the KAPT output, not that directory. A Kotlin test compilation that needs that directory has to list it as a source directory itself. This is an assumption: no build in the repository exercises that case.
+The example does not need that registration. Without Java tests in the example, a build without it still compiles the generated matchers: `./mvnw -o -B -q clean test-compile` in `example-maven-kotlin` writes `target/test-classes/example/kotlin/model/CustomerMatcher.class`, and the example has no build-helper registration. Next to Java tests the registration is the reason given in the end-to-end pom (#110): javac compiles only the KAPT matchers that Java sources reference, unless the output is a test source root. That case is not built by the example.
+
+== The special case: a configuration in the main sources
+
+A configuration in `src/main/kotlin` is the special case. It runs KAPT over the main sources with the plain `kapt` goal instead of `test-kapt`, which writes the Java matchers below `target/generated-sources/kapt/compile` and the Kotlin DSL below `target/generated-sources/kaptKotlin/compile`. The generator and the Kotlin DSL artifact must then be on the compile classpath of the main code, and a production artifact keeps them out with the `provided` scope and `<optional>true</optional>`, as the link:getting-started.html[getting started chapter] describes for Java. This combination is not built by the example.
+
+The consumer builds in `hamcrest-matcher-generator-endtoend-plain-kotlin/src/it` show the `kapt` goal over main sources. `right-scope` declares the artifacts without a scope, which is the compile scope, and its `sourceDirs` name only `src/main/kotlin`, no KAPT output directory, while the build compiles a check that uses the generated DSL. `wrong-scope` is the failing counterpart: it must not compile, because the DSL marker forbids the call from an outer scope. Whether the `provided` scope with `<optional>true</optional>` works for the Kotlin main case is not covered by a build in the repository.
 
 == IntelliJ IDEA with Kotlin tests
 
