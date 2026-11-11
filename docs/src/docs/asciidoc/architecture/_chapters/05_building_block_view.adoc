@@ -41,7 +41,9 @@ paths and the rendering of its findings live in the package-private `PathWalk` a
 `BeanPropertyMatcher` and the collection matchers use. `ReferenceMatching` is what the generated `isXLike(reference)` methods call: it presets the checks of a reference object (`BeanPropertyMatcher.preset`), builds one matcher per reference object while a matcher is built, so a cyclic graph yields a cyclic matcher, and `BeanPropertyMatcher` counts a pair of matcher and item met again as equal. The package-private `ReferencePresetPlanner` chooses, for each property of a reference object, the helper that compares it (the rule is in <<section-runtime-view,chapter 6>>). The opt-in completeness check (`checkingAllProperties()`) is also in `BeanPropertyMatcher`: a property is addressed when a check or `ignoringFoo()` names it, `resetFoo()` removes both, and the properties that are neither are reported after the failing checks. Every generated matcher extends `TypeSafeMatcher`, implements the public interface
 `GeneratedBeanMatcher` (its `beanPropertyMatcher()` is the seam through which a generated matcher used as a property
 check of another one is flattened into property paths; it is public because generated code lives in the user's
-packages) and passes its property names to the `BeanPropertyMatcher` constructor.
+packages) and passes each property to the `BeanPropertyMatcher` constructor with the accessor that reads it, as
+`BeanPropertyMatcher.property("name", (Type bean) -> bean.getName())` in declaration order, the lambda stating the type so that a static method overloading the getter does not make it ambiguous. The constructor that takes only the names is kept for matchers that an
+older version generated; which reflection remains is listed in <<section-solution-strategy,chapter 4>>.
 
 | `assertj-assertion-generator`
 | The AssertJ backend: it turns a `TypeModel` into an abstract assertion class and a concrete assertion class per
@@ -174,10 +176,12 @@ Builds the source of a `<Type>Matcher` class with JavaPoet from a `TypeModel`: t
 presets of `isXLike(reference)` it asks `ReferencePresetPlanner`, which is described in the building block table above.
 
 `BeanPropertyMatcher` and its helpers::
-The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object,
-collects the failing checks with their property paths and builds the mismatch message (see <<section-runtime-view,chapter 6>>). Its helpers, the
+The runtime library that the generated matchers call at test time. It reads the checked properties of the actual object
+through the accessor of each property (`BeanPropertyMatcher.Accessor`, a lambda or method reference such as
+`Type::getName`, which may return `null` or throw an exception), collects the failing checks with their property paths and builds the mismatch message (see <<section-runtime-view,chapter 6>>). Its helpers, the
 collection matchers (`itemsInOrder`, `itemsInAnyOrder`, `entries`), `ReferenceMatching`, `PathWalk` and `MismatchReport`,
-are described in the building block table above. The library extends Hamcrest's `TypeSafeMatcher`.
+are described in the building block table above. The library extends Hamcrest's `TypeSafeMatcher`. The values that a mismatch
+message prints for a configured type are read through the accessors that the first matcher of the type registered. The reflection that remains is listed in <<section-solution-strategy,chapter 4>>.
 
 [[building-block-assertj]]
 ==== White Box `assertj-assertion-generator`

@@ -27,7 +27,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
   private final BeanPropertyMatcher<SimplePojo<?>> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class, "name", "nickname", "count", "limit", "tags", "parts", "payload", "entry", "requiredEntry", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo<?>>(SimplePojo.class, BeanPropertyMatcher.property("name", (SimplePojo<?> bean) -> bean.getName()), BeanPropertyMatcher.property("nickname", (SimplePojo<?> bean) -> bean.getNickname()), BeanPropertyMatcher.property("count", (SimplePojo<?> bean) -> bean.getCount()), BeanPropertyMatcher.property("limit", (SimplePojo<?> bean) -> bean.getLimit()), BeanPropertyMatcher.property("tags", (SimplePojo<?> bean) -> bean.getTags()), BeanPropertyMatcher.property("parts", (SimplePojo<?> bean) -> bean.getParts()), BeanPropertyMatcher.property("payload", (SimplePojo<?> bean) -> bean.getPayload()), BeanPropertyMatcher.property("entry", (SimplePojo<?> bean) -> bean.getEntry()), BeanPropertyMatcher.property("requiredEntry", (SimplePojo<?> bean) -> bean.getRequiredEntry()), BeanPropertyMatcher.property("class", (SimplePojo<?> bean) -> bean.getClass()));
   }
 
   public SimplePojoMatcher withName(final Matcher<? super String> matcher) {
@@ -289,7 +289,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo<?>> implements
     private final BeanPropertyMatcher<SimplePojo.Inner> beanPropertyMatcher;
 
     public InnerMatcher() {
-      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class, "innerName", "class");
+      beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo.Inner>(SimplePojo.Inner.class, BeanPropertyMatcher.property("innerName", (SimplePojo.Inner bean) -> bean.getInnerName()), BeanPropertyMatcher.property("class", (SimplePojo.Inner bean) -> bean.getClass()));
     }
 
     public InnerMatcher withInnerName(final Matcher<? super String> matcher) {

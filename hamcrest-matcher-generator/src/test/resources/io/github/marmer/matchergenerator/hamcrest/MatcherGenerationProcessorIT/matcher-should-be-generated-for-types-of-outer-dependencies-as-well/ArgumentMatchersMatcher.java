@@ -19,7 +19,7 @@ public class ArgumentMatchersMatcher extends TypeSafeMatcher<ArgumentMatchers> i
   private final BeanPropertyMatcher<ArgumentMatchers> beanPropertyMatcher;
 
   public ArgumentMatchersMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class, "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<ArgumentMatchers>(ArgumentMatchers.class, BeanPropertyMatcher.property("class", (ArgumentMatchers bean) -> bean.getClass()));
   }
 
   public ArgumentMatchersMatcher withClass(final Matcher<? super Class<?>> matcher) {

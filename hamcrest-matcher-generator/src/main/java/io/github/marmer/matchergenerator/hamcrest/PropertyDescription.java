@@ -120,7 +120,7 @@ final class PropertyDescription extends StringDescription {
         append(" {");
         var first = true;
         for (final String property : properties) {
-            final @Nullable Object propertyValue = PropertyAccess.read(value, property);
+            final @Nullable Object propertyValue = PropertyAccess.readPrinted(value, property);
             if (propertyValue == PropertyAccess.NO_SUCH_PROPERTY) {
                 continue;
             }

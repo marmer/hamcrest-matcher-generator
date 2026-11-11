@@ -4,10 +4,13 @@
  */
 package io.github.marmer.matchergenerator.hamcrest;
 
+import static io.github.marmer.matchergenerator.hamcrest.BeanPropertyMatcher.property;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
+import java.util.List;
 import lombok.Value;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -425,6 +428,164 @@ class BeanPropertyMatcherTest {
         final boolean matches =
                 classUnderTest.matches(new ClassWithSingleProperty("someDifferentValue"));
         assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void testMatches_PropertyWithAccessor_ShouldReadTheValueThroughTheAccessor() {
+        final BeanPropertyMatcher<TextOnly> classUnderTest =
+                new BeanPropertyMatcher<TextOnly>(
+                        TextOnly.class, property("label", TextOnly::text));
+        classUnderTest.with("label", is(equalTo("someValue")));
+
+        final boolean matches = classUnderTest.matches(new TextOnly("someValue"));
+
+        assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void testMatches_PropertyWithAccessorAndOtherValue_ShouldNotMatch() {
+        final BeanPropertyMatcher<TextOnly> classUnderTest =
+                new BeanPropertyMatcher<TextOnly>(
+                        TextOnly.class, property("label", TextOnly::text));
+        classUnderTest.with("label", is(equalTo("someValue")));
+
+        final boolean matches = classUnderTest.matches(new TextOnly("someDifferentValue"));
+
+        assertThat("matches", matches, is(false));
+    }
+
+    @Test
+    void testMatches_AccessorThatThrows_ShouldFailNamingTheProperty() {
+        final BeanPropertyMatcher<ThrowingRecord> classUnderTest =
+                new BeanPropertyMatcher<ThrowingRecord>(
+                        ThrowingRecord.class, property("broken", ThrowingRecord::broken));
+        final Matcher<ThrowingRecord> matcher = classUnderTest.with("broken", is("someValue"));
+
+        final AssertionError error =
+                assertThrows(
+                        AssertionError.class,
+                        () -> matcher.matches(new ThrowingRecord("someValue")));
+
+        assertThat(
+                "message", error.getMessage(), containsString("Could not read property 'broken'"));
+        assertThat("cause", error.getCause(), instanceOf(IllegalStateException.class));
+    }
+
+    @Test
+    void testMatches_AccessorThatThrowsACheckedException_ShouldFailNamingTheProperty() {
+        final BeanPropertyMatcher<CheckedGetter> classUnderTest =
+                new BeanPropertyMatcher<CheckedGetter>(
+                        CheckedGetter.class, property("checked", CheckedGetter::getChecked));
+        final Matcher<CheckedGetter> matcher = classUnderTest.with("checked", is("someValue"));
+
+        final AssertionError error =
+                assertThrows(AssertionError.class, () -> matcher.matches(new CheckedGetter()));
+
+        assertThat(
+                "message", error.getMessage(), containsString("Could not read property 'checked'"));
+        assertThat("cause", error.getCause(), instanceOf(IOException.class));
+    }
+
+    @Test
+    void testDescribeMismatch_WithAccessors_ShouldReportTheSameAsWithoutAccessors() {
+        final BeanPropertyMatcher<ClassTwoProperties> reflective =
+                new BeanPropertyMatcher<ClassTwoProperties>(
+                        ClassTwoProperties.class, "firstProperty", "secondProperty");
+        reflective.with("firstProperty", is(equalTo("a"))).with("secondProperty", is(equalTo("b")));
+        final BeanPropertyMatcher<ClassTwoProperties> accessors =
+                new BeanPropertyMatcher<ClassTwoProperties>(
+                        ClassTwoProperties.class,
+                        property("firstProperty", ClassTwoProperties::getFirstProperty),
+                        property("secondProperty", ClassTwoProperties::getSecondProperty));
+        accessors.with("firstProperty", is(equalTo("a"))).with("secondProperty", is(equalTo("b")));
+        final ClassTwoProperties item = new ClassTwoProperties("x", "y");
+
+        assertThat("mismatch", mismatchOf(accessors, item), is(mismatchOf(reflective, item)));
+    }
+
+    @Test
+    void testDescribeMismatch_WithAccessorsAndCompleteness_ShouldReportTheSameAsWithoutAccessors() {
+        final BeanPropertyMatcher<ClassTwoProperties> reflective =
+                new BeanPropertyMatcher<ClassTwoProperties>(
+                                ClassTwoProperties.class, "firstProperty", "secondProperty")
+                        .checkingAllProperties();
+        reflective.with("firstProperty", is(equalTo("a")));
+        final BeanPropertyMatcher<ClassTwoProperties> accessors =
+                new BeanPropertyMatcher<ClassTwoProperties>(
+                                ClassTwoProperties.class,
+                                property("firstProperty", ClassTwoProperties::getFirstProperty),
+                                property("secondProperty", ClassTwoProperties::getSecondProperty))
+                        .checkingAllProperties();
+        accessors.with("firstProperty", is(equalTo("a")));
+        final ClassTwoProperties item = new ClassTwoProperties("x", "y");
+
+        assertThat("mismatch", mismatchOf(accessors, item), is(mismatchOf(reflective, item)));
+    }
+
+    @Test
+    void testDescribeMismatch_ItemOfAnotherType_ShouldReportTheSameAsWithoutAccessors() {
+        final BeanPropertyMatcher<ClassWithSingleProperty> reflective =
+                new BeanPropertyMatcher<ClassWithSingleProperty>(
+                        ClassWithSingleProperty.class, "someProperty");
+        reflective.with("someProperty", is(equalTo("a")));
+        final BeanPropertyMatcher<ClassWithSingleProperty> accessors =
+                new BeanPropertyMatcher<ClassWithSingleProperty>(
+                        ClassWithSingleProperty.class,
+                        property("someProperty", ClassWithSingleProperty::getSomeProperty));
+        accessors.with("someProperty", is(equalTo("a")));
+        final AnotherClassWithSingleProperty item = new AnotherClassWithSingleProperty("x");
+
+        assertThat("mismatch", mismatchOf(accessors, item), is(mismatchOf(reflective, item)));
+    }
+
+    @Test
+    void testMatches_PropertyWithoutAccessor_ShouldStillBeReadByName() {
+        final BeanPropertyMatcher<ClassTwoProperties> classUnderTest =
+                new BeanPropertyMatcher<ClassTwoProperties>(
+                        ClassTwoProperties.class,
+                        property("firstProperty", ClassTwoProperties::getFirstProperty));
+        classUnderTest.with("secondProperty", is(equalTo("y")));
+
+        final boolean matches = classUnderTest.matches(new ClassTwoProperties("x", "y"));
+
+        assertThat("matches", matches, is(true));
+    }
+
+    @Test
+    void testConstruction_WithAccessors_ShouldRegisterTheNamesForPrinting() {
+        new BeanPropertyMatcher<RegisteredWithAccessors>(
+                RegisteredWithAccessors.class,
+                property("name", RegisteredWithAccessors::getName),
+                property("class", RegisteredWithAccessors::getClass));
+
+        assertThat(
+                "printed properties",
+                PropertyAccess.propertiesOfGeneratedType(RegisteredWithAccessors.class),
+                is(List.of("name")));
+    }
+
+    public static class CheckedGetter {
+        public String getChecked() throws IOException {
+            throw new IOException("checked on purpose");
+        }
+    }
+
+    public static class TextOnly {
+        private final String text;
+
+        public TextOnly(final String text) {
+            this.text = text;
+        }
+
+        public String text() {
+            return text;
+        }
+    }
+
+    public static class RegisteredWithAccessors {
+        public String getName() {
+            return "name";
+        }
     }
 
     @Value

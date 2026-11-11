@@ -19,7 +19,7 @@ public class MarkerMatcher extends TypeSafeMatcher<Marker> implements GeneratedB
   private final BeanPropertyMatcher<Marker> beanPropertyMatcher;
 
   public MarkerMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Marker>(Marker.class, "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<Marker>(Marker.class, BeanPropertyMatcher.property("class", (Marker bean) -> bean.getClass()));
   }
 
   public MarkerMatcher withClass(final Matcher<? super Class<?>> matcher) {

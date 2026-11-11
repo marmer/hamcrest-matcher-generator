@@ -27,7 +27,7 @@ public class SimplePojoMatcher extends TypeSafeMatcher<SimplePojo> implements Ge
   private final BeanPropertyMatcher<SimplePojo> beanPropertyMatcher;
 
   public SimplePojoMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, "intProperty", "shortProperty", "longProperty", "doubleProperty", "floatProperty", "charProperty", "byteProperty", "booleanProperty", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<SimplePojo>(SimplePojo.class, BeanPropertyMatcher.property("intProperty", (SimplePojo bean) -> bean.getIntProperty()), BeanPropertyMatcher.property("shortProperty", (SimplePojo bean) -> bean.getShortProperty()), BeanPropertyMatcher.property("longProperty", (SimplePojo bean) -> bean.getLongProperty()), BeanPropertyMatcher.property("doubleProperty", (SimplePojo bean) -> bean.getDoubleProperty()), BeanPropertyMatcher.property("floatProperty", (SimplePojo bean) -> bean.getFloatProperty()), BeanPropertyMatcher.property("charProperty", (SimplePojo bean) -> bean.getCharProperty()), BeanPropertyMatcher.property("byteProperty", (SimplePojo bean) -> bean.getByteProperty()), BeanPropertyMatcher.property("booleanProperty", (SimplePojo bean) -> bean.isBooleanProperty()), BeanPropertyMatcher.property("class", (SimplePojo bean) -> bean.getClass()));
   }
 
   public SimplePojoMatcher withIntProperty(final Matcher<? super Integer> matcher) {

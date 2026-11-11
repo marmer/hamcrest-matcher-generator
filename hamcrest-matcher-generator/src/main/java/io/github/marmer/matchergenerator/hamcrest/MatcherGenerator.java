@@ -8,6 +8,7 @@ import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeE
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -20,7 +21,6 @@ import io.github.marmer.matchergenerator.core.model.TypeModel;
 import io.github.marmer.matchergenerator.core.spi.GenerationContext;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.DeclaredType;
@@ -295,18 +295,30 @@ class MatcherGenerator {
         return MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement(
-                        "$L = new $T($T.class$L)",
+                        "$L = new $T($L)",
                         BUILDER_FIELD_NAME,
                         getBuilderFieldType(),
-                        rawTypeName(),
-                        propertyNameArguments())
+                        constructorArguments())
                 .build();
     }
 
-    private String propertyNameArguments() {
-        return PropertyModel.distinctByName(model.properties()).stream()
-                .map(property -> ", \"" + property.name() + "\"")
-                .collect(Collectors.joining());
+    /**
+     * The type, then every property with the lambda that reads it, in order. The lambda states the
+     * parameter type, since a method reference is ambiguous when a static method overloads the
+     * accessor.
+     */
+    private CodeBlock constructorArguments() {
+        final CodeBlock.Builder arguments = CodeBlock.builder().add("$T.class", rawTypeName());
+        PropertyModel.distinctByName(model.properties())
+                .forEach(
+                        property ->
+                                arguments.add(
+                                        ", $T.property($S, ($T bean) -> bean.$L())",
+                                        BeanPropertyMatcher.class,
+                                        property.name(),
+                                        typeNameWithWildCards(),
+                                        property.accessor()));
+        return arguments.build();
     }
 
     private List<MethodSpec> getMatcherMethods() {

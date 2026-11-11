@@ -20,7 +20,7 @@ public class OrderMatcher extends TypeSafeMatcher<Order> implements GeneratedBea
   private final BeanPropertyMatcher<Order> beanPropertyMatcher;
 
   public OrderMatcher() {
-    beanPropertyMatcher = new BeanPropertyMatcher<Order>(Order.class, "customer", "class");
+    beanPropertyMatcher = new BeanPropertyMatcher<Order>(Order.class, BeanPropertyMatcher.property("customer", (Order bean) -> bean.getCustomer()), BeanPropertyMatcher.property("class", (Order bean) -> bean.getClass()));
   }
 
   public OrderMatcher withCustomer(final Matcher<? super Customer> matcher) {
