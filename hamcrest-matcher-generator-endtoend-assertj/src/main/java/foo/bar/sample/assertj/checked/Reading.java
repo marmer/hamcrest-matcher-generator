@@ -10,7 +10,9 @@ import java.io.IOException;
 public class Reading {
 
     /**
-     * @throws IOException always, as the sensor is offline
+     * Reads the name, which the offline sensor cannot give.
+     *
+     * @throws IOException always
      */
     public String getName() throws IOException {
         throw new IOException("sensor offline");

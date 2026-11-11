@@ -20,6 +20,8 @@ public final class PropertyRead {
     private PropertyRead() {}
 
     /**
+     * Reads the property with its getter, or fails like a reflective read.
+     *
      * @param property the name of the property, for the failure
      * @param getter reads the property from the asserted object
      * @param <V> the type of the property value
