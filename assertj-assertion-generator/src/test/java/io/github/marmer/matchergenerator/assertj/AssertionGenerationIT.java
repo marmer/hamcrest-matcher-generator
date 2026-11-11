@@ -1661,7 +1661,7 @@ class AssertionGenerationIT {
     }
 
     private static void assertNoWarningUnderLintAll(
-            final List<File> classPath, final String getName) {
+            final List<File> classPath, final String getter) {
         final Compilation compilation =
                 Compiler.javac()
                         .withClasspath(classPath)
@@ -1682,7 +1682,7 @@ class AssertionGenerationIT {
                                             }
                                         }
                                         """
-                                                .formatted(getName)));
+                                                .formatted(getter)));
 
         CompilationSubject.assertThat(compilation).succeeded();
         assertEquals(0, compilation.warnings().size(), () -> "Warnings: " + compilation.warnings());
