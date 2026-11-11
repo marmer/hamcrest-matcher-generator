@@ -6,15 +6,15 @@ package io.github.marmer.matchergenerator.hamcrest;
 
 import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
+import com.palantir.javapoet.AnnotationSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
+import com.palantir.javapoet.FieldSpec;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeSpec;
+import com.palantir.javapoet.WildcardTypeName;
 import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeModel;
@@ -145,7 +145,7 @@ class MatcherGenerator {
         return ParameterizedTypeName.get(
                 ClassName.get(Matcher.class),
                 model.isNameShared(property)
-                        ? WildcardTypeName.subtypeOf(TypeName.OBJECT)
+                        ? WildcardTypeName.subtypeOf(ClassName.OBJECT)
                         : WildcardTypeName.supertypeOf(
                                 nullableIf(
                                         property.nullability() == Nullability.NULLABLE,

@@ -6,16 +6,16 @@ package io.github.marmer.matchergenerator.assertj;
 
 import static io.github.marmer.matchergenerator.core.model.TypeHierarchy.asTypeElement;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
-import com.squareup.javapoet.WildcardTypeName;
+import com.palantir.javapoet.AnnotationSpec;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.CodeBlock;
+import com.palantir.javapoet.FieldSpec;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
+import com.palantir.javapoet.TypeSpec;
+import com.palantir.javapoet.TypeVariableName;
+import com.palantir.javapoet.WildcardTypeName;
 import io.github.marmer.matchergenerator.core.model.Nullability;
 import io.github.marmer.matchergenerator.core.model.PropertyModel;
 import io.github.marmer.matchergenerator.core.model.TypeHierarchy;
@@ -140,7 +140,7 @@ class AssertionGenerator {
                             final List<MethodSpec> methods = methodsByProperty.get(index);
                             final List<String> clashing =
                                     methods.stream()
-                                            .map(method -> method.name)
+                                            .map(method -> method.name())
                                             .filter(inherited::contains)
                                             .toList();
                             if (!clashing.isEmpty()) {
@@ -149,8 +149,8 @@ class AssertionGenerator {
                             methods.stream()
                                     .filter(
                                             method ->
-                                                    !inherited.contains(method.name)
-                                                            && !sharedNames.contains(method.name))
+                                                    !inherited.contains(method.name())
+                                                            && !sharedNames.contains(method.name()))
                                     .forEach(builder::addMethod);
                         });
         if (!properties.isEmpty()) {
@@ -292,7 +292,7 @@ class AssertionGenerator {
         if (bound.getKind() == TypeKind.DECLARED) {
             return ClassName.get(asTypeElement(bound));
         }
-        return TypeName.OBJECT;
+        return ClassName.OBJECT;
     }
 
     private MethodSpec concreteConstructor(final ClassName concreteClass) {
@@ -348,7 +348,7 @@ class AssertionGenerator {
                 .forEach(
                         index ->
                                 methodsByProperty.get(index).stream()
-                                        .map(method -> method.name)
+                                        .map(method -> method.name())
                                         .filter(name -> !inherited.contains(name))
                                         .forEach(
                                                 name ->
@@ -645,9 +645,11 @@ class AssertionGenerator {
                 .addModifiers(Modifier.PRIVATE)
                 .addParameter(String.class, "property", Modifier.FINAL)
                 .addParameter(
-                        FileShell.nullable(TypeName.OBJECT, context), "actualValue", Modifier.FINAL)
+                        FileShell.nullable(ClassName.OBJECT, context),
+                        "actualValue",
+                        Modifier.FINAL)
                 .addParameter(
-                        FileShell.nullable(TypeName.OBJECT, context),
+                        FileShell.nullable(ClassName.OBJECT, context),
                         "expectedValue",
                         Modifier.FINAL)
                 .addStatement("$L.add(property)", ADDRESSED)
@@ -670,7 +672,7 @@ class AssertionGenerator {
     private TypeName valueType(final PropertyModel property) {
         if (model.isNameSharedWithoutGetClass(property)
                 || property.type().getKind() == TypeKind.TYPEVAR) {
-            return FileShell.nullable(TypeName.OBJECT, context);
+            return FileShell.nullable(ClassName.OBJECT, context);
         }
         return FileShell.nullable(typeVarsToWildcards(property.type(), false), context);
     }
@@ -678,7 +680,7 @@ class AssertionGenerator {
     private TypeName requirementsType(final PropertyModel property) {
         final TypeName value =
                 model.isNameSharedWithoutGetClass(property)
-                        ? TypeName.OBJECT
+                        ? ClassName.OBJECT
                         : nullableIf(
                                 property.nullability() == Nullability.NULLABLE,
                                 typeVarsToWildcards(property.type(), true));
