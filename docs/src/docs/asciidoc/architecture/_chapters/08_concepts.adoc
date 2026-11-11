@@ -17,6 +17,7 @@ blocked it. Pull requests and pushes to `main` run the workflows of the table on
 | Build and verify matrix (`Build`, `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25`, `Verify JDK latest`)
 a|
 * `Build` runs `mvnw -B clean install -DskipTests -DskipITs`, then `mvnw -B verify`: the reactor installs without tests.
+* The reactor builds in parallel: `.mvn/maven.config` sets `-T 1C`, so modules build side by side on the four cores of a runner (`clean verify` on JDK 21 was about 23 % faster in a local measurement). The release build, the release dry run, the `Mutation testing` job and the `Sonar` job pin `-T 1` and stay serial: signing and publishing are not worth the risk of a parallel build, the dry run has to behave like the release, the mutation gain was within run-to-run noise, and the Sonar goal was not tried in parallel mode.
 * `Verify JDK 17`, `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest` run the build and verify matrix. `latest` follows the newest generally available JDK.
 * Together they guarantee that `./mvnw clean verify` is green on every supported JDK, including the newest generally available one.
 
