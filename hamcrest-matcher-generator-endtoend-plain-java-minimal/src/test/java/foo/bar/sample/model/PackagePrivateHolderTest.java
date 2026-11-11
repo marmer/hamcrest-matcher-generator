@@ -41,6 +41,8 @@ class PackagePrivateHolderTest {
     @Test
     @DisplayName("A package-private value that is the wrong one is printed with its properties")
     void aPackagePrivateValueThatIsTheWrongOneIsPrintedWithItsProperties() {
+        // A value prints its properties once a matcher of its type exists; no other test is needed.
+        new PackagePrivatePojoMatcher();
         final AssertionError error =
                 assertThrows(
                         AssertionError.class,
