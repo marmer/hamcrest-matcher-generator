@@ -2,6 +2,8 @@
 
 Decided 2026-10-29 in ticket #189 (spec #104), implemented in PR #252.
 
+Note (2026-11-11): the `GeneratorBackend` interface is internal to the project and makes no stability promise. Where this record calls it "published" or says external backends must adapt, the amendment of ADR 0001 applies; the decision text below is kept as it was decided.
+
 A backend may write a file that exists once per target package: the AssertJ `SoftAssertionsProvider` mixin and `PropertyRepresentation`. Such a file only knows the types generated in the same processing round. A later round of the same compilation, or a second compilation of the package (main and test, KAPT), either asked the Filer for a source it had already written ("Attempt to recreate") or silently left types out. The decision: the file is written once per package, the first round decides its content, and every later round or compilation gets a diagnostic instead of a second file. Two configuration classes of one package in one round still produce one file with the types of both. The name stays `SoftAssertionsProvider`; it is not named per configuration.
 
 To make the failure modes visible, the published `GeneratorBackend` interface grew:

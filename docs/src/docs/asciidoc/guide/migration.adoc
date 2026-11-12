@@ -112,9 +112,14 @@ A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0
 
 The `@Generated` annotation of generated code has no `date` element any more, so generated sources no longer differ from build to build in a time stamp. Nothing needs to change unless a tool of yours reads that element.
 
+[#skipped-getters]
+== A getter with the wrong prefix on a named type is a warning
+
+A getter whose prefix does not fit its return type, such as `boolean getActive()` or `String isName()`, is no property, so the completeness check never sees it. When the configuration names its type, 6.0.0 reports it as a compiler warning at the configured value. Without `-Werror` the build still compiles; with `-Werror` the warning fails the build, and the example modules build with `-Werror`. Rename the getter to the prefix its return type needs: `boolean getActive()` becomes `isActive()`, and `String isName()` becomes `getName()`. Or configure the type through a package entry instead of by its name: the skip is then only a verbose note, and the getter still stays out of the completeness check. The link:completeness-check.html[completeness check chapter] describes the rule.
+
 == What does not change
 
-The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>).
+The generated class names, their packages and the methods `isX()`, `withX` and `resetX` keep their 5.x names. `ignoringX()` and `checkingAllProperties()` are new in 6.0.0. A 5.x project that neither imports `BeanPropertyMatcher` directly nor uses `javax.annotation` types from the generator compiles after a version bump, as long as it passes values of the real type to the methods of an inherited generic property (see <<inherited-generic-properties,Inherited generic properties>>). A type with a getter of the wrong prefix, when the configuration names that type itself, is a new warning (see <<skipped-getters,A getter with the wrong prefix on a named type is a warning>>), and only `-Werror` turns it into a failure.
 
 == Next steps
 
