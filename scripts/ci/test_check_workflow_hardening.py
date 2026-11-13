@@ -310,7 +310,7 @@ class RepositoryWorkflowsTest(unittest.TestCase):
         test_step = text.index("name: Test scope")
         allow_lines = [line.strip() for line in text.splitlines() if line.strip().startswith("allow-dependencies-licenses:")]
         self.assertEqual(allow_lines, [
-            "allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin",
+            "allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin, pkg:maven/org.apache.maven.plugins/maven-site-plugin",
             "allow-dependencies-licenses: pkg:maven/org.junit.jupiter/junit-jupiter, pkg:maven/org.junit.platform/junit-platform-launcher, pkg:maven/org.junit.platform/junit-platform-commons, pkg:maven/com.tngtech.archunit/archunit",
         ])
         self.assertLess(text.index(allow_lines[0]), test_step)

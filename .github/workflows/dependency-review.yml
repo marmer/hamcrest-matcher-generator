@@ -3,11 +3,12 @@ name: Dependency review
 # Blocks a pull request that adds a dependency with a known vulnerability (any severity) or with a license outside the
 # allow-list. The allow-list mirrors the license-maven-plugin gates in the root pom: runtime and unknown scopes take
 # Apache-2.0, MIT, BSD-2-Clause and BSD-3-Clause; test scope also takes EPL-1.0 and EPL-2.0. Some artifacts are
-# allowed by purl instead, because the dependency graph reports them with a LicenseRef-* id although their real
-# license is on the allow-list (confirmed by the owner): build-helper-maven-plugin, javaparser-core,
-# maven-invoker-plugin and maven-javadoc-plugin in the runtime and unknown scopes step; junit-jupiter, junit-platform-launcher,
-# junit-platform-commons and archunit in the test scope step. Needs the dependency graph enabled in the repository
-# settings.
+# allowed by purl instead, in the runtime and unknown scopes step: build-helper-maven-plugin, javaparser-core,
+# maven-invoker-plugin and maven-javadoc-plugin, which the dependency graph reports with a LicenseRef-* id although
+# their real license is on the allow-list (confirmed by the owner), and maven-site-plugin, which it reports as a
+# compound expression with EPL and public-domain terms (a build plugin, confirmed by the owner). In the test scope
+# step: junit-jupiter, junit-platform-launcher, junit-platform-commons and archunit. Needs the dependency graph
+# enabled in the repository settings.
 # Not a required check: the owner decides whether to add it to the main ruleset.
 on:
   pull_request:
@@ -26,10 +27,13 @@ jobs:
           fail-on-severity: low
           fail-on-scopes: runtime, unknown
           allow-licenses: Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause
-          # The dependency graph reports build-helper-maven-plugin, javaparser-core, maven-invoker-plugin and maven-javadoc-plugin as
-          # LicenseRef-* although their real licenses are on the allow-list (Apache-2.0). Allowed here by purl, in
-          # runtime and unknown scopes, because the owner confirmed them as allowed dependencies.
-          allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin
+          # The dependency graph reports build-helper-maven-plugin, javaparser-core, maven-invoker-plugin and
+          # maven-javadoc-plugin as LicenseRef-* although their real licenses are on the allow-list (Apache-2.0).
+          # It reports maven-site-plugin as a compound expression that also holds EPL-1.0, EPL-2.0 and
+          # LicenseRef-scancode-public-domain, which the runtime allow-list does not take; the plugin is a build plugin
+          # that the root pom pins in pluginManagement. Allowed here by purl, in runtime and unknown scopes, because the owner
+          # confirmed them as allowed dependencies.
+          allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin, pkg:maven/org.apache.maven.plugins/maven-site-plugin
 
       - name: Test scope
         # Runs even when the runtime step found a violation, so a pull request that breaks both scopes reports both.
