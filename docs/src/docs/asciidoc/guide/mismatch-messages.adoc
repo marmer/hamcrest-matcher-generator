@@ -1,5 +1,5 @@
 = Mismatch messages
-:description: How a failed generated Hamcrest matcher or AssertJ assertion reports the property, its nested path, collection items and the completeness check, with real messages from the golden tests.
+:description: How a failed generated Hamcrest matcher or AssertJ assertion reports the property, the path of a nested property, collection items and the completeness check, with real messages from the golden tests.
 :page-order: 6
 
 A failing assertion should say which property differs, where it sits in the model and what was expected. The generated code does that for both backends. The examples in this chapter are the golden outputs of the project's own tests, included from the files they are compared with, so they show the messages as the generator produces them.

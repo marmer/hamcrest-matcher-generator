@@ -13,7 +13,7 @@
 
     <artifactId>hamcrest-matcher-generator-annotationprocessor</artifactId>
     <name>hamcrest-matcher-generator-annotationprocessor</name>
-    <description>Bridge jar for the 5.x artifact hamcrest-matcher-generator-annotationprocessor: it holds no code and brings hamcrest-matcher-generator in
+    <description>Bridge jar for the 5.x artifact hamcrest-matcher-generator-annotationprocessor: it holds no functionality and brings hamcrest-matcher-generator in
         transitively. Moved to hamcrest-matcher-generator since 6.0.0.
     </description>
 

@@ -56,7 +56,7 @@ written with KotlinPoet. It is the one backend that depends on another backend, 
 text in <<building-block-kotlin,White Box `hamcrest-matcher-generator-kotlin`>>.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
-| Bridge jars without code that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see <<adr-0002,ADR 0002>>).
+| Bridge jars with no functionality that depend on `hamcrest-matcher-generator`, so builds that name a 5.x artifact find a jar and get the Hamcrest backend transitively (see <<adr-0002,ADR 0002>>).
 
 | `*-endtoend-*` modules
 | Apply the processor to real beans and records, in plain Java, Kotlin and mixed projects, and exercise the generated

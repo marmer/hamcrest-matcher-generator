@@ -43,7 +43,7 @@ The group ID stays `io.github.marmer.testutils`. 6.0.0 has neutral artifact name
 | The Kotlin DSL, used with KAPT. New in 6.0.0, opt-in.
 
 | `hamcrest-matcher-generator-dependencies`, `hamcrest-matcher-generator-annotationprocessor`
-| The 5.x artifacts, now bridge jars. They contain no code and depend on `hamcrest-matcher-generator` at the same version.
+| The 5.x artifacts, now bridge jars. They have no functionality and depend on `hamcrest-matcher-generator` at the same version.
 |===
 
 The bridge jars let a 5.x build resolve without a change of coordinates. Keep the scope you declared for a 5.x artifact, as the scope advice in the link:getting-started.html[getting started chapter] describes: the Hamcrest backend arrives transitively with the scope of the bridge jar. The reason is the compiler plugin: `maven-compiler-plugin` before 3.12 does not follow a relocation POM in its processor path, so the 5.x artifacts are jars and not relocations. A project that keeps the 5.x coordinates gets the Hamcrest backend through them, and the processor arrives with it.
@@ -106,7 +106,7 @@ Every enum has such a property. `getDeclaringClass()` is inherited from `java.la
 [#mismatch-format]
 == The new form of mismatch messages
 
-A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0 writes one line per failing check, each with its property path, nested paths included, as the link:mismatch-messages.html[mismatch messages chapter] shows. This is a breaking change for a test that parses a message or pins its exact text. Such a test must be updated to the new form. A test that only checks that an assertion fails is not affected.
+A 5.x matcher joined its failing checks on one line, separated by ` and `. 6.0.0 writes one line per failing check, each with its property path, the path of a nested property included, as the link:mismatch-messages.html[mismatch messages chapter] shows. This is a breaking change for a test that parses a message or pins its exact text. Such a test must be updated to the new form. A test that only checks that an assertion fails is not affected.
 
 == Generated code carries no date
 
