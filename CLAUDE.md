@@ -75,4 +75,4 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root (created lazi
 
 ### Implementation process
 
-Implementation tickets name no model (the orchestrator picks it: Haiku by default, escalated on poor quality) and are commissioned one after another unless the orchestrator is sure they will not conflict (other work may run in parallel). PR bodies explain changes visually in `show-me` style where that helps, and every session's final report asks the user to run `/retro` (user-invoked only). See `docs/agents/implementation.md`.
+Implementation tickets name no model (the orchestrator picks it: Haiku by default, escalated on poor quality) and are commissioned one after another unless the orchestrator is sure they will not conflict (other work may run in parallel). PR bodies explain changes visually in `show-me` style where that helps, and every session's final report asks the user to run `/retro` (user-invoked only), except in a session that started `/goRalph`, whose loop runs its own retro. See `docs/agents/implementation.md`.
