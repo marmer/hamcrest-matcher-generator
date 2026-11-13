@@ -15,7 +15,7 @@ One fresh orchestrator process started by the script with the same prompt. It re
 The smallest unit after which the state is saved by commit and push, e.g. "ticket implemented", "review round 2 fixed", "PR opened". A stop `after-step` waits for the current work step to end.
 
 **Control file**:
-`control.json` in the run directory. It holds the limits (`until`, `max_duration`, `max_iterations`, `max_iteration_duration`, `max_parallel`) and the stop request (`now`, `after-step`, `after-iteration`). The script reads it before each iteration, the orchestrator between work steps; changing it changes the running loop.
+`control.json` in the run directory. It holds the limits (`until`, `max_duration`, `max_iterations`, `max_iteration_duration`, `max_parallel`), the stop kind a reached limit acts as (`limit_stop`, default `after-step`) and the stop request `stop` (`now`, `after-step`, `after-iteration`; `true` means `after-step`). `until` is `YYYY-MM-DD HH:MM`, optionally followed by a zone name (Europe/Berlin otherwise); durations are whole minutes. The script validates every value (`ERROR` line, exit 2) and reads the file before each iteration, a stop `now` and `max_iteration_duration` also while the iteration runs (every 5 s; kill after a grace period of 5 min); the orchestrator reads it between work steps; changing it changes the running loop.
 
 ## Settled decisions (draft)
 
