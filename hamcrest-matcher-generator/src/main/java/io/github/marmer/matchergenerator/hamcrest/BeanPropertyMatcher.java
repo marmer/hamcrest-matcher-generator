@@ -45,7 +45,6 @@ public class BeanPropertyMatcher<T> extends TypeSafeMatcher<T> {
     private static final ThreadLocal<Set<BeanPropertyMatcher<?>>> DESCRIBING =
             ThreadLocal.withInitial(() -> Collections.newSetFromMap(new IdentityHashMap<>()));
 
-    @SuppressWarnings("squid:S2293")
     private final Map<String, List<Matcher<?>>> propertyChecks = new LinkedHashMap<>();
 
     private final Set<String> presetProperties = new LinkedHashSet<>();
