@@ -7,9 +7,14 @@
 # Stdout carries only the monitor lines (iteration end, ERROR, DENIAL, STOP for a deliberate kill, END); the rest goes
 # to the run directory.
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
-# RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS
+# RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS,
+# RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
 # (shortened timings for tests, not for the owner; the PR sleep is the pause between two checks while PRs wait for CI,
-# default 300, the gh timeout the limit of one `gh api` call of that check, default 60).
+# default 300, the gh timeout the limit of one `gh api` call of that check, default 60; the limit retry is the pause
+# after an iteration that ended on a usage limit, default 600, the limit cap the most the run waits for such a limit to
+# lift, default 5 h 15 min).
+# An iteration whose result event is an error that names the usage limit (api_error_status 429 or "hit your limit")
+# counts as neither ok nor failed: the script waits without a claude process (WAIT lines) and runs it again.
 # Before each iteration the script asks `gh api` for work without a model: a free frontier ticket or a PR that needs
 # action (red CI, merge conflict, review or review comment after its last commit) starts the iteration, PRs that only
 # wait for CI with auto-merge make it sleep and check again, nothing at all ends the run.
@@ -51,11 +56,15 @@ poll_seconds="${RALPH_POLL_SECONDS:-5}"
 grace_seconds="${RALPH_GRACE_SECONDS:-300}"
 pr_sleep_seconds="${RALPH_PR_SLEEP_SECONDS:-300}"
 gh_timeout_seconds="${RALPH_GH_TIMEOUT_SECONDS:-60}"
+limit_retry_seconds="${RALPH_LIMIT_RETRY_SECONDS:-600}"
+limit_cap_seconds="${RALPH_LIMIT_CAP_SECONDS:-$((315 * minute_seconds))}"  # 5 h 15 min
 [[ "$minute_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_MINUTE_SECONDS needs a positive integer, got '$minute_seconds'"
 [[ "$poll_seconds" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "RALPH_POLL_SECONDS needs a number, got '$poll_seconds'"
 [[ "$grace_seconds" =~ ^[0-9]+$ ]] || die "RALPH_GRACE_SECONDS needs an integer, got '$grace_seconds'"
 [[ "$pr_sleep_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_PR_SLEEP_SECONDS needs a positive integer, got '$pr_sleep_seconds'"
 [[ "$gh_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '$gh_timeout_seconds'"
+[[ "$limit_retry_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_LIMIT_RETRY_SECONDS needs a positive integer, got '$limit_retry_seconds'"
+[[ "$limit_cap_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_LIMIT_CAP_SECONDS needs a positive integer, got '$limit_cap_seconds'"
 
 spec="${1:-}"
 [ -n "$spec" ] || die "usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND]"
@@ -178,6 +187,7 @@ watch_iteration() {
 
 ok_count=0
 failed_count=0
+limit_waited=0  # seconds waited for the usage limit since the last iteration that was not cut off by it
 
 REPO_API="repos/marmer/hamcrest-matcher-generator"
 
@@ -273,6 +283,18 @@ sleep_while_prs_wait() {
   done
 }
 
+# Sleeps the given seconds in poll-sized slices; returns early (status 1) when a stop is requested or a limit reached.
+sleep_unless_stopped() {
+  local deadline  # in milliseconds: whole seconds would end the pause up to a second early
+  deadline=$(( $(date +%s%3N) + $1 * 1000 ))
+  while [ "$(date +%s%3N)" -lt "$deadline" ]; do
+    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then return 1; fi
+    sleep "$poll_seconds" & sleeper=$!
+    wait "$sleeper"
+    sleeper=""
+  done
+}
+
 write_status() { # state, iteration
   jq -n --arg spec "$spec" --arg state "$1" --argjson iteration "$2" --argjson ok "$ok_count" \
     --argjson failed "$failed_count" --arg run "$run" \
@@ -352,6 +374,26 @@ while true; do
 
   jq -c 'select(.type == "result")' "$stream" 2>/dev/null | tail -1 > "$result"
   failure=""
+  # A usage limit is read from the result event (an error naming it), never from the exit code alone.
+  if [ ! -s "$killed" ] && [ -s "$result" ] && jq -e '.is_error == true
+        and (.api_error_status == 429 or ((.result // "") | test("hit your limit|usage limit"; "i")))' "$result" >/dev/null 2>&1; then
+    mv "$result" "$run/limit-result-$iteration-$(date +%s).json"
+    iteration=$((iteration - 1))  # the cut-off iteration does not count
+    if [ "$limit_waited" -ge "$limit_cap_seconds" ]; then
+      finish "$iteration" "usage limit not lifted within $limit_cap_seconds s"
+    fi
+    pause=$((limit_cap_seconds - limit_waited))
+    if [ "$pause" -gt "$limit_retry_seconds" ]; then pause="$limit_retry_seconds"; fi
+    echo "WAIT usage limit hit in iteration $((iteration + 1)): no claude process until the retry in $pause s (waited $limit_waited of $limit_cap_seconds s)"
+    write_status waiting "$iteration"
+    waited_from="$(date +%s)"
+    if sleep_unless_stopped "$pause"; then slept=0; limit_waited=$((limit_waited + pause))  # the planned pause, not the clock's rounding
+    else slept=1; limit_waited=$((limit_waited + $(date +%s) - waited_from)); fi
+    if [ "$slept" -eq 0 ]; then echo "WAIT over, retrying (waited $limit_waited of $limit_cap_seconds s)"
+    else echo "WAIT over, stop requested or limit reached (waited $limit_waited of $limit_cap_seconds s)"; fi
+    continue
+  fi
+  limit_waited=0
   if [ -s "$killed" ]; then
     : # a deliberate stop, reported as STOP below, not as a failure line
   elif [ ! -s "$result" ]; then
