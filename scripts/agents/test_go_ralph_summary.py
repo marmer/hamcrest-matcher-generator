@@ -156,7 +156,7 @@ class SummaryTest(unittest.TestCase):
     def test_a_tracker_call_that_times_out_ends_with_one_message_and_no_traceback(self):
         stub = Path(self.path.split(":")[0]) / "gh"
         stub.write_text("#!/usr/bin/env bash\nsleep 5\n", encoding="utf-8")
-        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), SUMMARY_GH_TIMEOUT="0.2")
+        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_TIMEOUT_SECONDS="0.2")
         done = subprocess.run([sys.executable, str(SCRIPT), str(self.run_dir)], env=env,
                               capture_output=True, text=True, timeout=60)
         self.assertEqual((1, ""), (done.returncode, done.stdout))

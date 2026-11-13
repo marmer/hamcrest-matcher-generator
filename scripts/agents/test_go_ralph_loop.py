@@ -527,7 +527,7 @@ class LoopScriptTest(unittest.TestCase):
         out = process.communicate(timeout=30)[0].splitlines()
 
         self.assertFalse(self.is_running(sleep_pid))
-        self.assertEqual("ERROR iteration 1 failed: killed, max_iteration_duration 1 reached and grace period over", out[0])
+        self.assertEqual("STOP iteration 1 killed (max_iteration_duration 1 reached and grace period over)", out[0])
         self.assertEqual("after-step", self.read_control()["stop"])
         self.assertEqual("END after 1 iterations: stop requested (after-step) (0 ok, 1 failed)", out[1])
 
@@ -539,7 +539,7 @@ class LoopScriptTest(unittest.TestCase):
         out = process.communicate(timeout=30)[0].splitlines()
 
         self.assertFalse(self.is_running(sleep_pid))
-        self.assertEqual("ERROR iteration 1 failed: killed, stop now", out[0])
+        self.assertEqual("STOP iteration 1 killed (stop now)", out[0])
 
     def test_stop_request_after_iteration_lets_the_running_iteration_finish(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
@@ -578,7 +578,7 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertFalse(self.is_running(sleep_pid), "the grandchild survived")
         self.assertFalse(self.is_running(stub_pid), "the child survived")
-        self.assertEqual("ERROR iteration 1 failed: killed, stop now", out[0])
+        self.assertEqual("STOP iteration 1 killed (stop now)", out[0])
         self.assertEqual("END after 1 iterations: stop requested (now) (0 ok, 1 failed)", out[1])
 
     # Work check before an iteration: free tickets and PRs that need action start one, PRs waiting for CI with
@@ -739,6 +739,14 @@ class LoopScriptTest(unittest.TestCase):
         out = process.communicate(timeout=30)[0].splitlines()
 
         self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], out)
+
+    def test_reached_limit_ends_a_sleeping_script_within_a_poll_slice(self):
+        self.pr(check_conclusions=(None,))
+        process = self.start("--max-duration", "2", STUB_GH_CLAIMED="1", RALPH_PR_SLEEP_SECONDS="600")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["END after 0 iterations: max_duration 2 reached (0 ok, 0 failed)"], out)
 
     def test_failing_PR_check_ends_the_run_with_an_error_line(self):
         (self.gh_dir / "fail_pulls").write_text("", encoding="utf-8")
