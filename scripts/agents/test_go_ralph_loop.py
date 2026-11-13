@@ -4,7 +4,7 @@ The script runs through bash from a scratch repository copy, with stub `claude` 
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
 STUB_CLAUDE_PID.sleep); a file STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
-STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds is appended to STUB_CALLS.times); the stub
+STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
@@ -29,7 +29,7 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
-date +%s.%N >> "$STUB_CALLS.times"
+cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
 n="$(wc -l < "$STUB_CALLS.times")"
 if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then
   echo $$ > "$STUB_CLAUDE_PID"
@@ -66,6 +66,11 @@ case "$endpoint" in
     if [ -e "$STUB_GH_DIR/$name" ]; then cat "$STUB_GH_DIR/$name"; else echo '[]'; fi ;;
 esac
 """
+
+# /proc/uptime counts hundredths of a second, truncated: the script's pause and the logged call times each lose less
+# than 0.01 s, and the pause starts after the first call began, so a pause that is not cut short measures at least
+# its length minus that resolution (the wall clock would break this when it steps).
+CLOCK_RESOLUTION = 0.02
 
 SUCCESS = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
                       "num_turns": 3, "total_cost_usd": 0.25, "permission_denials": []})
@@ -897,7 +902,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
                           "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"], lines[2:])
         first, second = self.call_times()
-        self.assertGreaterEqual(second - first, 2)
+        self.assertGreaterEqual(second - first, 2 - CLOCK_RESOLUTION, f"call times {first}, {second}")
 
     def test_usage_limit_is_recognised_from_the_result_not_the_exit_code(self):
         self.limit_then_success(exit_code="0")
@@ -936,7 +941,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(3, len([line for line in lines if line.startswith("WAIT over")]), lines)
         times = self.call_times()
         self.assertEqual(4, len(times), times)
-        self.assertGreaterEqual(times[-1] - times[0], 3)
+        self.assertGreaterEqual(times[-1] - times[0], 3 - CLOCK_RESOLUTION, f"call times {times}")
 
     def test_cap_is_five_hours_and_fifteen_minutes_by_default(self):
         self.limit_then_success()

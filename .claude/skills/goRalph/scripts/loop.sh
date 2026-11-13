@@ -287,15 +287,24 @@ limit_reason() {
   fi
 }
 
+# Milliseconds of the monotonic clock (/proc/uptime, 10 ms resolution, sets mono_now): a pause must not be cut short
+# or stretched by a step of the wall clock, which `date` follows.
+mono_ms() {
+  local up
+  read -r up _ < /proc/uptime
+  mono_now=$((10#${up%.*} * 1000 + 10#${up#*.} * 10))
+}
+
 # Sleeps the given seconds in poll-sized slices, so a stop request or a reached limit ends the sleep early (status 1).
 # Sets slept_seconds: the given seconds after a full sleep, the whole elapsed seconds after an early end.
 sleep_unless_stopped() {
-  local begin deadline now  # in milliseconds: whole seconds would end the pause up to a second early
-  begin="$(date +%s%3N)"
+  local begin deadline  # in milliseconds: whole seconds would end the pause up to a second early
+  mono_ms
+  begin="$mono_now"
   deadline=$((begin + $1 * 1000))
   slept_seconds="$1"
-  while now="$(date +%s%3N)"; [ "$now" -lt "$deadline" ]; do
-    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then slept_seconds=$(((now - begin) / 1000)); return 1; fi
+  while mono_ms; [ "$mono_now" -lt "$deadline" ]; do
+    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then slept_seconds=$(((mono_now - begin) / 1000)); return 1; fi
     sleep "$poll_seconds" & sleeper=$!
     wait "$sleeper"
     sleeper=""
