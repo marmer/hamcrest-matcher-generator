@@ -1582,12 +1582,12 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_until_does_not_bound_the_retro(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        process, _, _ = self.start_sleeping_retro(3, "--until", f"{self.berlin_wall_clock(0)} Europe/Berlin",
-                                                  RALPH_GRACE_SECONDS="1")
+        until = f"{self.berlin_wall_clock(0)} Europe/Berlin"
+        process, _, _ = self.start_sleeping_retro(3, "--until", until, RALPH_GRACE_SECONDS="1")
 
         out = process.communicate(timeout=30)[0].splitlines()
 
-        self.assertEqual(self.RETRO_OK, out[0], out)
+        self.assertEqual([self.RETRO_OK, f"END after 0 iterations: until {until} reached (0 ok, 0 failed)"], out)
 
 
 LEARNINGS = Path("docs") / "agents" / "goRalph-learnings.md"
