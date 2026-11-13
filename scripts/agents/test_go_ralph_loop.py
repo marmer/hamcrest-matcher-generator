@@ -95,6 +95,14 @@ class LoopScriptTest(unittest.TestCase):
         return process.returncode, out.splitlines(), err
 
     @staticmethod
+    def wait_until(condition, what, seconds=15):
+        deadline = time.monotonic() + seconds
+        while not condition():
+            if time.monotonic() > deadline:
+                raise AssertionError(f"timed out waiting for {what}")
+            time.sleep(0.05)
+
+    @staticmethod
     def is_running(pid):
         try:  # a zombie without a reaper in the container is dead
             return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] != "Z"
@@ -213,15 +221,16 @@ class LoopScriptTest(unittest.TestCase):
     def test_missing_flock_is_reported_as_such(self):
         tools = self.root / "tools"
         tools.mkdir()
-        for directory in ("/usr/bin", "/bin"):
-            for tool in Path(directory).iterdir():
-                if tool.name != "flock" and not os.path.lexists(tools / tool.name):
-                    (tools / tool.name).symlink_to(tool)
+        # Only the programs loop.sh and its issue-status helper use, found where this machine keeps them, minus flock.
+        for name in ("bash", "jq", "date", "mkdir", "cat", "dirname", "head", "tr", "grep", "tail", "touch", "rm", "mv",
+                     "sleep", "python3", "mktemp"):
+            found = shutil.which(name)
+            self.assertIsNotNone(found, f"{name} is needed by the test")
+            (tools / name).symlink_to(found)
         for stub in ("claude", "gh"):
-            (tools / stub).unlink(missing_ok=True)
             (tools / stub).symlink_to(self.root / "bin" / stub)
         process = subprocess.run(
-            ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
+            [str(tools / "bash"), str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
             cwd=self.repo, env=self.env(PATH=str(tools)), capture_output=True, text=True, timeout=60)
 
         self.assertEqual(2, process.returncode)
@@ -257,21 +266,17 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_terminated_loop_releases_the_lock_and_stops_its_child(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        pid_file = self.root / "child.pid"
-        process = self.start("--max-iterations", "1", STUB_CLAUDE_SLEEP="60", STUB_CLAUDE_PID=str(pid_file))
-        for _ in range(100):
-            if pid_file.exists() and pid_file.read_text(encoding="utf-8").strip():
-                break
-            time.sleep(0.1)
-        child = int(pid_file.read_text(encoding="utf-8").strip())
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iterations", "1")
+        child = int((self.root / "child.pid").read_text(encoding="utf-8").strip())
 
         process.terminate()
         process.communicate(timeout=30)
 
         self.assertEqual(0, subprocess.run(["flock", "-n", str(self.home / "locks" / "42.lock"), "true"]).returncode,
                          "the lock outlived the killed loop")
-        time.sleep(0.5)
-        self.assertFalse(self.is_running(child), "the child outlived the killed loop")
+        self.wait_until(lambda: not self.is_running(child), "the child to end")
+        self.assertFalse(self.is_running(int(sleep_pid_file.read_text(encoding="utf-8").strip())),
+                         "the child's own child outlived the killed loop")
 
     def test_error_result_with_exit_zero_counts_as_failed(self):
         self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
@@ -304,7 +309,8 @@ class LoopScriptTest(unittest.TestCase):
         holder = subprocess.Popen(["flock", str(self.home / "locks" / "42.lock"), "sleep", "60"])
         self.addCleanup(holder.wait)
         self.addCleanup(holder.kill)
-        time.sleep(0.5)
+        lock = self.home / "locks" / "42.lock"
+        self.wait_until(lambda: subprocess.run(["flock", "-n", str(lock), "true"]).returncode != 0, "the lock holder")
 
         code, lines, err = self.run_loop("--max-iterations", "1")
 
@@ -371,7 +377,7 @@ class LoopScriptTest(unittest.TestCase):
                           control["max_parallel"], control["limit_stop"]))
 
     def test_wrong_option_values_are_refused_before_a_run_is_created(self):
-        for option, value in (("--max-duration", "0"), ("--max-duration", "1h"), ("--max-iteration-duration", "-5"),
+        for option, value in (("--max-iterations", "0"), ("--max-duration", "0"), ("--max-duration", "1h"), ("--max-iteration-duration", "-5"),
                               ("--max-parallel", "4"), ("--max-parallel", "0"), ("--limit-stop", "soon"),
                               ("--until", "6 Uhr"), ("--until", "2999-13-45 25:61"),
                               ("--until", "2999-01-01 06:00 Nowhere/Land"), ("--until", "2999-01-01 06:00 ../x")):
@@ -383,7 +389,7 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_wrong_value_in_the_control_file_is_refused_and_keeps_the_run_unfinished(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        for key, value in (("max_duration", "soon"), ("max_iteration_duration", 0), ("max_parallel", 5),
+        for key, value in (("max_duration", "soon"), ("max_iterations", 0), ("max_iteration_duration", 0), ("max_parallel", 5),
                            ("max_iterations", 1.5), ("limit_stop", "later"), ("stop", "whenever"),
                            ("until", "tomorrow")):
             self.write_control(**{key: value})
@@ -393,6 +399,22 @@ class LoopScriptTest(unittest.TestCase):
             self.assertFalse((self.home / "runs" / "42-20260101-000000" / "ended").exists(), key)
             shutil.rmtree(self.home / "runs")
         self.assertFalse(self.calls.exists())
+
+    def test_missing_spec_is_reported_as_an_error_line(self):
+        process = subprocess.run(["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh")], cwd=self.repo, env=self.env(),
+                                 capture_output=True, text=True, timeout=60)
+
+        self.assertEqual(2, process.returncode)
+        self.assertTrue(process.stdout.startswith("ERROR usage"), process.stdout)
+
+    def test_until_without_time_zone_data_is_refused_instead_of_read_as_utc(self):
+        empty = self.root / "no-tzdata"
+        empty.mkdir()
+
+        code, lines, err = self.run_loop("--until", "2999-01-01 06:00", TZDIR=str(empty), STUB_GH_EMPTY="1")
+
+        self.assertEqual(2, code)
+        self.assertTrue(lines[0].startswith("ERROR until names a time zone this machine does not know"), lines)
 
     def test_wrong_timing_knob_is_refused(self):
         code, lines, err = self.run_loop(RALPH_GRACE_SECONDS="soon")
@@ -435,7 +457,7 @@ class LoopScriptTest(unittest.TestCase):
     def test_max_duration_ends_the_run_before_the_next_iteration(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
-        process, _ = self.start_sleeping(2, "--max-duration", "1")
+        process, _ = self.start_sleeping(6, "--max-duration", "1", RALPH_MINUTE_SECONDS="5")
         out = process.communicate(timeout=30)[0].splitlines()
 
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
@@ -447,6 +469,15 @@ class LoopScriptTest(unittest.TestCase):
         self.run_loop()
 
         self.assertEqual("after-iteration", self.read_control()["stop"])
+
+    def test_reached_limit_with_stop_kind_now_ends_the_run_between_iterations(self):
+        self.write_control(until="2000-01-01 00:00", limit_stop="now")
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["END after 0 iterations: until 2000-01-01 00:00 reached (0 ok, 0 failed)"], lines)
+        self.assertEqual("now", self.read_control()["stop"])
 
     def test_reached_limit_stops_after_the_step_by_default(self):
         self.write_control(until="2000-01-01 00:00")

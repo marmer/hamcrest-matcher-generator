@@ -21,9 +21,8 @@ die() { echo "ERROR $1"; exit 2; }
 check_value() {
   local key="$1" value="$2"
   case "$key" in
-    max_iterations) [[ "$value" =~ ^[0-9]+$ ]] || die "max_iterations needs a number, got '$value'" ;;
-    max_duration|max_iteration_duration)
-      [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -ge 1 ] || die "$key needs a number of minutes, at least 1, got '$value'" ;;
+    max_iterations|max_duration|max_iteration_duration)
+      [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -ge 1 ] || die "$key needs a number of at least 1, got '$value'" ;;
     max_parallel)
       [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -ge 1 ] && [ "$value" -le 3 ] || die "max_parallel needs a number from 1 to 3, got '$value'" ;;
     limit_stop)
@@ -34,7 +33,8 @@ check_value() {
       local re='^([0-9]{4}-[0-9]{2}-[0-9]{2})[ T]([0-9]{2}:[0-9]{2}(:[0-9]{2})?)( +([A-Za-z0-9_+/-]+))?$'
       [[ "$value" =~ $re ]] || die "until must look like 'YYYY-MM-DD HH:MM' or 'YYYY-MM-DD HH:MM Zone/Name', got '$value'"
       local zone="${BASH_REMATCH[5]:-Europe/Berlin}" wall="${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
-      if [ -d /usr/share/zoneinfo ] && [ ! -f "/usr/share/zoneinfo/$zone" ]; then die "until names an unknown time zone '$zone'"; fi
+      # GNU date reads an unknown zone as UTC without a word, so the zone file has to exist.
+      [ -f "${TZDIR:-/usr/share/zoneinfo}/$zone" ] || die "until names a time zone this machine does not know (tzdata installed?): '$zone'"
       until_epoch="$(TZ="$zone" date -d "$wall" +%s 2>/dev/null)" || die "until is not a valid date and time, got '$value'" ;;
   esac
 }
@@ -47,7 +47,8 @@ grace_seconds="${RALPH_GRACE_SECONDS:-300}"
 [[ "$poll_seconds" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "RALPH_POLL_SECONDS needs a number, got '$poll_seconds'"
 [[ "$grace_seconds" =~ ^[0-9]+$ ]] || die "RALPH_GRACE_SECONDS needs an integer, got '$grace_seconds'"
 
-spec="${1:?usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND]}"
+spec="${1:-}"
+[ -n "$spec" ] || die "usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND]"
 shift
 if ! [[ "$spec" =~ ^[0-9]+$ ]]; then die "spec must be an issue number, got '$spec'"; fi
 declare -A cli=()
@@ -65,6 +66,7 @@ while [ $# -gt 0 ]; do
 done
 command -v jq >/dev/null || die "jq is required"
 command -v flock >/dev/null || die "flock not found"
+command -v mktemp >/dev/null || die "mktemp is required"
 
 # Lock: one active run per spec, held through flock on a file descriptor, so the kernel releases it when the
 # process dies (a dead holder never blocks) and two starters cannot both get it.
@@ -97,10 +99,18 @@ if [ ! -e "$control" ]; then
   jq -n '{until: null, max_duration: null, max_iterations: null, max_iteration_duration: null, max_parallel: 3,
           stop: null, limit_stop: "after-step"}' > "$control"
 fi
+# Every write of the control file by this script: one writer at a time (flock on a lock file next to it), a
+# temporary file of its own, then an atomic rename, so concurrent writes of the script are not lost.
+update_control() { # jq arguments and program
+  (
+    flock 8
+    tmp="$(mktemp "$control.XXXXXX")"
+    if jq "$@" "$control" > "$tmp"; then mv "$tmp" "$control"; else rm -f "$tmp"; fi
+  ) 8>>"$control.lock"
+}
 for key in "${!cli[@]}"; do
-  jq --arg k "$key" --arg v "${cli[$key]}" \
-    'if ($k == "until" or $k == "limit_stop") then .[$k] = $v else .[$k] = ($v | tonumber) end' \
-    "$control" > "$control.tmp" && mv "$control.tmp" "$control"
+  update_control --arg k "$key" --arg v "${cli[$key]}" \
+    'if ($k == "until" or $k == "limit_stop") then .[$k] = $v else .[$k] = ($v | tonumber) end'
 done
 [ -e "$run/started" ] || date +%s > "$run/started"  # max_duration counts from here, also after a restart
 run_started="$(cat "$run/started")"
@@ -121,9 +131,7 @@ validate_control() {
 }
 
 request_stop() { # kind: written only when no stop is requested yet, so an owner's stop kind stays
-  if [ -z "$(ctl stop)" ]; then
-    jq --arg k "$1" '.stop = $k' "$control" > "$control.tmp" && mv "$control.tmp" "$control"
-  fi
+  update_control --arg k "$1" 'if (.stop == null or .stop == "") then .stop = $k else . end'
 }
 
 # Watches one running iteration (child pid, marker file for the reason of a kill). A stop `now` kills the child's
@@ -136,6 +144,7 @@ watch_iteration() {
   while true; do
     sleep "$poll_seconds" & sleeper=$!
     wait "$sleeper"
+    kill -0 "$pid" 2>/dev/null || exit 0  # the iteration ended by itself: nothing to write, nothing to kill
     now="$(date +%s)"
     max_iteration="$(ctl max_iteration_duration)"
     if [ -z "$requested" ] && [ -n "$max_iteration" ] && [ $((now - begin)) -ge $((max_iteration * minute_seconds)) ]; then
