@@ -16,6 +16,8 @@ endpoint without the repository prefix and query, slashes as underscores (`pulls
 call is appended to `calls.log` there, and a file `hang_<name>` makes it hang. With `--paginate --slurp` the stub
 answers the sub-issues as one page and every other file as it is, so the file of a list endpoint holds the list of its
 pages (for check runs a list of the pages' objects).
+A file STUB_CLAUDE_DATA (or its own STUB_CLAUDE_DATA.<n> for the n-th call) is copied by the stub iteration to the
+iteration's work data file in the run directory, as the orchestrator writes it.
 """
 import json
 import os
@@ -44,6 +46,11 @@ printf '%s\\0' "$@" > "$STUB_CALLS.argv"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
 cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
 n="$(wc -l < "$STUB_CALLS.times")"
+if [ -n "${STUB_CLAUDE_DATA:-}" ]; then  # the work data the iteration writes into the run directory (the n-th call's own file first)
+  data="$STUB_CLAUDE_DATA.$n"
+  [ -e "$data" ] || data="$STUB_CLAUDE_DATA"
+  [ -e "$data" ] && cp "$data" "$RALPH_RUN_DIR/iteration-$RALPH_ITERATION.json"
+fi
 if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then
   echo $$ > "$STUB_CLAUDE_PID"
   sleep "$STUB_CLAUDE_SLEEP" &
@@ -128,6 +135,9 @@ class IterationRulesTest(unittest.TestCase):
     def test_max_parallel_bounds_the_tickets_of_the_iteration(self):
         self.rule_with("max_parallel", "upper bound")
 
+    def test_tickets_and_prs_are_written_to_the_iteration_file_in_the_run_directory(self):
+        self.rule_with("$ralph_run_dir", "iteration-", "$ralph_iteration", "tickets", "prs")
+
     def test_owner_question_is_a_ticket_comment_with_question_options_and_recommendation_and_needs_info(self):
         self.rule_with("never ask the owner interactively", "comment", "question", "options", "recommendation",
                        "needs-info")
@@ -170,6 +180,7 @@ class LoopScriptTest(unittest.TestCase):
         write_executable(self.root / "bin" / "gh", STUB_GH)
         self.calls = self.root / "claude-calls.txt"
         self.stream = self.root / "stream.jsonl"
+        self.work_data = self.root / "work-data.json"
         self.gh_dir = self.root / "gh"
         self.gh_dir.mkdir()
 
@@ -408,6 +419,71 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertEqual(0, code, err)
         self.assertEqual("ERROR iteration 1 failed: exit 1, success", lines[0])
+
+    def test_iteration_end_line_names_the_tickets_and_prs_the_iteration_wrote(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.work_data.write_text('{"tickets": [7, 8], "prs": [12]}', encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_DATA=str(self.work_data))
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25, tickets #7 #8, PRs #12", lines[0])
+
+    def test_iteration_end_line_says_none_for_an_empty_list_of_tickets_or_prs(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.work_data.write_text('{"tickets": [], "prs": [12]}', encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_DATA=str(self.work_data))
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25, tickets none, PRs #12", lines[0])
+
+    def test_iteration_end_line_without_a_data_file_is_the_line_without_tickets_and_prs(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_malformed_iteration_data_falls_back_to_the_line_without_tickets_and_prs_and_fails_nothing(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        for data in ("not json {", '{"tickets": "7", "prs": []}', '{"tickets": [7]}', '{"tickets": [0], "prs": []}',
+                     '["7"]'):
+            with self.subTest(data=data):
+                shutil.rmtree(self.home, ignore_errors=True)
+                self.work_data.write_text(data, encoding="utf-8")
+
+                code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_DATA=str(self.work_data))
+
+                self.assertEqual(0, code, err)
+                self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                                  "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"],
+                                 self.without_retro(lines))
+
+    def test_each_iteration_names_only_the_tickets_and_prs_it_wrote(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.work_data}.1").write_text('{"tickets": [7], "prs": []}', encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "2", STUB_CLAUDE_DATA=str(self.work_data))
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25, tickets #7, PRs none",
+                          "iteration 2 ok: 3 turns, cost $0.25",
+                          "END after 2 iterations: max_iterations 2 reached (2 ok, 0 failed)"],
+                         self.without_retro(lines))
+
+    def test_data_of_an_iteration_cut_off_by_the_usage_limit_is_not_read_by_its_retry(self):
+        self.limit_then_success()
+        Path(f"{self.work_data}.1").write_text('{"tickets": [7], "prs": [12]}', encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="2",
+                                         STUB_CLAUDE_DATA=str(self.work_data))
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"],
+                         self.without_retro(lines)[2:])
 
     def test_missing_flock_is_reported_as_such(self):
         tools = self.root / "tools"

@@ -331,6 +331,19 @@ result_failure() { # result file, exit code
   elif [ "$(jq 'has("result")' "$file")" != "true" ]; then echo "no result field, $(jq -r '.subtype // "no subtype"' "$file")"
   fi
 }
+# The work data of an iteration: the orchestrator writes iteration-<i>.json into the run directory (the loop rules
+# say how). Its suffix for the iteration's ok line is ", tickets #<n> ..., PRs #<n> ..." ("none" for an empty list);
+# empty when the file is missing or malformed (both lists must be arrays of numbers from 1 on), so the line is then
+# the one without them.
+work_suffix() { # iteration
+  local file="$run/iteration-$1.json" tickets prs
+  [ -s "$file" ] || return 0
+  jq -e '[.tickets, .prs] | all(type == "array" and all(.[]; type == "number" and . == floor and . >= 1))' "$file" \
+    >/dev/null 2>&1 || return 0
+  tickets="$(jq -r '.tickets | if length == 0 then "none" else map("#\(.)") | join(" ") end' "$file")"
+  prs="$(jq -r '.prs | if length == 0 then "none" else map("#\(.)") | join(" ") end' "$file")"
+  echo ", tickets $tickets, PRs $prs"
+}
 denial_line() { # label, result file
   if [ -s "$2" ] && jq -e '(.permission_denials // []) | length > 0' "$2" >/dev/null 2>&1; then
     echo "DENIAL $1: $(jq -c '[.permission_denials[].tool_name]' "$2")"
@@ -438,6 +451,8 @@ while true; do
   result="$run/result-$iteration.json"
   killed="$run/killed-$iteration"
   rm -f "$killed"
+  rm -f "$run/iteration-$iteration.json"  # work data of an earlier attempt, e.g. one cut off by a usage limit
+  export RALPH_ITERATION="$iteration"  # the orchestrator names its work data file by it (iteration-rules.md)
   set -m  # own process group for the child (pgid = its pid)
   start_claude "/implement-spec $spec" iteration-rules.md "$stream" "$run/stderr-$iteration.txt"
   watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
@@ -484,7 +499,7 @@ while true; do
   elif [ -n "$failure" ]; then
     echo "ERROR iteration $iteration failed: $failure"
   else
-    echo "iteration $iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$result")"
+    echo "iteration $iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$result")$(work_suffix "$iteration")"
   fi
   denial_line "iteration $iteration" "$result"
   write_status between "$iteration"
