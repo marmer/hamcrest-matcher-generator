@@ -1578,7 +1578,9 @@ class LoopScriptTest(unittest.TestCase):
 
         out = process.communicate(timeout=30)[0].splitlines()
 
-        self.assertEqual([self.RETRO_OK, self.NO_TICKET_END], out)
+        self.assertEqual(2, len(out), out)  # the limit may be reached before the empty frontier is seen: either END
+        self.assertEqual(self.RETRO_OK, out[0], out)
+        self.assertIn(out[1], (self.NO_TICKET_END, "END after 0 iterations: max_duration 1 reached (0 ok, 0 failed)"))
 
     def test_until_does_not_bound_the_retro(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
