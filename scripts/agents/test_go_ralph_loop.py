@@ -616,6 +616,7 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertEqual(2, process.returncode)
         self.assertTrue(process.stdout.startswith("ERROR usage"), process.stdout)
+        self.assertIn("--resume-only", process.stdout, "the usage line omits --resume-only")
 
     def test_until_without_time_zone_data_is_refused_instead_of_read_as_utc(self):
         empty = self.root / "no-tzdata"
