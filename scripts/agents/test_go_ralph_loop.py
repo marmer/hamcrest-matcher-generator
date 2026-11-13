@@ -167,6 +167,35 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(0, code, err)
         self.assertEqual("ERROR iteration 1 failed: exit 1, success", lines[0])
 
+    def test_missing_flock_is_reported_as_such(self):
+        tools = self.root / "tools"
+        tools.mkdir()
+        for directory in ("/usr/bin", "/bin"):
+            for tool in Path(directory).iterdir():
+                if tool.name != "flock" and not (tools / tool.name).exists():
+                    (tools / tool.name).symlink_to(tool)
+        for stub in ("claude", "gh"):
+            (tools / stub).unlink(missing_ok=True)
+            (tools / stub).symlink_to(self.root / "bin" / stub)
+        process = subprocess.run(
+            ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
+            cwd=self.repo, env=self.env(PATH=str(tools)), capture_output=True, text=True, timeout=60)
+
+        self.assertEqual(2, process.returncode)
+        self.assertEqual(["ERROR flock not found"], process.stdout.splitlines())
+
+    def test_relative_ralph_home_keeps_pointing_at_the_same_directory(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        process = subprocess.run(
+            ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
+            cwd=self.root, env=self.env(RALPH_HOME="relative-home"), capture_output=True, text=True, timeout=60)
+
+        self.assertEqual(0, process.returncode, process.stderr)
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", process.stdout.splitlines()[0])
+        self.assertTrue((self.root / "relative-home" / "runs").is_dir())
+        self.assertFalse((self.repo / "relative-home").exists())
+
     def test_spec_that_is_not_a_number_is_refused(self):
         for spec in ("../x", "*", "4 2"):
             process = subprocess.run(

@@ -7,6 +7,7 @@ set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="${RALPH_REPO:-$(cd "$HERE/../../../.." && pwd)}"
 HOME_DIR="${RALPH_HOME:-$HOME/.goRalph}"
+mkdir -p "$HOME_DIR" && HOME_DIR="$(cd "$HOME_DIR" && pwd)"  # absolute: the script changes directory later
 
 spec="${1:?usage: loop.sh <spec> [--max-iterations N]}"
 shift
@@ -22,6 +23,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 command -v jq >/dev/null || { echo "ERROR jq is required"; exit 2; }
+command -v flock >/dev/null || { echo "ERROR flock not found"; exit 2; }
 
 # Lock: one active run per spec, held through flock on a file descriptor, so the kernel releases it when the
 # process dies (a dead holder never blocks) and two starters cannot both get it.
