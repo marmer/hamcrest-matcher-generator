@@ -15,7 +15,7 @@ One fresh orchestrator process started by the script with the same prompt. It re
 The smallest unit after which the state is saved by commit and push, e.g. "ticket implemented", "review round 2 fixed", "PR opened". A stop `after-step` waits for the current work step to end.
 
 **Control file**:
-`control.json` in the run directory. It holds the limits (`until`, `max_iterations`, `max_parallel`, budgets) and the stop request (`now`, `after-step`, `after-iteration`). The script reads it before each iteration, the orchestrator between work steps; changing it changes the running loop.
+`control.json` in the run directory. It holds the limits (`until`, `max_iterations`, `max_parallel`) and the stop request (`now`, `after-step`, `after-iteration`). The script reads it before each iteration, the orchestrator between work steps; changing it changes the running loop.
 
 ## Settled decisions (draft)
 
@@ -25,7 +25,7 @@ The smallest unit after which the state is saved by commit and push, e.g. "ticke
 - Models: orchestrator `sonnet`; implementer `haiku` for up to 3 attempts, then `sonnet` for 2 attempts, then the ticket gets `ready-for-human` with a comment and the loop goes on with other tickets. No `opus` in the loop.
 - `max_parallel` is the upper bound of tickets per iteration, default and maximum 3; the disjoint-files rule of `implementation.md` still applies.
 - Self-improvement: a retro may change only lessons in `docs/agents/implementer-brief.md` and the loop's own learnings file without the owner (own PR with review). Everything that changes rules, model defaults, gates or prompts becomes a `ready-for-human` ticket, presented to the owner with options and a recommendation when the loop skill is started; accepted ones are planned then and processed as normal tickets in a later run.
-- Budget: 3 USD per iteration, 25 USD per run. On a usage limit (HTTP 429) the script waits for the reset and retries, at most 5 h 15 min, then ends the run cleanly.
+- No cost budget: time (`until`) and iterations (`max_iterations`) are the only run limits. On a usage limit (HTTP 429) the script waits for the reset and retries, at most 5 h 15 min, then ends the run cleanly.
 - PRs: an iteration opens the PRs of its tickets with auto-merge and waits for CI with one blocking poll (no tokens while blocked), at most 30 min. On red CI it fixes once itself while its context is fresh; anything left (second red run, merge conflict, timeout) goes to the next iteration through the ticket's handover note `notes/ticket-<n>.md` on the ticket branch, updated after every work step. The iteration ends when its PRs are merged or after that one fix attempt.
 - Questions for the owner: the orchestrator comments on the ticket (question, options, recommendation), sets `needs-info` and goes on with other tickets. The ticket comment is the source of truth; the owner can answer in any session. When `goRalph` starts, the main session presents all open `needs-info` questions of the spec together with the retro tickets in one interview round, records the answers on the tickets and sets `ready-for-agent`.
 - Parallelism: `docs/agents/implementation.md` allows 3 parallel tickets in general, not only in the loop; the disjoint-files rule stays.
@@ -39,3 +39,6 @@ The smallest unit after which the state is saved by commit and push, e.g. "ticke
 - Loop learnings: `docs/agents/goRalph-learnings.md`, changed only through retro PRs, capped at about 40 lines because every iteration reads it; it holds only loop-specific lessons on top of `implementer-brief.md`. Whether 40 lines are enough is open and gets revisited.
 - The skill is built in the design session itself, followed by a `code-review` under the recursive review rule; the trial runs first on a small test spec of three documentation-only Haiku tickets, then on a real small spec, and covers `permissions.deny`, the three stop modes, a resume after a deliberately killed script, and a run of about 2 h.
 - `until` times are Europe/Berlin unless stated otherwise.
+- When the learnings file is full, the retro condenses instead of appending: lessons that hold for every implementation move to `implementer-brief.md`, lessons made obsolete by a rule change are deleted, and if it still does not fit, the retro files a retro ticket to raise the limit or restructure.
+- `/goRalph` takes its arguments in plain language (e.g. `/goRalph #312 bis 6 Uhr, max 7 Runden`); the main session turns them into `control.json` and shows the parsed values in one line before starting. Defaults: no time limit, no iteration limit, `max_parallel` 3.
+- Before each iteration the script checks through `gh api`, without a model, whether there is work: free frontier tickets or PRs that need action (red CI, conflict, new review comment) start an iteration; only PRs waiting for CI with auto-merge make the script sleep and check again every 5 min; nothing at all ends the run.
