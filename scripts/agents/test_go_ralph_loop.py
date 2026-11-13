@@ -3,7 +3,8 @@
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
-STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv; a file STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
+STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv; a file
+STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
 STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
@@ -15,6 +16,7 @@ pages (for check runs a list of the pages' objects).
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -102,7 +104,8 @@ class IterationRulesTest(unittest.TestCase):
 
     def rule_with(self, *words):
         """The one rule line holding all words (case-insensitive)."""
-        found = [line for line in self.lines if all(word in line for word in words)]
+        found = [line for line in self.lines
+                 if all(re.search(rf"(?<!\w){re.escape(word)}(?!\w)", line) for word in words)]
         self.assertTrue(found, f"no rule line names {words}; the rules text:\n{self.rules}")
         return found[0]
 
@@ -309,9 +312,13 @@ class LoopScriptTest(unittest.TestCase):
                          "git branch -D", "--allowedTools", "--output-format stream-json", "stdin bytes: 0"):
             self.assertIn(expected, call)
 
+    def argv(self):
+        """The arguments of the child's last start."""
+        return self.calls.with_name(self.calls.name + ".argv").read_bytes().decode("utf-8").split("\0")[:-1]
+
     def child_option(self, name):
         """The value after the option `name` in the arguments of the child's last start."""
-        arguments = self.calls.with_name(self.calls.name + ".argv").read_bytes().decode("utf-8").split("\0")[:-1]
+        arguments = self.argv()
         self.assertIn(name, arguments, f"the child was started without {name}; its arguments: {arguments}")
         return arguments[arguments.index(name) + 1]
 
@@ -339,7 +346,7 @@ class LoopScriptTest(unittest.TestCase):
 
         self.run_loop("--max-iterations", "1")
 
-        arguments = self.calls.with_name(self.calls.name + ".argv").read_bytes().decode("utf-8")
+        arguments = "\0".join(self.argv())
         for forbidden in ("bypassPermissions", "--dangerously-skip-permissions", "--permission-mode"):
             self.assertNotIn(forbidden, arguments, f"the child was started with {forbidden}")
 
@@ -364,6 +371,14 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(0, code, err)
         denials = [line for line in lines if line.startswith("DENIAL")]
         self.assertEqual(['DENIAL iteration 2: ["Bash","Write"]'], denials, f"monitor lines: {lines}")
+
+    def test_iteration_without_denials_prints_no_denial_line(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual([], [line for line in lines if line.startswith("DENIAL")], f"monitor lines: {lines}")
 
     def test_denial_line_follows_the_error_line_of_a_failed_iteration(self):
         failed = json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "stuck",
