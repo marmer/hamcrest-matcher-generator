@@ -10,29 +10,32 @@ HOME_DIR="${RALPH_HOME:-$HOME/.goRalph}"
 
 spec="${1:?usage: loop.sh <spec> [--max-iterations N]}"
 shift
+if ! [[ "$spec" =~ ^[0-9]+$ ]]; then echo "ERROR spec must be an issue number, got '$spec'"; exit 2; fi
 max_iterations=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --max-iterations) max_iterations="${2:?--max-iterations needs a number}"; shift 2 ;;
+    --max-iterations)
+      max_iterations="${2:-}"
+      if ! [[ "$max_iterations" =~ ^[0-9]+$ ]]; then echo "ERROR --max-iterations needs a number, got '$max_iterations'"; exit 2; fi
+      shift 2 ;;
     *) echo "ERROR unknown argument $1"; exit 2 ;;
   esac
 done
 command -v jq >/dev/null || { echo "ERROR jq is required"; exit 2; }
 
-# Lock: one active run per spec; a lock whose process is gone is taken over.
+# Lock: one active run per spec, held through flock on a file descriptor, so the kernel releases it when the
+# process dies (a dead holder never blocks) and two starters cannot both get it.
 lock="$HOME_DIR/locks/$spec.lock"
 mkdir -p "$HOME_DIR/locks" "$HOME_DIR/runs"
-if ! mkdir "$lock" 2>/dev/null; then
-  holder="$(cat "$lock/pid" 2>/dev/null || true)"
-  if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
-    echo "ERROR spec #$spec already has a running loop (pid $holder), lock $lock"
-    exit 1
-  fi
-  rm -rf "$lock"
-  mkdir "$lock" || { echo "ERROR cannot take lock $lock"; exit 1; }
+exec 9>>"$lock"
+if ! flock -n 9; then
+  echo "ERROR spec #$spec already has a running loop (pid $(cat "$lock" 2>/dev/null)), lock $lock"
+  exit 1
 fi
-echo $$ > "$lock/pid"
-trap 'rm -rf "$lock"' EXIT
+echo $$ > "$lock"
+
+child=""
+trap '[ -n "$child" ] && kill "$child" 2>/dev/null; exit 143' TERM INT
 
 # Run directory: continue an unfinished run of this spec, else start a new one.
 run=""
@@ -71,6 +74,7 @@ finish() { # iteration, reason
 settings='{"disableAllHooks":true,"permissions":{"deny":["Bash(git push --force*)","Bash(git push -f*)","Bash(git push origin main*)","Bash(git push origin HEAD:main*)","Bash(git reset --hard*)","Bash(git branch -D*)"]}}'
 allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(python3 scripts/:*),Read,Edit,Write,Agent,Skill'
 
+cd "$REPO" || exit 2
 iteration=0
 for existing in "$run"/result-*.json; do
   [ -e "$existing" ] || continue
@@ -97,12 +101,15 @@ while true; do
   write_status running "$iteration"
   stream="$run/stream-$iteration.jsonl"
   result="$run/result-$iteration.json"
-  (cd "$REPO" && claude -p "/implement-spec $spec" --model sonnet \
+  claude -p "/implement-spec $spec" --model sonnet \
     --settings "$settings" --allowedTools "$allowed" \
     --append-system-prompt "$(cat "$HERE/iteration-rules.md")" \
     --output-format stream-json --verbose \
-    < /dev/null > "$stream" 2> "$run/stderr-$iteration.txt")
+    < /dev/null > "$stream" 2> "$run/stderr-$iteration.txt" 9>&- &
+  child=$!
+  wait "$child"
   rc=$?
+  child=""
 
   jq -c 'select(.type == "result")' "$stream" 2>/dev/null | tail -1 > "$result"
   failure=""

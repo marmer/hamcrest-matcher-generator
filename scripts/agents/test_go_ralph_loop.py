@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -18,6 +19,8 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
+echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
+if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then echo $$ > "$STUB_CLAUDE_PID"; sleep "$STUB_CLAUDE_SLEEP"; fi
 cat "$STUB_CLAUDE_STREAM"
 exit "${STUB_CLAUDE_EXIT:-0}"
 """
@@ -81,6 +84,13 @@ class LoopScriptTest(unittest.TestCase):
         out, err = process.communicate(timeout=60)
         return process.returncode, out.splitlines(), err
 
+    @staticmethod
+    def is_running(pid):
+        try:  # a zombie without a reaper in the container is dead
+            return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] != "Z"
+        except FileNotFoundError:
+            return False
+
     def only_run_dir(self):
         (run,) = (self.home / "runs").iterdir()
         return run
@@ -95,10 +105,8 @@ class LoopScriptTest(unittest.TestCase):
                           "iteration 2 ok: 3 turns, cost $0.25",
                           "END after 2 iterations: max_iterations 2 reached (2 ok, 0 failed)"], lines)
         self.assertEqual(2, self.calls.read_text(encoding="utf-8").count("-p /implement-spec 42"))
-        self.assertIn("-p /implement-spec 42", self.calls.read_text(encoding="utf-8"))
-        self.assertIn("--model sonnet", self.calls.read_text(encoding="utf-8"))
 
-    def test_run_directory_lives_outside_the_repository_with_control_status_results_and_streams(self):
+    def test_run_directory_is_one_per_spec_and_start_time_outside_the_repository(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
         self.run_loop("--max-iterations", "1")
@@ -106,14 +114,92 @@ class LoopScriptTest(unittest.TestCase):
         run = self.only_run_dir()
         self.assertTrue(run.name.startswith("42-"), run.name)
         self.assertEqual(self.home / "runs", run.parent)
-        control = json.loads((run / "control.json").read_text(encoding="utf-8"))
+
+    def test_control_file_holds_the_iteration_limit(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        control = json.loads((self.only_run_dir() / "control.json").read_text(encoding="utf-8"))
         self.assertEqual(1, control["max_iterations"])
-        status = json.loads((run / "status.json").read_text(encoding="utf-8"))
+
+    def test_status_file_reports_the_ended_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        status = json.loads((self.only_run_dir() / "status.json").read_text(encoding="utf-8"))
         self.assertEqual({"spec": "42", "iteration": 1, "ok": 1, "failed": 0, "state": "ended"},
                          {key: status[key] for key in ("spec", "iteration", "ok", "failed", "state")})
+
+    def test_result_and_stream_files_are_kept_per_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        run = self.only_run_dir()
         self.assertTrue((run / "result-1.json").exists())
         self.assertTrue((run / "stream-1.jsonl").exists())
-        self.assertFalse((self.home / "locks" / "42.lock").exists(), "the lock outlived the run")
+
+    def test_lock_is_released_when_the_run_ends(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, subprocess.run(["flock", "-n", str(self.home / "locks" / "42.lock"), "true"]).returncode,
+                         "the lock outlived the run")
+
+    def test_child_is_started_without_hooks_with_the_deny_list_allowed_tools_stream_output_and_closed_stdin(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        call = self.calls.read_text(encoding="utf-8")
+        for expected in ("disableAllHooks", "git push --force", "git push origin main", "git reset --hard",
+                         "git branch -D", "--allowedTools", "--output-format stream-json", "stdin bytes: 0"):
+            self.assertIn(expected, call)
+
+    def test_non_zero_exit_with_a_valid_result_counts_as_failed(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_EXIT="1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("ERROR iteration 1 failed: exit 1, success", lines[0])
+
+    def test_spec_that_is_not_a_number_is_refused(self):
+        for spec in ("../x", "*", "4 2"):
+            process = subprocess.run(
+                ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), spec, "--max-iterations", "1"],
+                cwd=self.repo, env=self.env(), capture_output=True, text=True, timeout=60)
+            self.assertEqual(2, process.returncode, spec)
+            self.assertTrue(process.stdout.startswith("ERROR"), spec)
+        self.assertFalse((self.home / "runs").exists() and any((self.home / "runs").iterdir()))
+
+    def test_max_iterations_that_is_not_an_integer_is_refused(self):
+        code, lines, err = self.run_loop("--max-iterations", "x")
+
+        self.assertEqual(2, code)
+        self.assertTrue(lines[0].startswith("ERROR"), lines)
+        self.assertFalse(self.calls.exists())
+
+    def test_terminated_loop_releases_the_lock_and_stops_its_child(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        pid_file = self.root / "child.pid"
+        process = self.start("--max-iterations", "1", STUB_CLAUDE_SLEEP="60", STUB_CLAUDE_PID=str(pid_file))
+        for _ in range(100):
+            if pid_file.exists() and pid_file.read_text(encoding="utf-8").strip():
+                break
+            time.sleep(0.1)
+        child = int(pid_file.read_text(encoding="utf-8").strip())
+
+        process.terminate()
+        process.communicate(timeout=30)
+
+        self.assertEqual(0, subprocess.run(["flock", "-n", str(self.home / "locks" / "42.lock"), "true"]).returncode,
+                         "the lock outlived the killed loop")
+        time.sleep(0.5)
+        self.assertFalse(self.is_running(child), "the child outlived the killed loop")
 
     def test_error_result_with_exit_zero_counts_as_failed(self):
         self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
@@ -142,12 +228,11 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_lock_refuses_a_second_run_on_the_same_spec(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        lock = self.home / "locks" / "42.lock"
-        lock.mkdir(parents=True)
-        holder = subprocess.Popen(["sleep", "60"])
+        (self.home / "locks").mkdir(parents=True)
+        holder = subprocess.Popen(["flock", str(self.home / "locks" / "42.lock"), "sleep", "60"])
         self.addCleanup(holder.wait)
         self.addCleanup(holder.kill)
-        (lock / "pid").write_text(str(holder.pid), encoding="utf-8")
+        time.sleep(0.5)
 
         code, lines, err = self.run_loop("--max-iterations", "1")
 
@@ -156,13 +241,21 @@ class LoopScriptTest(unittest.TestCase):
         self.assertIn("already has a running loop", lines[0])
         self.assertFalse(self.calls.exists(), "an iteration started despite the lock")
 
+    def test_two_concurrent_starters_never_both_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        starters = [self.start("--max-iterations", "1", STUB_CLAUDE_SLEEP="2", STUB_CLAUDE_PID=str(self.root / f"p{i}"))
+                    for i in range(2)]
+        outputs = [starter.communicate(timeout=60)[0] for starter in starters]
+
+        self.assertEqual(1, sum("already has a running loop" in out for out in outputs), outputs)
+        self.assertEqual(1, self.calls.read_text(encoding="utf-8").count("-p /implement-spec 42"))
+
     def test_stale_lock_of_a_dead_process_is_taken_over(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        lock = self.home / "locks" / "42.lock"
-        lock.mkdir(parents=True)
+        (self.home / "locks").mkdir(parents=True)
         dead = subprocess.Popen(["true"])
         dead.wait()
-        (lock / "pid").write_text(str(dead.pid), encoding="utf-8")
+        (self.home / "locks" / "42.lock").write_text(str(dead.pid), encoding="utf-8")
 
         code, lines, err = self.run_loop("--max-iterations", "1")
 
