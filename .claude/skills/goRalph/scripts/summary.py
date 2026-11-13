@@ -7,6 +7,8 @@ Reads the run's `started` file, `status.json` and `ended` marker and asks the tr
 since the run started, escalation comments on the spec's tickets, open `needs-info` tickets of the spec and `retro`
 tickets created since the run started. It never reads the iteration streams or results. A failing or timed-out tracker call
 ends it with one message on stderr, exit 1 and nothing on stdout. Every list is read completely (`--paginate`).
+Environment: RALPH_GH_TIMEOUT_SECONDS, the limit of one `gh api` call in seconds (default 60, as in loop.sh; a value that is
+not a number ends it with the one message and exit 1).
 
 A comment counts as an escalation when it (1) mentions "escalat", (2) names a model transition (`haiku -> sonnet`,
 `haiku => sonnet`, a unicode arrow, `haiku to sonnet`) or (3) is a closing line `Model: sonnet|opus ...`, i.e. the
@@ -29,7 +31,7 @@ ESCALATION = re.compile(rf"escalat|\b({MODELS})\s*(->|=>|\u2192|to)\s*({MODELS})
 
 def gh(path):
     """All items of a list endpoint: `--slurp` wraps the pages of `--paginate` in one array, flattened here."""
-    timeout = float(os.environ.get("SUMMARY_GH_TIMEOUT", "60"))
+    timeout = float(os.environ.get("RALPH_GH_TIMEOUT_SECONDS", "60"))
     done = subprocess.run(["gh", "api", "--paginate", "--slurp", path], capture_output=True, text=True, timeout=timeout)
     if done.returncode != 0:
         raise RuntimeError(f"gh api {path} failed: {done.stderr.strip()}")

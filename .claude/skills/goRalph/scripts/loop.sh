@@ -4,7 +4,8 @@
 #                       [--until "YYYY-MM-DD HH:MM [Zone/Name]"] [--max-parallel N] [--limit-stop KIND]
 # The options write the control file of the run (control.json); the limits and a stop request in that file are read
 # before every iteration, so editing the file changes the running loop. Stop kinds: after-iteration, after-step, now.
-# Stdout carries only the monitor lines (iteration end, error, denial, END); everything else goes to the run directory.
+# Stdout carries only the monitor lines (iteration end, ERROR, DENIAL, STOP for a deliberate kill, END); the rest goes
+# to the run directory.
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
 # RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS
 # (shortened timings for tests, not for the owner; the PR sleep is the pause between two checks while PRs wait for CI,
@@ -248,11 +249,24 @@ check_prs() {
   return 0
 }
 
-# Sleeps pr_sleep_seconds in poll-sized slices, so a stop request ends the sleep early.
+# The reason of the first reached limit (until, max_duration, max_iterations), empty when none is reached.
+limit_reason() {
+  local now max max_duration until_value
+  now="$(date +%s)"
+  max="$(ctl max_iterations)"
+  max_duration="$(ctl max_duration)"
+  until_value="$(ctl until)"
+  if [ -n "$until_value" ] && [ "$now" -ge "$until_epoch" ]; then echo "until $until_value reached"
+  elif [ -n "$max_duration" ] && [ $((now - run_started)) -ge $((max_duration * minute_seconds)) ]; then echo "max_duration $max_duration reached"
+  elif [ -n "$max" ] && [ "$iteration" -ge "$max" ]; then echo "max_iterations $max reached"
+  fi
+}
+
+# Sleeps pr_sleep_seconds in poll-sized slices, so a stop request or a reached limit ends the sleep early.
 sleep_while_prs_wait() {
   local deadline
   deadline=$(( $(date +%s) + pr_sleep_seconds ))
-  while [ "$(date +%s)" -lt "$deadline" ] && [ -z "$(effective_stop)" ]; do
+  while [ "$(date +%s)" -lt "$deadline" ] && [ -z "$(effective_stop)" ] && [ -z "$(limit_reason)" ]; do
     sleep "$poll_seconds" & sleeper=$!
     wait "$sleeper"
     sleeper=""
@@ -290,15 +304,7 @@ while true; do
   if [ -n "$stop" ]; then finish "$iteration" "stop requested ($stop)"; fi
 
   # A reached limit acts as a stop request of the configured kind.
-  now="$(date +%s)"
-  max="$(ctl max_iterations)"
-  max_duration="$(ctl max_duration)"
-  until_value="$(ctl until)"
-  reason=""
-  if [ -n "$until_value" ] && [ "$now" -ge "$until_epoch" ]; then reason="until $until_value reached"
-  elif [ -n "$max_duration" ] && [ $((now - run_started)) -ge $((max_duration * minute_seconds)) ]; then reason="max_duration $max_duration reached"
-  elif [ -n "$max" ] && [ "$iteration" -ge "$max" ]; then reason="max_iterations $max reached"
-  fi
+  reason="$(limit_reason)"
   if [ -n "$reason" ]; then
     request_stop "$(limit_kind)"
     finish "$iteration" "$reason"
@@ -347,7 +353,7 @@ while true; do
   jq -c 'select(.type == "result")' "$stream" 2>/dev/null | tail -1 > "$result"
   failure=""
   if [ -s "$killed" ]; then
-    failure="killed, $(cat "$killed")"
+    : # a deliberate stop, reported as STOP below, not as a failure line
   elif [ ! -s "$result" ]; then
     failure="no result event (exit $rc)"
   elif ! jq -e . "$result" >/dev/null 2>&1; then
@@ -360,7 +366,10 @@ while true; do
     failure="no result field, $(jq -r '.subtype // "no subtype"' "$result")"
   fi
 
-  if [ -n "$failure" ]; then
+  if [ -s "$killed" ]; then
+    failed_count=$((failed_count + 1))
+    echo "STOP iteration $iteration killed ($(cat "$killed"))"
+  elif [ -n "$failure" ]; then
     failed_count=$((failed_count + 1))
     echo "ERROR iteration $iteration failed: $failure"
   else
