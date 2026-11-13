@@ -1,6 +1,6 @@
-# Ralph loop
+# Ralph loop (`goRalph`)
 
-A script-driven loop for long unattended implementation runs in a cloud session. The main session only starts the script and watches its status; the work happens in fresh `claude -p` processes. Research and measurements: `docs/research/ralph-loop-in-cloud-sessions.md`. This file is being written during the design interview; sections marked *draft* are not settled yet.
+The skill is called `goRalph`. A script-driven loop for long unattended implementation runs in a cloud session. The main session only starts the script and watches its status; the work happens in fresh `claude -p` processes. Research and measurements: `docs/research/ralph-loop-in-cloud-sessions.md`. This file is being written during the design interview; sections marked *draft* are not settled yet.
 
 ## Terms
 
@@ -26,3 +26,11 @@ The smallest unit after which the state is saved by commit and push, e.g. "ticke
 - `max_parallel` is the upper bound of tickets per iteration, default and maximum 3; the disjoint-files rule of `implementation.md` still applies.
 - Self-improvement: a retro may change only lessons in `docs/agents/implementer-brief.md` and the loop's own learnings file without the owner (own PR with review). Everything that changes rules, model defaults, gates or prompts becomes a `ready-for-human` ticket, presented to the owner with options and a recommendation when the loop skill is started; accepted ones are planned then and processed as normal tickets in a later run.
 - Budget: 3 USD per iteration, 25 USD per run. On a usage limit (HTTP 429) the script waits for the reset and retries, at most 5 h 15 min, then ends the run cleanly.
+- PRs: an iteration opens the PRs of its tickets with auto-merge and waits for CI with one blocking poll (no tokens while blocked), at most 30 min. On red CI it fixes once itself while its context is fresh; anything left (second red run, merge conflict, timeout) goes to the next iteration through the ticket's handover note `notes/ticket-<n>.md` on the ticket branch, updated after every work step. The iteration ends when its PRs are merged or after that one fix attempt.
+- Questions for the owner: the orchestrator comments on the ticket (question, options, recommendation), sets `needs-info` and goes on with other tickets. The ticket comment is the source of truth; the owner can answer in any session. When `goRalph` starts, the main session presents all open `needs-info` questions of the spec together with the retro tickets in one interview round, records the answers on the tickets and sets `ready-for-agent`.
+- Parallelism: `docs/agents/implementation.md` allows 3 parallel tickets in general, not only in the loop; the disjoint-files rule stays.
+- Retro tickets carry `retro` and `ready-for-human`. At `goRalph` start the owner decides per ticket: do or drop. Accepted ones are planned right away (acceptance criteria, model line, `ready-for-agent`) and taken by the next run, not the one starting now.
+- Child permissions: an explicit `--allowedTools` list (git, `./mvnw`, `gh api`, `python3 scripts/`, Read, Edit, Write, Agent, Skill) plus `permissions.deny` in `--settings` (force push, push to `main`, `reset --hard`, `branch -D`); denials from `permission_denials` become a monitor line. No `bypassPermissions`. Whether `permissions.deny` holds in `-p` without hooks is checked first in the trial.
+- Main session output: monitor lines only for iteration end (tickets, PRs, cost), errors and denials, stop and `END`; no live status page, `status.json` on request; at run end one summary page as an artifact (merged PRs, escalations, open questions, new retro tickets, cost).
+- Safety net: besides the monitor (re-armed every 30 min) the main session keeps a `send_later` check-in every 60 min; it restarts a dead script idempotently when the run neither ended nor was stopped, and reports the restart.
+- Retro: only as the last iteration of a run, also after `after-step` and `after-iteration` stops, not after `now`. `/retro` gets a non-interactive mode for this: it writes only the lessons allowed above and files retro tickets instead of asking.
