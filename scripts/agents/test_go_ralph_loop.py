@@ -3,7 +3,8 @@
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
-STUB_CLAUDE_PID.sleep); a file STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
+STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv; a file
+STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
 STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
@@ -15,6 +16,7 @@ pages (for check runs a list of the pages' objects).
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -28,6 +30,7 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
+printf '%s\\0' "$@" > "$STUB_CALLS.argv"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
 cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
 n="$(wc -l < "$STUB_CALLS.times")"
@@ -89,6 +92,56 @@ def write_executable(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     path.chmod(0o755)
+
+
+class IterationRulesTest(unittest.TestCase):
+    """The loop rules text handed to every iteration: it must name each loop rule and nothing about implementing."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rules = (REPO / SKILL_SCRIPTS / "iteration-rules.md").read_text(encoding="utf-8")
+        cls.lines = [line.lower() for line in cls.rules.splitlines() if line.startswith("- ")]
+
+    def rule_with(self, *words):
+        """The one rule line holding all words (case-insensitive)."""
+        found = [line for line in self.lines
+                 if all(re.search(rf"(?<!\w){re.escape(word)}(?!\w)", line) for word in words)]
+        self.assertTrue(found, f"no rule line names {words}; the rules text:\n{self.rules}")
+        return found[0]
+
+    def test_control_file_is_read_between_work_steps(self):
+        self.rule_with("control.json", "between work steps", "$ralph_run_dir")
+
+    def test_handover_note_is_kept_on_the_ticket_branch_after_every_work_step(self):
+        self.rule_with("notes/ticket-<n>.md", "ticket branch", "after every work step")
+
+    def test_max_parallel_bounds_the_tickets_of_the_iteration(self):
+        self.rule_with("max_parallel", "upper bound")
+
+    def test_owner_question_is_a_ticket_comment_with_question_options_and_recommendation_and_needs_info(self):
+        self.rule_with("never ask the owner interactively", "comment", "question", "options", "recommendation",
+                       "needs-info")
+
+    def test_prs_are_opened_with_squash_auto_merge(self):
+        self.rule_with("pr", "squash", "auto-merge")
+
+    def test_ci_is_waited_for_once_for_at_most_30_minutes_without_tokens(self):
+        self.rule_with("ci", "once", "30 min", "no tokens")
+
+    def test_red_ci_is_fixed_once_and_then_the_iteration_ends(self):
+        self.rule_with("red ci", "one fix", "end")
+
+    def test_escalation_path_is_a_pointer_to_the_implementation_doc_with_the_loop_model(self):
+        self.rule_with("escalation", "docs/agents/implementation.md", "sonnet")
+
+    def test_the_rules_hold_no_instructions_on_how_a_ticket_is_implemented(self):
+        for word in ("mvnw", "tdd", "spotless", "verify", "golden", "red evidence", "worktree", "conventional commit",
+                     "jacoco"):
+            self.assertNotIn(word, self.rules.lower(), f"how-to content in the loop rules: {word}")
+
+    def test_the_model_named_for_the_loop_matches_the_model_loop_sh_starts(self):
+        script = (REPO / SKILL_SCRIPTS / "loop.sh").read_text(encoding="utf-8")
+        self.assertIn("--model sonnet", script)
 
 
 class LoopScriptTest(unittest.TestCase):
@@ -258,6 +311,84 @@ class LoopScriptTest(unittest.TestCase):
         for expected in ("disableAllHooks", "git push --force", "git push origin main", "git reset --hard",
                          "git branch -D", "--allowedTools", "--output-format stream-json", "stdin bytes: 0"):
             self.assertIn(expected, call)
+
+    def argv(self):
+        """The arguments of the child's last start."""
+        return self.calls.with_name(self.calls.name + ".argv").read_bytes().decode("utf-8").split("\0")[:-1]
+
+    def child_option(self, name):
+        """The value after the option `name` in the arguments of the child's last start."""
+        arguments = self.argv()
+        self.assertIn(name, arguments, f"the child was started without {name}; its arguments: {arguments}")
+        return arguments[arguments.index(name) + 1]
+
+    def test_child_is_allowed_exactly_git_maven_gh_api_repo_python_scripts_and_the_agent_tools(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(["Agent", "Bash(./mvnw:*)", "Bash(gh api:*)", "Bash(git:*)", "Bash(python3 scripts/:*)",
+                          "Edit", "Read", "Skill", "Write"],
+                         sorted(self.child_option("--allowedTools").split(",")))
+
+    def test_child_is_denied_force_push_push_to_main_hard_reset_and_branch_delete(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        deny = json.loads(self.child_option("--settings"))["permissions"]["deny"]
+        for command in ("git push --force", "git push -f", "git push origin main", "git push origin HEAD:main",
+                        "git reset --hard", "git branch -D"):
+            self.assertIn(f"Bash({command}*)", deny, f"{command} is not denied; deny list: {deny}")
+
+    def test_child_never_runs_with_bypassed_permissions(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        arguments = "\0".join(self.argv())
+        for forbidden in ("bypassPermissions", "--dangerously-skip-permissions", "--permission-mode"):
+            self.assertNotIn(forbidden, arguments, f"the child was started with {forbidden}")
+
+    def test_child_gets_the_loop_rules_as_system_prompt_and_the_spec_as_its_task(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        rules = (REPO / SKILL_SCRIPTS / "iteration-rules.md").read_text(encoding="utf-8")
+        self.assertEqual(rules.strip(), self.child_option("--append-system-prompt").strip())
+        self.assertEqual("/implement-spec 42", self.child_option("-p"))
+
+    def test_every_iteration_with_denials_gets_its_own_denial_line_naming_each_denied_tool(self):
+        denied = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
+                             "num_turns": 2, "total_cost_usd": 0.1,
+                             "permission_denials": [{"tool_name": "Bash"}, {"tool_name": "Write"}]})
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.stream}.2").write_text(denied + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "2")
+
+        self.assertEqual(0, code, err)
+        denials = [line for line in lines if line.startswith("DENIAL")]
+        self.assertEqual(['DENIAL iteration 2: ["Bash","Write"]'], denials, f"monitor lines: {lines}")
+
+    def test_iteration_without_denials_prints_no_denial_line(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual([], [line for line in lines if line.startswith("DENIAL")], f"monitor lines: {lines}")
+
+    def test_denial_line_follows_the_error_line_of_a_failed_iteration(self):
+        failed = json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "stuck",
+                             "num_turns": 2, "total_cost_usd": 0.1, "permission_denials": [{"tool_name": "Bash"}]})
+        self.stream.write_text(failed + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["ERROR iteration 1 failed: is_error set, success", 'DENIAL iteration 1: ["Bash"]'], lines[:2])
 
     def test_non_zero_exit_with_a_valid_result_counts_as_failed(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
