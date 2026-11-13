@@ -541,6 +541,22 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(0, code, err)
         self.assertEqual(["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"], lines)
 
+    def test_retro_ticket_accepted_in_the_pre_run_interview_is_no_work_for_the_starting_run(self):
+        """An accepted retro ticket is `retro` and `ready-for-agent` but no sub-issue of the spec until the next start
+        attaches it (interview.py attach); the work check must not count it as free frontier work."""
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        accepted = [{"number": 61, "title": "Retro", "state": "open", "html_url": "u61",
+                     "labels": [{"name": "retro"}, {"name": "ready-for-agent"}]}]
+        (self.gh_dir / "issues").write_text(json.dumps([accepted]), encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "3", STUB_GH_EMPTY="1")
+        lines = self.without_retro(lines)
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"], lines)
+        started = self.calls.read_text(encoding="utf-8").count("-p /implement-spec") if self.calls.exists() else 0
+        self.assertEqual(0, started, "an iteration started for the accepted retro ticket")
+
     def test_stop_request_in_the_control_file_ends_the_run_before_the_next_iteration(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
         run = self.home / "runs" / "42-20260101-000000"
