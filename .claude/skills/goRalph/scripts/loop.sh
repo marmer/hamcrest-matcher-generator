@@ -13,7 +13,8 @@
 # default 300, the gh timeout the limit of one `gh api` call of that check, default 60; the limit retry is the pause
 # after an iteration that ended on a usage limit, default 600, the limit cap the most the run waits for such a limit to
 # lift, default 5 h 15 min).
-# An iteration whose result event is an error that names the usage limit (api_error_status 429 or "hit your limit")
+# An iteration whose result event is an error that names the usage limit (api_error_status 429, or a text with
+# "hit your limit" or "usage limit")
 # counts as neither ok nor failed: the script waits without a claude process (WAIT lines) and runs it again.
 # Before each iteration the script asks `gh api` for work without a model: a free frontier ticket or a PR that needs
 # action (red CI, merge conflict, review or review comment after its last commit) starts the iteration, PRs that only
@@ -272,23 +273,15 @@ limit_reason() {
   fi
 }
 
-# Sleeps pr_sleep_seconds in poll-sized slices, so a stop request or a reached limit ends the sleep early.
-sleep_while_prs_wait() {
-  local deadline
-  deadline=$(( $(date +%s) + pr_sleep_seconds ))
-  while [ "$(date +%s)" -lt "$deadline" ] && [ -z "$(effective_stop)" ] && [ -z "$(limit_reason)" ]; do
-    sleep "$poll_seconds" & sleeper=$!
-    wait "$sleeper"
-    sleeper=""
-  done
-}
-
-# Sleeps the given seconds in poll-sized slices; returns early (status 1) when a stop is requested or a limit reached.
+# Sleeps the given seconds in poll-sized slices, so a stop request or a reached limit ends the sleep early (status 1).
+# Sets slept_seconds: the given seconds after a full sleep, the whole elapsed seconds after an early end.
 sleep_unless_stopped() {
-  local deadline  # in milliseconds: whole seconds would end the pause up to a second early
-  deadline=$(( $(date +%s%3N) + $1 * 1000 ))
-  while [ "$(date +%s%3N)" -lt "$deadline" ]; do
-    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then return 1; fi
+  local begin deadline now  # in milliseconds: whole seconds would end the pause up to a second early
+  begin="$(date +%s%3N)"
+  deadline=$((begin + $1 * 1000))
+  slept_seconds="$1"
+  while now="$(date +%s%3N)"; [ "$now" -lt "$deadline" ]; do
+    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then slept_seconds=$(((now - begin) / 1000)); return 1; fi
     sleep "$poll_seconds" & sleeper=$!
     wait "$sleeper"
     sleeper=""
@@ -344,7 +337,7 @@ while true; do
     if [ -z "$pr_action" ]; then
       if [ "$pr_waiting" -eq 0 ]; then finish "$iteration" "no ticket ready for an agent"; fi
       write_status waiting "$iteration"
-      sleep_while_prs_wait
+      sleep_unless_stopped "$pr_sleep_seconds"
       continue
     fi
   fi
@@ -386,11 +379,9 @@ while true; do
     if [ "$pause" -gt "$limit_retry_seconds" ]; then pause="$limit_retry_seconds"; fi
     echo "WAIT usage limit hit in iteration $((iteration + 1)): no claude process until the retry in $pause s (waited $limit_waited of $limit_cap_seconds s)"
     write_status waiting "$iteration"
-    waited_from="$(date +%s)"
-    if sleep_unless_stopped "$pause"; then slept=0; limit_waited=$((limit_waited + pause))  # the planned pause, not the clock's rounding
-    else slept=1; limit_waited=$((limit_waited + $(date +%s) - waited_from)); fi
-    if [ "$slept" -eq 0 ]; then echo "WAIT over, retrying (waited $limit_waited of $limit_cap_seconds s)"
-    else echo "WAIT over, stop requested or limit reached (waited $limit_waited of $limit_cap_seconds s)"; fi
+    if sleep_unless_stopped "$pause"; then over="retrying"; else over="stop requested or limit reached"; fi
+    limit_waited=$((limit_waited + slept_seconds))
+    echo "WAIT over, $over (waited $limit_waited of $limit_cap_seconds s)"
     continue
   fi
   limit_waited=0
