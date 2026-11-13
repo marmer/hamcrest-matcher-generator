@@ -6,7 +6,8 @@ STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in S
 STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv;
 a call whose prompt starts with `/retro` is the retro iteration: it appears in STUB_CALLS but not in .times or the
 numbering of the streams, its arguments go to STUB_CALLS.retro.argv, and it answers from STUB_CLAUDE_STREAM.retro
-(STUB_CLAUDE_STREAM without it; exit code from STUB_CLAUDE_STREAM.retro.exit); a file
+(STUB_CLAUDE_STREAM without it; exit code from STUB_CLAUDE_STREAM.retro.exit; with STUB_RETRO_SLEEP it first runs a
+`sleep` child for that many seconds, pids in STUB_RETRO_PID and STUB_RETRO_PID.sleep); a file
 STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
 STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
@@ -39,6 +40,12 @@ if [[ "$2" == "/retro"* ]]; then
   printf '%s\\0' "$@" > "$STUB_CALLS.retro.argv"
   echo "RALPH_RUN_DIR=${RALPH_RUN_DIR:-}" >> "$STUB_CALLS.retro"
   echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
+  if [ -n "${STUB_RETRO_SLEEP:-}" ]; then
+    echo $$ > "$STUB_RETRO_PID"
+    sleep "$STUB_RETRO_SLEEP" &
+    echo $! > "$STUB_RETRO_PID.sleep"
+    wait
+  fi
   if [ -e "$STUB_CLAUDE_STREAM.retro" ]; then cat "$STUB_CLAUDE_STREAM.retro"; else cat "$STUB_CLAUDE_STREAM"; fi
   exit "$(cat "$STUB_CLAUDE_STREAM.retro.exit" 2>/dev/null || echo 0)"
 fi
@@ -1508,6 +1515,81 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertEqual(self.RETRO_OK, lines[0], lines)
         self.assertEqual(1, len(self.retro_calls()))
+
+
+    def start_sleeping_retro(self, seconds, *args, **extra):
+        """(A sleep that ends by itself soon, so that a retro nobody kills ends the test with a line to compare.) Starts a loop whose frontier is empty, so its retro runs at once and sleeps; returns the process and the
+        pids of the retro stub and of its sleep."""
+        pid_file = self.root / "retro.pid"
+        process = self.start(*args, STUB_GH_EMPTY="1", STUB_RETRO_SLEEP=str(seconds), STUB_RETRO_PID=str(pid_file),
+                             **extra)
+        sleep_pid_file = Path(f"{pid_file}.sleep")
+        self.wait_until(lambda: sleep_pid_file.exists() and sleep_pid_file.read_text(encoding="utf-8").strip(),
+                        "the retro to start")
+        return process, int(pid_file.read_text(encoding="utf-8").strip()), \
+            int(sleep_pid_file.read_text(encoding="utf-8").strip())
+
+    NO_TICKET_END = "END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"
+
+    def test_stop_now_written_while_the_retro_runs_kills_its_process_group_and_ends_the_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, stub_pid, sleep_pid = self.start_sleeping_retro(5)
+        self.edit_control(stop="now")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["STOP retro killed (stop now)", self.NO_TICKET_END], out)
+        self.assertFalse(self.is_running(sleep_pid), "the grandchild of the retro survived")
+        self.assertFalse(self.is_running(stub_pid), "the retro survived")
+
+    def test_retro_that_exceeds_max_iteration_duration_is_killed_after_the_grace_period(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, stub_pid, sleep_pid = self.start_sleeping_retro(5, "--max-iteration-duration", "1")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["STOP retro killed (max_iteration_duration 1 reached and grace period over)",
+                          self.NO_TICKET_END], out)
+        self.assertFalse(self.is_running(sleep_pid), "the grandchild of the retro survived")
+        self.assertFalse(self.is_running(stub_pid), "the retro survived")
+
+    def test_retro_within_max_iteration_duration_is_left_alone(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _, _ = self.start_sleeping_retro(1, "--max-iteration-duration", "5", RALPH_GRACE_SECONDS="5")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual([self.RETRO_OK, self.NO_TICKET_END], out)
+
+    def test_usage_limit_during_the_retro_is_not_waited_out_there_is_no_retro_and_the_run_ends(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.stream}.retro").write_text(USAGE_LIMIT + "\n", encoding="utf-8")
+        Path(f"{self.stream}.retro.exit").write_text("1", encoding="utf-8")
+
+        code, lines, err = self.run_loop(STUB_GH_EMPTY="1", RALPH_LIMIT_RETRY_SECONDS="1", seconds=15)
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["ERROR retro failed: usage limit hit, no retro", self.NO_TICKET_END], lines)
+        self.assertEqual(1, len(self.retro_calls()), "the retro was started again")
+
+    def test_max_duration_does_not_bound_the_retro(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _, _ = self.start_sleeping_retro(3, "--max-duration", "1", RALPH_GRACE_SECONDS="1")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(2, len(out), out)  # the limit may be reached before the empty frontier is seen: either END
+        self.assertEqual(self.RETRO_OK, out[0], out)
+        self.assertIn(out[1], (self.NO_TICKET_END, "END after 0 iterations: max_duration 1 reached (0 ok, 0 failed)"))
+
+    def test_until_does_not_bound_the_retro(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        until = f"{self.berlin_wall_clock(0)} Europe/Berlin"
+        process, _, _ = self.start_sleeping_retro(3, "--until", until, RALPH_GRACE_SECONDS="1")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual([self.RETRO_OK, f"END after 0 iterations: until {until} reached (0 ok, 0 failed)"], out)
 
 
 LEARNINGS = Path("docs") / "agents" / "goRalph-learnings.md"

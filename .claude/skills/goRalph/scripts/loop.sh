@@ -12,7 +12,8 @@
 # deliberate kill, END); the rest goes to the run directory.
 # The last iteration of a run that ends on a stop after-step or after-iteration, a reached limit acting as one of them
 # or an empty frontier is a retro: one `claude -p "/retro non-interactive <run dir>"` call (no retro after a stop now,
-# a limit acting as now, a failed check or a usage limit that does not lift). It is no iteration of the run.
+# a limit acting as now, a failed check or a usage limit that does not lift). It is no iteration of the run; it has
+# the stop now and duration watcher of an iteration, and a usage limit during it means no retro (not waited out).
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
 # RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS,
 # RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
@@ -331,6 +332,11 @@ result_failure() { # result file, exit code
   elif [ "$(jq 'has("result")' "$file")" != "true" ]; then echo "no result field, $(jq -r '.subtype // "no subtype"' "$file")"
   fi
 }
+# A usage limit is read from the result event (an error naming it), never from the exit code alone.
+is_usage_limit() { # result file
+  [ -s "$1" ] && jq -e '.is_error == true
+    and (.api_error_status == 429 or ((.result // "") | test("hit your limit|usage limit"; "i")))' "$1" >/dev/null 2>&1
+}
 # The work data of an iteration: the orchestrator writes iteration-<i>.json into the run directory (the loop rules
 # say how). Its suffix for the iteration's ok line is ", tickets #<n> ..., PRs #<n> ..." ("none" for an empty list);
 # empty when the file is missing or malformed (both lists must be arrays of numbers from 1 on), so the line is then
@@ -363,25 +369,41 @@ start_claude() { # prompt, rules file name in $HERE, stream file, stderr file
 
 # The retro iteration (#418): one `claude -p "/retro non-interactive <run dir>"` call, the last of a run that ends on
 # a stop after-step or after-iteration, a reached limit acting as one of them, or an empty frontier. It is no
-# iteration of the run (not counted in the iteration number, ok or failed, no stop `now` or duration watcher); its
-# files are retro-stream.jsonl, retro-result.json and retro-stderr.txt, and retro-done marks it as attempted, so a
-# restart does not run it twice. The child gets the settings and tools of the iterations and retro-rules.md (the non-interactive mode) instead of the
-# loop rules.
+# iteration of the run (not counted in the iteration number, ok or failed); its files are retro-stream.jsonl,
+# retro-result.json and retro-stderr.txt, and retro-done marks it as attempted, so a restart does not run it twice.
+# The child gets the settings and tools of the iterations and retro-rules.md (the non-interactive mode) instead of the
+# loop rules. It has the watcher of an iteration (#438): a stop `now` kills its process group, max_iteration_duration
+# bounds it with the same grace period, and either gives one STOP retro line; until and max_duration do not bound it.
+# A usage limit during the retro is not waited out: no retro, one ERROR line.
 run_retro() {
   [ -e "$run/retro-done" ] && return 0
   write_status retro "$iteration"
-  local rc=0 failure
+  local rc=0 failure killed="$run/retro-killed"
+  rm -f "$killed"
+  set -m  # own process group for the child (pgid = its pid)
   start_claude "/retro non-interactive $run" retro-rules.md "$run/retro-stream.jsonl" "$run/retro-stderr.txt"
+  watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
+  watcher=$!
+  set +m
   wait "$child" || rc=$?
+  kill "$watcher" 2>/dev/null
+  wait "$watcher" 2>/dev/null
   child=""
+  watcher=""
   jq -c 'select(.type == "result")' "$run/retro-stream.jsonl" 2>/dev/null | tail -1 > "$run/retro-result.json"
-  failure="$(result_failure "$run/retro-result.json" "$rc")"
-  if [ -n "$failure" ]; then
-    echo "ERROR retro failed: $failure"
+  if [ -s "$killed" ]; then
+    echo "STOP retro killed ($(cat "$killed"))"
+  elif is_usage_limit "$run/retro-result.json"; then
+    echo "ERROR retro failed: usage limit hit, no retro"
   else
-    echo "retro iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$run/retro-result.json")"
+    failure="$(result_failure "$run/retro-result.json" "$rc")"
+    if [ -n "$failure" ]; then
+      echo "ERROR retro failed: $failure"
+    else
+      echo "retro iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$run/retro-result.json")"
+    fi
+    denial_line retro "$run/retro-result.json"
   fi
-  denial_line retro "$run/retro-result.json"
   touch "$run/retro-done"
 }
 
@@ -467,9 +489,7 @@ while true; do
 
   jq -c 'select(.type == "result")' "$stream" 2>/dev/null | tail -1 > "$result"
   failure=""
-  # A usage limit is read from the result event (an error naming it), never from the exit code alone.
-  if [ ! -s "$killed" ] && [ -s "$result" ] && jq -e '.is_error == true
-        and (.api_error_status == 429 or ((.result // "") | test("hit your limit|usage limit"; "i")))' "$result" >/dev/null 2>&1; then
+  if [ ! -s "$killed" ] && is_usage_limit "$result"; then
     mv "$result" "$run/limit-result-$iteration-$(date +%s).json"
     iteration=$((iteration - 1))  # the cut-off iteration does not count
     if [ "$limit_waited" -ge "$limit_cap_seconds" ]; then
