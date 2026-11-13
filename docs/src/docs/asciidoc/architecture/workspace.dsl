@@ -28,7 +28,7 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             }
             assertjBackend = container "assertj-assertion-generator" "The AssertJ backend and its AssertionPath runtime." "Java, JavaPoet, Maven module"
             kotlinBackend = container "hamcrest-matcher-generator-kotlin" "Opt-in Kotlin DSL backend: a DSL file per type with properties. Runs under KAPT only." "Java, KotlinPoet, Maven module"
-            bridge = container "Bridge jars" "Code-free jars for the 5.x coordinates." "Java, Maven modules"
+            bridge = container "Bridge jars" "Jars with no functionality for the 5.x coordinates." "Java, Maven modules"
             endtoend = container "End-to-end modules" "Apply the processor and test the generated code." "Java, Kotlin, Maven modules"
             docs = container "docs" "Renders and checks this documentation." "Asciidoctor, Structurizr, Maven module"
         }

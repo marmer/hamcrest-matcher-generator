@@ -93,7 +93,7 @@ checks`, one failing check per line).
 `toString()`.
 . With the completeness check on (`checkingAllProperties()`), the description ends in `, every property checked or ignored`,
 and after the failing checks the mismatch adds one line that lists the properties neither checked nor ignored, with their
-nested paths, as `neither checked nor ignored: customer.phone, customer.address`. The golden test `BeanPropertyMatcherTest`
+property paths, as `neither checked nor ignored: customer.phone, customer.address`. The golden test `BeanPropertyMatcherTest`
 pins this line.
 
 Notable Aspects::

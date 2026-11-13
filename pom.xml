@@ -716,9 +716,14 @@
                                 </licenseHeader>
                             </java>
                             <kotlin>
+                                <!-- src/**: the end-to-end Kotlin modules keep their invoker projects under src/it/<case>/src/main/kotlin.
+                                     The golden files under src/test/resources are generated and carry no header. -->
                                 <includes>
-                                    <include>src/*/kotlin/**/*.kt</include>
+                                    <include>src/**/kotlin/**/*.kt</include>
                                 </includes>
+                                <excludes>
+                                    <exclude>src/test/resources/**</exclude>
+                                </excludes>
                                 <licenseHeader>
                                     <content>/*
  * SPDX-FileCopyrightText: 2019-2026 Mariano Mertinat and contributors

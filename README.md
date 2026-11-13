@@ -184,7 +184,7 @@ Coming from 5.x
 ---------------
 
 Java 11 users stay on 5.x: 6.0.0 needs JDK 17 or higher. The 5.x artifacts `hamcrest-matcher-generator-annotationprocessor`
-and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no code and bring in
+and `hamcrest-matcher-generator-dependencies` still work as bridge jars: they hold no functionality and bring in
 `hamcrest-matcher-generator` at the same version. `@MatcherConfiguration` remains as a deprecated alias of
 `@GenerateMatchers`. The [migration guide](https://hamcrest-matcher-generator.marmer.online/guide/migration.html) lists the rest, including the [new mismatch message form](https://hamcrest-matcher-generator.marmer.online/guide/migration.html#mismatch-format), which breaks tests that pin message text.
 

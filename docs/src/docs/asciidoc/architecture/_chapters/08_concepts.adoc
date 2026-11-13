@@ -24,7 +24,7 @@ a|
 | JaCoCo floor (part of `Build and verify matrix`, checked in `verify`)
 | Each of the five production modules (`matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`,
 `assertj-assertion-generator`, `hamcrest-matcher-generator-kotlin`) has at least 99 % line and 99 % branch coverage. Unit and integration coverage are merged before the check, and no class is
-excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no code.
+excluded, so a drop below the floor fails `verify` on every JDK in the matrix. The bridge jars are not measured because they hold no functionality.
 
 | Release dry run
 | The `release` profile still builds through the deploy lifecycle with signing and publishing switched off. A script
