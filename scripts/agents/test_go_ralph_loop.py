@@ -3,7 +3,10 @@
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
-STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv; a file
+STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv;
+a call whose prompt starts with `/retro` is the retro iteration: it appears in STUB_CALLS but not in .times or the
+numbering of the streams, its arguments go to STUB_CALLS.retro.argv, and it answers from STUB_CLAUDE_STREAM.retro
+(STUB_CLAUDE_STREAM without it; exit code from STUB_CLAUDE_STREAM.retro.exit); a file
 STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
 STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
@@ -30,6 +33,13 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
+if [[ "$2" == "/retro"* ]]; then
+  printf '%s\\0' "$@" > "$STUB_CALLS.retro.argv"
+  echo "RALPH_RUN_DIR=${RALPH_RUN_DIR:-}" >> "$STUB_CALLS.retro"
+  echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
+  if [ -e "$STUB_CLAUDE_STREAM.retro" ]; then cat "$STUB_CLAUDE_STREAM.retro"; else cat "$STUB_CLAUDE_STREAM"; fi
+  exit "$(cat "$STUB_CLAUDE_STREAM.retro.exit" 2>/dev/null || echo 0)"
+fi
 printf '%s\\0' "$@" > "$STUB_CALLS.argv"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
 cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
@@ -252,6 +262,7 @@ class LoopScriptTest(unittest.TestCase):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
         code, lines, err = self.run_loop("--max-iterations", "2")
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
@@ -462,6 +473,7 @@ class LoopScriptTest(unittest.TestCase):
         self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
 
         code, lines, err = self.run_loop("--max-iterations", "1")
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual("ERROR iteration 1 failed: is_error set, success", lines[0])
@@ -524,6 +536,7 @@ class LoopScriptTest(unittest.TestCase):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
         code, lines, err = self.run_loop("--max-iterations", "3", STUB_GH_EMPTY="1")
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"], lines)
@@ -535,6 +548,7 @@ class LoopScriptTest(unittest.TestCase):
         (run / "control.json").write_text(json.dumps({"max_iterations": 5, "stop": "after-step"}), encoding="utf-8")
 
         code, lines, err = self.run_loop()
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], lines)
@@ -606,6 +620,7 @@ class LoopScriptTest(unittest.TestCase):
         self.write_control(until="2000-01-01 00:00")
 
         code, lines, err = self.run_loop()
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(["END after 0 iterations: until 2000-01-01 00:00 reached (0 ok, 0 failed)"], lines)
@@ -623,6 +638,7 @@ class LoopScriptTest(unittest.TestCase):
         self.write_control(until=past_in_berlin)
 
         code, lines, err = self.run_loop()
+        lines = self.without_retro(lines)
 
         self.assertEqual(f"END after 0 iterations: until {past_in_berlin} reached (0 ok, 0 failed)", lines[0])
 
@@ -639,6 +655,7 @@ class LoopScriptTest(unittest.TestCase):
 
         process, _ = self.start_sleeping(6, "--max-duration", "1", RALPH_MINUTE_SECONDS="5")
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
                           "END after 1 iterations: max_duration 1 reached (1 ok, 0 failed)"], out)
@@ -671,6 +688,7 @@ class LoopScriptTest(unittest.TestCase):
         process, _ = self.start_sleeping(4, "--max-iteration-duration", "1", "--limit-stop", "after-iteration",
                                          RALPH_GRACE_SECONDS="30")
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual("after-iteration", self.read_control()["stop"])
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
@@ -681,6 +699,7 @@ class LoopScriptTest(unittest.TestCase):
         sleep_pid = int(sleep_pid_file.read_text(encoding="utf-8").strip())
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertFalse(self.is_running(sleep_pid))
         self.assertEqual("STOP iteration 1 killed (max_iteration_duration 1 reached and grace period over)", out[0])
@@ -703,6 +722,7 @@ class LoopScriptTest(unittest.TestCase):
         self.edit_control(stop="after-iteration")
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
                           "END after 1 iterations: stop requested (after-iteration) (1 ok, 0 failed)"], out)
@@ -713,6 +733,7 @@ class LoopScriptTest(unittest.TestCase):
         self.edit_control(stop="after-step")
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
                           "END after 1 iterations: stop requested (after-step) (1 ok, 0 failed)"], out)
@@ -721,6 +742,7 @@ class LoopScriptTest(unittest.TestCase):
         self.write_control(stop=True)
 
         code, lines, err = self.run_loop()
+        lines = self.without_retro(lines)
 
         self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], lines)
 
@@ -775,7 +797,7 @@ class LoopScriptTest(unittest.TestCase):
     def run_with_pr_sleep(self, **extra):
         process = self.start_with_pr_sleep(**extra)
         out, err = process.communicate(timeout=60)
-        return process.returncode, out.splitlines(), err
+        return process.returncode, self.without_retro(out.splitlines()), err
 
     def assert_iteration_started(self, outcome):
         code, lines, err = outcome
@@ -859,9 +881,10 @@ class LoopScriptTest(unittest.TestCase):
         self.serve("pulls", [[]])
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(self.NO_WORK, out)
-        self.assertFalse(self.calls.exists())
+        self.assertNotIn("/implement-spec", self.calls.read_text(encoding="utf-8"), "an iteration was started")
 
     def test_waiting_PR_turning_red_starts_an_iteration(self):
         self.pr(check_conclusions=(None,))
@@ -893,6 +916,7 @@ class LoopScriptTest(unittest.TestCase):
         self.edit_control(stop="after-step")
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], out)
 
@@ -901,6 +925,7 @@ class LoopScriptTest(unittest.TestCase):
         process = self.start("--max-duration", "2", STUB_GH_CLAIMED="1", RALPH_PR_SLEEP_SECONDS="600")
 
         out = process.communicate(timeout=30)[0].splitlines()
+        out = self.without_retro(out)
 
         self.assertEqual(["END after 0 iterations: max_duration 2 reached (0 ok, 0 failed)"], out)
 
@@ -1025,6 +1050,7 @@ class LoopScriptTest(unittest.TestCase):
         self.limit_then_success()
 
         code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="2")
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(4, len(lines), lines)
@@ -1202,6 +1228,7 @@ class LoopScriptTest(unittest.TestCase):
         run = self.seed_run(["ok"], max_iterations=2)
 
         code, lines, err = self.run_loop("--resume-only")
+        lines = self.without_retro(lines)
 
         self.assertEqual(0, code, err)
         self.assertEqual(["iteration 2 ok: 3 turns, cost $0.25",
@@ -1217,6 +1244,208 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
         self.assertIn("already has a running loop", lines[0])
         self.finish(process, 30)
+
+    # The retro iteration (#418): the last iteration of a run that ends on a stop after-step or after-iteration, a
+    # reached limit acting as one of them, or an empty frontier; never after a stop now. It is not counted in the
+    # iterations or the ok and failed counts of the run.
+
+    RETRO_OK = "retro iteration ok: 3 turns, cost $0.25"
+
+    @staticmethod
+    def without_retro(lines):
+        """The monitor lines of the run without those of the retro iteration, for the tests of other behaviour."""
+        return [line for line in lines if not re.match(r"retro iteration ok|ERROR retro failed|DENIAL retro", line)]
+
+    def retro_calls(self):
+        return [line for line in self.calls.read_text(encoding="utf-8").splitlines() if line.startswith("-p /retro")] \
+            if self.calls.exists() else []
+
+    def retro_option(self, name):
+        arguments = Path(f"{self.calls}.retro.argv").read_bytes().decode("utf-8").split("\0")[:-1]
+        self.assertIn(name, arguments, f"the retro was started without {name}; its arguments: {arguments}")
+        return arguments[arguments.index(name) + 1]
+
+    def test_retro_runs_as_the_last_iteration_after_a_stop_after_step(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _ = self.start_sleeping(2, "--max-iterations", "5")
+        self.edit_control(stop="after-step")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25", self.RETRO_OK,
+                          "END after 1 iterations: stop requested (after-step) (1 ok, 0 failed)"], out)
+        self.assertEqual(1, len(self.retro_calls()), self.calls.read_text(encoding="utf-8"))
+
+    def test_retro_runs_as_the_last_iteration_after_a_stop_after_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _ = self.start_sleeping(2, "--max-iterations", "5")
+        self.edit_control(stop="after-iteration")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25", self.RETRO_OK,
+                          "END after 1 iterations: stop requested (after-iteration) (1 ok, 0 failed)"], out)
+
+    def test_retro_runs_after_an_empty_frontier(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop(STUB_GH_EMPTY="1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual([self.RETRO_OK, "END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"],
+                         lines)
+
+    def test_retro_runs_after_a_reached_limit_acting_as_after_step_or_after_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25", self.RETRO_OK,
+                          "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"], lines)
+
+    def test_retro_runs_after_a_reached_limit_that_acts_as_after_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", "--limit-stop", "after-iteration")
+
+        self.assertEqual(self.RETRO_OK, lines[1], lines)
+        self.assertEqual(1, len(self.retro_calls()))
+
+    def test_no_retro_after_a_stop_now_in_the_control_file(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.write_control(stop="now")
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(["END after 0 iterations: stop requested (now) (0 ok, 0 failed)"], lines)
+        self.assertEqual([], self.retro_calls(), "a retro started after stop now")
+
+    def test_no_retro_after_a_stop_now_that_killed_an_iteration(self):
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iterations", "5")
+        self.edit_control(stop="now")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual("STOP iteration 1 killed (stop now)", out[0], out)
+        self.assertEqual("END after 1 iterations: stop requested (now) (0 ok, 1 failed)", out[-1])
+        self.assertEqual([], self.retro_calls(), "a retro started after stop now")
+
+    def test_no_retro_after_a_reached_limit_acting_as_now(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.write_control(until="2000-01-01 00:00", limit_stop="now")
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(["END after 0 iterations: until 2000-01-01 00:00 reached (0 ok, 0 failed)"], lines)
+        self.assertEqual([], self.retro_calls(), "a retro started after a limit acting as stop now")
+
+    def test_no_retro_when_the_usage_limit_does_not_lift(self):
+        self.stream.write_text(USAGE_LIMIT + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="1", RALPH_LIMIT_CAP_SECONDS="2", seconds=15)
+
+        self.assertEqual("END after 0 iterations: usage limit not lifted within 2 s (0 ok, 0 failed)", lines[-1])
+        self.assertEqual([], self.retro_calls(), "a retro started while the usage limit is on")
+
+    def test_retro_is_started_non_interactively_with_the_loop_permissions_and_the_run_directory(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop(STUB_GH_EMPTY="1")
+
+        run = self.only_run_dir()
+        self.assertEqual(f"/retro non-interactive {run}", self.retro_option("-p"))
+        self.assertEqual(f"RALPH_RUN_DIR={run}\n", Path(f"{self.calls}.retro").read_text(encoding="utf-8"))
+        self.assertEqual("sonnet", self.retro_option("--model"))
+        rules = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
+        self.assertEqual(rules.strip(), self.retro_option("--append-system-prompt").strip())
+        self.assertEqual("Agent,Bash(./mvnw:*),Bash(gh api:*),Bash(git:*),Bash(python3 scripts/:*),Edit,Read,Skill,Write",
+                         ",".join(sorted(self.retro_option("--allowedTools").split(","))))
+        settings = json.loads(self.retro_option("--settings"))
+        self.assertTrue(settings["disableAllHooks"])
+        self.assertIn("Bash(git push origin main*)", settings["permissions"]["deny"])
+        self.assertIn("stdin bytes: 0", self.calls.read_text(encoding="utf-8"))
+
+    def test_retro_is_not_counted_as_an_iteration_and_keeps_its_own_files(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        run = self.only_run_dir()
+        status = self.read_status(run)
+        self.assertEqual((1, 1, 0, "ended"), (status["iteration"], status["ok"], status["failed"], status["state"]))
+        self.assertTrue((run / "retro-result.json").exists())
+        self.assertTrue((run / "retro-stream.jsonl").exists())
+        self.assertTrue((run / "retro-done").exists(), "the finished retro left no retro-done marker")
+        self.assertFalse((run / "result-2.json").exists(), "the retro was filed as an iteration")
+
+    def test_failed_retro_prints_an_error_line_and_the_run_still_ends(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.stream}.retro").write_text(ERROR_RESULT + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop(STUB_GH_EMPTY="1")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["ERROR retro failed: is_error set, success",
+                          "END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"], lines)
+
+    def test_denials_of_the_retro_get_a_denial_line(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.stream}.retro").write_text(DENIED + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop(STUB_GH_EMPTY="1")
+
+        self.assertEqual(["retro iteration ok: 2 turns, cost $0.1", 'DENIAL retro: ["Bash"]'], lines[:2])
+
+    def test_a_restart_after_a_finished_retro_does_not_run_it_again(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok"], max_iterations=1)
+        (run / "retro-done").touch()
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(["END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"], lines)
+        self.assertEqual([], self.retro_calls(), "the retro ran twice")
+
+    def test_a_restart_after_a_killed_script_runs_the_retro_that_did_not_finish(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.seed_run(["ok"], max_iterations=1)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(self.RETRO_OK, lines[0], lines)
+        self.assertEqual(1, len(self.retro_calls()))
+
+
+LEARNINGS = Path("docs") / "agents" / "goRalph-learnings.md"
+LEARNINGS_LINE_LIMIT = 40
+
+
+class LearningsFileTest(unittest.TestCase):
+    """The loop's learnings file: every iteration reads it, so it stays short (a retro condenses it; raising the
+    limit is the owner's decision through a retro ticket, and then this constant)."""
+
+    def test_the_file_exists_and_holds_lessons(self):
+        text = (REPO / LEARNINGS).read_text(encoding="utf-8")
+        self.assertGreaterEqual(sum(1 for line in text.splitlines() if line.startswith("- ")), 3,
+                                f"{LEARNINGS} holds fewer than three lessons (lines starting with '- ')")
+
+    def test_the_file_stays_at_or_under_its_line_limit(self):
+        lines = (REPO / LEARNINGS).read_text(encoding="utf-8").splitlines()
+        self.assertLessEqual(len(lines), LEARNINGS_LINE_LIMIT,
+                             f"{LEARNINGS} has {len(lines)} lines, limit {LEARNINGS_LINE_LIMIT}: condense it (general "
+                             f"lessons to docs/agents/implementer-brief.md, obsolete ones deleted); if it still does "
+                             f"not fit, file a retro ticket that proposes raising the limit")
+
+    def test_every_iteration_is_pointed_to_the_file_by_the_loop_rules(self):
+        rules = (REPO / SKILL_SCRIPTS / "iteration-rules.md").read_text(encoding="utf-8")
+        self.assertIn("docs/agents/goRalph-learnings.md", rules, "the loop rules do not point to the learnings file")
+
+    def test_the_retro_rules_name_the_non_interactive_mode_its_allowed_changes_and_the_ticket_labels(self):
+        skill = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
+        for expected in ("non-interactive", "docs/agents/implementer-brief.md", "docs/agents/goRalph-learnings.md",
+                         "`retro`", "`ready-for-human`", "options", "recommendation"):
+            self.assertIn(expected, skill, f"the retro rules do not mention {expected}")
 
 
 if __name__ == "__main__":

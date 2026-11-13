@@ -1,0 +1,12 @@
+# Retro rules (non-interactive mode)
+
+You are the retro iteration of a goRalph run: `/retro non-interactive <run directory>`, a fresh process with nobody to ask. These rules replace steps 1 and 4 of the `retro` skill (the style guide is optional, and you present nothing to a user) and override its interactive parts. Design: `docs/agents/ralph-loop.md`. Never ask a question; every decision that is not yours goes into a ticket.
+
+- **Sources**: the run directory (`stream-<i>.jsonl`, `result-<i>.json`, `control.json`, `status.json`), the tickets and PRs of the spec through `gh api`, the escalation comments on the tickets, and `docs/agents/goRalph-learnings.md`. Read the streams selectively (search for errors, denials and retries), they are large.
+- **Changes you make yourself**, and only these:
+  - lessons for implementers in `docs/agents/implementer-brief.md`;
+  - the loop's learnings file `docs/agents/goRalph-learnings.md`.
+  Make them in your own branch `retro-<spec>-<YYYY-MM-DD>` (run `git ls-remote --heads origin <name>` first; an existing name means another date suffix) and your own PR, reviewed and merged like every other PR (`docs/agents/implementation.md`, "One ticket, one review, one PR": review chain, squash auto-merge, one CI wait). No change when there is no lesson worth keeping.
+- **Everything else becomes a ticket**: rules, model defaults, gates, prompts, skills, checks, coding standards, docs, any change to the loop. Create one issue per proposal through `gh api` with the labels `retro` and `ready-for-human` (check the labels with `gh api repos/marmer/hamcrest-matcher-generator/labels --paginate`; create `retro` there first only when it is missing). The body holds the problem with evidence (run, iteration, ticket), two or three options and your recommendation. Do not implement it, and do not add `ready-for-agent`: the owner decides at the next `/goRalph` start.
+- **Learnings file limit**: the file stays at 40 lines or fewer (`LearningsFileTest` pins it). Add a lesson only when it is specific to the loop and not already stated; when the file is full, condense first: move lessons that hold for every implementation into `implementer-brief.md`, delete obsolete ones, merge duplicates. If it still does not fit, do not exceed the limit: file a retro ticket that proposes raising the limit or restructuring the file.
+- **End** with a short result: the PR (if any) and the tickets you filed.
