@@ -288,3 +288,40 @@ Zuverlaessige Erkennung im Loop-Script: **Nicht** `.result` lesen (fehlt bei Abb
 - Enkel-Spawn (Subagent startet Subagent) und Hoechstwert-Aenderung von `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` (8.4): nicht getestet.
 - PR-Anlage per REST aus einem Kind (8.2): nicht getestet.
 - Ursache des JaCoCo-Fehlers (8.6): Annahme.
+
+## 9. Trial on a test spec (#421)
+
+Probelauf des gebauten Loops (Spec #410) auf einer Test-Spec (#443) mit drei Dokumentations-Tickets (#444 bis #446, Haiku). Drei Laeufe, vom Orchestrator von Hand gestartet; alle Aussagen sind Beobachtungen (b) aus diesen Laeufen, jeweils ein Lauf je Frage, also keine Statistik. Nicht Teil dieses Trials: der Lauf auf einer echten kleinen Spec (#422).
+
+### 9.1 Ergebnis je Abnahmefrage
+
+| Frage | Beobachtung | Urteil |
+|---|---|---|
+| `permissions.deny` in `-p` ohne Hooks | Haiku-Probe (3 Turns) mit `disableAllHooks`: `git branch -D` und `git push --force --dry-run` abgelehnt, obwohl `Bash(git:*)` erlaubt ist; `permission_denials` im Ergebnis gefuellt. | haelt (nur die zwei Regeln geprueft, nicht alle vier) |
+| `stop: now` | Lauf 1, ca. 2,5 min in Iteration 1: das Script beendete `claude` innerhalb von weniger als 60 s nach der Aenderung der Control-Datei; Zeilen `STOP iteration 1 killed (stop now)` und `END ... (0 ok, 1 failed)`, kein Retro, `ended`-Marker geschrieben. | wie spezifiziert; Branches und Worktrees `ticket-444`/`ticket-446` (lokal committet, nicht gepusht) bleiben liegen |
+| `stop: after-step` | Lauf 2, Stop 21 s nach Start von Iteration 2: die Iteration lief von allein zu Ende (13 Turns, ca. 1,5 min), danach Retro, dann `END (2 ok, 0 failed)`. Das Script achtet den Stop. Der Orchestrator las `control.json` nur einmal am Start, nie zwischen Arbeitsschritten (siehe 9.3). | Script-Seite ok; "nach dem Arbeitsschritt" haengt am Orchestrator und ist nicht erfuellt (D1) |
+| `stop: after-iteration` | Lauf 3, gesetzt waehrend der wiederaufgenommenen Iteration 1: Iteration endete ok, dann Retro, dann `END after 1 iterations: stop requested (after-iteration) (1 ok, 0 failed)`. | wie spezifiziert |
+| Resume nach `kill -9` | Lauf 3: `kill -9` auf Script und `claude` mitten in Iteration 1, danach `loop.sh 443 --resume-only`. Dasselbe Run-Verzeichnis (`443-20261113-230118`) wurde fortgesetzt, Status `running`, Iteration 1 (die getoetete) lief erneut, die verwaiste Lock-Datei wurde akzeptiert. | funktioniert |
+| Control-Datei, waehrend Subagents laufen | Der Orchestrator einer Iteration liest `control.json` hoechstens einmal am Start (Iteration 2 von Lauf 2: ein Read, vor dem Stop). Subagents sehen die Datei nie. Ein Stop `after-step` wirkt daher erst, wenn die Iteration fertig ist; nur `now` greift mitten drin (das Script killt, der Orchestrator ist nicht beteiligt). | Luecke (D1) |
+| `max_parallel` | Auf 1 gesetzt; der Orchestrator startete in beiden Iterationen trotzdem je 3 Implementer parallel. Er suchte in `loop.sh` nach "parallel" und fand nichts im Prompt-Pfad. Wie `$RALPH_RUN_DIR` zu nutzen ist, war ihm unklar. | wird ignoriert (D1) |
+| VM wach waehrend Loop (2 h) | measurement pending, see #421 comment | offen |
+
+Zur Einordnung der letzten Zeile: der Lauf ueber ca. 2 h ist kein vollstaendiger 2-h-Loop mit Implementierungsarbeit. Er misst nur, ob die VM wach bleibt, solange das Script laeuft und die Hauptsession einen Monitor betreibt; der Monitor-Test ist ein Heartbeat einer sonst untaetigen Session. Ob echte Arbeit (Maven, Parallelkinder) die VM laenger oder kuerzer wach haelt, ist damit nicht gezeigt (Annahme). Auch offen aus 8.8: zaehlt ein laufender Monitor der Hauptsession als Aktivitaet.
+
+### 9.2 Kosten
+
+Lauf 2: Iteration 1 0,43 USD, Iteration 2 0,37 USD, Retro 0,32 USD; Lauf 3: Iteration 1 0,30 USD, Retro 0,37 USD; Lauf 1 nicht erfasst. Zusammen etwa 1,8 USD und mehr; die Haiku-Implementer stehen nicht im `result`-Betrag der Iteration, die Summe ist also eine Untergrenze (c). Der Trial hat zudem Reste auf `main` und im Repo hinterlassen: `docs/research/ralph-trial/issue-py-subcommands.md` (ueber #447 gemergt), offene PRs #448 und #449 (Testdateien) und #453 (Learnings des Retros).
+
+### 9.3 Defekte und Tickets
+
+| Id | Defekt | Ticket |
+|---|---|---|
+| D1 | `max_parallel` wird vom Orchestrator ignoriert (F3, F11) und `control.json` wird zwischen Arbeitsschritten nicht neu gelesen, so dass `after-step` nicht wirkt (F8) | **needs ticket** |
+| D2 | `gh pr merge --auto --squash` wird abgelehnt (Allow-Liste kennt nur `Bash(gh api:*)`), das MCP-Tool `enable_pr_auto_merge` fehlt in `-p`, per REST gibt es keinen Weg (GraphQL in Cloud-Sessions gesperrt): PRs bleiben offen ohne Auto-Merge, `is_error` bleibt false, nur eine `DENIAL`-Zeile (F6) | #450 |
+| D3 | Die Frontier schliesst Tickets mit offenem PR nicht aus; es gab keine Uebergabenotiz, Iteration 2 implementierte #444 bis #446 ein zweites Mal und endete mit einer interaktiven Rueckfrage im Ergebnistext statt Ticket-Kommentar plus `needs-info` (F9) | #451 |
+| D4 | `issue-status.py --help` wird als Spec-Nummer gelesen (F10) | #452 |
+| D5 | Kind kann `$RALPH_RUN_DIR` nicht lesen (`;`-Ketten und `$VAR`-Expansion abgelehnt), daher keine Uebergabenotiz und kein Ticket-Kommentar (F14, F12: 6 und 7 `DENIAL`-Zeilen in Retro und Iteration) | #455 |
+| D6 | Handmerge von #447 ueber die Merge-API, waehrend `Domain docs in sync` rot oder offen war; die Regel "nie von Hand mergen" hat im Loop keine Sperre (F14) | teils #455; die fehlende Merge-Sperre bei rotem CI **needs ticket** |
+| D7 | Flaky `test_sleeping_script_reports_the_waiting_state` (rote Stufe "Test the agent scripts" bei #447, F16) | #454 |
+
+Ohne Fehler: F13 (Resume), F1, F2, F15. F4 (liegengebliebene Branches nach `stop now`) und F7 (die "Killed"-Meldung der Shell erscheint nur, wenn stderr mitgeschrieben wird; der Skill leitet nur stdout um) sind Beobachtungen ohne Ticket. Ergebnis der Pipeline im Trial: von drei Tickets wurde eines gemergt (F16).
