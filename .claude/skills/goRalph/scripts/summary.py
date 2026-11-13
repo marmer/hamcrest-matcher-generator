@@ -7,8 +7,8 @@ Reads the run's `started` file, `status.json` and `ended` marker and asks the tr
 since the run started, escalation comments on the spec's tickets, open `needs-info` tickets of the spec and `retro`
 tickets created since the run started. It never reads the iteration streams or results. A failing or timed-out tracker call
 ends it with one message on stderr, exit 1 and nothing on stdout. Every list is read completely (`--paginate`).
-Environment: RALPH_GH_TIMEOUT_SECONDS, the limit of one `gh api` call in seconds (default 60, as in loop.sh; a value that is
-not a number ends it with the one message and exit 1).
+Environment: RALPH_GH_TIMEOUT_SECONDS, the limit of one `gh api` call in seconds (an integer of at least 1, default 60, as in
+loop.sh; anything else ends it with an `ERROR` line on stderr and exit 2). The tracker call is `ghapi.py`.
 
 A comment counts as an escalation when it (1) mentions "escalat", (2) names a model transition (`haiku -> sonnet`,
 `haiku => sonnet`, a unicode arrow, `haiku to sonnet`) or (3) is a closing line `Model: sonnet|opus ...`, i.e. the
@@ -16,7 +16,6 @@ ticket ran above the default model. The rule is loose on purpose: a comment like
 false positive.
 """
 import json
-import os
 import re
 import subprocess
 import sys
@@ -24,19 +23,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPO = "repos/marmer/hamcrest-matcher-generator"
+from ghapi import REPO, SettingError, gh_list, timeout_seconds
 MODELS = "haiku|sonnet|opus"
 ESCALATION = re.compile(rf"escalat|\b({MODELS})\s*(->|=>|\u2192|to)\s*({MODELS})\b|\bModel:\s*(sonnet|opus)\b", re.I)
-
-
-def gh(path):
-    """All items of a list endpoint: `--slurp` wraps the pages of `--paginate` in one array, flattened here."""
-    timeout = float(os.environ.get("RALPH_GH_TIMEOUT_SECONDS", "60"))
-    done = subprocess.run(["gh", "api", "--paginate", "--slurp", path], capture_output=True, text=True, timeout=timeout)
-    if done.returncode != 0:
-        raise RuntimeError(f"gh api {path} failed: {done.stderr.strip()}")
-    pages = json.loads(done.stdout) if done.stdout.strip() else []
-    return [item for page in pages for item in page]
 
 
 def collect(run_dir):
@@ -48,13 +37,13 @@ def collect(run_dir):
     since = datetime.fromtimestamp(started, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     spec = int(status["spec"])
 
-    pulls = gh(f"{REPO}/pulls?state=closed&sort=updated&direction=desc&per_page=100")
-    tickets = gh(f"{REPO}/issues/{spec}/sub_issues?per_page=100")
-    retro = gh(f"{REPO}/issues?labels=retro&state=all&since={since}&per_page=100")
+    pulls = gh_list(f"{REPO}/pulls?state=closed&sort=updated&direction=desc&per_page=100")
+    tickets = gh_list(f"{REPO}/issues/{spec}/sub_issues?per_page=100")
+    retro = gh_list(f"{REPO}/issues?labels=retro&state=all&since={since}&per_page=100")
 
     escalations = []
     for ticket in tickets:
-        for comment in gh(f"{REPO}/issues/{ticket['number']}/comments?since={since}&per_page=100"):
+        for comment in gh_list(f"{REPO}/issues/{ticket['number']}/comments?since={since}&per_page=100"):
             if comment["created_at"] >= since and ESCALATION.search(comment["body"]):
                 escalations.append({"ticket": ticket["number"], "title": ticket["title"],
                                     "comment": comment["body"], "url": comment["html_url"]})
@@ -82,7 +71,11 @@ def main(argv):
         print("usage: summary.py <run directory>", file=sys.stderr)
         return 2
     try:
+        timeout_seconds()
         data = collect(argv[1])
+    except SettingError as error:
+        print(f"ERROR {error}", file=sys.stderr)
+        return 2
     except (RuntimeError, subprocess.SubprocessError, OSError, ValueError, KeyError) as error:
         print(f"summary.py: {error}", file=sys.stderr)
         return 1

@@ -8,8 +8,8 @@
 # with an ERROR line (exit 1) when the spec has no run or only finished ones.
 # The options write the control file of the run (control.json); the limits and a stop request in that file are read
 # before every iteration, so editing the file changes the running loop. Stop kinds: after-iteration, after-step, now.
-# Stdout carries only the monitor lines (iteration end, ERROR, DENIAL, STOP for a deliberate kill, END); the rest goes
-# to the run directory.
+# Stdout carries only the monitor lines (iteration end, retro end, ERROR, DENIAL, WAIT for a usage limit, STOP for a
+# deliberate kill, END); the rest goes to the run directory.
 # The last iteration of a run that ends on a stop after-step or after-iteration, a reached limit acting as one of them
 # or an empty frontier is a retro: one `claude -p "/retro non-interactive <run dir>"` call (no retro after a stop now,
 # a limit acting as now, a failed check or a usage limit that does not lift). It is no iteration of the run.
@@ -75,7 +75,7 @@ limit_cap_seconds="${RALPH_LIMIT_CAP_SECONDS:-$((315 * minute_seconds))}"  # 5 h
 [[ "$limit_cap_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_LIMIT_CAP_SECONDS needs a positive integer, got '$limit_cap_seconds'"
 
 spec="${1:-}"
-[ -n "$spec" ] || die "usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND]"
+[ -n "$spec" ] || die "usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND] [--resume-only]"
 shift
 if ! [[ "$spec" =~ ^[0-9]+$ ]]; then die "spec must be an issue number, got '$spec'"; fi
 declare -A cli=()
@@ -337,6 +337,17 @@ denial_line() { # label, result file
   fi
 }
 
+# The one claude call of an iteration and of the retro: starts it in the background (stdin from /dev/null, stdout to the stream file, stderr to
+# its own file, the lock descriptor closed) and sets $child. The rules file is the system prompt addition.
+start_claude() { # prompt, rules file name in $HERE, stream file, stderr file
+  claude -p "$1" --model sonnet \
+    --settings "$settings" --allowedTools "$allowed" \
+    --append-system-prompt "$(cat "$HERE/$2")" \
+    --output-format stream-json --verbose \
+    < /dev/null > "$3" 2> "$4" 9>&- &
+  child=$!
+}
+
 # The retro iteration (#418): one `claude -p "/retro non-interactive <run dir>"` call, the last of a run that ends on
 # a stop after-step or after-iteration, a reached limit acting as one of them, or an empty frontier. It is no
 # iteration of the run (not counted in the iteration number, ok or failed, no stop `now` or duration watcher); its
@@ -347,12 +358,7 @@ run_retro() {
   [ -e "$run/retro-done" ] && return 0
   write_status retro "$iteration"
   local rc=0 failure
-  claude -p "/retro non-interactive $run" --model sonnet \
-    --settings "$settings" --allowedTools "$allowed" \
-    --append-system-prompt "$(cat "$HERE/retro-rules.md")" \
-    --output-format stream-json --verbose \
-    < /dev/null > "$run/retro-stream.jsonl" 2> "$run/retro-stderr.txt" 9>&- &
-  child=$!
+  start_claude "/retro non-interactive $run" retro-rules.md "$run/retro-stream.jsonl" "$run/retro-stderr.txt"
   wait "$child" || rc=$?
   child=""
   jq -c 'select(.type == "result")' "$run/retro-stream.jsonl" 2>/dev/null | tail -1 > "$run/retro-result.json"
@@ -433,12 +439,7 @@ while true; do
   killed="$run/killed-$iteration"
   rm -f "$killed"
   set -m  # own process group for the child (pgid = its pid)
-  claude -p "/implement-spec $spec" --model sonnet \
-    --settings "$settings" --allowedTools "$allowed" \
-    --append-system-prompt "$(cat "$HERE/iteration-rules.md")" \
-    --output-format stream-json --verbose \
-    < /dev/null > "$stream" 2> "$run/stderr-$iteration.txt" 9>&- &
-  child=$!
+  start_claude "/implement-spec $spec" iteration-rules.md "$stream" "$run/stderr-$iteration.txt"
   watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
   watcher=$!
   set +m

@@ -156,11 +156,19 @@ class SummaryTest(unittest.TestCase):
     def test_a_tracker_call_that_times_out_ends_with_one_message_and_no_traceback(self):
         stub = Path(self.path.split(":")[0]) / "gh"
         stub.write_text("#!/usr/bin/env bash\nsleep 5\n", encoding="utf-8")
-        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_TIMEOUT_SECONDS="0.2")
+        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_TIMEOUT_SECONDS="1")
         done = subprocess.run([sys.executable, str(SCRIPT), str(self.run_dir)], env=env,
                               capture_output=True, text=True, timeout=60)
         self.assertEqual((1, ""), (done.returncode, done.stdout))
         self.assertNotIn("Traceback", done.stderr)
+
+    def test_a_wrong_gh_timeout_is_refused_with_an_error_line_and_exit_2_like_in_loop_sh(self):
+        for value in ("abc", "0", "1.5", "-3", ""):
+            env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_TIMEOUT_SECONDS=value)
+            done = subprocess.run([sys.executable, str(SCRIPT), str(self.run_dir)], env=env, capture_output=True,
+                                  text=True, timeout=60)
+            self.assertEqual((2, ""), (done.returncode, done.stdout), f"value {value!r}: {done.stderr}")
+            self.assertIn(f"ERROR RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '{value}'", done.stderr)
 
     def test_a_failing_tracker_call_ends_with_an_error_and_no_data(self):
         (self.gh_dir / "pulls.json").unlink()
