@@ -62,6 +62,9 @@ unknown or missing license, so a new dependency with an unseen license name must
 Every published jar carries `META-INF/LICENSE`, `META-INF/NOTICE` and `THIRD-PARTY.txt`, which a per-module test checks.
 Build plugins and the `docs` module's tooling are not checked.
 
+| Enforcer rules (part of the Build and verify matrix)
+| Maven Enforcer runs in every module of the reactor in `validate`, so `verify` runs it first. `enforceBytecodeVersion` caps the bytecode at Java 17 (the `docs` module excludes Structurizr, <<adr-0003,ADR 0003>>). `requireUpperBoundDeps` fails when two versions of one dependency meet in a module's tree and the one chosen is not the highest, so the higher version is managed in the root `dependencyManagement`. `requirePluginVersions` fails on a plugin without a version, so every plugin version is pinned in the root `pluginManagement`, the default lifecycle plugins included.
+
 | Static analysis (JDK 21+ profile `static-analysis`, part of `Verify JDK 21`, `Verify JDK 25` and `Verify JDK latest`)
 a|
 * Spotless checks google-java-format (AOSP style, 4-space indentation) and the SPDX header in every Java and Kotlin source
