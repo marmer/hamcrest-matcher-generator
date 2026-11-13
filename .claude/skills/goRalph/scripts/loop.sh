@@ -1,7 +1,11 @@
 # Ralph loop: fresh `claude -p "/implement-spec <spec>"` orchestrators, one per iteration.
 # Run it through bash (no executable bit needed):
 #   bash loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN]
-#                       [--until "YYYY-MM-DD HH:MM [Zone/Name]"] [--max-parallel N] [--limit-stop KIND]
+#                       [--until "YYYY-MM-DD HH:MM [Zone/Name]"] [--max-parallel N] [--limit-stop KIND] [--resume-only]
+# A start continues the unfinished run of the spec (no `ended` marker in its run directory: iteration number and the
+# ok and failed counts are recovered from the result and outcome files) or begins a new run when there is none.
+# --resume-only never begins a run: it is for the main session's check-in, which restarts a dead script, and refuses
+# with an ERROR line (exit 1) when the spec has no run or only finished ones.
 # The options write the control file of the run (control.json); the limits and a stop request in that file are read
 # before every iteration, so editing the file changes the running loop. Stop kinds: after-iteration, after-step, now.
 # Stdout carries only the monitor lines (iteration end, ERROR, DENIAL, STOP for a deliberate kill, END); the rest goes
@@ -72,6 +76,7 @@ spec="${1:-}"
 shift
 if ! [[ "$spec" =~ ^[0-9]+$ ]]; then die "spec must be an issue number, got '$spec'"; fi
 declare -A cli=()
+resume_only=""  # --resume-only: never begins a run, so it also refuses a finished one (the check-in must not restart those)
 while [ $# -gt 0 ]; do
   case "$1" in
     --max-iterations|--max-duration|--max-iteration-duration|--max-parallel|--until|--limit-stop)
@@ -81,6 +86,7 @@ while [ $# -gt 0 ]; do
       check_value "$key" "$2"
       cli[$key]="$2"
       shift 2 ;;
+    --resume-only) resume_only=1; shift ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -111,6 +117,14 @@ run=""
 for candidate in "$HOME_DIR"/runs/"$spec"-*; do
   if [ -d "$candidate" ] && [ ! -e "$candidate/ended" ]; then run="$candidate"; fi
 done
+if [ -z "$run" ] && [ -n "$resume_only" ]; then
+  if compgen -G "$HOME_DIR/runs/$spec-*" >/dev/null; then
+    echo "ERROR run of #$spec already ended, nothing to resume"
+  else
+    echo "ERROR no run of #$spec to resume"
+  fi
+  exit 1
+fi
 if [ -z "$run" ]; then
   run="$HOME_DIR/runs/$spec-$(date +%Y%m%d-%H%M%S)"
   mkdir -p "$run"
@@ -273,15 +287,24 @@ limit_reason() {
   fi
 }
 
+# Milliseconds of the monotonic clock (/proc/uptime, 10 ms resolution, sets mono_now): a pause must not be cut short
+# or stretched by a step of the wall clock, which `date` follows.
+mono_ms() {
+  local up
+  read -r up _ < /proc/uptime
+  mono_now=$((10#${up%.*} * 1000 + 10#${up#*.} * 10))
+}
+
 # Sleeps the given seconds in poll-sized slices, so a stop request or a reached limit ends the sleep early (status 1).
 # Sets slept_seconds: the given seconds after a full sleep, the whole elapsed seconds after an early end.
 sleep_unless_stopped() {
-  local begin deadline now  # in milliseconds: whole seconds would end the pause up to a second early
-  begin="$(date +%s%3N)"
+  local begin deadline  # in milliseconds: whole seconds would end the pause up to a second early
+  mono_ms
+  begin="$mono_now"
   deadline=$((begin + $1 * 1000))
   slept_seconds="$1"
-  while now="$(date +%s%3N)"; [ "$now" -lt "$deadline" ]; do
-    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then slept_seconds=$(((now - begin) / 1000)); return 1; fi
+  while mono_ms; [ "$mono_now" -lt "$deadline" ]; do
+    if [ -n "$(effective_stop)" ] || [ -n "$(limit_reason)" ]; then slept_seconds=$(((mono_now - begin) / 1000)); return 1; fi
     sleep "$poll_seconds" & sleeper=$!
     wait "$sleeper"
     sleeper=""
@@ -306,11 +329,14 @@ allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(python3 scripts/:*),Read
 
 cd "$REPO" || exit 2
 iteration=0
+# After a restart the iteration number and the counts come from the files of the finished iterations; an iteration
+# whose outcome file is missing (the script died between its result and its outcome) counts as failed.
 for existing in "$run"/result-*.json; do
   [ -e "$existing" ] || continue
   n="${existing##*/result-}"
   n="${n%.json}"
   if [ "$n" -gt "$iteration" ]; then iteration="$n"; fi
+  if [ "$(cat "$run/outcome-$n" 2>/dev/null)" = ok ]; then ok_count=$((ok_count + 1)); else failed_count=$((failed_count + 1)); fi
 done
 
 while true; do
@@ -399,14 +425,14 @@ while true; do
     failure="no result field, $(jq -r '.subtype // "no subtype"' "$result")"
   fi
 
+  if [ -s "$killed" ] || [ -n "$failure" ]; then outcome=failed; else outcome=ok; fi
+  echo "$outcome" > "$run/outcome-$iteration"
+  if [ "$outcome" = ok ]; then ok_count=$((ok_count + 1)); else failed_count=$((failed_count + 1)); fi
   if [ -s "$killed" ]; then
-    failed_count=$((failed_count + 1))
     echo "STOP iteration $iteration killed ($(cat "$killed"))"
   elif [ -n "$failure" ]; then
-    failed_count=$((failed_count + 1))
     echo "ERROR iteration $iteration failed: $failure"
   else
-    ok_count=$((ok_count + 1))
     echo "iteration $iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$result")"
   fi
   if [ -s "$result" ] && jq -e '(.permission_denials // []) | length > 0' "$result" >/dev/null 2>&1; then

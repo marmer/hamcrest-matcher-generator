@@ -4,7 +4,7 @@ The script runs through bash from a scratch repository copy, with stub `claude` 
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
 STUB_CLAUDE_PID.sleep); a file STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
-STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds is appended to STUB_CALLS.times); the stub
+STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on the monotonic clock (/proc/uptime, resolution 0.01 s) is appended to STUB_CALLS.times); the stub
 `gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
@@ -29,7 +29,7 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
-date +%s.%N >> "$STUB_CALLS.times"
+cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
 n="$(wc -l < "$STUB_CALLS.times")"
 if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then
   echo $$ > "$STUB_CLAUDE_PID"
@@ -66,6 +66,11 @@ case "$endpoint" in
     if [ -e "$STUB_GH_DIR/$name" ]; then cat "$STUB_GH_DIR/$name"; else echo '[]'; fi ;;
 esac
 """
+
+# /proc/uptime counts hundredths of a second, truncated: the script's pause and the logged call times each lose less
+# than 0.01 s, and the pause starts after the first call began, so a pause that is not cut short measures at least
+# its length minus that resolution (the wall clock would break this when it steps).
+CLOCK_RESOLUTION = 0.02
 
 SUCCESS = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
                       "num_turns": 3, "total_cost_usd": 0.25, "permission_denials": []})
@@ -897,7 +902,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
                           "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"], lines[2:])
         first, second = self.call_times()
-        self.assertGreaterEqual(second - first, 2)
+        self.assertGreaterEqual(second - first, 2 - CLOCK_RESOLUTION, f"call times {first}, {second}")
 
     def test_usage_limit_is_recognised_from_the_result_not_the_exit_code(self):
         self.limit_then_success(exit_code="0")
@@ -936,7 +941,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(3, len([line for line in lines if line.startswith("WAIT over")]), lines)
         times = self.call_times()
         self.assertEqual(4, len(times), times)
-        self.assertGreaterEqual(times[-1] - times[0], 3)
+        self.assertGreaterEqual(times[-1] - times[0], 3 - CLOCK_RESOLUTION, f"call times {times}")
 
     def test_cap_is_five_hours_and_fifteen_minutes_by_default(self):
         self.limit_then_success()
@@ -967,6 +972,120 @@ class LoopScriptTest(unittest.TestCase):
         code, lines, err = self.run_loop(RALPH_LIMIT_CAP_SECONDS="soon", seconds=8)
         self.assertEqual(2, code, err)
         self.assertEqual(["ERROR RALPH_LIMIT_CAP_SECONDS needs a positive integer, got 'soon'"], lines)
+
+    def seed_run(self, outcomes, ended=False, **control):
+        """An earlier run of the spec: one result file per iteration, its outcome file where the outcome is given
+        (ok or failed; None leaves it out, as a script that died between the result and the outcome would)."""
+        run = self.home / "runs" / "42-20260101-000000"
+        run.mkdir(parents=True)
+        (run / "control.json").write_text(json.dumps(control), encoding="utf-8")
+        (run / "started").write_text(str(int(time.time())), encoding="utf-8")
+        for number, outcome in enumerate(outcomes, start=1):
+            (run / f"result-{number}.json").write_text(SUCCESS + "\n", encoding="utf-8")
+            if outcome:
+                (run / f"outcome-{number}").write_text(outcome + "\n", encoding="utf-8")
+        if ended:
+            (run / "ended").touch()
+        return run
+
+    def read_status(self, run):
+        return json.loads((run / "status.json").read_text(encoding="utf-8"))
+
+    def test_new_start_continues_the_unfinished_run_without_repeating_finished_iterations(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", "ok"], max_iterations=3)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(1, self.calls.read_text(encoding="utf-8").count("-p /implement-spec 42"),
+                         f"finished iterations were repeated; monitor lines: {lines}")
+        self.assertEqual(run, self.only_run_dir(), "the restart started a second run directory")
+        self.assertTrue((run / "result-3.json").exists(), "the restart did not continue with iteration 3")
+
+    def test_resume_recovers_the_ok_and_failed_counts_from_the_finished_iterations(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", "failed"], max_iterations=3)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("END after 3 iterations: max_iterations 3 reached (2 ok, 1 failed)", lines[-1])
+        status = self.read_status(run)
+        self.assertEqual((3, 2, 1), (status["iteration"], status["ok"], status["failed"]),
+                         f"status.json after the resume: {status}")
+
+    def test_resume_counts_an_iteration_without_a_recorded_outcome_as_failed(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", None], max_iterations=2)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        status = self.read_status(run)
+        self.assertEqual(status["iteration"], status["ok"] + status["failed"], f"status.json: {status}")
+        self.assertEqual("END after 2 iterations: max_iterations 2 reached (1 ok, 1 failed)", lines[-1])
+
+    def test_outcomes_of_new_iterations_are_recorded_for_a_later_resume(self):
+        self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        outcome = self.only_run_dir() / "outcome-1"
+        self.assertTrue(outcome.exists(), "no outcome file after a failed iteration")
+        self.assertEqual("failed", outcome.read_text(encoding="utf-8").strip())
+
+    def test_start_after_a_finished_run_begins_a_new_run_and_leaves_the_finished_one_alone(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        finished = self.seed_run(["ok", "ok"], ended=True, max_iterations=2)
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        runs = sorted((self.home / "runs").iterdir())
+        self.assertEqual(2, len(runs), f"runs: {runs}; monitor lines: {lines}")
+        self.assertFalse((finished / "status.json").exists(), "the finished run was written to")
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_resume_only_refuses_a_finished_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        finished = self.seed_run(["ok"], ended=True, max_iterations=3)
+
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertEqual(["ERROR run of #42 already ended, nothing to resume"], lines)
+        self.assertFalse(self.calls.exists(), "an iteration started on a finished run")
+        self.assertEqual([finished], list((self.home / "runs").iterdir()), "resume-only created a run directory")
+
+    def test_resume_only_without_any_run_refuses(self):
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertEqual(["ERROR no run of #42 to resume"], lines)
+        self.assertFalse((self.home / "runs").exists() and any((self.home / "runs").iterdir()),
+                         "resume-only created a run directory")
+
+    def test_resume_only_continues_the_unfinished_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok"], max_iterations=2)
+
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["iteration 2 ok: 3 turns, cost $0.25",
+                          "END after 2 iterations: max_iterations 2 reached (2 ok, 0 failed)"], lines)
+        self.assertEqual(run, self.only_run_dir())
+
+    def test_resume_only_is_refused_while_the_run_is_still_running(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, sleep_pid_file = self.start_sleeping(3, "--max-iterations", "1")
+
+        code, lines, err = self.run_loop("--resume-only", seconds=20)
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertIn("already has a running loop", lines[0])
+        self.finish(process, 30)
 
 
 if __name__ == "__main__":
