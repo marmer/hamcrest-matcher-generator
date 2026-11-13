@@ -3,8 +3,9 @@
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
-STUB_CLAUDE_PID.sleep); the stub `gh`
-serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
+STUB_CLAUDE_PID.sleep); a file STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
+STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds is appended to STUB_CALLS.times); the stub
+`gh` serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one claimed one (the number 7, so not
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
 `commits_<sha>_check-runs`), `[]` when there is none; a file `fail_<name>` makes that endpoint fail, and every such
@@ -28,11 +29,17 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
+date +%s.%N >> "$STUB_CALLS.times"
+n="$(wc -l < "$STUB_CALLS.times")"
 if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then
   echo $$ > "$STUB_CLAUDE_PID"
   sleep "$STUB_CLAUDE_SLEEP" &
   echo $! > "$STUB_CLAUDE_PID.sleep"
   wait
+fi
+if [ -e "$STUB_CLAUDE_STREAM.$n" ]; then
+  cat "$STUB_CLAUDE_STREAM.$n"
+  exit "$(cat "$STUB_CLAUDE_STREAM.$n.exit" 2>/dev/null || echo 0)"
 fi
 cat "$STUB_CLAUDE_STREAM"
 exit "${STUB_CLAUDE_EXIT:-0}"
@@ -66,6 +73,9 @@ ERROR_RESULT = json.dumps({"type": "result", "subtype": "success", "is_error": T
                            "num_turns": 1, "total_cost_usd": 0.01, "permission_denials": []})
 TURN_LIMIT = json.dumps({"type": "result", "subtype": "error_max_turns", "is_error": False,
                          "num_turns": 41, "total_cost_usd": 1.5, "permission_denials": []})
+USAGE_LIMIT = json.dumps({"type": "result", "subtype": "success", "is_error": True,
+                          "result": "You've hit your limit · resets 3pm (Europe/Berlin)", "api_error_status": 429,
+                          "num_turns": 1, "total_cost_usd": 0, "permission_denials": []})
 DENIED = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
                      "num_turns": 2, "total_cost_usd": 0.1, "permission_denials": [{"tool_name": "Bash"}]})
 
@@ -113,10 +123,20 @@ class LoopScriptTest(unittest.TestCase):
         self.addCleanup(process.kill)
         return process
 
-    def run_loop(self, *args, **extra):
+    def run_loop(self, *args, seconds=60, **extra):
         process = self.start(*args, **extra)
-        out, err = process.communicate(timeout=60)
+        out, err = self.finish(process, seconds)
         return process.returncode, out.splitlines(), err
+
+    def finish(self, process, seconds):
+        """Waits for the loop; one that is still running after the given seconds is killed and fails the test with
+        the monitor lines it had printed."""
+        try:
+            return process.communicate(timeout=seconds)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            out, err = process.communicate()
+            self.fail(f"the loop did not end within {seconds} s; its monitor lines: {out.splitlines()}")
 
     @staticmethod
     def wait_until(condition, what, seconds=15):
@@ -855,6 +875,98 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertEqual(2, code, err)
         self.assertEqual(["ERROR RALPH_PR_SLEEP_SECONDS needs a positive integer, got 'soon'"], lines)
+
+    def call_times(self):
+        times = Path(f"{self.calls}.times")
+        return [float(line) for line in times.read_text(encoding="utf-8").split()] if times.exists() else []
+
+    def limit_then_success(self, exit_code="1"):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        Path(f"{self.stream}.1").write_text(USAGE_LIMIT + "\n", encoding="utf-8")
+        Path(f"{self.stream}.1.exit").write_text(exit_code, encoding="utf-8")
+
+    def test_usage_limit_waits_for_the_retry_and_runs_the_iteration_again(self):
+        self.limit_then_success()
+
+        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="2")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(4, len(lines), lines)
+        self.assertRegex(lines[0], r"^WAIT usage limit hit in iteration 1: no claude process until the retry in 2 s")
+        self.assertRegex(lines[1], r"^WAIT over, retrying")
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)"], lines[2:])
+        first, second = self.call_times()
+        self.assertGreaterEqual(second - first, 2)
+
+    def test_usage_limit_is_recognised_from_the_result_not_the_exit_code(self):
+        self.limit_then_success(exit_code="0")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="1")
+
+        self.assertEqual(0, code, err)
+        self.assertTrue(lines[0].startswith("WAIT usage limit hit"), lines)
+
+    def test_failed_iteration_with_a_non_zero_exit_is_not_a_usage_limit(self):
+        self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_EXIT="1", RALPH_LIMIT_RETRY_SECONDS="1",
+                                         seconds=8)
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("ERROR iteration 1 failed: exit 1, success", lines[0])
+        self.assertEqual(1, len(self.call_times()))
+
+    def test_usage_limit_counts_neither_as_an_iteration_nor_as_a_failure(self):
+        self.limit_then_success()
+
+        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="1")
+
+        self.assertEqual("END after 1 iterations: max_iterations 1 reached (1 ok, 0 failed)", lines[-1])
+        self.assertEqual(2, len(self.call_times()))
+
+    def test_usage_limit_that_does_not_lift_ends_the_run_cleanly_at_the_cap(self):
+        self.stream.write_text(USAGE_LIMIT + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="1", RALPH_LIMIT_CAP_SECONDS="3", seconds=15)
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("END after 0 iterations: usage limit not lifted within 3 s (0 ok, 0 failed)", lines[-1])
+        self.assertEqual(3, len([line for line in lines if line.startswith("WAIT usage limit")]), lines)
+        self.assertEqual(3, len([line for line in lines if line.startswith("WAIT over")]), lines)
+        times = self.call_times()
+        self.assertEqual(4, len(times), times)
+        self.assertGreaterEqual(times[-1] - times[0], 3)
+
+    def test_cap_is_five_hours_and_fifteen_minutes_by_default(self):
+        self.limit_then_success()
+
+        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_LIMIT_RETRY_SECONDS="1", RALPH_MINUTE_SECONDS="2")
+
+        self.assertEqual(0, code, err)
+        self.assertIn("(waited 0 of 630 s)", lines[0])
+
+    def test_stop_request_ends_the_usage_limit_wait(self):
+        self.stream.write_text(USAGE_LIMIT + "\n", encoding="utf-8")
+        process = self.start(RALPH_LIMIT_RETRY_SECONDS="60")
+        self.wait_until(lambda: self.call_times(), "the first iteration")
+        self.wait_until(lambda: (self.home / "runs").exists() and any((self.home / "runs").glob("*/limit-*")),
+                        "the usage limit wait")
+        self.edit_control(stop="after-step")
+
+        out, err = self.finish(process, 20)
+
+        self.assertEqual(0, process.returncode, err)
+        self.assertRegex(out, r"WAIT over, stop requested")
+        self.assertIn("END after 0 iterations: stop requested (after-step)", out)
+
+    def test_wrong_usage_limit_knobs_are_refused(self):
+        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="0", seconds=8)
+        self.assertEqual(2, code, err)
+        self.assertEqual(["ERROR RALPH_LIMIT_RETRY_SECONDS needs a positive integer, got '0'"], lines)
+        code, lines, err = self.run_loop(RALPH_LIMIT_CAP_SECONDS="soon", seconds=8)
+        self.assertEqual(2, code, err)
+        self.assertEqual(["ERROR RALPH_LIMIT_CAP_SECONDS needs a positive integer, got 'soon'"], lines)
 
 
 if __name__ == "__main__":
