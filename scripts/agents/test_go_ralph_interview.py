@@ -52,6 +52,7 @@ class InterviewTest(unittest.TestCase):
         stub.parent.mkdir()
         stub.write_text(STUB_GH, encoding="utf-8")
         stub.chmod(0o755)
+        self.ralph_home = root / "ralph-home"
         self.path = f"{stub.parent}:{os.environ['PATH']}"
         for name in ("sub_issues", "retro-human", "retro-agent"):
             self.fixture(name, [])
@@ -60,7 +61,7 @@ class InterviewTest(unittest.TestCase):
         (self.gh_dir / f"{name}.json").write_text(json.dumps([data]), encoding="utf-8")
 
     def run_script(self, *args):
-        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir))
+        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_HOME=str(self.ralph_home))
         return subprocess.run([sys.executable, str(SCRIPT), *args], env=env, capture_output=True, text=True,
                               timeout=60)
 
@@ -70,8 +71,25 @@ class InterviewTest(unittest.TestCase):
         return json.loads(done.stdout)
 
     def test_nothing_open_means_no_interview(self):
-        self.assertEqual({"spec": 42, "interview": False, "needs_info": [], "retro": [], "carry_over": []},
-                         self.listing())
+        self.assertEqual({"spec": 42, "interview": False, "needs_info": [], "retro": [], "carry_over": [],
+                          "unfinished_run": False}, self.listing())
+
+    def make_run(self, name, ended=False):
+        run = self.ralph_home / "runs" / name
+        run.mkdir(parents=True)
+        if ended:
+            (run / "ended").write_text("", encoding="utf-8")
+
+    def test_a_run_directory_of_the_spec_without_an_ended_marker_is_an_unfinished_run(self):
+        self.make_run("42-20260101-000000", ended=True)
+        self.make_run("42-20260102-000000")
+        self.assertTrue(self.listing()["unfinished_run"], "an unfinished run of #42 was not reported")
+
+    def test_finished_runs_and_runs_of_other_specs_are_no_unfinished_run(self):
+        self.make_run("42-20260101-000000", ended=True)
+        self.make_run("420-20260102-000000")
+        self.make_run("4-20260102-000000")
+        self.assertFalse(self.listing()["unfinished_run"], "a run of another spec or a finished run counted")
 
     def test_open_needs_info_tickets_of_the_spec_are_listed(self):
         self.fixture("sub_issues", [issue(7, "needs-info"), issue(8, "ready-for-agent"),

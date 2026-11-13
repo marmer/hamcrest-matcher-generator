@@ -4,7 +4,7 @@ Usage (through python3, no executable bit needed):
   python3 interview.py list <spec>              # what the interview has to ask, as JSON
   python3 interview.py attach <spec> <n>...     # add retro tickets <n> to the spec as sub-issues
 
-`list` prints `{"spec", "interview", "needs_info", "retro", "carry_over"}`, every ticket as `number`, `title`, `url`:
+`list` prints `{"spec", "interview", "needs_info", "retro", "carry_over", "unfinished_run"}`, every ticket as `number`, `title`, `url`:
   needs_info   open sub-issues of the spec labelled `needs-info` (questions the owner has to answer);
   retro        open issues labelled `retro` and `ready-for-human` (proposals the owner accepts or drops), without
                those already listed as needs_info and without pull requests;
@@ -12,6 +12,10 @@ Usage (through python3, no executable bit needed):
                sub-issue of any spec, this one or another, cannot get a second parent): retro tickets
                accepted in an earlier interview, which the next run takes. `attach` makes them sub-issues (a ticket it cannot attach is reported on stderr, the others are still attached, exit 1), i.e. frontier
                work, so it belongs to the start of that run, before the new interview.
+  unfinished_run  true when the spec has a run directory under RALPH_HOME (default ~/.goRalph) `runs/<spec>-*` without an
+               `ended` marker, as loop.sh finds it: the start continues that run instead of beginning a new one, so
+               the caller attaches `carry_over` only when this is false (they are taken by the next run, not by a
+               run that is continued).
 `interview` is true when needs_info or retro is not empty; otherwise the run starts at once.
 
 An accepted retro ticket is no sub-issue of the spec until the next start attaches it; the frontier of the loop
@@ -23,8 +27,10 @@ limit of one `gh api` call in seconds (an integer of at least 1, default 60, as 
 an `ERROR` line on stderr and exit 2). The tracker call itself is `ghapi.py`, shared with summary.py.
 """
 import json
+import os
 import subprocess
 import sys
+from pathlib import Path
 
 from ghapi import REPO, SettingError, gh, gh_list, timeout_seconds
 
@@ -50,7 +56,14 @@ def collect(spec):
     carry_over = [i for i in gh_list(f"{REPO}/issues?labels=retro,ready-for-agent&state=open&per_page=100")
                   if is_open_issue(i) and i["number"] not in in_spec and not i.get("parent_issue_url")]
     return {"spec": spec, "interview": bool(needs_info or retro), "needs_info": [brief(t) for t in needs_info],
-            "retro": [brief(i) for i in retro], "carry_over": [brief(i) for i in carry_over]}
+            "retro": [brief(i) for i in retro], "carry_over": [brief(i) for i in carry_over],
+            "unfinished_run": has_unfinished_run(spec)}
+
+
+def has_unfinished_run(spec):
+    """As in loop.sh: a run directory `runs/<spec>-*` under RALPH_HOME (default ~/.goRalph) without an `ended` marker."""
+    home = Path(os.environ.get("RALPH_HOME") or Path.home() / ".goRalph")
+    return any(run.is_dir() and not (run / "ended").exists() for run in (home / "runs").glob(f"{spec}-*"))
 
 
 def attach(spec, numbers):
