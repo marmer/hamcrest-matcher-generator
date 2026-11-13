@@ -172,7 +172,7 @@ class LoopScriptTest(unittest.TestCase):
         tools.mkdir()
         for directory in ("/usr/bin", "/bin"):
             for tool in Path(directory).iterdir():
-                if tool.name != "flock" and not (tools / tool.name).exists():
+                if tool.name != "flock" and not os.path.lexists(tools / tool.name):
                     (tools / tool.name).symlink_to(tool)
         for stub in ("claude", "gh"):
             (tools / stub).unlink(missing_ok=True)
