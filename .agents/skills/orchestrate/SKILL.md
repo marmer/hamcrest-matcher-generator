@@ -36,7 +36,7 @@ A result that misses the bar goes back as a targeted follow-up instruction to th
 
 ### Escalation
 
-Count **attempts** per subtask as "Attempts" in `docs/agents/implementation.md` says: only after a report that missed the quality bar; review rounds and CI fixes do not count.
+Count **attempts** per subtask: the first run, every follow-up and every fix each count as one.
 
 1. Haiku gets **3 attempts**.
 2. After the third miss, discard the work and restart the subtask on **Sonnet** with a fresh handoff that adds what Haiku got wrong. Sonnet gets **2 attempts**.
