@@ -220,9 +220,11 @@ Stand: 2026-11-12 (Abend), `claude` im Container 2.1.322 (Kinder, Haiku); die Ho
 
 **Doku (a, code.claude.com/docs/en/claude-code-on-the-web, Abschnitt "Environment expired"):** "Cloud sessions stop after a period of inactivity and the session's VM is reclaimed. A session counts as inactive while it waits for you to approve an MCP connector tool call or to sign in to an MCP server, and it can expire during that wait." Beim Wiederoeffnen wird eine frische VM bereitgestellt; **wiederhergestellt**: Konversationsverlauf; **nicht wiederhergestellt**: laufende Shell-Commands, Subagents, session-scoped Scheduled Tasks und `/loop`. Die Doku nennt **keine** Zahl fuer die Inaktivitaetsdauer und sagt nicht, ob ein Hintergrundprozess als Aktivitaet zaehlt. `read_documentation` (Tool der Host-Session, Thema `session.resources`) lieferte keine Aussage zu Idle/Lebensdauer.
 
-**Schluss:** Belegt (a+b): Nach Inaktivitaet wird die VM gestoppt und spaeter per Resume neu gestartet; Dateien bleiben, Prozesse sind weg. **Ob ein detachtes Script das verhindert: unbekannt, Auswertung ausstehend.** Konsequenz fuer den Ralph-Loop bleibt wie in 2.4/5.3: Zustand in Dateien/Git, Script idempotent neu startbar, Hauptsession startet es nach Resume erneut.
+**Schluss:** Belegt (a+b): Nach Inaktivitaet wird die VM gestoppt und spaeter per Resume neu gestartet; Dateien bleiben, Prozesse sind weg. **Ein detachtes Script verhindert das nicht (Heartbeat-Ergebnis unten, b).** Konsequenz fuer den Ralph-Loop bleibt wie in 2.4/5.3: Zustand in Dateien/Git, Script idempotent neu startbar, Hauptsession startet es nach Resume erneut.
 
-**Heartbeat-Experiment (laeuft):** Detachter Prozess (`setsid nohup`), schreibt alle 60 s einen UTC-Zeitstempel, beendet sich nach 90 min selbst und schreibt dann `END ...`.
+**Heartbeat-Ergebnis (b, ausgewertet 2026-11-13 06:03 UTC):** Ein detachter Hintergrundprozess haelt die VM **nicht** wach. Das Log hat `START 2026-11-12T22:17:06Z` plus 12 Zeitstempel im 60-s-Takt, der letzte ist `22:28:06Z`; es gibt keine Luecke dazwischen und **keine** `END`-Zeile (der Prozess hat sich also nicht selbst nach 90 min beendet). Neuer Boot: `uptime -s` = 2026-11-13 06:01:25, `pgrep -f heartbeat.sh` findet nichts. Die letzte Aktivitaet der Hauptsession war um ca. 22:23-22:24 (letzte gelesene Benachrichtigung 22:23:13), der Prozess blieb also nur etwa 4-5 Minuten nach der letzten Session-Aktivitaet am Leben. Das passt zu der Doku-Angabe "nach einigen Minuten" aus Abschnitt 5.3. Annahme (c): Die VM wurde um 22:28 eingefroren bzw. gestoppt; aus dem Log allein ist nicht unterscheidbar, ob eingefroren oder beendet. Ebenfalls unbekannt: ob ein laufender Vordergrund-Tool-Aufruf der Hauptsession (z.B. `Monitor` oder ein langer `Bash`-Aufruf) die Session als aktiv zaehlt; das war nicht Teil des Tests. Konsequenz: Ein Ralph-Loop, den die Hauptsession nur startet und dann nicht mehr beobachtet, laeuft nicht zuverlaessig laenger als wenige Minuten. Die Hauptsession muss waehrend der Laufzeit aktiv bleiben (offen, womit: Monitor/laufender Tool-Aufruf), oder der Loop muss nach Resume idempotent neu gestartet werden.
+
+**Heartbeat-Experiment (Aufbau):** Detachter Prozess (`setsid nohup`), schreibt alle 60 s einen UTC-Zeitstempel, beendet sich nach 90 min selbst und schreibt dann `END ...`.
 
 - Script: `.../scratchpad/heartbeat.sh`; Log: `/tmp/claude-0/-home-user-hamcrest-matcher-generator/892e21a3-3ba3-5b24-b4aa-a167a08bed45/scratchpad/heartbeat.log`; PID **1539** (Start 22:17:06 UTC, Boot-Zeit der VM steht in der `START`-Zeile: `uptime_since=2026-11-12 22:13:58`).
 - Test nur aussagekraeftig, wenn die Session nach dem Start **idle** ist (Agentenlauf haelt sie aktiv). Der Auftraggeber startet nach der Idle-Phase eine Auswertung mit **einem Befehl** (Lueckengrenze 90 s):
@@ -281,7 +283,7 @@ Zuverlaessige Erkennung im Loop-Script: **Nicht** `.result` lesen (fehlt bei Abb
 
 ### 8.8 Offen geblieben
 
-- Haelt ein Hintergrundprozess die VM wach: **Auswertung ausstehend** (8.1, Heartbeat PID 1539).
+- Haelt ein Hintergrundprozess die VM wach: **nein**, er stoppte ca. 4-5 min nach der letzten Session-Aktivitaet (8.1). Offen: zaehlt ein laufender Monitor-/Bash-Aufruf der Hauptsession als Aktivitaet?
 - Exit-Code/`subtype` von `-p` bei endgueltigem 429/Usage-Limit (8.3): nur Doku-Teilwissen, nicht verifiziert.
 - Enkel-Spawn (Subagent startet Subagent) und Hoechstwert-Aenderung von `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` (8.4): nicht getestet.
 - PR-Anlage per REST aus einem Kind (8.2): nicht getestet.
