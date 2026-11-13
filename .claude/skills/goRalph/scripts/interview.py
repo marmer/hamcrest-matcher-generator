@@ -8,8 +8,9 @@ Usage (through python3, no executable bit needed):
   needs_info   open sub-issues of the spec labelled `needs-info` (questions the owner has to answer);
   retro        open issues labelled `retro` and `ready-for-human` (proposals the owner accepts or drops), without
                those already listed as needs_info and without pull requests;
-  carry_over   open issues labelled `retro` and `ready-for-agent` that are not sub-issues of the spec: retro tickets
-               accepted in an earlier interview, which the next run takes. `attach` makes them sub-issues, i.e. frontier
+  carry_over   open issues labelled `retro` and `ready-for-agent` that have no parent issue yet (a ticket that is a
+               sub-issue of any spec, this one or another, cannot get a second parent): retro tickets
+               accepted in an earlier interview, which the next run takes. `attach` makes them sub-issues (a ticket it cannot attach is reported on stderr, the others are still attached, exit 1), i.e. frontier
                work, so it belongs to the start of that run, before the new interview.
 `interview` is true when needs_info or retro is not empty; otherwise the run starts at once.
 
@@ -60,15 +61,22 @@ def collect(spec):
     retro = [i for i in gh_list(f"{REPO}/issues?labels=retro,ready-for-human&state=open&per_page=100")
              if is_open_issue(i) and i["number"] not in asked]
     carry_over = [i for i in gh_list(f"{REPO}/issues?labels=retro,ready-for-agent&state=open&per_page=100")
-                  if is_open_issue(i) and i["number"] not in in_spec]
+                  if is_open_issue(i) and i["number"] not in in_spec and not i.get("parent_issue_url")]
     return {"spec": spec, "interview": bool(needs_info or retro), "needs_info": [brief(t) for t in needs_info],
             "retro": [brief(i) for i in retro], "carry_over": [brief(i) for i in carry_over]}
 
 
 def attach(spec, numbers):
+    """Attaches every ticket it can; returns the numbers that failed, each reported on stderr."""
+    failed = []
     for number in numbers:
-        database_id = gh(f"{REPO}/issues/{number}")["id"]
-        gh("-X", "POST", f"{REPO}/issues/{spec}/sub_issues", "-F", f"sub_issue_id={database_id}")
+        try:
+            database_id = gh(f"{REPO}/issues/{number}")["id"]
+            gh("-X", "POST", f"{REPO}/issues/{spec}/sub_issues", "-F", f"sub_issue_id={database_id}")
+        except (RuntimeError, subprocess.SubprocessError, OSError, ValueError, KeyError) as error:
+            print(f"interview.py: could not attach #{number}: {error}", file=sys.stderr)
+            failed.append(number)
+    return failed
 
 
 def main(argv):
@@ -81,7 +89,8 @@ def main(argv):
         if argv[1] == "list":
             print(json.dumps(collect(int(numbers[0])), indent=2))
         else:
-            attach(int(numbers[0]), numbers[1:])
+            if attach(int(numbers[0]), numbers[1:]):
+                return 1
     except (RuntimeError, subprocess.SubprocessError, OSError, ValueError, KeyError) as error:
         print(f"interview.py: {error}", file=sys.stderr)
         return 1

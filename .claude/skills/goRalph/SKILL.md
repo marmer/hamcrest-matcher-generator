@@ -24,7 +24,7 @@ A **goRalph run** works one spec through a script, not through this session: `sc
    - **Retro ticket accepted**: plan it right away. Add to its body (`PATCH`, keep the text) the acceptance criteria and the line `**Implementer model:** <haiku|sonnet|opus>` with a reason, per "Implementer model per ticket" in `docs/agents/implementation.md`; swap `ready-for-human` for `ready-for-agent`. Do NOT make it a sub-issue of the spec: the loop's frontier reads only the sub-issues, so the starting run does not take it, and the next start attaches it as `carry_over` above.
    - **Retro ticket dropped**: comment the reason, then `issue.py close <n> --reason not_planned`.
    - Answered `needs-info` tickets are sub-issues already, so they join the starting run.
-   Design: `docs/agents/ralph-loop.md`; the interview text itself is not scripted (trial #421).
+   An `attach` that exits 1 names the tickets it could not attach (stderr): tell the owner in one sentence and go on. Design: `docs/agents/ralph-loop.md`; the interview text itself is not scripted.
 3. **Watch first**: arm the Monitor tool on `tail -n 0 -F ~/.goRalph/monitor-<spec>.log` (create the file with `mkdir -p ~/.goRalph && touch ~/.goRalph/monitor-<spec>.log` before), so an immediate `ERROR` (lock refused, bad option) is not lost.
 4. **Start** the script in the background, its stdout into that file, through `bash` (no executable bit needed):
    ```bash

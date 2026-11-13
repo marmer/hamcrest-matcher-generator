@@ -95,6 +95,20 @@ class InterviewTest(unittest.TestCase):
         self.assertEqual([{"number": 61, "title": "Title 61", "url": "u61"}], data["carry_over"])
         self.assertFalse(data["interview"])
 
+    def test_a_retro_ticket_that_already_has_a_parent_is_not_carried_over(self):
+        self.fixture("retro-agent", [issue(61, "retro", "ready-for-agent",
+                                           parent_issue_url="https://api.example.test/repos/x/issues/30"),
+                                     issue(62, "retro", "ready-for-agent")])
+        self.assertEqual([62], [t["number"] for t in self.listing()["carry_over"]])
+
+    def test_a_ticket_that_cannot_be_attached_is_reported_and_the_others_are_still_attached(self):
+        self.fixture("issue-62", {"id": 9062, "number": 62})
+        done = self.run_script("attach", "42", "61", "62")
+        self.assertEqual(1, done.returncode)
+        self.assertIn("interview.py: could not attach #61", done.stderr)
+        calls = (self.gh_dir / "calls.log").read_text(encoding="utf-8")
+        self.assertIn("sub_issue_id=9062", calls)
+
     def test_a_ticket_that_asks_and_is_a_retro_ticket_is_listed_once_as_a_question(self):
         self.fixture("sub_issues", [issue(7, "retro", "needs-info")])
         self.fixture("retro-human", [issue(7, "retro", "needs-info", "ready-for-human")])
