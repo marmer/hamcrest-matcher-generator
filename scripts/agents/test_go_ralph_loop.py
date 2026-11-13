@@ -123,10 +123,20 @@ class LoopScriptTest(unittest.TestCase):
         self.addCleanup(process.kill)
         return process
 
-    def run_loop(self, *args, **extra):
+    def run_loop(self, *args, seconds=60, **extra):
         process = self.start(*args, **extra)
-        out, err = process.communicate(timeout=60)
+        out, err = self.finish(process, seconds)
         return process.returncode, out.splitlines(), err
+
+    def finish(self, process, seconds):
+        """Waits for the loop; one that is still running after the given seconds is killed and fails the test with
+        the monitor lines it had printed."""
+        try:
+            return process.communicate(timeout=seconds)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            out, err = process.communicate()
+            self.fail(f"the loop did not end within {seconds} s; its monitor lines: {out.splitlines()}")
 
     @staticmethod
     def wait_until(condition, what, seconds=15):
@@ -900,7 +910,8 @@ class LoopScriptTest(unittest.TestCase):
     def test_failed_iteration_with_a_non_zero_exit_is_not_a_usage_limit(self):
         self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
 
-        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_EXIT="1", RALPH_LIMIT_RETRY_SECONDS="1")
+        code, lines, err = self.run_loop("--max-iterations", "1", STUB_CLAUDE_EXIT="1", RALPH_LIMIT_RETRY_SECONDS="1",
+                                         seconds=8)
 
         self.assertEqual(0, code, err)
         self.assertEqual("ERROR iteration 1 failed: exit 1, success", lines[0])
@@ -917,7 +928,7 @@ class LoopScriptTest(unittest.TestCase):
     def test_usage_limit_that_does_not_lift_ends_the_run_cleanly_at_the_cap(self):
         self.stream.write_text(USAGE_LIMIT + "\n", encoding="utf-8")
 
-        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="1", RALPH_LIMIT_CAP_SECONDS="3")
+        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="1", RALPH_LIMIT_CAP_SECONDS="3", seconds=15)
 
         self.assertEqual(0, code, err)
         self.assertEqual("END after 0 iterations: usage limit not lifted within 3 s (0 ok, 0 failed)", lines[-1])
@@ -943,17 +954,17 @@ class LoopScriptTest(unittest.TestCase):
                         "the usage limit wait")
         self.edit_control(stop="after-step")
 
-        out, err = process.communicate(timeout=20)
+        out, err = self.finish(process, 20)
 
         self.assertEqual(0, process.returncode, err)
         self.assertRegex(out, r"WAIT over, stop requested")
         self.assertIn("END after 0 iterations: stop requested (after-step)", out)
 
     def test_wrong_usage_limit_knobs_are_refused(self):
-        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="0")
+        code, lines, err = self.run_loop(RALPH_LIMIT_RETRY_SECONDS="0", seconds=8)
         self.assertEqual(2, code, err)
         self.assertEqual(["ERROR RALPH_LIMIT_RETRY_SECONDS needs a positive integer, got '0'"], lines)
-        code, lines, err = self.run_loop(RALPH_LIMIT_CAP_SECONDS="soon")
+        code, lines, err = self.run_loop(RALPH_LIMIT_CAP_SECONDS="soon", seconds=8)
         self.assertEqual(2, code, err)
         self.assertEqual(["ERROR RALPH_LIMIT_CAP_SECONDS needs a positive integer, got 'soon'"], lines)
 
