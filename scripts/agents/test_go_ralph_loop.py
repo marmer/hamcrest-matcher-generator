@@ -1376,6 +1376,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual((1, 1, 0, "ended"), (status["iteration"], status["ok"], status["failed"], status["state"]))
         self.assertTrue((run / "retro-result.json").exists())
         self.assertTrue((run / "retro-stream.jsonl").exists())
+        self.assertTrue((run / "retro-done").exists(), "the finished retro left no retro-done marker")
         self.assertFalse((run / "result-2.json").exists(), "the retro was filed as an iteration")
 
     def test_failed_retro_prints_an_error_line_and_the_run_still_ends(self):
