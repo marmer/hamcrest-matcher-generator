@@ -76,7 +76,7 @@ spec="${1:-}"
 shift
 if ! [[ "$spec" =~ ^[0-9]+$ ]]; then die "spec must be an issue number, got '$spec'"; fi
 declare -A cli=()
-resume_only=""
+resume_only=""  # --resume-only: never begins a run, so it also refuses a finished one (the check-in must not restart those)
 while [ $# -gt 0 ]; do
   case "$1" in
     --max-iterations|--max-duration|--max-iteration-duration|--max-parallel|--until|--limit-stop)
@@ -416,17 +416,14 @@ while true; do
     failure="no result field, $(jq -r '.subtype // "no subtype"' "$result")"
   fi
 
+  if [ -s "$killed" ] || [ -n "$failure" ]; then outcome=failed; else outcome=ok; fi
+  echo "$outcome" > "$run/outcome-$iteration"
+  if [ "$outcome" = ok ]; then ok_count=$((ok_count + 1)); else failed_count=$((failed_count + 1)); fi
   if [ -s "$killed" ]; then
-    failed_count=$((failed_count + 1))
-    echo failed > "$run/outcome-$iteration"
     echo "STOP iteration $iteration killed ($(cat "$killed"))"
   elif [ -n "$failure" ]; then
-    failed_count=$((failed_count + 1))
-    echo failed > "$run/outcome-$iteration"
     echo "ERROR iteration $iteration failed: $failure"
   else
-    ok_count=$((ok_count + 1))
-    echo ok > "$run/outcome-$iteration"
     echo "iteration $iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$result")"
   fi
   if [ -s "$result" ] && jq -e '(.permission_denials // []) | length > 0' "$result" >/dev/null 2>&1; then
