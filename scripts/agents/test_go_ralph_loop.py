@@ -968,6 +968,120 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(2, code, err)
         self.assertEqual(["ERROR RALPH_LIMIT_CAP_SECONDS needs a positive integer, got 'soon'"], lines)
 
+    def seed_run(self, outcomes, ended=False, **control):
+        """An earlier run of the spec: one result file per iteration, its outcome file where the outcome is given
+        (ok or failed; None leaves it out, as a script that died between the result and the outcome would)."""
+        run = self.home / "runs" / "42-20260101-000000"
+        run.mkdir(parents=True)
+        (run / "control.json").write_text(json.dumps(control), encoding="utf-8")
+        (run / "started").write_text(str(int(time.time())), encoding="utf-8")
+        for number, outcome in enumerate(outcomes, start=1):
+            (run / f"result-{number}.json").write_text(SUCCESS + "\n", encoding="utf-8")
+            if outcome:
+                (run / f"outcome-{number}").write_text(outcome + "\n", encoding="utf-8")
+        if ended:
+            (run / "ended").touch()
+        return run
+
+    def read_status(self, run):
+        return json.loads((run / "status.json").read_text(encoding="utf-8"))
+
+    def test_new_start_continues_the_unfinished_run_without_repeating_finished_iterations(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", "ok"], max_iterations=3)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(1, self.calls.read_text(encoding="utf-8").count("-p /implement-spec 42"),
+                         f"finished iterations were repeated; monitor lines: {lines}")
+        self.assertEqual(run, self.only_run_dir(), "the restart started a second run directory")
+        self.assertTrue((run / "result-3.json").exists(), "the restart did not continue with iteration 3")
+
+    def test_resume_recovers_the_ok_and_failed_counts_from_the_finished_iterations(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", "failed"], max_iterations=3)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual("END after 3 iterations: max_iterations 3 reached (2 ok, 1 failed)", lines[-1])
+        status = self.read_status(run)
+        self.assertEqual((3, 2, 1), (status["iteration"], status["ok"], status["failed"]),
+                         f"status.json after the resume: {status}")
+
+    def test_resume_counts_an_iteration_without_a_recorded_outcome_as_failed(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok", None], max_iterations=2)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        status = self.read_status(run)
+        self.assertEqual(status["iteration"], status["ok"] + status["failed"], f"status.json: {status}")
+        self.assertEqual("END after 2 iterations: max_iterations 2 reached (1 ok, 1 failed)", lines[-1])
+
+    def test_outcomes_of_new_iterations_are_recorded_for_a_later_resume(self):
+        self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        outcome = self.only_run_dir() / "outcome-1"
+        self.assertTrue(outcome.exists(), "no outcome file after a failed iteration")
+        self.assertEqual("failed", outcome.read_text(encoding="utf-8").strip())
+
+    def test_start_after_a_finished_run_begins_a_new_run_and_leaves_the_finished_one_alone(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        finished = self.seed_run(["ok", "ok"], ended=True, max_iterations=2)
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        runs = sorted((self.home / "runs").iterdir())
+        self.assertEqual(2, len(runs), f"runs: {runs}; monitor lines: {lines}")
+        self.assertFalse((finished / "status.json").exists(), "the finished run was written to")
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_resume_only_refuses_a_finished_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        finished = self.seed_run(["ok"], ended=True, max_iterations=3)
+
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertEqual(["ERROR run of #42 already ended, nothing to resume"], lines)
+        self.assertFalse(self.calls.exists(), "an iteration started on a finished run")
+        self.assertEqual([finished], list((self.home / "runs").iterdir()), "resume-only created a run directory")
+
+    def test_resume_only_without_any_run_refuses(self):
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertEqual(["ERROR no run of #42 to resume"], lines)
+        self.assertFalse((self.home / "runs").exists() and any((self.home / "runs").iterdir()),
+                         "resume-only created a run directory")
+
+    def test_resume_only_continues_the_unfinished_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        run = self.seed_run(["ok"], max_iterations=2)
+
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["iteration 2 ok: 3 turns, cost $0.25",
+                          "END after 2 iterations: max_iterations 2 reached (2 ok, 0 failed)"], lines)
+        self.assertEqual(run, self.only_run_dir())
+
+    def test_resume_only_is_refused_while_the_run_is_still_running(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, sleep_pid_file = self.start_sleeping(3, "--max-iterations", "1")
+
+        code, lines, err = self.run_loop("--resume-only", seconds=20)
+
+        self.assertEqual(1, code, f"{err}; monitor lines: {lines}")
+        self.assertIn("already has a running loop", lines[0])
+        self.finish(process, 30)
+
 
 if __name__ == "__main__":
     unittest.main()

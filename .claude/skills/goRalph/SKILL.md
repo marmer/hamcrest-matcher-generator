@@ -25,3 +25,8 @@ A **goRalph run** works one spec through a script, not through this session: `sc
    - Build one phone-friendly Artifact page from it: duration and counts first, then one short list with links per key; an empty list says "none".
    - Cost is deliberately not on the page.
    - If the script fails, tell the owner in one sentence and publish no page.
+6. **Safety net**, from the start until the `END` line or the owner's stop (a VM stop or crash kills the script, not the run):
+   - **Monitor**: re-arm the Monitor tool on the monitor log every 30 min (it times out), so it never lapses.
+   - **Hourly check-in**: create ONE recurring scheduled task bound to this session (`create_trigger` with an hourly cron expression at minute 0, default self-bind; not a chain of one-shot `send_later` messages that each re-arm the next, since a firing that cannot run would end the chain). Its message to this session: read `status.json` of the run directory; if `state` is not `ended` and no `ended` file exists, start `bash "${CLAUDE_SKILL_DIR}/scripts/loop.sh" <spec> --resume-only >> ~/.goRalph/monitor-<spec>.log` with `run_in_background` (a live script refuses with "already has a running loop": do nothing; a finished run refuses with "already ended": delete the task). After a restart that started an iteration, tell the owner in one sentence that the script was dead and was restarted. The restarted script continues the run: it does not repeat finished iterations.
+   - **End**: on the `END` line or when the owner stops the run, delete the task (`delete_trigger`). The same goes for a stop with `stop now`, once the script has ended.
+   - Assumption, not verified: whether a firing during an active usage limit is retried or skipped; the next hourly firing is the fallback.
