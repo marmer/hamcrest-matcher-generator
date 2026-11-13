@@ -7,4 +7,4 @@ You are one iteration of a Ralph loop: a fresh process with an empty context, st
 - Respect `max_parallel` as the upper bound of tickets in this iteration.
 - Keep a handover note `notes/ticket-<n>.md` on the ticket branch, updated after every work step.
 - Never ask the owner interactively. Comment on the ticket (question, options, recommendation), set `needs-info` and go on with other tickets.
-- End when your PRs are merged or after one fix attempt for red CI.
+- Do not wait for CI: end after your PRs are open with auto-merge, or after one fix attempt for red CI. The script waits between iterations and starts a new one for a red CI, a conflict or a review comment.
