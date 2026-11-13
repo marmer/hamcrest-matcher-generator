@@ -6,8 +6,9 @@
 # before every iteration, so editing the file changes the running loop. Stop kinds: after-iteration, after-step, now.
 # Stdout carries only the monitor lines (iteration end, error, denial, END); everything else goes to the run directory.
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
-# RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS (shortened timings for tests,
-# not for the owner; the last one is the pause between two checks while PRs wait for CI, default 300).
+# RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS
+# (shortened timings for tests, not for the owner; the PR sleep is the pause between two checks while PRs wait for CI,
+# default 300, the gh timeout the limit of one `gh api` call of that check, default 60).
 # Before each iteration the script asks `gh api` for work without a model: a free frontier ticket or a PR that needs
 # action (red CI, merge conflict, review or review comment after its last commit) starts the iteration, PRs that only
 # wait for CI with auto-merge make it sleep and check again, nothing at all ends the run.
@@ -48,10 +49,12 @@ minute_seconds="${RALPH_MINUTE_SECONDS:-60}"
 poll_seconds="${RALPH_POLL_SECONDS:-5}"
 grace_seconds="${RALPH_GRACE_SECONDS:-300}"
 pr_sleep_seconds="${RALPH_PR_SLEEP_SECONDS:-300}"
+gh_timeout_seconds="${RALPH_GH_TIMEOUT_SECONDS:-60}"
 [[ "$minute_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_MINUTE_SECONDS needs a positive integer, got '$minute_seconds'"
 [[ "$poll_seconds" =~ ^[0-9]+(\.[0-9]+)?$ ]] || die "RALPH_POLL_SECONDS needs a number, got '$poll_seconds'"
 [[ "$grace_seconds" =~ ^[0-9]+$ ]] || die "RALPH_GRACE_SECONDS needs an integer, got '$grace_seconds'"
 [[ "$pr_sleep_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_PR_SLEEP_SECONDS needs a positive integer, got '$pr_sleep_seconds'"
+[[ "$gh_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '$gh_timeout_seconds'"
 
 spec="${1:-}"
 [ -n "$spec" ] || die "usage: loop.sh <spec> [--max-iterations N] [--max-duration MIN] [--max-iteration-duration MIN] [--until \"YYYY-MM-DD HH:MM [Zone]\"] [--max-parallel N] [--limit-stop KIND]"
@@ -73,6 +76,7 @@ done
 command -v jq >/dev/null || die "jq is required"
 command -v flock >/dev/null || die "flock not found"
 command -v mktemp >/dev/null || die "mktemp is required"
+command -v timeout >/dev/null || die "timeout is required"
 
 # Lock: one active run per spec, held through flock on a file descriptor, so the kernel releases it when the
 # process dies (a dead holder never blocks) and two starters cannot both get it.
@@ -176,47 +180,70 @@ failed_count=0
 
 REPO_API="repos/marmer/hamcrest-matcher-generator"
 
+# One `gh api` call (arguments as for gh) with the timeout, so a hung gh cannot block the TERM trap for long; the
+# lists are read with --paginate --slurp, i.e. as a JSON array holding one element per page.
+gh_call() { timeout "$gh_timeout_seconds" gh api "$@" 2>>"$run/pr-err.txt"; }
+gh_pages() { gh_call --paginate --slurp "$1"; }
+
+# jq -e with its three outcomes kept apart: sets test_result to true or false (exit 0 or 1 of jq: the answer), and
+# returns 1 when jq itself failed (exit 2 or more: invalid input, a missing field), so garbage never passes as green.
+json_test() { # input, jq arguments
+  local input="$1" status
+  shift
+  jq -e "$@" <<< "$input" > /dev/null 2>>"$run/pr-err.txt"
+  status=$?
+  [ "$status" -le 1 ] || return 1
+  if [ "$status" -eq 0 ]; then test_result=true; else test_result=false; fi
+}
+
 # Looks at the open PRs of the spec's tickets (head branch ticket-<n>, n a sub-issue of the spec). Sets pr_action to
-# the first PR needing action (red CI, merge conflict, review or review comment after the head commit) and pr_waiting
-# to the number of PRs with auto-merge that need nothing; returns 1 when `gh` or its output fails.
+# the first PR needing action (red CI, merge conflict, review or review comment after the head commit; replies in a
+# comment thread do not count) and pr_waiting to the number of PRs that need nothing but wait for CI with auto-merge
+# (a check run not completed, or none yet); returns 1 when `gh` or its output fails.
 check_prs() {
   pr_action=""
   pr_waiting=0
-  local out children rows number sha detail checks reason date err="$run/pr-err.txt"
-  out="$(gh api "$REPO_API/issues/$spec/sub_issues?per_page=100" 2>"$err")" || return 1
-  children="$(jq -c '[.[].number]' <<< "$out" 2>>"$err")" || return 1
-  out="$(gh api "$REPO_API/pulls?state=open&per_page=100" 2>>"$err")" || return 1
-  rows="$(jq -r --argjson children "$children" '.[]
+  local out children rows number sha detail checks reason head_date
+  : > "$run/pr-err.txt"
+  out="$(gh_pages "$REPO_API/issues/$spec/sub_issues?per_page=100")" || return 1
+  children="$(jq -c '[.[][].number]' <<< "$out" 2>>"$run/pr-err.txt")" || return 1
+  out="$(gh_pages "$REPO_API/pulls?state=open&per_page=100")" || return 1
+  rows="$(jq -r --argjson children "$children" '.[][]
       | select(.head.ref | test("^ticket-[0-9]+$"))
       | select((.head.ref | ltrimstr("ticket-") | tonumber) as $n | $children | index($n))
-      | [.number, .head.sha] | @tsv' <<< "$out" 2>>"$err")" || return 1
+      | [.number, .head.sha] | @tsv' <<< "$out" 2>>"$run/pr-err.txt")" || return 1
   while IFS=$'\t' read -r number sha; do
     [ -n "$number" ] || continue
-    detail="$(gh api "$REPO_API/pulls/$number" 2>>"$err")" || return 1
-    checks="$(gh api "$REPO_API/commits/$sha/check-runs?per_page=100" 2>>"$err")" || return 1
+    detail="$(gh_call "$REPO_API/pulls/$number")" || return 1
+    out="$(gh_pages "$REPO_API/commits/$sha/check-runs?per_page=100")" || return 1
+    checks="$(jq -c '[.[].check_runs[]]' <<< "$out" 2>>"$run/pr-err.txt")" || return 1
     reason=""
-    if [ "$(jq -r '.mergeable_state' <<< "$detail" 2>>"$err")" = dirty ]; then
+    json_test "$detail" '.mergeable_state == "dirty"' || return 1
+    if [ "$test_result" = true ]; then
       reason="merge conflict"
-    elif jq -e '[.check_runs[] | select(.conclusion | IN("failure", "timed_out", "cancelled", "action_required", "startup_failure"))] | length > 0' \
-        <<< "$checks" > /dev/null 2>>"$err"; then
-      reason="red CI"
+    else
+      json_test "$checks" 'any(.[]; .conclusion | IN("failure", "timed_out", "cancelled", "action_required", "startup_failure"))' || return 1
+      if [ "$test_result" = true ]; then reason="red CI"; fi
     fi
     if [ -z "$reason" ]; then
-      out="$(gh api "$REPO_API/commits/$sha" 2>>"$err")" || return 1
-      date="$(jq -r '.commit.committer.date' <<< "$out" 2>>"$err")" || return 1
-      out="$(gh api "$REPO_API/pulls/$number/comments?per_page=100" 2>>"$err")" || return 1
-      if jq -e --arg d "$date" 'map(select(.created_at > $d)) | length > 0' <<< "$out" > /dev/null 2>>"$err"; then
-        reason="new review comment"
-      fi
-      out="$(gh api "$REPO_API/pulls/$number/reviews?per_page=100" 2>>"$err")" || return 1
-      if [ -z "$reason" ] && jq -e --arg d "$date" \
-          'map(select(.submitted_at > $d and (.state == "CHANGES_REQUESTED" or (.body // "") != ""))) | length > 0' \
-          <<< "$out" > /dev/null 2>>"$err"; then
-        reason="new review"
-      fi
+      out="$(gh_call "$REPO_API/commits/$sha")" || return 1
+      head_date="$(jq -r '.commit.committer.date' <<< "$out" 2>>"$run/pr-err.txt")" || return 1
+      out="$(gh_pages "$REPO_API/pulls/$number/comments?per_page=100")" || return 1
+      json_test "$out" --arg d "$head_date" 'any(.[][]; .created_at > $d and .in_reply_to_id == null)' || return 1
+      if [ "$test_result" = true ]; then reason="new review comment"; fi
+    fi
+    if [ -z "$reason" ]; then
+      out="$(gh_pages "$REPO_API/pulls/$number/reviews?per_page=100")" || return 1
+      json_test "$out" --arg d "$head_date" \
+        'any(.[][]; .submitted_at > $d and (.state == "CHANGES_REQUESTED" or (.body // "") != ""))' || return 1
+      if [ "$test_result" = true ]; then reason="new review"; fi
     fi
     if [ -n "$reason" ]; then pr_action="#$number $reason"; return 0; fi
-    if [ "$(jq -r '.auto_merge != null' <<< "$detail")" = true ]; then pr_waiting=$((pr_waiting + 1)); fi
+    json_test "$detail" '.auto_merge != null' || return 1
+    if [ "$test_result" = true ]; then
+      json_test "$checks" 'length == 0 or any(.[]; .status != "completed")' || return 1
+      if [ "$test_result" = true ]; then pr_waiting=$((pr_waiting + 1)); fi
+    fi
   done <<< "$rows"
   return 0
 }

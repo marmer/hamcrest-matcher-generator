@@ -8,7 +8,9 @@ serves one ready sub-issue of the spec, none when STUB_GH_EMPTY is set, or one c
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
 `commits_<sha>_check-runs`), `[]` when there is none; a file `fail_<name>` makes that endpoint fail, and every such
-call is appended to `calls.log` there.
+call is appended to `calls.log` there, and a file `hang_<name>` makes it hang. With `--paginate --slurp` the stub
+answers the sub-issues as one page and every other file as it is, so the file of a list endpoint holds the list of its
+pages (for check runs a list of the pages' objects).
 """
 import json
 import os
@@ -37,12 +39,15 @@ exit "${STUB_CLAUDE_EXIT:-0}"
 """
 
 STUB_GH = """#!/usr/bin/env bash
-endpoint="${2:-}"
+slurp=""
+for argument in "$@"; do [ "$argument" = --slurp ] && slurp=1; done
+endpoint="${@: -1}"
+wrap() { if [ -n "$slurp" ]; then echo "[$(cat)]"; else cat; fi; }
 case "$endpoint" in
   *sub_issues*)
-    if [ -n "${STUB_GH_EMPTY:-}" ]; then echo '[]'
-    elif [ -n "${STUB_GH_CLAIMED:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": [], "assignees": [{"login": "x"}]}]'
-    else echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}]'; fi ;;
+    if [ -n "${STUB_GH_EMPTY:-}" ]; then echo '[]' | wrap
+    elif [ -n "${STUB_GH_CLAIMED:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": [], "assignees": [{"login": "x"}]}]' | wrap
+    else echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}]' | wrap; fi ;;
   *dependencies*) echo '[]' ;;
   *)
     name="${endpoint#repos/marmer/hamcrest-matcher-generator/}"
@@ -50,6 +55,7 @@ case "$endpoint" in
     name="${name//\\//_}"
     echo "$name" >> "$STUB_GH_DIR/calls.log"
     if [ -e "$STUB_GH_DIR/fail_$name" ]; then echo "stub gh: $name failed" >&2; exit 1; fi
+    if [ -e "$STUB_GH_DIR/hang_$name" ]; then sleep 30; fi
     if [ -e "$STUB_GH_DIR/$name" ]; then cat "$STUB_GH_DIR/$name"; else echo '[]'; fi ;;
 esac
 """
@@ -582,19 +588,22 @@ class LoopScriptTest(unittest.TestCase):
     NO_WORK = ["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"]
 
     def pr(self, number=5, branch="ticket-7", sha="abc", auto_merge=True, state="clean", check_conclusions=("success",),
-           comments=(), reviews=(), commit_date="2026-01-01T00:00:00Z"):
-        """An open PR as the stub gh serves it; a check conclusion of None is a run still going."""
+           comments=(), replies=(), reviews=(), commit_date="2026-01-01T00:00:00Z"):
+        """An open PR as the stub gh serves it, every list as one page; a check conclusion of None is a run still
+        going, none at all is a PR whose CI has not started; replies are review comments in reply to another."""
         pulls_file = self.gh_dir / "pulls"
-        pulls = json.loads(pulls_file.read_text(encoding="utf-8")) if pulls_file.exists() else []
+        pulls = json.loads(pulls_file.read_text(encoding="utf-8"))[0] if pulls_file.exists() else []
         pulls.append({"number": number, "head": {"ref": branch, "sha": sha}})
-        self.serve("pulls", pulls)
+        self.serve("pulls", [pulls])
         self.serve(f"pulls_{number}", {"number": number, "mergeable_state": state, "head": {"ref": branch, "sha": sha},
                                        "auto_merge": {"merge_method": "squash"} if auto_merge else None})
-        self.serve(f"commits_{sha}_check-runs", {"check_runs": [
-            {"status": "completed" if c else "in_progress", "conclusion": c} for c in check_conclusions]})
+        self.serve(f"commits_{sha}_check-runs", [{"total_count": len(check_conclusions), "check_runs": [
+            {"status": "completed" if c else "in_progress", "conclusion": c} for c in check_conclusions]}])
         self.serve(f"commits_{sha}", {"commit": {"committer": {"date": commit_date}}})
-        self.serve(f"pulls_{number}_comments", [{"created_at": c, "body": "please change"} for c in comments])
-        self.serve(f"pulls_{number}_reviews", reviews)
+        self.serve(f"pulls_{number}_comments", [
+            [{"created_at": c, "body": "please change", "in_reply_to_id": None} for c in comments]
+            + [{"created_at": c, "body": "done", "in_reply_to_id": 1} for c in replies]])
+        self.serve(f"pulls_{number}_reviews", [list(reviews)])
 
     def serve(self, name, data):
         (self.gh_dir / name).write_text(json.dumps(data), encoding="utf-8")
@@ -622,6 +631,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertIsNone(process.poll(), "the script ended instead of waiting")
         self.assertFalse(self.calls.exists(), "a claude process was started while PRs wait")
         process.terminate()
+        process.communicate(timeout=30)
 
     def test_pr_with_red_ci_starts_an_iteration(self):
         self.pr(check_conclusions=("success", "failure"))
@@ -645,12 +655,13 @@ class LoopScriptTest(unittest.TestCase):
         self.assert_iteration_started(self.run_with_pr_sleep())
 
     def test_review_comment_before_the_last_commit_needs_no_action(self):
-        self.pr(commit_date="2026-01-01T00:10:00Z", comments=["2026-01-01T00:05:00Z"])
+        self.pr(commit_date="2026-01-01T00:10:00Z", comments=["2026-01-01T00:05:00Z"], check_conclusions=(None,))
 
         self.assert_sleeping_without_claude(self.start_with_pr_sleep())
 
     def test_approval_without_text_needs_no_action(self):
-        self.pr(reviews=[{"state": "APPROVED", "body": "", "submitted_at": "2026-01-01T00:05:00Z"}])
+        self.pr(reviews=[{"state": "APPROVED", "body": "", "submitted_at": "2026-01-01T00:05:00Z"}],
+                check_conclusions=(None,))
 
         self.assert_sleeping_without_claude(self.start_with_pr_sleep())
 
@@ -689,7 +700,7 @@ class LoopScriptTest(unittest.TestCase):
         self.pr(check_conclusions=(None,))
         process = self.start_with_pr_sleep()
         self.wait_until(lambda: self.pr_checks() >= 2, "a second check of the PRs")
-        self.serve("pulls", [])
+        self.serve("pulls", [[]])
 
         out = process.communicate(timeout=30)[0].splitlines()
 
@@ -700,7 +711,7 @@ class LoopScriptTest(unittest.TestCase):
         self.pr(check_conclusions=(None,))
         process = self.start_with_pr_sleep()
         self.wait_until(lambda: self.pr_checks() >= 2, "a second check of the PRs")
-        self.serve("commits_abc_check-runs", {"check_runs": [{"status": "completed", "conclusion": "failure"}]})
+        self.serve("commits_abc_check-runs", [{"check_runs": [{"status": "completed", "conclusion": "failure"}]}])
 
         out = process.communicate(timeout=30)[0].splitlines()
 
@@ -710,7 +721,7 @@ class LoopScriptTest(unittest.TestCase):
         self.pr(check_conclusions=(None,))
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
-        code, lines, err = self.run_loop("--max-iterations", "1", RALPH_PR_SLEEP_SECONDS="1")
+        lines = self.run_loop("--max-iterations", "1", RALPH_PR_SLEEP_SECONDS="1")[1]
 
         self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
 
@@ -737,6 +748,99 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(0, code, err)
         self.assertTrue(lines[0].startswith("ERROR PR check for #42 failed: "), lines)
         self.assertEqual("END after 0 iterations: PR check failed (0 ok, 0 failed)", lines[1])
+
+    def test_green_PR_that_is_blocked_is_neither_action_nor_waiting(self):
+        self.pr(state="blocked", check_conclusions=("success",))
+
+        self.assertEqual((0, self.NO_WORK), self.run_with_pr_sleep()[:2])
+
+    def test_green_PR_that_is_behind_is_neither_action_nor_waiting(self):
+        self.pr(state="behind", check_conclusions=("success",))
+
+        self.assertEqual((0, self.NO_WORK), self.run_with_pr_sleep()[:2])
+
+    def test_PR_with_auto_merge_and_completed_checks_of_unknown_merge_state_is_not_waiting(self):
+        self.pr(state=None, check_conclusions=("success",))
+
+        self.assertEqual((0, self.NO_WORK), self.run_with_pr_sleep()[:2])
+
+    def test_PR_with_auto_merge_and_pending_checks_of_unknown_merge_state_is_waiting(self):
+        self.pr(state=None, check_conclusions=(None,))
+
+        self.assert_sleeping_without_claude(self.start_with_pr_sleep())
+
+    def test_PR_with_auto_merge_whose_checks_have_not_started_is_waiting(self):
+        self.pr(check_conclusions=())
+
+        self.assert_sleeping_without_claude(self.start_with_pr_sleep())
+
+    def test_red_check_run_on_the_second_page_starts_an_iteration(self):
+        self.pr()
+        self.serve("commits_abc_check-runs", [{"check_runs": [{"status": "completed", "conclusion": "success"}]},
+                                              {"check_runs": [{"status": "completed", "conclusion": "failure"}]}])
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+    def test_review_comment_on_the_second_page_starts_an_iteration(self):
+        self.pr()
+        self.serve("pulls_5_comments", [[{"created_at": "2025-12-31T00:00:00Z", "in_reply_to_id": None}],
+                                        [{"created_at": "2026-01-01T00:05:00Z", "in_reply_to_id": None}]])
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+    def test_review_on_the_second_page_starts_an_iteration(self):
+        self.pr()
+        self.serve("pulls_5_reviews", [[], [{"state": "CHANGES_REQUESTED", "body": "", "submitted_at": "2026-01-01T00:05:00Z"}]])
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+    def test_red_PR_on_the_second_page_of_the_open_PRs_starts_an_iteration(self):
+        self.pr(branch="feature-1", check_conclusions=("success",))
+        self.pr(number=6, sha="def", check_conclusions=("failure",))
+        pulls = json.loads((self.gh_dir / "pulls").read_text(encoding="utf-8"))[0]
+        self.serve("pulls", [[pulls[0]], [pulls[1]]])
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+    def assert_pr_check_failed(self, outcome):
+        code, lines, err = outcome
+        self.assertEqual(0, code, err)
+        self.assertTrue(lines[0].startswith("ERROR PR check for #42 failed"), lines)
+        self.assertEqual("END after 0 iterations: PR check failed (0 ok, 0 failed)", lines[1])
+
+    def test_check_runs_answer_without_check_runs_fails_the_check_instead_of_passing_it(self):
+        self.pr()
+        self.serve("commits_abc_check-runs", [{"message": "Server Error"}])
+
+        self.assert_pr_check_failed(self.run_with_pr_sleep())
+
+    def test_review_comments_answer_that_is_not_a_list_fails_the_check_instead_of_passing_it(self):
+        self.pr()
+        self.serve("pulls_5_comments", [{"message": "Server Error"}])
+
+        self.assert_pr_check_failed(self.run_with_pr_sleep())
+
+    def test_reviews_answer_that_is_not_a_list_fails_the_check_instead_of_passing_it(self):
+        self.pr()
+        self.serve("pulls_5_reviews", [{"message": "Server Error"}])
+
+        self.assert_pr_check_failed(self.run_with_pr_sleep())
+
+    def test_reply_to_a_review_comment_after_the_last_commit_needs_no_action(self):
+        self.pr(replies=["2026-01-01T00:05:00Z"], check_conclusions=(None,))
+
+        self.assert_sleeping_without_claude(self.start_with_pr_sleep())
+
+    def test_hanging_gh_ends_the_run_with_an_error_line_after_the_timeout(self):
+        (self.gh_dir / "hang_pulls").write_text("", encoding="utf-8")
+
+        self.assert_pr_check_failed(self.run_with_pr_sleep(RALPH_GH_TIMEOUT_SECONDS="1"))
+
+    def test_wrong_gh_timeout_knob_is_refused(self):
+        code, lines, err = self.run_loop(RALPH_GH_TIMEOUT_SECONDS="0")
+
+        self.assertEqual(2, code, err)
+        self.assertEqual(["ERROR RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '0'"], lines)
 
     def test_wrong_pr_sleep_knob_is_refused(self):
         code, lines, err = self.run_loop(RALPH_PR_SLEEP_SECONDS="soon")
