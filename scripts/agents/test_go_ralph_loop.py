@@ -1,7 +1,9 @@
 """Black-box tests for .claude/skills/goRalph/scripts/loop.sh (stdlib unittest only).
 
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
-The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT; the stub `gh`
+The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
+STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
+STUB_CLAUDE_PID.sleep); the stub `gh`
 serves one ready sub-issue of the spec, or none when STUB_GH_EMPTY is set.
 """
 import json
@@ -20,7 +22,12 @@ SKILL_SCRIPTS = Path(".claude") / "skills" / "goRalph" / "scripts"
 STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
-if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then echo $$ > "$STUB_CLAUDE_PID"; sleep "$STUB_CLAUDE_SLEEP"; fi
+if [ -n "${STUB_CLAUDE_SLEEP:-}" ]; then
+  echo $$ > "$STUB_CLAUDE_PID"
+  sleep "$STUB_CLAUDE_SLEEP" &
+  echo $! > "$STUB_CLAUDE_PID.sleep"
+  wait
+fi
 cat "$STUB_CLAUDE_STREAM"
 exit "${STUB_CLAUDE_EXIT:-0}"
 """
@@ -70,14 +77,17 @@ class LoopScriptTest(unittest.TestCase):
 
     def env(self, **extra):
         env = dict(os.environ, PATH=f"{self.root / 'bin'}:{os.environ['PATH']}", RALPH_HOME=str(self.home),
-                   RALPH_REPO=str(self.repo), STUB_CALLS=str(self.calls), STUB_CLAUDE_STREAM=str(self.stream))
+                   RALPH_REPO=str(self.repo), RALPH_MINUTE_SECONDS="1", RALPH_POLL_SECONDS="0.2",
+                   RALPH_GRACE_SECONDS="1", STUB_CALLS=str(self.calls), STUB_CLAUDE_STREAM=str(self.stream))
         env.update(extra)
         return env
 
     def start(self, *args, **extra):
-        return subprocess.Popen(
+        process = subprocess.Popen(
             ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", *args],
             cwd=self.repo, env=self.env(**extra), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.addCleanup(process.kill)
+        return process
 
     def run_loop(self, *args, **extra):
         process = self.start(*args, **extra)
@@ -85,11 +95,52 @@ class LoopScriptTest(unittest.TestCase):
         return process.returncode, out.splitlines(), err
 
     @staticmethod
+    def wait_until(condition, what, seconds=15):
+        deadline = time.monotonic() + seconds
+        while not condition():
+            if time.monotonic() > deadline:
+                raise AssertionError(f"timed out waiting for {what}")
+            time.sleep(0.05)
+
+    @staticmethod
     def is_running(pid):
         try:  # a zombie without a reaper in the container is dead
             return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] != "Z"
         except FileNotFoundError:
             return False
+
+    def start_sleeping(self, seconds, *args, **extra):
+        """Starts the loop with a child that sleeps; returns the process and the pid file of the sleep."""
+        pid_file = self.root / "child.pid"
+        process = self.start(*args, STUB_CLAUDE_SLEEP=str(seconds), STUB_CLAUDE_PID=str(pid_file), **extra)
+        sleep_pid_file = Path(f"{pid_file}.sleep")
+        for _ in range(100):
+            if sleep_pid_file.exists() and sleep_pid_file.read_text(encoding="utf-8").strip():
+                return process, sleep_pid_file
+            time.sleep(0.1)
+        self.fail("the child never started")
+
+    def edit_control(self, **values):
+        control = self.only_run_dir() / "control.json"
+        data = json.loads(control.read_text(encoding="utf-8"))
+        data.update(values)
+        temporary = control.with_suffix(".edit")
+        temporary.write_text(json.dumps(data), encoding="utf-8")
+        temporary.replace(control)
+
+    def read_control(self):
+        return json.loads((self.only_run_dir() / "control.json").read_text(encoding="utf-8"))
+
+    def write_control(self, **values):
+        run = self.home / "runs" / "42-20260101-000000"
+        run.mkdir(parents=True)
+        (run / "control.json").write_text(json.dumps(values), encoding="utf-8")
+
+    @staticmethod
+    def berlin_wall_clock(minutes_from_now):
+        shifted = int(time.time()) + minutes_from_now * 60
+        return subprocess.run(["date", "-d", f"@{shifted}", "+%Y-%m-%d %H:%M"], env=dict(os.environ, TZ="Europe/Berlin"),
+                              capture_output=True, text=True, check=True).stdout.strip()
 
     def only_run_dir(self):
         (run,) = (self.home / "runs").iterdir()
@@ -170,15 +221,16 @@ class LoopScriptTest(unittest.TestCase):
     def test_missing_flock_is_reported_as_such(self):
         tools = self.root / "tools"
         tools.mkdir()
-        for directory in ("/usr/bin", "/bin"):
-            for tool in Path(directory).iterdir():
-                if tool.name != "flock" and not os.path.lexists(tools / tool.name):
-                    (tools / tool.name).symlink_to(tool)
+        # Only the programs loop.sh and its issue-status helper use, found where this machine keeps them, minus flock.
+        for name in ("bash", "jq", "date", "mkdir", "cat", "dirname", "head", "tr", "grep", "tail", "touch", "rm", "mv",
+                     "sleep", "python3", "mktemp"):
+            found = shutil.which(name)
+            self.assertIsNotNone(found, f"{name} is needed by the test")
+            (tools / name).symlink_to(found)
         for stub in ("claude", "gh"):
-            (tools / stub).unlink(missing_ok=True)
             (tools / stub).symlink_to(self.root / "bin" / stub)
         process = subprocess.run(
-            ["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
+            [str(tools / "bash"), str(self.repo / SKILL_SCRIPTS / "loop.sh"), "42", "--max-iterations", "1"],
             cwd=self.repo, env=self.env(PATH=str(tools)), capture_output=True, text=True, timeout=60)
 
         self.assertEqual(2, process.returncode)
@@ -214,21 +266,17 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_terminated_loop_releases_the_lock_and_stops_its_child(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
-        pid_file = self.root / "child.pid"
-        process = self.start("--max-iterations", "1", STUB_CLAUDE_SLEEP="60", STUB_CLAUDE_PID=str(pid_file))
-        for _ in range(100):
-            if pid_file.exists() and pid_file.read_text(encoding="utf-8").strip():
-                break
-            time.sleep(0.1)
-        child = int(pid_file.read_text(encoding="utf-8").strip())
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iterations", "1")
+        child = int((self.root / "child.pid").read_text(encoding="utf-8").strip())
 
         process.terminate()
         process.communicate(timeout=30)
 
         self.assertEqual(0, subprocess.run(["flock", "-n", str(self.home / "locks" / "42.lock"), "true"]).returncode,
                          "the lock outlived the killed loop")
-        time.sleep(0.5)
-        self.assertFalse(self.is_running(child), "the child outlived the killed loop")
+        self.wait_until(lambda: not self.is_running(child), "the child to end")
+        self.assertFalse(self.is_running(int(sleep_pid_file.read_text(encoding="utf-8").strip())),
+                         "the child's own child outlived the killed loop")
 
     def test_error_result_with_exit_zero_counts_as_failed(self):
         self.stream.write_text(ERROR_RESULT + "\n", encoding="utf-8")
@@ -261,7 +309,8 @@ class LoopScriptTest(unittest.TestCase):
         holder = subprocess.Popen(["flock", str(self.home / "locks" / "42.lock"), "sleep", "60"])
         self.addCleanup(holder.wait)
         self.addCleanup(holder.kill)
-        time.sleep(0.5)
+        lock = self.home / "locks" / "42.lock"
+        self.wait_until(lambda: subprocess.run(["flock", "-n", str(lock), "true"]).returncode != 0, "the lock holder")
 
         code, lines, err = self.run_loop("--max-iterations", "1")
 
@@ -309,6 +358,204 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assertEqual(0, code, err)
         self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], lines)
+
+    def test_control_file_starts_with_the_defaults(self):
+        self.run_loop(STUB_GH_EMPTY="1")
+
+        self.assertEqual({"until": None, "max_duration": None, "max_iterations": None, "max_iteration_duration": None,
+                          "max_parallel": 3, "stop": None, "limit_stop": "after-step"}, self.read_control())
+
+    def test_limit_options_are_written_into_the_control_file(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1", "--max-duration", "90", "--max-iteration-duration", "30",
+                      "--until", "2999-01-01 06:00 Asia/Tokyo", "--max-parallel", "2", "--limit-stop", "now")
+
+        control = self.read_control()
+        self.assertEqual((90, 30, "2999-01-01 06:00 Asia/Tokyo", 2, "now"),
+                         (control["max_duration"], control["max_iteration_duration"], control["until"],
+                          control["max_parallel"], control["limit_stop"]))
+
+    def test_wrong_option_values_are_refused_before_a_run_is_created(self):
+        for option, value in (("--max-iterations", "0"), ("--max-duration", "0"), ("--max-duration", "1h"), ("--max-iteration-duration", "-5"),
+                              ("--max-parallel", "4"), ("--max-parallel", "0"), ("--limit-stop", "soon"),
+                              ("--until", "6 Uhr"), ("--until", "2999-13-45 25:61"),
+                              ("--until", "2999-01-01 06:00 Nowhere/Land"), ("--until", "2999-01-01 06:00 ../x")):
+            code, lines, err = self.run_loop(option, value)
+            self.assertEqual(2, code, (option, value))
+            self.assertTrue(lines[0].startswith("ERROR " + option[2:].replace("-", "_")), (option, value, lines))
+        self.assertFalse((self.home / "runs").exists() and any((self.home / "runs").iterdir()))
+        self.assertFalse(self.calls.exists())
+
+    def test_wrong_value_in_the_control_file_is_refused_and_keeps_the_run_unfinished(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        for key, value in (("max_duration", "soon"), ("max_iterations", 0), ("max_iteration_duration", 0), ("max_parallel", 5),
+                           ("max_iterations", 1.5), ("limit_stop", "later"), ("stop", "whenever"),
+                           ("until", "tomorrow")):
+            self.write_control(**{key: value})
+            code, lines, err = self.run_loop()
+            self.assertEqual(2, code, (key, value))
+            self.assertTrue(lines[0].startswith(f"ERROR {key}"), lines)
+            self.assertFalse((self.home / "runs" / "42-20260101-000000" / "ended").exists(), key)
+            shutil.rmtree(self.home / "runs")
+        self.assertFalse(self.calls.exists())
+
+    def test_missing_spec_is_reported_as_an_error_line(self):
+        process = subprocess.run(["bash", str(self.repo / SKILL_SCRIPTS / "loop.sh")], cwd=self.repo, env=self.env(),
+                                 capture_output=True, text=True, timeout=60)
+
+        self.assertEqual(2, process.returncode)
+        self.assertTrue(process.stdout.startswith("ERROR usage"), process.stdout)
+
+    def test_until_without_time_zone_data_is_refused_instead_of_read_as_utc(self):
+        empty = self.root / "no-tzdata"
+        empty.mkdir()
+
+        code, lines, err = self.run_loop("--until", "2999-01-01 06:00", TZDIR=str(empty), STUB_GH_EMPTY="1")
+
+        self.assertEqual(2, code)
+        self.assertTrue(lines[0].startswith("ERROR until names a time zone this machine does not know"), lines)
+
+    def test_wrong_timing_knob_is_refused(self):
+        code, lines, err = self.run_loop(RALPH_GRACE_SECONDS="soon")
+
+        self.assertEqual(2, code)
+        self.assertTrue(lines[0].startswith("ERROR RALPH_GRACE_SECONDS"), lines)
+
+    def test_until_in_the_past_ends_the_run_before_the_first_iteration(self):
+        self.write_control(until="2000-01-01 00:00")
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["END after 0 iterations: until 2000-01-01 00:00 reached (0 ok, 0 failed)"], lines)
+
+    def test_until_in_the_future_does_not_end_the_run(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.write_control(until="2999-01-01 06:00", max_iterations=1)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_until_reads_the_wall_clock_in_berlin_by_default(self):
+        past_in_berlin = self.berlin_wall_clock(-30)
+        self.write_control(until=past_in_berlin)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(f"END after 0 iterations: until {past_in_berlin} reached (0 ok, 0 failed)", lines[0])
+
+    def test_until_reads_the_wall_clock_in_the_named_zone(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.write_control(until=self.berlin_wall_clock(-30) + " America/New_York", max_iterations=1)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_max_duration_ends_the_run_before_the_next_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        process, _ = self.start_sleeping(6, "--max-duration", "1", RALPH_MINUTE_SECONDS="5")
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: max_duration 1 reached (1 ok, 0 failed)"], out)
+
+    def test_reached_limit_writes_the_configured_stop_kind_into_the_control_file(self):
+        self.write_control(until="2000-01-01 00:00", limit_stop="after-iteration")
+
+        self.run_loop()
+
+        self.assertEqual("after-iteration", self.read_control()["stop"])
+
+    def test_reached_limit_with_stop_kind_now_ends_the_run_between_iterations(self):
+        self.write_control(until="2000-01-01 00:00", limit_stop="now")
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(["END after 0 iterations: until 2000-01-01 00:00 reached (0 ok, 0 failed)"], lines)
+        self.assertEqual("now", self.read_control()["stop"])
+
+    def test_reached_limit_stops_after_the_step_by_default(self):
+        self.write_control(until="2000-01-01 00:00")
+
+        self.run_loop()
+
+        self.assertEqual("after-step", self.read_control()["stop"])
+
+    def test_max_iteration_duration_writes_the_configured_stop_kind_and_ends_the_run_after_the_iteration(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _ = self.start_sleeping(4, "--max-iteration-duration", "1", "--limit-stop", "after-iteration",
+                                         RALPH_GRACE_SECONDS="30")
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual("after-iteration", self.read_control()["stop"])
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: stop requested (after-iteration) (1 ok, 0 failed)"], out)
+
+    def test_max_iteration_duration_kills_the_iteration_after_the_grace_period(self):
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iteration-duration", "1")
+        sleep_pid = int(sleep_pid_file.read_text(encoding="utf-8").strip())
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertFalse(self.is_running(sleep_pid))
+        self.assertEqual("ERROR iteration 1 failed: killed, max_iteration_duration 1 reached and grace period over", out[0])
+        self.assertEqual("after-step", self.read_control()["stop"])
+        self.assertEqual("END after 1 iterations: stop requested (after-step) (0 ok, 1 failed)", out[1])
+
+    def test_max_iteration_duration_with_stop_kind_now_kills_without_the_grace_period(self):
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iteration-duration", "1", "--limit-stop", "now",
+                                                      RALPH_GRACE_SECONDS="600")
+        sleep_pid = int(sleep_pid_file.read_text(encoding="utf-8").strip())
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertFalse(self.is_running(sleep_pid))
+        self.assertEqual("ERROR iteration 1 failed: killed, stop now", out[0])
+
+    def test_stop_request_after_iteration_lets_the_running_iteration_finish(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _ = self.start_sleeping(2, "--max-iterations", "5")
+        self.edit_control(stop="after-iteration")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: stop requested (after-iteration) (1 ok, 0 failed)"], out)
+
+    def test_stop_request_after_step_lets_the_running_iteration_finish(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process, _ = self.start_sleeping(2, "--max-iterations", "5")
+        self.edit_control(stop="after-step")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(["iteration 1 ok: 3 turns, cost $0.25",
+                          "END after 1 iterations: stop requested (after-step) (1 ok, 0 failed)"], out)
+
+    def test_stop_request_without_a_kind_means_after_step(self):
+        self.write_control(stop=True)
+
+        code, lines, err = self.run_loop()
+
+        self.assertEqual(["END after 0 iterations: stop requested (after-step) (0 ok, 0 failed)"], lines)
+
+    def test_stop_request_now_kills_the_process_group_of_the_child(self):
+        process, sleep_pid_file = self.start_sleeping(60, "--max-iterations", "5")
+        sleep_pid = int(sleep_pid_file.read_text(encoding="utf-8").strip())
+        stub_pid = int((self.root / "child.pid").read_text(encoding="utf-8").strip())
+        self.edit_control(stop="now")
+
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertFalse(self.is_running(sleep_pid), "the grandchild survived")
+        self.assertFalse(self.is_running(stub_pid), "the child survived")
+        self.assertEqual("ERROR iteration 1 failed: killed, stop now", out[0])
+        self.assertEqual("END after 1 iterations: stop requested (now) (0 ok, 1 failed)", out[1])
 
 
 if __name__ == "__main__":
