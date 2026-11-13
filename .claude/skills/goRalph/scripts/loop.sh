@@ -337,7 +337,7 @@ denial_line() { # label, result file
   fi
 }
 
-# The one claude call of an iteration and of the retro: starts it in the background (stdout to the stream file, stderr to
+# The one claude call of an iteration and of the retro: starts it in the background (stdin from /dev/null, stdout to the stream file, stderr to
 # its own file, the lock descriptor closed) and sets $child. The rules file is the system prompt addition.
 start_claude() { # prompt, rules file name in $HERE, stream file, stderr file
   claude -p "$1" --model sonnet \

@@ -6,6 +6,7 @@ Limit: 40 lines (`LearningsFileTest` in `scripts/agents/test_go_ralph_loop.py` p
 
 ## Lessons
 
+- Done means the PR is squash-merged, not that the implementer reported: open it with auto-merge, wait for CI once, then end.
 - Record every escalation as a ticket comment (from which model to which, and why); the retro reads these comments.
 - This sandbox refuses shell commands that mix the literal text "github" with pipes, loops, substitutions or heredocs: put such a command in a script file in the scratchpad and run the file.
 - Tests of scripts: build the fake PATH from the needed tools only, wait with poll-and-deadline helpers (never fixed sleeps), and give every failure line an assertion message, never a bare timeout.

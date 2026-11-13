@@ -34,7 +34,13 @@ The one place that lists what the script prints and writes; `SKILL.md` and the o
 
 Usage limit wait (#414): the pause is `RALPH_LIMIT_RETRY_SECONDS` (default 600), sliced by `RALPH_POLL_SECONDS` so that a stop request or a reached limit ends it early. The waits add up to at most `RALPH_LIMIT_CAP_SECONDS` (default 5 h 15 min = 18900 s); the sum starts again at zero after an iteration that no usage limit cut off. When the cap is used up and the limit is still there, the run ends with `END ... usage limit not lifted within <cap> s`. The script does not read the reset time from the message, it retries at the pause; the result file of a cut-off iteration is kept as `limit-result-<i>-<epoch>.json`.
 
-Exit codes: 0 after an `END`; 2 for a value the script cannot read (option, environment variable or a hand edit of the control file: `ERROR <what is wrong>`, the run stays unfinished) and for a missing tool (`jq`, `flock`, `mktemp`, `timeout`); 1 when the lock of the spec is held (`ERROR spec #<n> already has a running loop (pid <pid>), lock <path>`) and for the refusal of `--resume-only` (`ERROR no run of #<n> to resume`, `ERROR run of #<n> already ended, nothing to resume`); `interview.py` and `summary.py` exit 1 for a failed or timed-out tracker call and 2 for a wrong argument or `RALPH_GH_TIMEOUT_SECONDS` (an integer of at least 1, as in `loop.sh`); 143 when the script itself is terminated.
+Exit codes:
+
+- 0 after an `END`.
+- 2 for a value the script cannot read (option, environment variable or a hand edit of the control file: `ERROR <what is wrong>`, the run stays unfinished) and for a missing tool (`jq`, `flock`, `mktemp`, `timeout`).
+- 1 when the lock of the spec is held (`ERROR spec #<n> already has a running loop (pid <pid>), lock <path>`) and for the refusal of `--resume-only` (`ERROR no run of #<n> to resume`, `ERROR run of #<n> already ended, nothing to resume`).
+- `interview.py` and `summary.py`: 1 for a failed or timed-out tracker call, 2 for a wrong argument or `RALPH_GH_TIMEOUT_SECONDS` (an integer of at least 1, as in `loop.sh`).
+- 143 when the script itself is terminated.
 
 `status.json` in the run directory is rewritten at every state change: `spec` (string), `state`, `iteration` (number of the current or last iteration), `ok`, `failed` (counts of the run, recovered after a restart) and `run_dir`. States: `running` (an iteration runs), `retro` (the retro iteration runs), `waiting` (PRs wait for CI or a usage limit has to lift, the script sleeps), `between` (after an iteration, before the next check) and `ended`.
 
