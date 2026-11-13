@@ -10,6 +10,9 @@
 # before every iteration, so editing the file changes the running loop. Stop kinds: after-iteration, after-step, now.
 # Stdout carries only the monitor lines (iteration end, ERROR, DENIAL, STOP for a deliberate kill, END); the rest goes
 # to the run directory.
+# The last iteration of a run that ends on a stop after-step or after-iteration, a reached limit acting as one of them
+# or an empty frontier is a retro: one `claude -p "/retro non-interactive <run dir>"` call (no retro after a stop now,
+# a limit acting as now, a failed check or a usage limit that does not lift). It is no iteration of the run.
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
 # RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS,
 # RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
@@ -317,7 +320,46 @@ write_status() { # state, iteration
     '{spec: $spec, state: $state, iteration: $iteration, ok: $ok, failed: $failed, run_dir: $run}' > "$run/status.json"
 }
 
-finish() { # iteration, reason
+# The retro iteration (#418): one `claude -p "/retro non-interactive <run dir>"` call, the last of a run that ends on
+# a stop after-step or after-iteration, a reached limit acting as one of them, or an empty frontier. It is no
+# iteration of the run (not counted in the iteration number, ok or failed, no stop `now` or duration watcher); its
+# files are retro-stream.jsonl, retro-result.json and retro-stderr.txt, and retro-done marks it as attempted, so a
+# restart does not run it twice. The child gets the settings and tools of the iterations and retro-rules.md (the non-interactive mode) instead of the
+# loop rules.
+run_retro() {
+  [ -e "$run/retro-done" ] && return 0
+  write_status retro "$iteration"
+  local rc=0 failure=""
+  claude -p "/retro non-interactive $run" --model sonnet \
+    --settings "$settings" --allowedTools "$allowed" \
+    --append-system-prompt "$(cat "$HERE/retro-rules.md")" \
+    --output-format stream-json --verbose \
+    < /dev/null > "$run/retro-stream.jsonl" 2> "$run/retro-stderr.txt" 9>&- &
+  child=$!
+  wait "$child" || rc=$?
+  child=""
+  jq -c 'select(.type == "result")' "$run/retro-stream.jsonl" 2>/dev/null | tail -1 > "$run/retro-result.json"
+  if [ ! -s "$run/retro-result.json" ]; then failure="no result event (exit $rc)"
+  elif ! jq -e . "$run/retro-result.json" >/dev/null 2>&1; then failure="unreadable result event (exit $rc)"
+  elif [ "$rc" -ne 0 ]; then failure="exit $rc, $(jq -r '.subtype // "no subtype"' "$run/retro-result.json")"
+  elif [ "$(jq -r '.is_error // false' "$run/retro-result.json")" = "true" ]; then
+    failure="is_error set, $(jq -r '.subtype // "no subtype"' "$run/retro-result.json")"
+  elif [ "$(jq 'has("result")' "$run/retro-result.json")" != "true" ]; then
+    failure="no result field, $(jq -r '.subtype // "no subtype"' "$run/retro-result.json")"
+  fi
+  if [ -n "$failure" ]; then
+    echo "ERROR retro failed: $failure"
+  else
+    echo "retro iteration ok: $(jq -r '"\(.num_turns // 0) turns, cost $\(.total_cost_usd // 0)"' "$run/retro-result.json")"
+  fi
+  if [ -s "$run/retro-result.json" ] && jq -e '(.permission_denials // []) | length > 0' "$run/retro-result.json" >/dev/null 2>&1; then
+    echo "DENIAL retro: $(jq -c '[.permission_denials[].tool_name]' "$run/retro-result.json")"
+  fi
+  touch "$run/retro-done"
+}
+
+finish() { # iteration, reason, "retro" to run the retro iteration first
+  if [ "${3:-}" = retro ]; then run_retro; fi
   touch "$run/ended"
   write_status ended "$1"
   echo "END after $1 iterations: $2 ($ok_count ok, $failed_count failed)"
@@ -342,13 +384,17 @@ done
 while true; do
   validate_control
   stop="$(effective_stop)"
-  if [ -n "$stop" ]; then finish "$iteration" "stop requested ($stop)"; fi
+  if [ -n "$stop" ]; then
+    if [ "$stop" = now ]; then finish "$iteration" "stop requested ($stop)"; fi
+    finish "$iteration" "stop requested ($stop)" retro
+  fi
 
   # A reached limit acts as a stop request of the configured kind.
   reason="$(limit_reason)"
   if [ -n "$reason" ]; then
     request_stop "$(limit_kind)"
-    finish "$iteration" "$reason"
+    if [ "$(effective_stop)" = now ]; then finish "$iteration" "$reason"; fi
+    finish "$iteration" "$reason" retro
   fi
 
   if ! frontier="$(cd "$REPO" && python3 scripts/agents/issue-status.py "$spec" --frontier 2>"$run/frontier-err.txt")"; then
@@ -361,7 +407,7 @@ while true; do
       finish "$iteration" "PR check failed"
     fi
     if [ -z "$pr_action" ]; then
-      if [ "$pr_waiting" -eq 0 ]; then finish "$iteration" "no ticket ready for an agent"; fi
+      if [ "$pr_waiting" -eq 0 ]; then finish "$iteration" "no ticket ready for an agent" retro; fi
       write_status waiting "$iteration"
       sleep_unless_stopped "$pr_sleep_seconds"
       continue
