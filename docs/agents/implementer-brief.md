@@ -3,7 +3,7 @@
 The orchestrator hands this file, by path, to every implementer subagent, together with the ticket number `<n>`. You implement ONE ticket in your own git worktree. The flow around you is "One ticket, one review, one PR" in `docs/agents/implementation.md`.
 
 1. **Base**: `git fetch origin main`, then confirm your worktree HEAD contains `origin/main` (`git merge-base --is-ancestor origin/main HEAD`); if not, `git checkout -B ticket-<n> origin/main`. Work on a local branch named `ticket-<n>`.
-2. **Read**: the ticket (`gh api repos/marmer/hamcrest-matcher-generator/issues/<n>` plus `/comments`), its spec (long; grep it for the sections you need), `CLAUDE.md`, and any research or prototype branch or ADR the ticket names (`git show origin/<branch>:<path>`, `docs/adr/`). Build only what the ticket asks; every acceptance criterion must be met.
+2. **Read**: the ticket (`gh api repos/marmer/hamcrest-matcher-generator/issues/<n>` plus `/comments`), its spec (long; grep it for the sections you need), `CLAUDE.md`, and any research or prototype branch or ADR the ticket names (`git show origin/<branch>:<path>`, `docs/adr/`). Build only what the ticket asks; every acceptance criterion must be met. When documents contradict each other, align them to the spec's "Implementation Decisions"; never change a decision. If a document cannot follow the decision, report it as a finding instead of rewriting it.
 3. **Build**: call the Skill tool with `tdd` and work test-first whenever possible; test-last is to be avoided (owner rule). See every new or changed test fail before it passes. When the behaviour it pins already exists (a refactor carried it in, or you are adding a missing test), break the production code briefly (e.g. revert the rule the test pins), run the test, confirm it is red for the right reason, then restore the code and see it green; never commit the broken state. For a golden IT, restore the old generator logic without committing, run the IT against the committed goldens, quote the failure line, then restore; the command that runs one IT alone (red evidence only) is in the "Red evidence for one test class" paragraph of `docs/agents/testing.md`. The report names, per new test, how it was seen red (step 7's table). Commit after every green cycle: a container restart once killed an implementer, and only committed work survived.
 4. **Verify**: only a full-reactor result counts. `scripts/agents/verify.sh` runs the commands below in order (Spotless apply first; `--latest`, `--release`, `--fresh`, `--only <step>`), logs each step and stops at the first failure. Before every `verify`, run `./mvnw -o -B clean install -DskipTests -DskipITs`: it is the build CI's Build job runs, and `verify` does not cover it (the jar-less docs module failed there first). Run it alone, since it writes the `~/.m2` shared with sibling worktrees. Use `-pl` only together with `-am`. Then `./mvnw -o clean verify` (default JDK is 21) and `JAVA_HOME=~/.jdks/17 ./mvnw -o clean verify`; also `JAVA_HOME=~/.jdks/latest ./mvnw -o clean verify` when the change touches the build or JDK-specific code.
    - **Fresh-repo check**: when the change touches poms, maven-invoker consumer builds, end-to-end modules or anything else that resolves project artifacts from a local repository, also run `scripts/agents/verify.sh --only fresh-repo`. It runs `clean verify` against a throw-away copy of `~/.m2` without the project's artifacts, like CI's fresh runner; the shared `~/.m2` holds every earlier `install` and hides a missing one (#202 was green locally and red on every CI Verify job).
@@ -20,6 +20,15 @@ The orchestrator hands this file, by path, to every implementer subagent, togeth
    |---|---|---|
 
    An implementer works with git, the build, file tools and the issue-reading commands this brief names. Every session or remote tool (creating, archiving or messaging sessions, triggers, PR or issue writes) belongs to the orchestrator, and the job ends with the final answer.
+
+## Lessons for tests of scripts
+
+For the scripts under `scripts/agents` and the goRalph skill (PR #426 went red in CI on a PATH assumption; the review of #412 found the same pattern again):
+
+- Tests assume nothing about the local PATH, tzdata or installed tools: build the PATH of a fake environment from only the needed tools via `shutil.which`.
+- Wait with poll-and-deadline helpers, never fixed sleeps; shorten timings through env knobs.
+- Validate every user-supplied or hand-edited value with a clear `ERROR` line and exit 2.
+- To undo a temporary mutation of production code (step 3), restore from a copy or a commit, never `git checkout` an uncommitted file (an implementer lost an uncommitted edit that way).
 
 ## Sandbox gotchas
 
