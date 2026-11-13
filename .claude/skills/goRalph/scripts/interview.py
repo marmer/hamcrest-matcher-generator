@@ -19,29 +19,16 @@ An accepted retro ticket is no sub-issue of the spec until the next start attach
 
 A failing or timed-out tracker call ends it with one message on stderr, exit 1 and nothing on stdout; wrong arguments
 give a usage line and exit 2. Every list is read completely (`--paginate`). Environment: RALPH_GH_TIMEOUT_SECONDS, the
-limit of one `gh api` call in seconds (default 60, as in loop.sh; a value that is not a number ends it with exit 1).
+limit of one `gh api` call in seconds (an integer of at least 1, default 60, as in loop.sh; anything else ends it with
+an `ERROR` line on stderr and exit 2). The tracker call itself is `ghapi.py`, shared with summary.py.
 """
 import json
-import os
 import subprocess
 import sys
 
-REPO = "repos/marmer/hamcrest-matcher-generator"
+from ghapi import REPO, SettingError, gh, gh_list, timeout_seconds
+
 USAGE = "usage: interview.py list <spec> | interview.py attach <spec> <n>..."
-
-
-def gh(*args):
-    timeout = float(os.environ.get("RALPH_GH_TIMEOUT_SECONDS", "60"))
-    done = subprocess.run(["gh", "api", *args], capture_output=True, text=True, timeout=timeout)
-    if done.returncode != 0:
-        raise RuntimeError(f"gh api {' '.join(args)} failed: {done.stderr.strip()}")
-    return json.loads(done.stdout) if done.stdout.strip() else None
-
-
-def gh_list(path):
-    """All items of a list endpoint: `--slurp` wraps the pages of `--paginate` in one array, flattened here."""
-    pages = gh("--paginate", "--slurp", path) or []
-    return [item for page in pages for item in page]
 
 
 def brief(issue):
@@ -86,11 +73,15 @@ def main(argv):
         print(USAGE, file=sys.stderr)
         return 2
     try:
+        timeout_seconds()
         if argv[1] == "list":
             print(json.dumps(collect(int(numbers[0])), indent=2))
         else:
             if attach(int(numbers[0]), numbers[1:]):
                 return 1
+    except SettingError as error:
+        print(f"ERROR {error}", file=sys.stderr)
+        return 2
     except (RuntimeError, subprocess.SubprocessError, OSError, ValueError, KeyError) as error:
         print(f"interview.py: {error}", file=sys.stderr)
         return 1

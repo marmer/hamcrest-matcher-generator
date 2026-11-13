@@ -130,6 +130,14 @@ class InterviewTest(unittest.TestCase):
         calls = (self.gh_dir / "calls.log").read_text(encoding="utf-8")
         self.assertIn("-X POST repos/marmer/hamcrest-matcher-generator/issues/42/sub_issues -F sub_issue_id=9061", calls)
 
+    def test_a_wrong_gh_timeout_is_refused_with_an_error_line_and_exit_2_like_in_loop_sh(self):
+        for value in ("abc", "0", "1.5", "-3", ""):
+            env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_TIMEOUT_SECONDS=value)
+            done = subprocess.run([sys.executable, str(SCRIPT), "list", "42"], env=env, capture_output=True,
+                                  text=True, timeout=60)
+            self.assertEqual((2, ""), (done.returncode, done.stdout), f"value {value!r}: {done.stderr}")
+            self.assertIn(f"ERROR RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '{value}'", done.stderr)
+
     def test_wrong_arguments_are_refused_with_a_usage_line_and_exit_2(self):
         for args in ([], ["list"], ["list", "x"], ["attach", "42"], ["attach", "42", "y"], ["bogus", "42"]):
             done = self.run_script(*args)
