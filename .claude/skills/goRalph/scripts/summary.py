@@ -5,10 +5,17 @@ Usage (through python3, no executable bit needed):
 
 Reads the run's `started` file, `status.json` and `ended` marker and asks the tracker through `gh api`: PRs merged
 since the run started, escalation comments on the spec's tickets, open `needs-info` tickets of the spec and `retro`
-tickets created since the run started. It never reads the iteration streams or results. A failing tracker call
-ends it with a message on stderr, exit 1 and nothing on stdout.
+tickets created since the run started. It never reads the iteration streams or results. A failing or timed-out tracker call
+ends it with one message on stderr, exit 1 and nothing on stdout. Every list is read completely (`--paginate`).
+
+A comment counts as an escalation when it (1) mentions "escalat", (2) names a model transition (`haiku -> sonnet`,
+`haiku => sonnet`, a unicode arrow, `haiku to sonnet`) or (3) is a closing line `Model: sonnet|opus ...`, i.e. the
+ticket ran above the default model. The rule is loose on purpose: a comment like "no escalation needed" is a known
+false positive.
 """
 import json
+import os
+import re
 import subprocess
 import sys
 import time
@@ -16,13 +23,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = "repos/marmer/hamcrest-matcher-generator"
+MODELS = "haiku|sonnet|opus"
+ESCALATION = re.compile(rf"escalat|\b({MODELS})\s*(->|=>|\u2192|to)\s*({MODELS})\b|\bModel:\s*(sonnet|opus)\b", re.I)
 
 
 def gh(path):
-    done = subprocess.run(["gh", "api", path], capture_output=True, text=True, timeout=60)
+    """All items of a list endpoint: `--slurp` wraps the pages of `--paginate` in one array, flattened here."""
+    timeout = float(os.environ.get("SUMMARY_GH_TIMEOUT", "60"))
+    done = subprocess.run(["gh", "api", "--paginate", "--slurp", path], capture_output=True, text=True, timeout=timeout)
     if done.returncode != 0:
         raise RuntimeError(f"gh api {path} failed: {done.stderr.strip()}")
-    return json.loads(done.stdout) if done.stdout.strip() else []
+    pages = json.loads(done.stdout) if done.stdout.strip() else []
+    return [item for page in pages for item in page]
 
 
 def collect(run_dir):
@@ -41,7 +53,7 @@ def collect(run_dir):
     escalations = []
     for ticket in tickets:
         for comment in gh(f"{REPO}/issues/{ticket['number']}/comments?since={since}&per_page=100"):
-            if comment["created_at"] >= since and "escalat" in comment["body"].lower():
+            if comment["created_at"] >= since and ESCALATION.search(comment["body"]):
                 escalations.append({"ticket": ticket["number"], "title": ticket["title"],
                                     "comment": comment["body"], "url": comment["html_url"]})
 
@@ -69,7 +81,7 @@ def main(argv):
         return 2
     try:
         data = collect(argv[1])
-    except (RuntimeError, OSError, ValueError, KeyError) as error:
+    except (RuntimeError, subprocess.SubprocessError, OSError, ValueError, KeyError) as error:
         print(f"summary.py: {error}", file=sys.stderr)
         return 1
     print(json.dumps(data, indent=2))
