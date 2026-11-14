@@ -1,7 +1,12 @@
 """Unit tests for the loose-ticket check in issue-status.py (stdlib unittest only, no API calls)."""
+import contextlib
 import importlib.util
+import io
 import os
+import subprocess
+import sys
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("issue_status", os.path.join(HERE, "issue-status.py"))
@@ -71,6 +76,36 @@ class FrontierLinesTest(unittest.TestCase):
 
     def test_no_waiting_line_without_owner_labelled_tickets(self):
         self.assertEqual(["#1 t1 (ready-for-agent)"], status.frontier_lines([ready(1, ["ready-for-agent"])]))
+
+
+class CommandLineTest(unittest.TestCase):
+
+    def run_script(self, *args):
+        return subprocess.run([sys.executable, os.path.join(HERE, "issue-status.py"), *args],
+                              capture_output=True, text=True, timeout=30)
+
+    def test_help_prints_usage_naming_the_flags_and_exits_0(self):
+        for flag in ("--help", "-h"):
+            with self.subTest(flag=flag):
+                result = self.run_script(flag)
+
+                self.assertEqual(0, result.returncode, result.stderr)
+                for name in ("--print", "--json", "--frontier"):
+                    self.assertIn(name, result.stdout)
+
+    def test_parent_number_with_frontier_still_prints_the_ready_tickets(self):
+        tickets = [{"number": 7, "title": "t7", "closed": False, "blocked_by": [], "status": "ready",
+                    "labels": ["ready-for-agent"]}]
+        out = io.StringIO()
+
+        with mock.patch.object(status, "collect", return_value=tickets) as collect, \
+                mock.patch.object(status, "gh", side_effect=AssertionError("must not call the API")), \
+                mock.patch.object(sys, "argv", ["issue-status.py", "12", "--frontier"]), \
+                contextlib.redirect_stdout(out):
+            status.main()
+
+        collect.assert_called_once_with("12")
+        self.assertEqual("#7 t7 (ready-for-agent)\n", out.getvalue())
 
 
 if __name__ == "__main__":
