@@ -8,6 +8,8 @@ Limit: 40 lines (`LearningsFileTest` in `scripts/agents/test_go_ralph_loop.py` p
 
 - Done means the PR is squash-merged, not that the implementer reported: open it with auto-merge, wait for CI once, then end.
 - Record every escalation as a ticket comment (from which model to which, and why); the retro reads these comments.
-- This sandbox refuses shell commands that mix the literal text "github" with pipes, loops, substitutions or heredocs: put such a command in a script file in the scratchpad and run the file.
+- This sandbox refuses shell commands that mix the literal text "github" with pipes, loops, substitutions or heredocs, and any command with `;` chains or `$VARIABLE`s (the run directory and iteration number are in the prompt, not to be expanded): use one simple command per call, or put the logic in a script file in the scratchpad and run the file (run 443: 7 denied calls in one iteration).
+- Never call the squash-merge API yourself, even when CI looks flaky: a failed check means fix or report on the ticket, not merge (run 443 merged #447 with a red check).
 - Tests of scripts: build the fake PATH from the needed tools only, wait with poll-and-deadline helpers (never fixed sleeps), and give every failure line an assertion message, never a bare timeout.
+- Before implementing a ticket, check for an existing remote branch `ticket-<n>` and an open PR (`git ls-remote --heads origin ticket-<n>`). If one exists, continue on it (fetch, check CI, enable auto-merge) instead of implementing again: a second push is rejected and the work is lost (run 443).
 - Never `git checkout` an uncommitted file, and never force-push or push to `main`: the permission settings deny both.
