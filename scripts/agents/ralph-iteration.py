@@ -12,7 +12,7 @@ the script prints an ERROR line and exits 1.
 
 The `gh` call has the timeout of `RALPH_GH_TIMEOUT_SECONDS` (an integer of at least 1, default 60, as in `loop.sh`).
 
-Exit codes: 0 done, 1 the `gh` call failed, 2 a value the script cannot use (`ERROR <what is wrong>`).
+Exit codes: 0 done, 1 the `gh` call failed, timed out or `gh` is missing, 2 a value the script cannot use (`ERROR <what is wrong>`).
 """
 import argparse
 import json
@@ -61,6 +61,8 @@ def auto_merge(args):
         refuse(str(error))
     try:
         ghapi.gh("-X", "PUT", f"{ghapi.REPO}/pulls/{pr}/ccr/auto_merge", "-f", "merge_method=squash")
+    except ValueError:
+        pass  # the call succeeded; ghapi.gh could not parse an empty or non-JSON body, which this route may send
     except (RuntimeError, subprocess.TimeoutExpired, OSError) as error:
         print(f"ERROR auto-merge for #{pr} failed: {error}")
         sys.exit(1)

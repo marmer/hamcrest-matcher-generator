@@ -19,7 +19,7 @@ STUB_GH = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_DIR/gh.log"
 if [ -e "$STUB_DIR/gh.hang" ]; then sleep 30; fi
 if [ -e "$STUB_DIR/gh.fail" ]; then cat "$STUB_DIR/gh.fail" >&2; exit 1; fi
-echo '{}'
+if [ -e "$STUB_DIR/gh.body" ]; then cat "$STUB_DIR/gh.body"; else echo '{}'; fi
 """
 
 
@@ -136,6 +136,16 @@ class RalphIterationTest(unittest.TestCase):
         self.assertEqual(2, done.returncode)
         self.assertIn("ERROR RALPH_GH_TIMEOUT_SECONDS", done.stdout)
         self.assertEqual([], self.gh_calls())
+
+    def test_successful_call_with_an_empty_or_non_json_body_counts_as_success(self):
+        for body in ("", "Accepted"):
+            with self.subTest(body=body):
+                (self.root / "gh.body").write_text(body, encoding="utf-8")
+
+                done = self.run_script("auto-merge", "460")
+
+                self.assertEqual(0, done.returncode, done.stderr)
+                self.assertIn("auto-merge (squash) enabled for #460", done.stdout)
 
     def test_auto_merge_refuses_a_pull_request_number_that_is_not_a_positive_number(self):
         done = self.run_script("auto-merge", "abc")
