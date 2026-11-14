@@ -11,6 +11,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import org.jspecify.annotations.Nullable;
 
@@ -68,11 +69,13 @@ final class ElementSupport {
             final ProcessingEnvironment processingEnv,
             final AnnotationMirror mirror,
             final String name) {
-        return processingEnv
-                .getElementUtils()
-                .getElementValuesWithDefaults(mirror)
-                .entrySet()
-                .stream()
+        return annotationValue(processingEnv.getElementUtils(), mirror, name);
+    }
+
+    /** The value of the named annotation attribute, falling back to the attribute's default. */
+    static AnnotationValue annotationValue(
+            final Elements elements, final AnnotationMirror mirror, final String name) {
+        return elements.getElementValuesWithDefaults(mirror).entrySet().stream()
                 .filter(entry -> entry.getKey().getSimpleName().contentEquals(name))
                 .map(Map.Entry::getValue)
                 .findFirst()
