@@ -325,3 +325,11 @@ Lauf 2: Iteration 1 0,43 USD, Iteration 2 0,37 USD, Retro 0,32 USD; Lauf 3: Iter
 | D7 | Flaky `test_sleeping_script_reports_the_waiting_state` (rote Stufe "Test the agent scripts" bei #447, F16) | #454 |
 
 Ohne Fehler: F13 (Resume), F1, F2, F15. F4 (liegengebliebene Branches nach `stop now`) und F7 (die "Killed"-Meldung der Shell erscheint nur, wenn stderr mitgeschrieben wird; der Skill leitet nur stdout um) sind Beobachtungen ohne Ticket. Ergebnis der Pipeline im Trial: von drei Tickets wurde eines gemergt (F16).
+
+### 9.4 Auto-Merge aus einem `-p`-Kind (#455)
+
+Probe am 2026-11-14 aus einer Cloud-Session (Subagent der Hauptsession, kein `-p`-Kind; dieselbe `gh`-Umgebung und derselbe Proxy, ob das `-p`-Kind sie erbt, ist nicht gemessen):
+
+- `gh api graphql -f query='{viewer{login}}'` wird mit HTTP 403 abgelehnt. Die Meldung nennt selbst die Ausweichroute: "use the CCR routes on api.github.com: ... PUT or DELETE /repos/{owner}/{repo}/pulls/{n}/ccr/auto_merge" (daneben `review_threads`, `resolve`, `ready_for_review`, `convert_to_draft`). Die `enablePullRequestAutoMerge`-Mutation per GraphQL ist also nicht moeglich.
+- Die REST-Route ist erreichbar: `gh api -X PUT repos/marmer/hamcrest-matcher-generator/pulls/99999999/ccr/auto_merge -f merge_method=squash` auf eine nicht vorhandene PR antwortet 404 "Could not resolve to a PullRequest" (keine 403, keine Proxy-Ablehnung), `GET .../ccr/review_threads` ebenso. Der Erfolgsfall (eine echte PR) wurde bewusst nicht geprueft, um auf keiner echten PR Auto-Merge zu schalten; ebenso ist offen, ob der Body-Parameter `merge_method` die richtige Form ist (Annahme).
+- Folge: `scripts/agents/ralph-iteration.py auto-merge <pr>` nutzt die Route. Das erste echte Ergebnis steht aus und gehoert in den naechsten Lauf (#422); bei Ablehnung gibt der Wrapper eine `ERROR`-Zeile aus und merged nie selbst.
