@@ -38,10 +38,10 @@ class RalphIterationTest(unittest.TestCase):
         self.path = os.pathsep.join([str(bin_dir), str(Path(shutil.which("bash")).parent)])
         self.gh_log = self.root / "gh.log"
 
-    def run_script(self, *args, path=None, **extra):
+    def run_script(self, *args, path=None, seconds=30, **extra):
         env = {"PATH": path or self.path, "STUB_DIR": str(self.root), "HOME": str(self.root), **extra}
         return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, env=env,
-                              timeout=30)
+                              timeout=seconds)
 
     def gh_calls(self):
         return self.gh_log.read_text(encoding="utf-8").splitlines() if self.gh_log.exists() else []
@@ -114,7 +114,10 @@ class RalphIterationTest(unittest.TestCase):
     def test_hanging_gh_is_an_error_line_after_the_timeout_not_a_traceback(self):
         (self.root / "gh.hang").write_text("", encoding="utf-8")
 
-        done = self.run_script("auto-merge", "460", RALPH_GH_TIMEOUT_SECONDS="1")
+        try:
+            done = self.run_script("auto-merge", "460", seconds=10, RALPH_GH_TIMEOUT_SECONDS="1")
+        except subprocess.TimeoutExpired:
+            self.fail("ralph-iteration.py did not stop at RALPH_GH_TIMEOUT_SECONDS=1, still running after 10 s")
 
         self.assertEqual(1, done.returncode, done.stderr)
         self.assertIn("ERROR auto-merge for #460 failed:", done.stdout)
