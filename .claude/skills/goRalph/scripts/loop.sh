@@ -265,6 +265,7 @@ json_test() { # input, jq arguments
 # `ralph-iteration.py auto-merge`), without a model. Sets test_result to true when it is enabled; a failure is a WARN
 # line on the monitor and leaves test_result false: it never ends the run, the PR just does not count as waiting.
 enable_auto_merge() { # PR number
+  : > "$run/pr-err.txt"
   if gh_call -X PUT -f merge_method=squash "$REPO_API/pulls/$1/ccr/auto_merge" > /dev/null; then
     echo "auto-merge (squash) enabled for #$1"
     test_result=true
@@ -319,7 +320,10 @@ check_prs() {
     fi
     if [ -n "$reason" ]; then pr_action="#$number $reason"; return 0; fi
     json_test "$detail" '.auto_merge != null' || return 1
-    if [ "$test_result" = false ]; then enable_auto_merge "$number"; fi
+    if [ "$test_result" = false ]; then
+      json_test "$detail" '.draft != true' || return 1
+      if [ "$test_result" = true ]; then enable_auto_merge "$number"; fi
+    fi
     if [ "$test_result" = true ]; then
       json_test "$checks" 'length == 0 or any(.[]; .status != "completed")' || return 1
       if [ "$test_result" = true ]; then pr_waiting=$((pr_waiting + 1)); fi

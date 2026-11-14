@@ -1164,14 +1164,15 @@ printf '%s\n' "${{doc:10}}"
     NO_WORK = ["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"]
 
     def pr(self, number=5, branch="ticket-7", sha="abc", auto_merge=True, state="clean", check_conclusions=("success",),
-           comments=(), replies=(), reviews=(), commit_date="2026-01-01T00:00:00Z"):
+           comments=(), replies=(), reviews=(), commit_date="2026-01-01T00:00:00Z", draft=False):
         """An open PR as the stub gh serves it, every list as one page; a check conclusion of None is a run still
         going, none at all is a PR whose CI has not started; replies are review comments in reply to another."""
         pulls_file = self.gh_dir / "pulls"
         pulls = json.loads(pulls_file.read_text(encoding="utf-8"))[0] if pulls_file.exists() else []
         pulls.append({"number": number, "head": {"ref": branch, "sha": sha}})
         self.serve("pulls", [pulls])
-        self.serve(f"pulls_{number}", {"number": number, "mergeable_state": state, "head": {"ref": branch, "sha": sha},
+        self.serve(f"pulls_{number}", {"number": number, "mergeable_state": state, "draft": draft,
+                                       "head": {"ref": branch, "sha": sha},
                                        "auto_merge": {"merge_method": "squash"} if auto_merge else None})
         self.serve(f"commits_{sha}_check-runs", [{"total_count": len(check_conclusions), "check_runs": [
             {"status": "completed" if c else "in_progress", "conclusion": c} for c in check_conclusions]}])
@@ -1380,6 +1381,14 @@ printf '%s\n' "${{doc:10}}"
         self.assertTrue(lines[0].startswith("WARN auto-merge for #5 failed: "), lines)
         self.assertEqual(self.NO_WORK[0], lines[1])
         self.assertNotIn("ERROR", "\n".join(lines))
+
+    def test_draft_PR_gets_no_auto_merge_from_the_script(self):
+        self.pr(auto_merge=False, check_conclusions=("success",), draft=True)
+
+        lines = self.run_with_pr_sleep()[1]
+
+        self.assertEqual([], self.puts())
+        self.assertEqual(self.NO_WORK, lines)
 
     def test_PR_needing_action_gets_no_auto_merge_from_the_script(self):
         self.pr(auto_merge=False, check_conclusions=("failure",))
