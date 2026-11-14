@@ -3,9 +3,11 @@
 The script runs through bash from a scratch repository copy, with stub `claude` and `gh` programs first on PATH.
 The stub `claude` answers from the file named by STUB_CLAUDE_STREAM and exits with STUB_CLAUDE_EXIT (with
 STUB_CLAUDE_SLEEP it first runs a `sleep` child for that many seconds, pids in STUB_CLAUDE_PID and
-STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv;
+STUB_CLAUDE_PID.sleep); its arguments of the last call are written NUL-separated to STUB_CALLS.argv, and the value
+of CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS it sees ("unset" when absent) to STUB_CALLS.ceiling;
 a call whose prompt starts with `/retro` is the retro iteration: it appears in STUB_CALLS but not in .times or the
-numbering of the streams, its arguments go to STUB_CALLS.retro.argv, and it answers from STUB_CLAUDE_STREAM.retro
+numbering of the streams, its arguments go to STUB_CALLS.retro.argv, its ceiling to STUB_CALLS.retro.ceiling, and it
+answers from STUB_CLAUDE_STREAM.retro
 (STUB_CLAUDE_STREAM without it; exit code from STUB_CLAUDE_STREAM.retro.exit; with STUB_RETRO_SLEEP it first runs a
 `sleep` child for that many seconds, pids in STUB_RETRO_PID and STUB_RETRO_PID.sleep); a file
 STUB_CLAUDE_STREAM.<n> answers the n-th call instead (its exit code is the content of
@@ -38,6 +40,7 @@ STUB_CLAUDE = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 if [[ "$2" == "/retro"* ]]; then
   printf '%s\\0' "$@" > "$STUB_CALLS.retro.argv"
+  echo "${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS-unset}" > "$STUB_CALLS.retro.ceiling"
   echo "RALPH_RUN_DIR=${RALPH_RUN_DIR:-}" >> "$STUB_CALLS.retro"
   echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
   if [ -n "${STUB_RETRO_SLEEP:-}" ]; then
@@ -50,6 +53,7 @@ if [[ "$2" == "/retro"* ]]; then
   exit "$(cat "$STUB_CLAUDE_STREAM.retro.exit" 2>/dev/null || echo 0)"
 fi
 printf '%s\\0' "$@" > "$STUB_CALLS.argv"
+echo "${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS-unset}" > "$STUB_CALLS.ceiling"
 echo "stdin bytes: $(cat | wc -c)" >> "$STUB_CALLS"
 cut -d" " -f1 /proc/uptime >> "$STUB_CALLS.times"
 n="$(wc -l < "$STUB_CALLS.times")"
@@ -222,6 +226,7 @@ class LoopScriptTest(unittest.TestCase):
                    RALPH_REPO=str(self.repo), RALPH_MINUTE_SECONDS="1", RALPH_POLL_SECONDS="0.2",
                    RALPH_GRACE_SECONDS="1", STUB_CALLS=str(self.calls), STUB_CLAUDE_STREAM=str(self.stream),
                    STUB_GH_DIR=str(self.gh_dir))
+        env.pop("CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS", None)  # only a test sets it, never the runner's shell
         env.update(extra)
         return env
 
@@ -373,6 +378,38 @@ class LoopScriptTest(unittest.TestCase):
         arguments = self.argv()
         self.assertIn(name, arguments, f"the child was started without {name}; its arguments: {arguments}")
         return arguments[arguments.index(name) + 1]
+
+    def child_ceiling(self, suffix=".ceiling"):
+        """The background wait ceiling the child of the last start saw, as the stub recorded it."""
+        return self.calls.with_name(self.calls.name + suffix).read_text(encoding="utf-8").strip()
+
+    def test_iteration_child_waits_at_most_an_hour_for_background_work_by_default(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        self.assertEqual("3600000", self.child_ceiling(), "the iteration child must see CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=3600000 by default (claude -p stops background work after 10 minutes otherwise)")
+
+    def test_retro_child_waits_at_most_an_hour_for_background_work_by_default(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop(STUB_GH_EMPTY="1")
+
+        self.assertEqual("3600000", self.child_ceiling(".retro.ceiling"), "the retro child must see CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=3600000 by default")
+
+    def test_wait_ceiling_already_set_for_the_loop_wins_for_the_iteration_child(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1", CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS="1234")
+
+        self.assertEqual("1234", self.child_ceiling(), "a CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS already set for loop.sh must reach the iteration child unchanged")
+
+    def test_wait_ceiling_already_set_for_the_loop_wins_for_the_retro_child(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop(STUB_GH_EMPTY="1", CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS="1234")
+
+        self.assertEqual("1234", self.child_ceiling(".retro.ceiling"), "a CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS already set for loop.sh must reach the retro child unchanged")
 
     def test_child_is_allowed_exactly_every_bash_command_and_the_file_and_agent_tools(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
