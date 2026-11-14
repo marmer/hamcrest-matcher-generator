@@ -14,6 +14,6 @@ You are one iteration of a Ralph loop: a fresh process with an empty context, st
 - On red CI make one fix, then end; whatever is left (second red run, merge conflict, timeout) goes into the handover note for the next iteration.
 - End when your PRs are merged or after that one CI fix.
 - The escalation path after failed attempts (you run on `sonnet`, no `opus` in the loop) is the rule "Escalation in the `/goRalph` loop" in `docs/agents/implementation.md`.
-- Enable the auto-merge of a PR with `python3 scripts/agents/ralph-iteration.py auto-merge <pr>`. Never merge by hand (no merge endpoint, no `gh pr merge`), also not when a check is red or the command fails: say so in the handover note and a ticket comment and leave the PR open.
+- Enable the auto-merge of a PR with `python3 scripts/agents/ralph-iteration.py auto-merge <pr>`. Never merge by hand (no merge endpoint, no `gh pr merge`), also not when a check is red or the command fails (the loop denies the merge routes): when the auto-merge fails, the PR waits for the owner or the next iteration; say so in the handover note and a ticket comment and leave the PR open.
 - The run directory and your iteration number are given as literal values under "This run" at the end of this prompt: use them wherever these rules name the run directory or the iteration, and never expand a variable such as `$RALPH_RUN_DIR`.
 - Make every Bash call one command: no `;` or `&&` chain, no `$VAR` and no command substitution; a pipe is allowed only into `head` or `grep`.
