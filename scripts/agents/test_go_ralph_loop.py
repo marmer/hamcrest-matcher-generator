@@ -423,6 +423,28 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual({"spec": "42", "iteration": 1, "ok": 1, "failed": 0, "state": "ended"},
                          {key: status[key] for key in ("spec", "iteration", "ok", "failed", "state")})
 
+    def test_status_file_is_never_observable_half_written(self):
+        # A jq stand-in that emits the status document in two halves and, between them, looks at the finished status.json of the run.
+        real_jq = shutil.which("jq")
+        observed = self.root / "status-observations"
+        write_executable(self.root / "bin" / "jq", f"""#!/bin/bash
+case "$*" in *run_dir*) ;; *) exec {real_jq} "$@" ;; esac
+doc="$({real_jq} "$@")" || exit 1
+printf '%s' "${{doc:0:10}}"
+for status in "$RALPH_HOME"/runs/*/status.json; do
+  if [ -e "$status" ]; then {real_jq} -e . "$status" >/dev/null 2>&1 && echo valid >> {observed} || echo partial >> {observed}; fi
+done
+sleep 0.2
+printf '%s\n' "${{doc:10}}"
+""")
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        seen = observed.read_text(encoding="utf-8").split()
+        self.assertIn("valid", seen, "the run never rewrote an existing status.json")
+        self.assertNotIn("partial", seen, "status.json was observable while it was being rewritten")
+
     def test_result_and_stream_files_are_kept_per_iteration(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
@@ -1233,8 +1255,12 @@ class LoopScriptTest(unittest.TestCase):
         process = self.start_with_pr_sleep()
 
         def state():
-            status = self.home.glob("runs/*/status.json")
-            return next((json.loads(f.read_text(encoding="utf-8"))["state"] for f in status), None)
+            for status in self.home.glob("runs/*/status.json"):
+                try:
+                    return json.loads(status.read_text(encoding="utf-8"))["state"]
+                except json.JSONDecodeError:  # read while the script rewrote the file; the next poll sees it whole
+                    return None
+            return None
 
         self.wait_until(lambda: state() == "waiting", "the waiting state")
         process.terminate()
