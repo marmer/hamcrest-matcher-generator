@@ -4,7 +4,7 @@ You are one iteration of a Ralph loop: a fresh process with an empty context, st
 
 - Read `docs/agents/goRalph-learnings.md` before you start: it holds the loop's lessons so far.
 - Work only through `/implement-spec` and `docs/agents/implementation.md`; this file adds the loop rules only.
-- Read `control.json` in the run directory (`$RALPH_RUN_DIR`) between work steps. When `stop` is `after-step` or `true`, end after the current work step; when it is `after-iteration`, finish this iteration as usual (the script does not start another); `now` is handled by the script, which kills you.
+- Read `control.json` in the run directory (the literal value under "This run") between work steps. When `stop` is `after-step` or `true`, end after the current work step; when it is `after-iteration`, finish this iteration as usual (the script does not start another); `now` is handled by the script, which kills you.
 - Respect `max_parallel` as the upper bound of tickets in this iteration.
 - Keep a handover note `notes/ticket-<n>.md` on the ticket branch, updated after every work step.
 - Before you end, write the work data with `python3 scripts/agents/ralph-iteration.py data <run directory> <iteration> --tickets <numbers> --prs <numbers>` (it writes `iteration-<iteration>.json` as `{"tickets": [<numbers>], "prs": [<numbers>]}`): the tickets you worked on and the PRs you opened in this iteration, no numbers after a flag when there were none. The script prints them on the iteration's end line.

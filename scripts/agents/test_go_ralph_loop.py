@@ -134,7 +134,7 @@ class IterationRulesTest(unittest.TestCase):
         return found[0]
 
     def test_control_file_is_read_between_work_steps(self):
-        self.rule_with("control.json", "between work steps", "$ralph_run_dir")
+        self.rule_with("control.json", "between work steps", "this run")
 
     def test_handover_note_is_kept_on_the_ticket_branch_after_every_work_step(self):
         self.rule_with("notes/ticket-<n>.md", "ticket branch", "after every work step")
@@ -1478,6 +1478,7 @@ class LoopScriptTest(unittest.TestCase):
         rules = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
         self.assertTrue(self.retro_option("--append-system-prompt").startswith(rules.strip()))
         self.assertIn(f"Run directory: {run}\n", self.retro_option("--append-system-prompt"))
+        self.assertTrue(self.retro_option("--append-system-prompt").endswith("\nLast iteration of the run: 0"))
         self.assertEqual("Agent,Bash(./mvnw:*),Bash(gh api:*),Bash(git:*),Bash(grep:*),Bash(head:*),"
                          "Bash(python3 scripts/:*),Edit,Read,Skill,Write",
                          ",".join(sorted(self.retro_option("--allowedTools").split(","))))

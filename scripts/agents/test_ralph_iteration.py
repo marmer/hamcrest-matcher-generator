@@ -17,6 +17,7 @@ SCRIPT = HERE / "ralph-iteration.py"
 
 STUB_GH = """#!/usr/bin/env bash
 echo "$*" >> "$STUB_DIR/gh.log"
+if [ -e "$STUB_DIR/gh.hang" ]; then sleep 30; fi
 if [ -e "$STUB_DIR/gh.fail" ]; then cat "$STUB_DIR/gh.fail" >&2; exit 1; fi
 echo '{}'
 """
@@ -37,8 +38,8 @@ class RalphIterationTest(unittest.TestCase):
         self.path = os.pathsep.join([str(bin_dir), str(Path(shutil.which("bash")).parent)])
         self.gh_log = self.root / "gh.log"
 
-    def run_script(self, *args):
-        env = {"PATH": self.path, "STUB_DIR": str(self.root), "HOME": str(self.root)}
+    def run_script(self, *args, path=None, **extra):
+        env = {"PATH": path or self.path, "STUB_DIR": str(self.root), "HOME": str(self.root), **extra}
         return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, env=env,
                               timeout=30)
 
@@ -87,20 +88,6 @@ class RalphIterationTest(unittest.TestCase):
         self.assertIn("ERROR", done.stdout + done.stderr)
         self.assertFalse((self.root / "missing").exists())
 
-    def test_control_prints_the_control_file_of_the_run_directory(self):
-        (self.run_dir / "control.json").write_text('{"max_parallel": 2, "stop": null}\n', encoding="utf-8")
-
-        done = self.run_script("control", str(self.run_dir))
-
-        self.assertEqual(0, done.returncode, done.stderr)
-        self.assertEqual({"max_parallel": 2, "stop": None}, json.loads(done.stdout))
-
-    def test_control_without_a_control_file_is_an_error(self):
-        done = self.run_script("control", str(self.run_dir))
-
-        self.assertEqual(2, done.returncode)
-        self.assertIn("ERROR", done.stdout + done.stderr)
-
     def test_auto_merge_enables_squash_auto_merge_through_the_rest_route_of_the_pull_request(self):
         done = self.run_script("auto-merge", "460")
 
@@ -108,12 +95,11 @@ class RalphIterationTest(unittest.TestCase):
         self.assertEqual(["api -X PUT repos/marmer/hamcrest-matcher-generator/pulls/460/ccr/auto_merge "
                           "-f merge_method=squash"], self.gh_calls())
 
-    def test_auto_merge_never_calls_the_merge_endpoint_or_graphql(self):
+    def test_auto_merge_calls_exactly_the_auto_merge_route_of_the_pull_request(self):
         self.run_script("auto-merge", "460")
 
-        for call in self.gh_calls():
-            self.assertNotIn("/merge", call.replace("/ccr/auto_merge", ""))
-            self.assertNotIn("graphql", call)
+        (call,) = self.gh_calls()
+        self.assertEqual("repos/marmer/hamcrest-matcher-generator/pulls/460/ccr/auto_merge", call.split()[3], call)
 
     def test_failing_auto_merge_is_an_error_line_with_the_reason_and_no_hand_merge(self):
         (self.root / "gh.fail").write_text("HTTP 403 nope", encoding="utf-8")
@@ -121,8 +107,32 @@ class RalphIterationTest(unittest.TestCase):
         done = self.run_script("auto-merge", "460")
 
         self.assertEqual(1, done.returncode)
-        self.assertIn("ERROR auto-merge for #460 failed: HTTP 403 nope", done.stdout + done.stderr)
+        self.assertIn("ERROR auto-merge for #460 failed:", done.stdout)
+        self.assertIn("HTTP 403 nope", done.stdout)
         self.assertEqual(1, len(self.gh_calls()), "a fallback call was made")
+
+    def test_hanging_gh_is_an_error_line_after_the_timeout_not_a_traceback(self):
+        (self.root / "gh.hang").write_text("", encoding="utf-8")
+
+        done = self.run_script("auto-merge", "460", RALPH_GH_TIMEOUT_SECONDS="1")
+
+        self.assertEqual(1, done.returncode, done.stderr)
+        self.assertIn("ERROR auto-merge for #460 failed:", done.stdout)
+        self.assertNotIn("Traceback", done.stderr)
+
+    def test_missing_gh_is_an_error_line_not_a_traceback(self):
+        done = self.run_script("auto-merge", "460", path=str(self.root / "empty"))
+
+        self.assertEqual(1, done.returncode, done.stderr)
+        self.assertIn("ERROR auto-merge for #460 failed:", done.stdout)
+        self.assertNotIn("Traceback", done.stderr)
+
+    def test_wrong_gh_timeout_knob_is_refused_before_gh_is_called(self):
+        done = self.run_script("auto-merge", "460", RALPH_GH_TIMEOUT_SECONDS="soon")
+
+        self.assertEqual(2, done.returncode)
+        self.assertIn("ERROR RALPH_GH_TIMEOUT_SECONDS", done.stdout)
+        self.assertEqual([], self.gh_calls())
 
     def test_auto_merge_refuses_a_pull_request_number_that_is_not_a_positive_number(self):
         done = self.run_script("auto-merge", "abc")

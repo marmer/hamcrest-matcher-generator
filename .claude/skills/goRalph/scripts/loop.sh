@@ -474,7 +474,7 @@ while true; do
   killed="$run/killed-$iteration"
   rm -f "$killed"
   rm -f "$run/iteration-$iteration.json"  # work data of an earlier attempt, e.g. one cut off by a usage limit
-  export RALPH_ITERATION="$iteration"  # the orchestrator names its work data file by it (iteration-rules.md)
+  export RALPH_ITERATION="$iteration"  # kept for the child's tools; the prompt carries the number literally (iteration-rules.md)
   set -m  # own process group for the child (pgid = its pid)
   start_claude "/implement-spec $spec" iteration-rules.md "$stream" "$run/stderr-$iteration.txt" "Iteration: $iteration"
   watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
