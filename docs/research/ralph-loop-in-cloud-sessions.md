@@ -291,7 +291,7 @@ Zuverlaessige Erkennung im Loop-Script: **Nicht** `.result` lesen (fehlt bei Abb
 
 ## 9. Trial on a test spec (#421)
 
-Probelauf des gebauten Loops (Spec #410) auf einer Test-Spec (#443) mit drei Dokumentations-Tickets (#444 bis #446, Haiku). Drei Laeufe, aus der Hauptsession per `loop.sh` gestartet (Run 3 mit `nohup setsid`); alle Aussagen sind Beobachtungen (b) aus diesen Laeufen, jeweils ein Lauf je Frage, also keine Statistik. Nicht Teil dieses Trials: der Lauf auf einer echten kleinen Spec (#422).
+Probelauf des gebauten Loops (Spec #410) auf einer Test-Spec (#443) mit drei Dokumentations-Tickets (#444 bis #446, Haiku). Drei Laeufe, aus der Hauptsession per `loop.sh` gestartet; alle Aussagen sind Beobachtungen (b) aus diesen Laeufen, ausser den ausdruecklich als Annahme oder Schluss markierten, jeweils ein Lauf je Frage, also keine Statistik. Nicht Teil dieses Trials: der Lauf auf einer echten kleinen Spec (#422).
 
 ### 9.1 Ergebnis je Abnahmefrage
 
