@@ -74,7 +74,7 @@ published to Maven Central.
 
 [[building-block-important-interfaces]]Important Interfaces::
 
-Every backend implements the `GeneratorBackend` interface of the core, which is the only interface between the core and a backend. A backend receives a `TypeModel` and a `GenerationContext`, and returns its `GeneratedSource` files, each a Java or Kotlin file (the Hamcrest backend returns one, the AssertJ backend two, the Kotlin DSL backend one Kotlin file, or none). The `GenerationContext` carries:
+Every backend implements the `GeneratorBackend` interface of the core, which is the only interface between the core and a backend. A backend receives a `TypeModel` and a `GenerationContext`, and returns its `GeneratedSource` files, each a Java or Kotlin file (per type, the Hamcrest backend returns one, the AssertJ backend two plus its per-package files, the Kotlin DSL backend one Kotlin file, or none). The `GenerationContext` carries:
 
 * the generator name;
 * whether JSpecify resolves at compile time (`jspecifyAvailable`), which is the condition for emitting JSpecify annotations;
@@ -115,7 +115,7 @@ The core and the Hamcrest backend have a component view, shown below. The Assert
 ==== White Box `matcher-generator-core`
 
 .Components of matcher-generator-core
-[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core: the processor hands each round to the worker, which asks the type model factory and the nullability resolver for the model, calls the backend SPI and hands the sources to the source writer, which writes them through the Java compiler",renderer=plantuml]
+[structurizr,target=core-components,format=svg,view=CoreComponents,alt="Components of matcher-generator-core: the processor hands each round to the worker, which reads the configured names with ConfiguredNames, expands them with TypeExpansion, asks the type model factory and the nullability resolver for the model, calls the backend SPI and hands the sources to the source writer, which writes them through the Java compiler",renderer=plantuml]
 ----
 include::../workspace.dsl[]
 ----
@@ -125,8 +125,20 @@ The annotation processor (package `io.github.marmer.matchergenerator.core`) regi
 worker. It declares the processor option `kapt.kotlin.generated`.
 
 `MatcherGenerationProcessorWorker`::
-Resolves the configured class and package names to types, skips types that are already marked as generated, and asks every
-backend for its source, which it hands to the source writer.
+Plans the types of a round: it asks `ConfiguredNames` and `TypeExpansion` which types the configuration stands for, skips
+types that are already marked as generated, models the rest, and asks every backend for its source, which it hands to the
+source writer. It remembers the unresolved names of a configuration between rounds (see <<runtime-deferred-names,chapter 6>>).
+Two small package-private records carry its data: `ConfigurationSite` (the configuration class and its annotation, which
+a diagnostic points at) and `PlannedType` (a type with its model and the `ConfigurationSite` that asked for it).
+
+`ConfiguredNames`::
+The names that one configuration lists in its `value` attribute and its `exclude` attribute, and what they stand for in
+the round: which names match a type or a package, and which exclusions name a type. It lives for one round, with the
+compiler's `Elements` as its only seam; the names that matched nothing are kept from round to round as strings.
+
+`TypeExpansion`::
+Expands the configured names to the types to plan, with the excluded types left out and the public member types
+included, and finds the exclusions that name none of them. It does not plan or generate; that is the worker's concern.
 
 `ProcessorDiagnostics`::
 Holds the texts of the messages the worker and the source writer give and places each one through the compiler's
@@ -211,6 +223,10 @@ Each target package gets one `SoftAssertionsProvider` mixin (written once per pa
 so the generated assertions work as soft and BDD assertions. Each target package also gets one `PropertyRepresentation`, an AssertJ `StandardRepresentation` that prints configured types by their properties; the user registers it with `Assertions.useRepresentation`, and it is never registered automatically. Failures use AssertJ's own `Expecting ...` wording and name the property path from the root type. The runtime class `AssertionPath` carries
 that path into the assertion of the value a `hasFooSatisfying` requirement is run for, matched by identity (its limits are in the glossary entry "<<term-assertion-path,Assertion path>>"); inside an array, collection or map the path
 restarts at the element type. The runtime class `PropertyRead` reads a property whose getter declares a checked exception, for the assertions and the representation (the rule is under `TypeModelFactory` above). Name clashes in the generated code are reported as compiler errors (see <<concepts-diagnostics,chapter 8>>, Diagnostics).
+
+Two package-private helpers serve the generators: `AssertionNaming` holds the names the generators and the name clash check
+share (the mixin, the representation and the names of the assertion classes), as `MatcherNaming` does for the Hamcrest
+backend, and `FileShell` gives every generated type the same `@Generated` annotation and null marking.
 
 The generated code needs AssertJ on the test class path.
 
