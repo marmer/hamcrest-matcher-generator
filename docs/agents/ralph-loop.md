@@ -39,6 +39,7 @@ Work data (#439): before it ends, the orchestrator writes `iteration-<i>.json` i
 Exit codes:
 
 - 0 after an `END`.
+- 2 for a stale or offline start (#489): before the lock and the run directory, a new run and `--resume-only` fetch `origin main` and refuse when `HEAD` does not contain `origin/main` (`ERROR branch <name> is <n> commits behind origin/main, update it or start from main`) or the fetch fails (`ERROR fetching origin main failed in <repo>, the loop needs the network`); a branch on or ahead of `main` starts as before, and the check runs only at the start. Tests: `test_a_branch_behind_main_is_refused_without_run_directory_or_lock` and its neighbours in `test_go_ralph_loop.py`.
 - 2 for a value the script cannot read (option, environment variable or a hand edit of the control file: `ERROR <what is wrong>`, the run stays unfinished) and for a missing tool (`jq`, `flock`, `mktemp`, `timeout`).
 - 1 when the lock of the spec is held (`ERROR spec #<n> already has a running loop (pid <pid>), lock <path>`) and for the refusal of `--resume-only` (`ERROR no run of #<n> to resume`, `ERROR run of #<n> already ended, nothing to resume`).
 - `interview.py` and `summary.py`: 1 for a failed or timed-out tracker call, 2 for a wrong argument or `RALPH_GH_TIMEOUT_SECONDS` (an integer of at least 1, as in `loop.sh`).
