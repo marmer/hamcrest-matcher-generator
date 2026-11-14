@@ -10,7 +10,6 @@ import io.github.marmer.matchergenerator.core.spi.GeneratorBackend;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,9 +45,6 @@ public class MatcherGenerationProcessorWorker {
 
     private static final Set<String> CONFIGURATION_ANNOTATIONS =
             Set.of(GENERATE_MATCHERS, MATCHER_CONFIGURATION);
-
-    /** Kind of the {@code kotlin.Metadata} annotation that marks a file facade. */
-    private static final int KOTLIN_FILE_FACADE_KIND = 2;
 
     /** Generator name of the 5.x processor. Types it generated are skipped as well. */
     private static final String LEGACY_GENERATOR_NAME =
@@ -229,7 +225,7 @@ public class MatcherGenerationProcessorWorker {
         final Map<String, AnnotationValue> entries =
                 configuredNames.entriesMatchingTypeOrPackage(candidates);
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
-                getAllTypeElementsFor(configuredNames, entries.keySet());
+                TypeExpansion.typesToPlan(configuredNames, entries.keySet());
         final Map<String, AnnotationValue> typeEntries =
                 configuredNames.entriesNamingTypes(entries.keySet());
         final Set<String> namedTypes = typeEntries.keySet();
@@ -237,28 +233,23 @@ public class MatcherGenerationProcessorWorker {
                 new TypeModelFactory(
                         processingEnv, diagnostics, configuration, excluded, typeEntries);
         final List<PlannedType> planned = new ArrayList<>();
-        withoutExcludedTypes(typesByGeneratedType, excluded)
-                .forEach(
-                        (typeElement, configuredTypes) -> {
-                            if (isSelfGenerated(typeElement)) {
-                                printSkipNoteBecauseOfSelfGenerationFor(typeElement);
-                            } else if (factory.isNonPublicOutsideItsPackage(typeElement)) {
-                                reportNonPublicType(
+        typesByGeneratedType.forEach(
+                (typeElement, configuredTypes) -> {
+                    if (isSelfGenerated(typeElement)) {
+                        printSkipNoteBecauseOfSelfGenerationFor(typeElement);
+                    } else if (factory.isNonPublicOutsideItsPackage(typeElement)) {
+                        reportNonPublicType(
+                                typeElement, configuredTypes, typeEntries, configuration, factory);
+                    } else {
+                        planned.add(
+                                planFor(
                                         typeElement,
                                         configuredTypes,
-                                        typeEntries,
+                                        namedTypes,
                                         configuration,
-                                        factory);
-                            } else {
-                                planned.add(
-                                        planFor(
-                                                typeElement,
-                                                configuredTypes,
-                                                namedTypes,
-                                                configuration,
-                                                factory));
-                            }
-                        });
+                                        factory));
+                    }
+                });
         return planned;
     }
 
@@ -387,7 +378,7 @@ public class MatcherGenerationProcessorWorker {
         final String qualifiedName = configuredType.getQualifiedName().toString();
         findModel(generatedModel, qualifiedName)
                 .filter(MatcherGenerationProcessorWorker::hasNoProperties)
-                .filter(model -> !isKotlinFileFacade(configuredType))
+                .filter(model -> TypeExpansion.isUserType(configuredType))
                 .ifPresent(
                         model -> {
                             if (namedTypes.contains(qualifiedName)) {
@@ -415,92 +406,16 @@ public class MatcherGenerationProcessorWorker {
     }
 
     /**
-     * The class Kotlin generates for top level functions. It has no properties by design and is no
-     * user type.
-     */
-    private static boolean isKotlinFileFacade(final TypeElement type) {
-        return ElementSupport.kotlinMetadata(type).stream()
-                .flatMap(mirror -> mirror.getElementValues().entrySet().stream())
-                .filter(entry -> entry.getKey().getSimpleName().contentEquals("k"))
-                .anyMatch(
-                        entry ->
-                                Integer.valueOf(KOTLIN_FILE_FACADE_KIND)
-                                        .equals(entry.getValue().getValue()));
-    }
-
-    /**
-     * The types to generate for the given configured names, each with the configured types it
-     * stands for. A nested configured type is generated with its highest nesting type, which then
-     * is not a configured type itself.
-     */
-    private static Map<TypeElement, Set<TypeElement>> getAllTypeElementsFor(
-            final ConfiguredNames configuredNames, final Collection<String> names) {
-        final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        names.forEach(
-                name ->
-                        configuredNames
-                                .typesNamed(name)
-                                .forEach(
-                                        (type, configured) ->
-                                                result.computeIfAbsent(
-                                                                type, key -> new LinkedHashSet<>())
-                                                        .addAll(configured)));
-        return result;
-    }
-
-    /**
      * Every exclusion that names none of the types the processor models for the configured names,
      * neither a generated type nor one of their public member types, is one warning at the
      * exclusion. The caller runs it once per configuration, when all of its names are final.
      */
     private void warnAboutUnmatchedExclusions(
             final ConfigurationSite configuration, final ConfiguredNames configuredNames) {
-        final List<TypeElement> modelledTypes =
-                getAllTypeElementsFor(configuredNames, configuredNames.names()).keySet().stream()
-                        .flatMap(generatedType -> withPublicMemberTypes(generatedType).stream())
-                        .toList();
-        configuredNames
-                .exclusionsNamingNone(modelledTypes)
+        TypeExpansion.unmatchedExclusions(configuredNames)
                 .forEach(
                         (name, exclusion) ->
                                 diagnostics.unmatchedExclusion(name, configuration, exclusion));
-    }
-
-    /**
-     * The type followed by its public member types, recursively, which is the set of types the type
-     * model holds.
-     */
-    private static List<TypeElement> withPublicMemberTypes(final TypeElement type) {
-        final List<TypeElement> result = new ArrayList<>();
-        result.add(type);
-        type.getEnclosedElements().stream()
-                .filter(TypeElement.class::isInstance)
-                .map(TypeElement.class::cast)
-                .filter(ElementSupport::isPublic)
-                .forEach(member -> result.addAll(withPublicMemberTypes(member)));
-        return result;
-    }
-
-    /**
-     * Drops excluded generated types with all their configured types, and the excluded configured
-     * types of the generated types that stay. A generated type without configured types left is not
-     * generated.
-     */
-    private static Map<TypeElement, Set<TypeElement>> withoutExcludedTypes(
-            final Map<TypeElement, Set<TypeElement>> typesByGeneratedType,
-            final Predicate<TypeElement> excluded) {
-        final Map<TypeElement, Set<TypeElement>> result = new LinkedHashMap<>();
-        typesByGeneratedType.forEach(
-                (generatedType, configuredTypes) -> {
-                    final Set<TypeElement> kept =
-                            configuredTypes.stream()
-                                    .filter(excluded.negate())
-                                    .collect(Collectors.toCollection(LinkedHashSet::new));
-                    if (!excluded.test(generatedType) && !kept.isEmpty()) {
-                        result.put(generatedType, kept);
-                    }
-                });
-        return result;
     }
 
     /**
