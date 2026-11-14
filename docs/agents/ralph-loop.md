@@ -46,7 +46,7 @@ Exit codes:
 - `ralph-iteration.py` (#455): 0 done, 1 when the `gh` call of `auto-merge` failed, timed out or `gh` is missing (`ERROR auto-merge for #<n> failed: <reason>`), 2 for a wrong argument or `RALPH_GH_TIMEOUT_SECONDS` (`ERROR <what is wrong>`).
 - 143 when the script itself is terminated.
 
-`status.json` in the run directory is rewritten at every state change: `spec` (string), `state`, `iteration` (number of the current or last iteration), `ok`, `failed` (counts of the run, recovered after a restart) and `run_dir`. States: `running` (an iteration runs), `retro` (the retro iteration runs), `waiting` (PRs wait for CI or a usage limit has to lift, the script sleeps), `between` (after an iteration, before the next check) and `ended`.
+`status.json` in the run directory is rewritten atomically (temp file, then `mv`) at every state change: `spec` (string), `state`, `iteration` (number of the current or last iteration), `ok`, `failed` (counts of the run, recovered after a restart) and `run_dir`. States: `running` (an iteration runs), `retro` (the retro iteration runs), `waiting` (PRs wait for CI or a usage limit has to lift, the script sleeps), `between` (after an iteration, before the next check) and `ended`.
 
 ## Built
 

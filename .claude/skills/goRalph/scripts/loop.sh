@@ -348,10 +348,11 @@ sleep_unless_stopped() {
   done
 }
 
-write_status() { # state, iteration
+write_status() { # state, iteration; written through a temp file so a reader never sees a half-written status.json
+  local tmp="$run/status.json.tmp"
   jq -n --arg spec "$spec" --arg state "$1" --argjson iteration "$2" --argjson ok "$ok_count" \
     --argjson failed "$failed_count" --arg run "$run" \
-    '{spec: $spec, state: $state, iteration: $iteration, ok: $ok, failed: $failed, run_dir: $run}' > "$run/status.json"
+    '{spec: $spec, state: $state, iteration: $iteration, ok: $ok, failed: $failed, run_dir: $run}' > "$tmp" && mv "$tmp" "$run/status.json"
 }
 
 # Shared by the iterations and the retro: the failure of a finished child (empty when it is fine) from its result file
