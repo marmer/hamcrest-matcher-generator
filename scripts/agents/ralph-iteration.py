@@ -98,13 +98,23 @@ def delete_branch(args):
         if not any(pull.get("merged_at") for pull in pulls):
             print(f"ERROR branch {name} has no merged pull request")
             sys.exit(1)
-        local = git("rev-parse", "--verify", "--quiet", f"refs/heads/{name}").returncode == 0
+        merged_heads = {(pull.get("head") or {}).get("sha") for pull in pulls if pull.get("merged_at")}
+        # Every question first, so that a failing one (exit code of ls-remote other than 0 or 2) deletes nothing.
+        local_tip = git("rev-parse", "--verify", "--quiet", f"refs/heads/{name}")
+        listed = git("ls-remote", "--exit-code", "--heads", "origin", f"refs/heads/{name}")
+        if listed.returncode not in (0, 2):  # 2 alone means "no such branch"; 128 and the rest are failures
+            raise RuntimeError(f"git ls-remote origin failed with exit {listed.returncode}: {listed.stderr.strip()}")
+        local = local_tip.returncode == 0
+        remote = listed.returncode == 0
+        tips = ([local_tip.stdout.strip()] if local else []) + ([listed.stdout.split()[0]] if remote else [])
+        if any(tip not in merged_heads for tip in tips):
+            print(f"ERROR branch {name} has commits after its merged pull request (its tip is not the head of a merged one)")
+            sys.exit(1)
         if local:  # first, so that the checked-out branch stops the deletion before the remote one is touched
             removed = git("branch", "-D", name)
             if removed.returncode != 0:
                 print(f"ERROR deleting the local branch {name} failed: {removed.stderr.strip()}")
                 sys.exit(1)
-        remote = git("ls-remote", "--exit-code", "--heads", "origin", name).returncode == 0
         if remote:
             pushed = git("push", "origin", "--delete", name)
             if pushed.returncode != 0:

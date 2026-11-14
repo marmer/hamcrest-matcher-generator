@@ -158,8 +158,6 @@ class RalphIterationTest(unittest.TestCase):
 class DeleteBranchTest(unittest.TestCase):
     """`delete-branch <name>`: the one way a loop child deletes a branch on the remote (the loop denies the hand routes)."""
 
-    MERGED = json.dumps([{"state": "closed", "merged_at": "2026-11-14T10:00:00Z"}])
-
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="ralph-delete-branch-test-"))
         self.addCleanup(shutil.rmtree, self.root, True)
@@ -180,6 +178,8 @@ class DeleteBranchTest(unittest.TestCase):
         for name in ("ticket-5", "session-end-2026-11-14", "retro-443-2026-11-13", "review-445-2", "feature-x"):
             self.git(self.work, "branch", name)
             self.git(self.work, "push", "-q", "origin", name)
+        self.tip = self.git(self.work, "rev-parse", "main").strip()
+        self.MERGED = json.dumps([{"state": "closed", "merged_at": "2026-11-14T10:00:00Z", "head": {"sha": self.tip}}])
 
     def git(self, cwd, *args):
         return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout
@@ -229,7 +229,7 @@ class DeleteBranchTest(unittest.TestCase):
                 self.assertFalse(self.gh_log.exists(), "gh was called for a refused name")
 
     def test_refuses_a_branch_without_a_merged_pull_request_and_deletes_nothing(self):
-        for body in ("[]", json.dumps([{"state": "closed", "merged_at": None}])):
+        for body in ("[]", json.dumps([{"state": "closed", "merged_at": None, "head": {"sha": self.tip}}])):
             with self.subTest(body=body):
                 done = self.delete("ticket-5", body)
 
@@ -239,8 +239,8 @@ class DeleteBranchTest(unittest.TestCase):
                 self.assertIn("ticket-5", self.local_branches())
 
     def test_refuses_a_branch_that_still_has_an_open_pull_request(self):
-        done = self.delete("ticket-5", json.dumps([{"state": "closed", "merged_at": "2026-11-14T10:00:00Z"},
-                                                   {"state": "open", "merged_at": None}]))
+        done = self.delete("ticket-5", json.dumps([{"state": "closed", "merged_at": "2026-11-14T10:00:00Z", "head": {"sha": self.tip}},
+                                                   {"state": "open", "merged_at": None, "head": {"sha": self.tip}}]))
 
         self.assertEqual(1, done.returncode, done.stdout + done.stderr)
         self.assertIn("open pull request", done.stdout)
@@ -262,6 +262,62 @@ class DeleteBranchTest(unittest.TestCase):
 
         self.assertEqual(0, done.returncode, done.stdout + done.stderr)
         self.assertIn("branch ticket-5 is already gone", done.stdout)
+
+    def stub_git(self, script):
+        """A `git` first on PATH that runs `script` for its arguments and otherwise the real git."""
+        stub = self.root / "bin" / "git"
+        stub.write_text(f"#!/usr/bin/env bash\n{script}\nexec {shutil.which('git')} \"$@\"\n", encoding="utf-8")
+        stub.chmod(0o755)
+
+    def test_a_failing_ls_remote_is_an_error_line_not_an_absent_branch_and_nothing_is_deleted(self):
+        for code in (1, 128):
+            with self.subTest(code=code):
+                self.stub_git(f'if [ "$1" = ls-remote ]; then echo "fatal: unable to access" >&2; exit {code}; fi')
+
+                done = self.delete("ticket-5", self.MERGED)
+
+                self.assertEqual(1, done.returncode, done.stdout + done.stderr)
+                self.assertIn("ERROR delete-branch for ticket-5", done.stdout)
+                self.assertNotIn("deleted", done.stdout)
+                self.assertNotIn("already gone", done.stdout)
+                self.assertIn("ticket-5", self.local_branches())
+                self.assertIn("ticket-5", self.remote_branches())
+
+    def test_an_unreachable_origin_is_an_error_line_and_nothing_is_deleted(self):
+        self.git(self.work, "remote", "set-url", "origin", str(self.root / "nowhere.git"))
+
+        done = self.delete("ticket-5", self.MERGED)
+
+        self.assertEqual(1, done.returncode, done.stdout + done.stderr)
+        self.assertIn("ERROR delete-branch for ticket-5", done.stdout)
+        self.assertNotIn("deleted", done.stdout)
+        self.assertIn("ticket-5", self.local_branches())
+
+    def test_a_branch_with_commits_after_its_merged_pull_request_is_not_deleted(self):
+        self.git(self.work, "checkout", "-q", "ticket-5")
+        self.git(self.work, "-c", "user.email=a@b", "-c", "user.name=x", "commit", "-q", "--allow-empty", "-m", "later")
+        self.git(self.work, "checkout", "-q", "main")
+
+        done = self.delete("ticket-5", self.MERGED)  # local tip is ahead of the merged head
+
+        self.assertEqual(1, done.returncode, done.stdout + done.stderr)
+        self.assertIn("ERROR branch ticket-5 has commits after its merged pull request", done.stdout)
+        self.assertIn("ticket-5", self.local_branches())
+        self.assertIn("ticket-5", self.remote_branches())
+
+    def test_a_remote_branch_with_commits_after_its_merged_pull_request_is_not_deleted_either(self):
+        self.git(self.work, "checkout", "-q", "ticket-5")
+        self.git(self.work, "-c", "user.email=a@b", "-c", "user.name=x", "commit", "-q", "--allow-empty", "-m", "later")
+        self.git(self.work, "push", "-q", "origin", "ticket-5")
+        self.git(self.work, "reset", "-q", "--hard", self.tip)
+        self.git(self.work, "checkout", "-q", "main")
+
+        done = self.delete("ticket-5", self.MERGED)  # local tip equals the merged head, the remote one does not
+
+        self.assertEqual(1, done.returncode, done.stdout + done.stderr)
+        self.assertIn("ERROR branch ticket-5 has commits after its merged pull request", done.stdout)
+        self.assertIn("ticket-5", self.local_branches())
+        self.assertIn("ticket-5", self.remote_branches())
 
     def test_the_checked_out_branch_is_not_deleted_and_the_remote_branch_stays(self):
         self.git(self.work, "checkout", "-q", "ticket-5")
