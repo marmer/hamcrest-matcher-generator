@@ -230,12 +230,12 @@ public class MatcherGenerationProcessorWorker {
                 configuredNames.entriesMatchingTypeOrPackage(candidates);
         final Map<TypeElement, Set<TypeElement>> typesByGeneratedType =
                 getAllTypeElementsFor(configuredNames, entries.keySet());
-        final Map<String, AnnotationValue> namedEntries =
+        final Map<String, AnnotationValue> typeEntries =
                 configuredNames.entriesNamingTypes(entries.keySet());
-        final Set<String> namedTypes = namedEntries.keySet();
+        final Set<String> namedTypes = typeEntries.keySet();
         final TypeModelFactory factory =
                 new TypeModelFactory(
-                        processingEnv, diagnostics, configuration, excluded, namedEntries);
+                        processingEnv, diagnostics, configuration, excluded, typeEntries);
         final List<PlannedType> planned = new ArrayList<>();
         withoutExcludedTypes(typesByGeneratedType, excluded)
                 .forEach(
@@ -246,7 +246,7 @@ public class MatcherGenerationProcessorWorker {
                                 reportNonPublicType(
                                         typeElement,
                                         configuredTypes,
-                                        namedEntries,
+                                        typeEntries,
                                         configuration,
                                         factory);
                             } else {
@@ -273,10 +273,10 @@ public class MatcherGenerationProcessorWorker {
     private void reportNonPublicType(
             final TypeElement typeElement,
             final Set<TypeElement> configuredTypes,
-            final Map<String, AnnotationValue> namedEntries,
+            final Map<String, AnnotationValue> typeEntries,
             final ConfigurationSite configuration,
             final TypeModelFactory factory) {
-        namedEntries.entrySet().stream()
+        typeEntries.entrySet().stream()
                 .filter(
                         entry ->
                                 configuredTypes.stream()

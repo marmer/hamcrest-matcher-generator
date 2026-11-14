@@ -161,8 +161,7 @@ class ConfiguredNamesTest {
         final TypeElement lateType = elements.addType("p", "Late");
 
         final ConfiguredNames laterRound = namesOf(List.of(late), List.of());
-        final List<String> remembered =
-                Objects.requireNonNull(memory.remembered().get("c.Config"));
+        final List<String> remembered = Objects.requireNonNull(memory.remembered().get("c.Config"));
         assertEquals(List.of("p.Late"), remembered);
         assertEquals(List.of(), laterRound.namesMatchingNothing(remembered));
         assertEquals(Set.of(lateType), laterRound.typesNamed("p.Late").keySet());
