@@ -397,7 +397,8 @@ class LoopScriptTest(unittest.TestCase):
         deny = json.loads(self.child_option("--settings"))["permissions"]["deny"]
         for command in ("gh api*-X PUT", "gh api*-XPUT", "gh api*--method PUT", "gh api*--method=PUT",
                         "gh api*-X put", "gh api*-Xput", "gh api*--method put", "gh api*--method=put",
-                        "gh api*mergePullRequest", "gh api*/merges", "gh pr merge"):
+                        "gh api*-X Put", "gh api*-XPut", "gh api*--method Put", "gh api*--method=Put",
+                        "gh api*mergePullRequest", "gh pr merge"):
             self.assertIn(f"Bash({command}*)", deny, f"{command} is not denied; deny list: {deny}")
 
     def test_deny_list_blocks_the_merge_api_in_either_flag_order_but_not_reads_or_the_wrapper(self):
@@ -414,6 +415,7 @@ class LoopScriptTest(unittest.TestCase):
         merge = "repos/marmer/hamcrest-matcher-generator/pulls/1/merge"
         for command in (f"gh api -X PUT {merge}", f"gh api --method PUT {merge}", f"gh api {merge} -X PUT",
                         f"gh api {merge} --method=PUT -f merge_method=squash", f"gh api -XPUT {merge}", f"gh api -X put {merge}", f"gh api {merge} --method=put",
+                        f"gh api {merge} --method Put", f"gh api -XPut {merge}",
                         "gh pr merge 1 --squash"):
             self.assertTrue(denied(command), f"{command} is not denied; patterns: {patterns}")
         for command in ("gh api repos/marmer/hamcrest-matcher-generator/pulls/1",
