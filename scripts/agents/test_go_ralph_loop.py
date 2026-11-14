@@ -217,9 +217,24 @@ class LoopScriptTest(unittest.TestCase):
         self.work_data = self.root / "work-data.json"
         self.gh_dir = self.root / "gh"
         self.gh_dir.mkdir()
+        self.origin = self.root / "origin.git"
+        self.git(self.root, "init", "-q", "--bare", "-b", "main", str(self.origin))
+        self.git(self.repo, "init", "-q", "-b", "main")
+        self.git(self.repo, "remote", "add", "origin", str(self.origin))
+        self.commit("start")
+        self.git(self.repo, "push", "-q", "origin", "main")
 
     def tearDown(self):
         self.directory.cleanup()
+
+    @staticmethod
+    def git(directory, *args):
+        return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.org", *args], cwd=directory,
+                              check=True, capture_output=True, text=True).stdout.strip()
+
+    def commit(self, message):
+        self.git(self.repo, "add", "-A")
+        self.git(self.repo, "commit", "-q", "--allow-empty", "-m", message)
 
     def env(self, **extra):
         env = dict(os.environ, PATH=f"{self.root / 'bin'}:{os.environ['PATH']}", RALPH_HOME=str(self.home),
@@ -229,6 +244,15 @@ class LoopScriptTest(unittest.TestCase):
         env.pop("CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS", None)  # only a test sets it, never the runner's shell
         env.update(extra)
         return env
+
+    def advance_origin(self, commits):
+        """Puts commits on origin's main that the scratch repository does not have (made in a second clone)."""
+        other = self.root / "other"
+        if not other.exists():
+            self.git(self.root, "clone", "-q", str(self.origin), str(other))
+        for number in range(commits):
+            self.git(other, "commit", "-q", "--allow-empty", "-m", f"main {number}")
+        self.git(other, "push", "-q", "origin", "main")
 
     def start(self, *args, **extra):
         process = subprocess.Popen(
@@ -303,6 +327,57 @@ class LoopScriptTest(unittest.TestCase):
     def only_run_dir(self):
         (run,) = (self.home / "runs").iterdir()
         return run
+
+    def test_a_checkout_on_main_starts(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertFalse([line for line in lines if line.startswith("ERROR")], lines)
+
+    def test_a_branch_ahead_of_main_starts(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.git(self.repo, "checkout", "-q", "-b", "loop-work")
+        self.commit("work on the loop")
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(0, code, err)
+        self.assertFalse([line for line in lines if line.startswith("ERROR")], lines)
+
+    def test_a_branch_behind_main_is_refused_without_run_directory_or_lock(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        self.git(self.repo, "checkout", "-q", "-b", "retro-stale")
+        self.advance_origin(2)
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(2, code, err)
+        self.assertEqual(["ERROR branch retro-stale is 2 commits behind origin/main, update it or start from main"],
+                         lines)
+        self.assertFalse((self.home / "runs").exists() and list((self.home / "runs").iterdir()))
+        self.assertFalse((self.home / "locks").exists() and list((self.home / "locks").iterdir()))
+        self.assertFalse(self.calls.exists())
+
+    def test_the_stale_start_is_refused_by_resume_only_too(self):
+        self.write_control()
+        self.advance_origin(1)
+
+        code, lines, err = self.run_loop("--resume-only")
+
+        self.assertEqual(2, code, err)
+        self.assertEqual(["ERROR branch main is 1 commit behind origin/main, update it or start from main"], lines)
+
+    def test_a_failed_fetch_is_refused(self):
+        self.git(self.repo, "remote", "set-url", "origin", str(self.root / "missing.git"))
+
+        code, lines, err = self.run_loop("--max-iterations", "1")
+
+        self.assertEqual(2, code, err)
+        self.assertEqual(1, len(lines), lines)
+        self.assertTrue(lines[0].startswith("ERROR fetching origin main failed"), lines)
+        self.assertFalse((self.home / "runs").exists() and list((self.home / "runs").iterdir()))
 
     def test_n_successful_iterations_then_end(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")

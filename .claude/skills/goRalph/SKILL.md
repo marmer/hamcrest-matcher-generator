@@ -11,7 +11,7 @@ A **goRalph run** works one spec through a script, not through this session: `sc
    - `max N Runden` is `--max-iterations N`; `höchstens 4 Stunden` is `--max-duration 240` (minutes); `Runden höchstens 120 Minuten` is `--max-iteration-duration 120`;
    - `bis 6 Uhr` is `--until "<next 06:00 as YYYY-MM-DD HH:MM>"`, Europe/Berlin unless a zone is named (`--until "2026-11-14 06:00 America/New_York"`);
    - `--max-parallel N` (1 to 3, default 3); `--limit-stop after-iteration|after-step|now` is the stop kind a reached limit acts as (default `after-step`).
-   Every limit is absent by default. A value the script cannot read ends it with an `ERROR` line and exit 2: tell the owner.
+   Every limit is absent by default. A value the script cannot read ends it with an `ERROR` line and exit 2: tell the owner. `ERROR branch <name> is <n> commits behind origin/main` (exit 2, nothing started) means the checkout is stale: tell the owner to update the branch (merge `origin/main`) or start from `main`; `ERROR fetching origin main failed` means no network.
 2. **Interview**, before anything is started and only when something is open. The lister asks the tracker without a model:
    ```bash
    python3 "${CLAUDE_SKILL_DIR}/scripts/interview.py" list <spec>

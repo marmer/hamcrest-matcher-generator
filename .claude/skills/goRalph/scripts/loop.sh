@@ -14,6 +14,8 @@
 # or an empty frontier is a retro: one `claude -p "/retro non-interactive <run dir>"` call (no retro after a stop now,
 # a limit acting as now, a failed check or a usage limit that does not lift). It is no iteration of the run; it has
 # the stop now and duration watcher of an iteration, and a usage limit during it means no retro (not waited out).
+# A start (new or --resume-only) fetches origin main first and refuses with an ERROR line (exit 2, no lock, no run
+# directory) when HEAD does not contain it or the fetch fails.
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
 # RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS,
 # RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
@@ -98,6 +100,18 @@ command -v jq >/dev/null || die "jq is required"
 command -v flock >/dev/null || die "flock not found"
 command -v mktemp >/dev/null || die "mktemp is required"
 command -v timeout >/dev/null || die "timeout is required"
+command -v git >/dev/null || die "git is required"
+
+# A checkout that lacks commits of main runs the loop files of that older state (#489: a run started from a branch
+# without the wider allowlist was denied every command), so a start, new or --resume-only, needs HEAD to contain
+# origin/main. Checked here only: iterations move the checkout themselves. Before the lock and the run directory,
+# so a refusal leaves nothing behind.
+git -C "$REPO" fetch --quiet origin main 2>/dev/null || die "fetching origin main failed in $REPO, the loop needs the network"
+if ! git -C "$REPO" merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
+  behind="$(git -C "$REPO" rev-list --count HEAD..origin/main 2>/dev/null)"
+  [ "$behind" = 1 ] && commits=commit || commits=commits
+  die "branch $(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null) is ${behind:-?} $commits behind origin/main, update it or start from main"
+fi
 
 # Lock: one active run per spec, held through flock on a file descriptor, so the kernel releases it when the
 # process dies (a dead holder never blocks) and two starters cannot both get it.
