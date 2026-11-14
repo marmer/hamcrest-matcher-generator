@@ -16,9 +16,9 @@
 # the stop now and duration watcher of an iteration, and a usage limit during it means no retro (not waited out).
 # Environment: RALPH_HOME (default ~/.goRalph), RALPH_REPO (repository root, default: four levels above this script),
 # RALPH_MINUTE_SECONDS, RALPH_POLL_SECONDS, RALPH_GRACE_SECONDS, RALPH_PR_SLEEP_SECONDS, RALPH_GH_TIMEOUT_SECONDS,
-# RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
+# RALPH_GH_MAX_PAGES, RALPH_LIMIT_RETRY_SECONDS, RALPH_LIMIT_CAP_SECONDS
 # (shortened timings for tests, not for the owner; the PR sleep is the pause between two checks while PRs wait for CI,
-# default 300, the gh timeout the limit of one `gh api` call of that check, default 60; the limit retry is the pause
+# default 300, the gh timeout the limit of one `gh api` call of that check, default 60, the page limit RALPH_GH_MAX_PAGES of one list, default 100, reaching it fails the check; the limit retry is the pause
 # after an iteration that ended on a usage limit, default 600, the limit cap the most the run waits for such a limit to
 # lift, default 5 h 15 min).
 # An iteration whose result event is an error that names the usage limit (api_error_status 429, or a text with
@@ -65,6 +65,7 @@ poll_seconds="${RALPH_POLL_SECONDS:-5}"
 grace_seconds="${RALPH_GRACE_SECONDS:-300}"
 pr_sleep_seconds="${RALPH_PR_SLEEP_SECONDS:-300}"
 gh_timeout_seconds="${RALPH_GH_TIMEOUT_SECONDS:-60}"
+gh_max_pages="${RALPH_GH_MAX_PAGES:-100}"
 limit_retry_seconds="${RALPH_LIMIT_RETRY_SECONDS:-600}"
 limit_cap_seconds="${RALPH_LIMIT_CAP_SECONDS:-$((315 * minute_seconds))}"  # 5 h 15 min
 [[ "$minute_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_MINUTE_SECONDS needs a positive integer, got '$minute_seconds'"
@@ -72,6 +73,7 @@ limit_cap_seconds="${RALPH_LIMIT_CAP_SECONDS:-$((315 * minute_seconds))}"  # 5 h
 [[ "$grace_seconds" =~ ^[0-9]+$ ]] || die "RALPH_GRACE_SECONDS needs an integer, got '$grace_seconds'"
 [[ "$pr_sleep_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_PR_SLEEP_SECONDS needs a positive integer, got '$pr_sleep_seconds'"
 [[ "$gh_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_GH_TIMEOUT_SECONDS needs a positive integer, got '$gh_timeout_seconds'"
+[[ "$gh_max_pages" =~ ^[1-9][0-9]*$ ]] || die "RALPH_GH_MAX_PAGES needs a positive integer, got '$gh_max_pages'"
 [[ "$limit_retry_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_LIMIT_RETRY_SECONDS needs a positive integer, got '$limit_retry_seconds'"
 [[ "$limit_cap_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_LIMIT_CAP_SECONDS needs a positive integer, got '$limit_cap_seconds'"
 
@@ -211,9 +213,26 @@ limit_waited=0  # seconds waited for the usage limit since the last iteration th
 REPO_API="repos/marmer/hamcrest-matcher-generator"
 
 # One `gh api` call (arguments as for gh) with the timeout, so a hung gh cannot block the TERM trap for long; the
-# lists are read with --paginate --slurp, i.e. as a JSON array holding one element per page.
+# lists are read by gh_pages.
 gh_call() { timeout "$gh_timeout_seconds" gh api "$@" 2>>"$run/pr-err.txt"; }
-gh_pages() { gh_call --paginate --slurp "$1"; }
+
+# A list endpoint (its path has a query with per_page=100) as a JSON array holding one element per page: the pages
+# page=1, 2, ... are read one by one (not with --paginate: GitHub's Link header leads to repositories/{id}/... paths,
+# which the cloud proxy refuses with 403) up to the first page with fewer than 100 items (for check runs the items
+# of its check_runs); a list still full at the page limit fails with a message naming the endpoint, never truncated.
+gh_pages() { # endpoint
+  local endpoint="$1" page=1 out count pages=""
+  while [ "$page" -le "$gh_max_pages" ]; do
+    out="$(gh_call "$endpoint&page=$page")" || return 1
+    count="$(jq 'if type == "array" then length else (.check_runs // [] | length) end' <<< "$out" 2>>"$run/pr-err.txt")" || return 1
+    [ -n "$count" ] || return 1
+    pages="$pages${pages:+,}$out"
+    if [ "$count" -lt 100 ]; then echo "[$pages]"; return 0; fi
+    page=$((page + 1))
+  done
+  echo "page limit $gh_max_pages (RALPH_GH_MAX_PAGES) reached for $endpoint" >> "$run/pr-err.txt"
+  return 1
+}
 
 # jq -e with its three outcomes kept apart: sets test_result to true or false (exit 0 or 1 of jq: the answer), and
 # returns 1 when jq itself failed (exit 2 or more: invalid input, a missing field), so garbage never passes as green.

@@ -22,7 +22,8 @@ An accepted retro ticket is no sub-issue of the spec until the next start attach
 (`issue-status.py --frontier`) reads only the sub-issues, so the starting run cannot take it.
 
 A failing or timed-out tracker call ends it with one message on stderr, exit 1 and nothing on stdout; wrong arguments
-give a usage line and exit 2. Every list is read completely (`--paginate`). Environment: RALPH_GH_TIMEOUT_SECONDS, the
+give a usage line and exit 2. Every list is read completely (page by page, see `ghapi.gh_list`; RALPH_GH_MAX_PAGES, default 100,
+is the page limit, reaching it is an error). Environment: RALPH_GH_TIMEOUT_SECONDS, the
 limit of one `gh api` call in seconds (an integer of at least 1, default 60, as in loop.sh; anything else ends it with
 an `ERROR` line on stderr and exit 2). The tracker call itself is `ghapi.py`, shared with summary.py.
 """

@@ -16,9 +16,10 @@ STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on t
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
 `commits_<sha>_check-runs`), `[]` when there is none; a file `fail_<name>` makes that endpoint fail, and every such
-call is appended to `calls.log` there, and a file `hang_<name>` makes it hang. With `--paginate --slurp` the stub
-answers the sub-issues as one page and every other file as it is, so the file of a list endpoint holds the list of its
-pages (for check runs a list of the pages' objects).
+call is appended to `calls.log` there, and a file `hang_<name>` makes it hang. For `page=N` the stub answers the
+sub-issues as one page (`[]` from page 2) and serves page N of every other file (`[]` beyond the last one), so the
+file of a list endpoint holds the list of its pages (for check runs a list of the pages' objects); an endpoint
+without `page=` gets the file as it is. Like the cloud proxy the stub refuses `--paginate`.
 A file STUB_CLAUDE_DATA (or its own STUB_CLAUDE_DATA.<n> for the n-th call) is copied by the stub iteration to the
 iteration's work data file in the run directory, as the orchestrator writes it.
 """
@@ -77,15 +78,18 @@ exit "${STUB_CLAUDE_EXIT:-0}"
 """
 
 STUB_GH = """#!/usr/bin/env bash
-slurp=""
-for argument in "$@"; do [ "$argument" = --slurp ] && slurp=1; done
+for argument in "$@"; do
+  if [ "$argument" = --paginate ]; then echo "stub gh: --paginate follows repositories/{id} links, refused like the proxy" >&2; exit 1; fi
+done
 endpoint="${@: -1}"
-wrap() { if [ -n "$slurp" ]; then echo "[$(cat)]"; else cat; fi; }
+page=""
+case "$endpoint" in *"&page="*) page="${endpoint##*&page=}"; page="${page%%&*}" ;; esac
 case "$endpoint" in
   *sub_issues*)
-    if [ -n "${STUB_GH_EMPTY:-}" ]; then echo '[]' | wrap
-    elif [ -n "${STUB_GH_CLAIMED:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": [], "assignees": [{"login": "x"}]}]' | wrap
-    else echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}]' | wrap; fi ;;
+    if [ -n "$page" ] && [ "$page" -gt 1 ]; then echo '[]'
+    elif [ -n "${STUB_GH_EMPTY:-}" ]; then echo '[]'
+    elif [ -n "${STUB_GH_CLAIMED:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": [], "assignees": [{"login": "x"}]}]'
+    else echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}]'; fi ;;
   *dependencies*) echo '[]' ;;
   *)
     name="${endpoint#repos/marmer/hamcrest-matcher-generator/}"
@@ -94,7 +98,9 @@ case "$endpoint" in
     echo "$name" >> "$STUB_GH_DIR/calls.log"
     if [ -e "$STUB_GH_DIR/fail_$name" ]; then echo "stub gh: $name failed" >&2; exit 1; fi
     if [ -e "$STUB_GH_DIR/hang_$name" ]; then sleep 30; fi
-    if [ -e "$STUB_GH_DIR/$name" ]; then cat "$STUB_GH_DIR/$name"; else echo '[]'; fi ;;
+    if [ ! -e "$STUB_GH_DIR/$name" ]; then echo '[]'
+    elif [ -n "$page" ]; then jq -c --argjson n "$page" '.[$n - 1] // []' "$STUB_GH_DIR/$name"
+    else cat "$STUB_GH_DIR/$name"; fi ;;
 esac
 """
 
@@ -1254,21 +1260,22 @@ class LoopScriptTest(unittest.TestCase):
 
     def test_red_check_run_on_the_second_page_starts_an_iteration(self):
         self.pr()
-        self.serve("commits_abc_check-runs", [{"check_runs": [{"status": "completed", "conclusion": "success"}]},
+        self.serve("commits_abc_check-runs", [{"check_runs": [{"status": "completed", "conclusion": "success"}] * 100},
                                               {"check_runs": [{"status": "completed", "conclusion": "failure"}]}])
 
         self.assert_iteration_started(self.run_with_pr_sleep())
 
     def test_review_comment_on_the_second_page_starts_an_iteration(self):
         self.pr()
-        self.serve("pulls_5_comments", [[{"created_at": "2025-12-31T00:00:00Z", "in_reply_to_id": None}],
+        self.serve("pulls_5_comments", [[{"created_at": "2025-12-31T00:00:00Z", "in_reply_to_id": None}] * 100,
                                         [{"created_at": "2026-01-01T00:05:00Z", "in_reply_to_id": None}]])
 
         self.assert_iteration_started(self.run_with_pr_sleep())
 
     def test_review_on_the_second_page_starts_an_iteration(self):
         self.pr()
-        self.serve("pulls_5_reviews", [[], [{"state": "CHANGES_REQUESTED", "body": "", "submitted_at": "2026-01-01T00:05:00Z"}]])
+        self.serve("pulls_5_reviews", [[{"state": "APPROVED", "body": "", "submitted_at": "2025-12-31T00:00:00Z"}] * 100,
+                                        [{"state": "CHANGES_REQUESTED", "body": "", "submitted_at": "2026-01-01T00:05:00Z"}]])
 
         self.assert_iteration_started(self.run_with_pr_sleep())
 
@@ -1276,9 +1283,31 @@ class LoopScriptTest(unittest.TestCase):
         self.pr(branch="feature-1", check_conclusions=("success",))
         self.pr(number=6, sha="def", check_conclusions=("failure",))
         pulls = json.loads((self.gh_dir / "pulls").read_text(encoding="utf-8"))[0]
-        self.serve("pulls", [[pulls[0]], [pulls[1]]])
+        self.serve("pulls", [[pulls[0]] + [self.other_pr(n) for n in range(99)], [pulls[1]]])
 
         self.assert_iteration_started(self.run_with_pr_sleep())
+
+    @staticmethod
+    def other_pr(number):
+        return {"number": 1000 + number, "head": {"ref": "feature-other", "sha": f"other{number}"}}
+
+    def test_red_PR_on_the_third_page_of_250_open_PRs_starts_an_iteration(self):
+        self.pr(number=6, sha="def", check_conclusions=("failure",))
+        red = json.loads((self.gh_dir / "pulls").read_text(encoding="utf-8"))[0][0]
+        others = [self.other_pr(n) for n in range(249)]
+        self.serve("pulls", [others[:100], others[100:200], others[200:] + [red]])
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+    def test_open_PRs_still_full_at_the_page_limit_fail_the_check_naming_the_endpoint(self):
+        self.pr()
+        self.serve("pulls", [[self.other_pr(n) for n in range(100)]] * 3)
+
+        code, lines, err = self.run_with_pr_sleep(RALPH_GH_MAX_PAGES="3")
+
+        self.assert_pr_check_failed((code, lines, err))
+        self.assertIn("pulls?state=open", lines[0])
+        self.assertIn("RALPH_GH_MAX_PAGES", lines[0])
 
     def assert_pr_check_failed(self, outcome):
         code, lines, err = outcome
