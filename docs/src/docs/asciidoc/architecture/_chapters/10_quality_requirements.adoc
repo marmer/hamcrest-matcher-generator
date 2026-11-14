@@ -54,8 +54,7 @@ Each scenario has a short title and one sentence that names all elements of the 
 When _source_ _stimulus_ while _environment_, _artifact_ _response_; _response measure_.
 
 Scenarios describe either a use of the library at runtime (a test developer compiles or runs tests) or a change to the system or its environment (a contributor, a bot or a new JDK).
-The column "Protected by" names the check that decides whether the scenario is met, as decided for 6.0.0.
-"None yet (planned for 6.0.0)" marks a scenario without such a check; 6.0.0 adds that check.
+The column "Protected by" names the check that decides whether the scenario is met; "None" marks a scenario without such a check, with the reason.
 
 [options="header",cols="1,2,6,2"]
 |===
