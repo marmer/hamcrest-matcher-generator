@@ -3,7 +3,8 @@
 The script runs on a scratch run directory (started file, status.json, ended marker) with a stub `gh` first on PATH.
 The stub serves one JSON fixture per endpoint from the directory STUB_GH_DIR: pulls.json, sub_issues.json,
 comments-<n>.json and retro.json, each a list of pages; a missing fixture makes it fail like a broken tracker call.
-Like gh, it prints the first page only, and with `--paginate --slurp` all pages as one array of pages.
+It serves the page named by `page=N` in the endpoint (`[]` beyond the last one) and, like the cloud proxy, refuses
+`--paginate` (its Link header leads to `repositories/{id}/...` paths) and an endpoint without `page=`.
 """
 import json
 import os
@@ -25,10 +26,10 @@ case "$*" in
   *) f=unknown ;;
 esac
 [ -f "$STUB_GH_DIR/$f" ] || { echo "stub gh: no fixture $f for $*" >&2; exit 1; }
-case "$*" in
-  *--paginate*--slurp*|*--slurp*--paginate*) cat "$STUB_GH_DIR/$f" ;;
-  *) jq -c '.[0]' "$STUB_GH_DIR/$f" ;;
-esac
+case "$*" in *--paginate*) echo "stub gh: --paginate follows repositories/{id} links, refused like the proxy" >&2; exit 1 ;; esac
+case "${@: -1}" in *"&page="*) ;; *) echo "stub gh: no page= in $*" >&2; exit 1 ;; esac
+page="${@: -1}"; page="${page##*&page=}"; page="${page%%&*}"
+jq -c --argjson n "$page" '.[$n - 1] // []' "$STUB_GH_DIR/$f"
 """
 
 START = 1_700_000_000  # 2023-11-14T22:13:20Z
@@ -82,6 +83,23 @@ class SummaryTest(unittest.TestCase):
         ])
         self.assertEqual([{"number": 5, "title": "feat: new", "url": "https://example.test/pull/5"}],
                          self.data()["merged_prs"])
+
+    def test_reads_every_page_of_a_list_longer_than_one_page(self):
+        def pull(number):
+            return {"number": number, "title": f"feat {number}", "html_url": f"u{number}", "merged_at": AFTER}
+        self.pages("pulls", [[pull(n) for n in range(0, 100)], [pull(n) for n in range(100, 200)],
+                             [pull(n) for n in range(200, 250)]])
+        self.assertEqual(list(range(250)), [p["number"] for p in self.data()["merged_prs"]])
+
+    def test_a_list_still_full_at_the_page_limit_is_an_error_naming_the_endpoint(self):
+        full = [{"number": n, "title": "t", "html_url": "u", "merged_at": AFTER} for n in range(100)]
+        self.pages("pulls", [full] * 3)
+        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_GH_MAX_PAGES="3")
+        done = subprocess.run([sys.executable, str(SCRIPT), str(self.run_dir)], env=env, capture_output=True,
+                              text=True, timeout=60)
+        self.assertEqual(1, done.returncode, done.stderr)
+        self.assertIn("pulls?state=closed", done.stderr)
+        self.assertEqual("", done.stdout)
 
     def test_lists_open_needs_info_tickets_of_the_spec_as_open_questions(self):
         self.fixture("sub_issues", [
@@ -141,16 +159,19 @@ class SummaryTest(unittest.TestCase):
 
     def test_every_page_of_the_merged_pull_requests_is_read(self):
         self.pages("pulls", [
-            [{"number": 5, "title": "first page", "html_url": "u5", "merged_at": AFTER}],
+            [{"number": 5, "title": "first page", "html_url": "u5", "merged_at": AFTER}]
+            + [{"number": 1000 + n, "title": "open", "html_url": "u", "merged_at": None} for n in range(99)],
             [{"number": 4, "title": "second page", "html_url": "u4", "merged_at": AFTER}]])
         self.assertEqual([5, 4], [p["number"] for p in self.data()["merged_prs"]])
 
     def test_every_page_of_the_spec_tickets_is_read(self):
         self.pages("sub_issues", [
-            [{"number": 7, "title": "One", "state": "open", "html_url": "u7", "labels": [{"name": "needs-info"}]}],
+            [{"number": 7, "title": "One", "state": "open", "html_url": "u7", "labels": [{"name": "needs-info"}]}]
+            + [{"number": 1000 + n, "title": "Done", "state": "closed", "html_url": "u", "labels": []}
+               for n in range(99)],
             [{"number": 8, "title": "Two", "state": "open", "html_url": "u8", "labels": [{"name": "needs-info"}]}]])
-        self.fixture("comments-7", [])
-        self.fixture("comments-8", [])
+        for number in [7, 8] + list(range(1000, 1099)):
+            self.fixture(f"comments-{number}", [])
         self.assertEqual([7, 8], [q["number"] for q in self.data()["open_questions"]])
 
     def test_a_tracker_call_that_times_out_ends_with_one_message_and_no_traceback(self):

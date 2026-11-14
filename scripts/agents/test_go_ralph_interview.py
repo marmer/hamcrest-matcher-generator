@@ -3,7 +3,7 @@
 The script runs with a stub `gh` first on PATH. The stub serves one JSON fixture per endpoint from STUB_GH_DIR:
 sub_issues.json (the spec's sub-issues), retro-human.json (issues labelled retro and ready-for-human),
 retro-agent.json (retro and ready-for-agent) and issue-<n>.json (one issue); each list is a list of pages and is
-printed as one array of pages for `--paginate --slurp`. A missing fixture makes the stub fail like a broken tracker
+served page by page for `page=N` (`[]` beyond the last one); like the cloud proxy the stub refuses `--paginate`. A missing fixture makes the stub fail like a broken tracker
 call; every call is appended to calls.log there.
 """
 import json
@@ -28,8 +28,10 @@ case "$*" in
   *) f=unknown ;;
 esac
 [ -f "$STUB_GH_DIR/$f" ] || { echo "stub gh: no fixture $f for $*" >&2; exit 1; }
-case "$*" in
-  *--slurp*) cat "$STUB_GH_DIR/$f" ;;
+case "$*" in *--paginate*) echo "stub gh: --paginate follows repositories/{id} links, refused like the proxy" >&2; exit 1 ;; esac
+case "${@: -1}" in
+  *"&page="*) page="${@: -1}"; page="${page##*&page=}"; page="${page%%&*}"
+           jq -c --argjson n "$page" '.[$n - 1] // []' "$STUB_GH_DIR/$f" ;;
   *) jq -c 'if type == "array" then .[0] else . end' "$STUB_GH_DIR/$f" ;;
 esac
 """
@@ -58,10 +60,14 @@ class InterviewTest(unittest.TestCase):
             self.fixture(name, [])
 
     def fixture(self, name, data):
-        (self.gh_dir / f"{name}.json").write_text(json.dumps([data]), encoding="utf-8")
+        self.pages(name, [data])
 
-    def run_script(self, *args):
-        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_HOME=str(self.ralph_home))
+    def pages(self, name, pages):
+        (self.gh_dir / f"{name}.json").write_text(json.dumps(pages), encoding="utf-8")
+
+    def run_script(self, *args, **extra_env):
+        env = dict(os.environ, PATH=self.path, STUB_GH_DIR=str(self.gh_dir), RALPH_HOME=str(self.ralph_home),
+                   **extra_env)
         return subprocess.run([sys.executable, str(SCRIPT), *args], env=env, capture_output=True, text=True,
                               timeout=60)
 
@@ -112,6 +118,19 @@ class InterviewTest(unittest.TestCase):
         data = self.listing()
         self.assertEqual([{"number": 61, "title": "Title 61", "url": "u61"}], data["carry_over"])
         self.assertFalse(data["interview"])
+
+    def test_reads_every_page_of_a_list_longer_than_one_page(self):
+        self.pages("retro-human", [[issue(n, "retro", "ready-for-human") for n in range(100, 200)],
+                                   [issue(n, "retro", "ready-for-human") for n in range(200, 300)],
+                                   [issue(n, "retro", "ready-for-human") for n in range(300, 350)]])
+        self.assertEqual(list(range(100, 350)), [t["number"] for t in self.listing()["retro"]])
+
+    def test_a_list_still_full_at_the_page_limit_is_an_error_naming_the_endpoint(self):
+        full = [issue(n, "retro", "ready-for-human") for n in range(100)]
+        self.pages("retro-human", [full] * 3)
+        done = self.run_script("list", "42", RALPH_GH_MAX_PAGES="3")
+        self.assertEqual(1, done.returncode, done.stderr)
+        self.assertIn("labels=retro,ready-for-human", done.stderr)
 
     def test_a_retro_ticket_that_already_has_a_parent_is_not_carried_over(self):
         self.fixture("retro-agent", [issue(61, "retro", "ready-for-agent",
