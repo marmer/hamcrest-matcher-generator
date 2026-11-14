@@ -12,7 +12,9 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
             annotations = container "matcher-generator-annotations" "The configuration annotations." "Java, Maven module"
             core = container "matcher-generator-core" "Processor, type model and backend SPI. No assertion library." "Java, Maven module" {
                 processor = component "MatcherGenerationProcessor" "Annotation processor, registered through META-INF/services." "Java"
-                worker = component "MatcherGenerationProcessorWorker" "Resolves configured types, skips generated ones, hands every backend's source to the source writer." "Java"
+                worker = component "MatcherGenerationProcessorWorker" "Plans the configured types, skips generated ones, hands every backend's source to the source writer." "Java"
+                configuredNames = component "ConfiguredNames" "The names a configuration lists and what they stand for in a round." "Java"
+                typeExpansion = component "TypeExpansion" "Expands configured names to the types to plan, exclusions applied." "Java"
                 diagnostics = component "ProcessorDiagnostics" "Holds the texts of the messages and places them through the Messager; the worker decides which applies." "Java"
                 sourceWriter = component "GeneratedSourceWriter" "Owns the Filer, writes each source once: Java through the Filer, Kotlin into the KAPT directory." "Java"
                 typeModelFactory = component "TypeModelFactory" "Reads a type through the element API." "Java"
@@ -71,6 +73,8 @@ workspace "Hamcrest Matcher Generator" "Generates type-safe test assertions for 
         endtoend -> annotations "Configures types with"
 
         processor -> worker "Hands rounds to"
+        worker -> configuredNames "Reads names with"
+        worker -> typeExpansion "Expands names with"
         worker -> typeModelFactory "Asks for model"
         typeModelFactory -> nullability "Asks for nullability"
         nullability -> propertyModel "Feeds nullability to"
