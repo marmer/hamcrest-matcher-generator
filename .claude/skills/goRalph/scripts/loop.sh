@@ -358,7 +358,11 @@ denial_line() { # label, result file
 
 # The one claude call of an iteration and of the retro: starts it in the background (stdin from /dev/null, stdout to the stream file, stderr to
 # its own file, the lock descriptor closed) and sets $child. The rules file is the system prompt addition.
+# claude -p stops background subagents 10 minutes after the last turn unless CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS
+# says otherwise (run 104, iteration 1: two implementers lost); the child gets one hour unless loop.sh's environment
+# already sets it. `max_iteration_duration` remains the bound of an iteration (0 would wait without any limit).
 start_claude() { # prompt, rules file name in $HERE, stream file, stderr file, extra "This run" line
+  CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS="${CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS:-3600000}" \
   claude -p "$1" --model sonnet \
     --settings "$settings" --allowedTools "$allowed" \
     --append-system-prompt "$(cat "$HERE/$2")"$'\n\n'"## This run"$'\n\n'"Run directory: $run"$'\n'"$5" \
