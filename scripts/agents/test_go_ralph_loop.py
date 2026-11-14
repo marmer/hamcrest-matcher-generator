@@ -136,6 +136,13 @@ class IterationRulesTest(unittest.TestCase):
     def test_control_file_is_read_between_work_steps(self):
         self.rule_with("control.json", "between work steps", "this run")
 
+    def test_max_parallel_is_a_hard_number_read_from_the_control_file_at_the_start_with_the_read_tool(self):
+        self.rule_with("max_parallel", "hard", "control.json", "at the start", "read tool", "this run")
+
+    def test_control_file_is_reread_before_each_implementer_after_each_merge_and_before_each_review_round(self):
+        self.rule_with("control.json", "before each new implementer", "after each implementer has reported",
+                       "after each merge", "before each review round")
+
     def test_handover_note_is_kept_on_the_ticket_branch_after_every_work_step(self):
         self.rule_with("notes/ticket-<n>.md", "ticket branch", "after every work step")
 
