@@ -56,3 +56,12 @@ Details: link:{adr-url}/0005-java-17-baseline.md[ADR 0005]
 Some generated files exist once per target package, such as the AssertJ soft assertions mixin, and they only know the types of the processing round that wrote them. Instead of failing with a Filer exception or leaving types out silently, such a file is written once per package, and the first round decides its content; the rule is stated in <<files-once-per-package,chapter 6>>. Naming the mixin per configuration was rejected: a test class that implements it would break when the configuration layout changes, and the types of earlier rounds would still be missing. To report this, the `GeneratorBackend` interface gained a verbose-only note and a question whether a class exists outside the compilation's own output. Consequences are that builds with warnings as errors fail on the late-round warning and that the class path note cannot tell every case apart. A diagnostics interface instead of the growing list of channels is recorded as an open idea.
 
 Details: link:{adr-url}/0006-files-written-once-and-backend-spi-channels.md[ADR 0006]
+
+[[adr-0007]]
+=== ADR 0007: The core stays free of JavaPoet; the wildcard helpers stay duplicated in the backends
+
+*Status:* accepted, 2026-11-14
+
+The architecture review of #203 proposed moving two identical wildcard helpers of the Hamcrest and AssertJ backends into the core. The core would then need JavaPoet on its classpath, so the proposal was dropped: `matcher-generator-core` has no JavaPoet dependency, and the helpers stay in the two backends. A rule in `CoreDependencyRulesTest` pins this, so that a later review does not propose the move again.
+
+Details: link:{adr-url}/0007-core-stays-free-of-javapoet.md[ADR 0007]

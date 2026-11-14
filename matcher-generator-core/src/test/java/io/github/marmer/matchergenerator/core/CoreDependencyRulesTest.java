@@ -71,6 +71,22 @@ class CoreDependencyRulesTest {
 
     @Test
     @DisplayName(
+            "The core does not depend on JavaPoet, so the backends keep their code generation to themselves")
+    void theCoreDoesNotDependOnJavaPoet() {
+        noClasses()
+                .that()
+                .resideInAPackage("io.github.marmer.matchergenerator.core..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("com.palantir.javapoet..")
+                .because(
+                        "JavaPoet on the core's classpath would spread to every user of the core; the shared"
+                                + " type helpers stay in the backends (ADR 0007)")
+                .check(CORE_CLASSES);
+    }
+
+    @Test
+    @DisplayName(
             "The worker keeps no element, type or mirror of a round in a field, not even as a type argument")
     void theWorkerKeepsNoLanguageModelTypeInAField() {
         fields().that()
