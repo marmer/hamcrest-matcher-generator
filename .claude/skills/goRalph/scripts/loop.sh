@@ -358,10 +358,10 @@ denial_line() { # label, result file
 
 # The one claude call of an iteration and of the retro: starts it in the background (stdin from /dev/null, stdout to the stream file, stderr to
 # its own file, the lock descriptor closed) and sets $child. The rules file is the system prompt addition.
-start_claude() { # prompt, rules file name in $HERE, stream file, stderr file
+start_claude() { # prompt, rules file name in $HERE, stream file, stderr file, extra "This run" line
   claude -p "$1" --model sonnet \
     --settings "$settings" --allowedTools "$allowed" \
-    --append-system-prompt "$(cat "$HERE/$2")" \
+    --append-system-prompt "$(cat "$HERE/$2")"$'\n\n'"## This run"$'\n\n'"Run directory: $run"$'\n'"$5" \
     --output-format stream-json --verbose \
     < /dev/null > "$3" 2> "$4" 9>&- &
   child=$!
@@ -381,7 +381,7 @@ run_retro() {
   local rc=0 failure killed="$run/retro-killed"
   rm -f "$killed"
   set -m  # own process group for the child (pgid = its pid)
-  start_claude "/retro non-interactive $run" retro-rules.md "$run/retro-stream.jsonl" "$run/retro-stderr.txt"
+  start_claude "/retro non-interactive $run" retro-rules.md "$run/retro-stream.jsonl" "$run/retro-stderr.txt" "Last iteration of the run: $iteration"
   watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
   watcher=$!
   set +m
@@ -422,7 +422,7 @@ finish_for_stop_kind() { # stop kind, iteration, reason
 }
 
 settings='{"disableAllHooks":true,"permissions":{"deny":["Bash(git push --force*)","Bash(git push -f*)","Bash(git push origin main*)","Bash(git push origin HEAD:main*)","Bash(git reset --hard*)","Bash(git branch -D*)"]}}'
-allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(python3 scripts/:*),Read,Edit,Write,Agent,Skill'
+allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(head:*),Bash(grep:*),Bash(python3 scripts/:*),Read,Edit,Write,Agent,Skill'
 
 cd "$REPO" || exit 2
 iteration=0
@@ -476,7 +476,7 @@ while true; do
   rm -f "$run/iteration-$iteration.json"  # work data of an earlier attempt, e.g. one cut off by a usage limit
   export RALPH_ITERATION="$iteration"  # the orchestrator names its work data file by it (iteration-rules.md)
   set -m  # own process group for the child (pgid = its pid)
-  start_claude "/implement-spec $spec" iteration-rules.md "$stream" "$run/stderr-$iteration.txt"
+  start_claude "/implement-spec $spec" iteration-rules.md "$stream" "$run/stderr-$iteration.txt" "Iteration: $iteration"
   watch_iteration "$child" "$killed" > /dev/null 2>&1 9>&- &
   watcher=$!
   set +m
