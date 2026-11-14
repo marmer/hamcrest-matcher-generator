@@ -131,6 +131,7 @@ class InterviewTest(unittest.TestCase):
         done = self.run_script("list", "42", RALPH_GH_MAX_PAGES="3")
         self.assertEqual(1, done.returncode, done.stderr)
         self.assertIn("labels=retro,ready-for-human", done.stderr)
+        self.assertIn("RALPH_GH_MAX_PAGES", done.stderr)
 
     def test_a_retro_ticket_that_already_has_a_parent_is_not_carried_over(self):
         self.fixture("retro-agent", [issue(61, "retro", "ready-for-agent",

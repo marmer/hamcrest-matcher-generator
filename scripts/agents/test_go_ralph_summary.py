@@ -99,6 +99,7 @@ class SummaryTest(unittest.TestCase):
                               text=True, timeout=60)
         self.assertEqual(1, done.returncode, done.stderr)
         self.assertIn("pulls?state=closed", done.stderr)
+        self.assertIn("RALPH_GH_MAX_PAGES", done.stderr)
         self.assertEqual("", done.stdout)
 
     def test_lists_open_needs_info_tickets_of_the_spec_as_open_questions(self):

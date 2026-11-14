@@ -1270,6 +1270,7 @@ class LoopScriptTest(unittest.TestCase):
 
         self.assert_pr_check_failed((code, lines, err))
         self.assertIn("pulls?state=open", lines[0])
+        self.assertIn("RALPH_GH_MAX_PAGES", lines[0])
 
     def assert_pr_check_failed(self, outcome):
         code, lines, err = outcome
