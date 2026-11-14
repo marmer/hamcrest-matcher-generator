@@ -74,4 +74,4 @@ Exit codes:
 
 ## Planned (open tickets; not in the code yet)
 
-- #422, trial on a real small spec. #421 (trial on a test spec of three documentation-only Haiku tickets) is done: it covered `permissions.deny`, the three stop modes and a resume after a killed script; findings, defects and their tickets are in the research file, section 9. The 2 h VM-awake measurement is pending (see the #421 comment).
+- #422, trial on a real small spec. #421 (trial on a test spec of three documentation-only Haiku tickets) is done: it covered `permissions.deny`, the three stop modes and a resume after a killed script; findings, defects and their tickets are in the research file, section 9. The VM stayed awake for at least 90 min with a running monitor and the container was restarted after 1 h 46 min for an unknown reason, so a run needs the resume path (research file, section 9.1); the defects found are #450, #451, #452, #454, #455, #456 and #457.

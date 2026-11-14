@@ -304,7 +304,7 @@ Probelauf des gebauten Loops (Spec #410) auf einer Test-Spec (#443) mit drei Dok
 | Resume nach `kill -9` | Lauf 3: `kill -9` auf Script und `claude` mitten in Iteration 1, danach `loop.sh 443 --resume-only`. Dasselbe Run-Verzeichnis (`443-20261113-230118`) wurde fortgesetzt, Status `running`, Iteration 1 (die getoetete) lief erneut, die verwaiste Lock-Datei wurde akzeptiert. | funktioniert |
 | Control-Datei, waehrend Subagents laufen | Der Orchestrator einer Iteration liest `control.json` hoechstens einmal am Start (Iteration 2 von Lauf 2: ein Read, vor dem Stop). Subagents sehen die Datei nie. Ein Stop `after-step` wirkt daher erst, wenn die Iteration fertig ist; nur `now` greift mitten drin (das Script killt, der Orchestrator ist nicht beteiligt). | Luecke (D1) |
 | `max_parallel` | Auf 1 gesetzt; der Orchestrator startete in beiden Iterationen trotzdem je 3 Implementer parallel. Er suchte in `loop.sh` nach "parallel" und fand nichts im Prompt-Pfad. Wie `$RALPH_RUN_DIR` zu nutzen ist, war ihm unklar. | wird ignoriert (D1) |
-| VM wach waehrend Loop (2 h) | measurement pending, see #421 comment | offen |
+| VM wach bei laufendem Monitor (ca. 2 h) | Idle-Heartbeat: Hauptsession untaetig, ein Monitor je 30 min neu gestartet (Start 23:05 UTC). Heartbeats kamen um 23:35, 00:05 und 00:35 UTC (VM nach 30, 60 und 90 min wach); um ca. 00:51 UTC (nach 1 h 46 min) wurde der Container neu gestartet, die Messung brach dort ab (Heartbeat 4 ging verloren). Dateien (Run-Verzeichnis, Branches, Worktrees) ueberlebten, Prozesse nicht. | mindestens 90 min wach; Neustart nach 1 h 46 min trotz laufendem Monitor, die Ursache ist nicht bekannt (Annahme: Container-Lebensdauer oder Wartung, nicht Leerlauf; nicht belegt) |
 
 Zur Einordnung der letzten Zeile: der Lauf ueber ca. 2 h ist kein vollstaendiger 2-h-Loop mit Implementierungsarbeit. Er misst nur, ob die VM wach bleibt, solange das Script laeuft und die Hauptsession einen Monitor betreibt; der Monitor-Test ist ein Heartbeat einer sonst untaetigen Session. Ob echte Arbeit (Maven, Parallelkinder) die VM laenger oder kuerzer wach haelt, ist damit nicht gezeigt (Annahme). Auch offen aus 8.8: zaehlt ein laufender Monitor der Hauptsession als Aktivitaet.
 
@@ -316,12 +316,12 @@ Lauf 2: Iteration 1 0,43 USD, Iteration 2 0,37 USD, Retro 0,32 USD; Lauf 3: Iter
 
 | Id | Defekt | Ticket |
 |---|---|---|
-| D1 | `max_parallel` wird vom Orchestrator ignoriert (F3, F11) und `control.json` wird zwischen Arbeitsschritten nicht neu gelesen, so dass `after-step` nicht wirkt (F8) | **needs ticket** |
+| D1 | `max_parallel` wird vom Orchestrator ignoriert (F3, F11) und `control.json` wird zwischen Arbeitsschritten nicht neu gelesen, so dass `after-step` nicht wirkt (F8) | #456 |
 | D2 | `gh pr merge --auto --squash` wird abgelehnt (Allow-Liste kennt nur `Bash(gh api:*)`), das MCP-Tool `enable_pr_auto_merge` fehlt in `-p`, per REST gibt es keinen Weg (GraphQL in Cloud-Sessions gesperrt): PRs bleiben offen ohne Auto-Merge, `is_error` bleibt false, nur eine `DENIAL`-Zeile (F6) | #450 |
 | D3 | Die Frontier schliesst Tickets mit offenem PR nicht aus; es gab keine Uebergabenotiz, Iteration 2 implementierte #444 bis #446 ein zweites Mal und endete mit einer interaktiven Rueckfrage im Ergebnistext statt Ticket-Kommentar plus `needs-info` (F9) | #451 |
 | D4 | `issue-status.py --help` wird als Spec-Nummer gelesen (F10) | #452 |
 | D5 | Kind kann `$RALPH_RUN_DIR` nicht lesen (`;`-Ketten und `$VAR`-Expansion abgelehnt), daher keine Uebergabenotiz und kein Ticket-Kommentar (F14, F12: 6 und 7 `DENIAL`-Zeilen in Retro und Iteration) | #455 |
-| D6 | Handmerge von #447 ueber die Merge-API, waehrend `Domain docs in sync` rot oder offen war; die Regel "nie von Hand mergen" hat im Loop keine Sperre (F14) | teils #455; die fehlende Merge-Sperre bei rotem CI **needs ticket** |
+| D6 | Handmerge von #447 ueber die Merge-API, waehrend `Domain docs in sync` rot oder offen war; die Regel "nie von Hand mergen" hat im Loop keine Sperre (F14) | teils #455; die fehlende Merge-Sperre #457 |
 | D7 | Flaky `test_sleeping_script_reports_the_waiting_state` (rote Stufe "Test the agent scripts" bei #447, F16) | #454 |
 
 Ohne Fehler: F13 (Resume), F1, F2, F15. F4 (liegengebliebene Branches nach `stop now`) und F7 (die "Killed"-Meldung der Shell erscheint nur, wenn stderr mitgeschrieben wird; der Skill leitet nur stdout um) sind Beobachtungen ohne Ticket. Ergebnis der Pipeline im Trial: von drei Tickets wurde eines gemergt (F16).
