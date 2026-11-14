@@ -88,6 +88,7 @@ case "$endpoint" in
   *sub_issues*)
     if [ -n "$page" ] && [ "$page" -gt 1 ]; then echo '[]'
     elif [ -n "${STUB_GH_EMPTY:-}" ]; then echo '[]'
+    elif [ -n "${STUB_GH_TWO:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}, {"number": 8, "title": "Other", "state": "open", "labels": []}]'
     elif [ -n "${STUB_GH_CLAIMED:-}" ]; then echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": [], "assignees": [{"login": "x"}]}]'
     else echo '[{"number": 7, "title": "Ticket", "state": "open", "labels": []}]'; fi ;;
   *dependencies*) echo '[]' ;;
@@ -1296,7 +1297,39 @@ printf '%s\n' "${{doc:10}}"
         self.pr(check_conclusions=(None,))
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
+        lines = self.run_loop("--max-iterations", "1", STUB_GH_TWO="1", RALPH_PR_SLEEP_SECONDS="1")[1]
+
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    # A ticket with an open PR or a remote ticket-<n> branch is no free ticket (#451): `Closes #n` fires only on merge.
+
+    def test_ticket_with_a_waiting_PR_is_no_free_ticket_so_the_script_sleeps_instead_of_starting_claude(self):
+        self.pr(check_conclusions=(None,))
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+        process = self.start("--max-iterations", "1", RALPH_PR_SLEEP_SECONDS="1")
+
+        self.assert_sleeping_without_claude(process)
+
+    def test_ticket_with_a_PR_needing_action_still_starts_an_iteration(self):
+        self.pr(check_conclusions=("failure",))
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
         lines = self.run_loop("--max-iterations", "1", RALPH_PR_SLEEP_SECONDS="1")[1]
+
+        self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
+
+    def test_ticket_with_a_remote_branch_and_no_PR_is_no_free_ticket(self):
+        self.serve("git_matching-refs_heads_ticket-", [[{"ref": "refs/heads/ticket-7"}]])
+
+        code, lines, _ = self.run_loop()
+
+        self.assertEqual((0, self.NO_WORK), (code, self.without_retro(lines)))
+
+    def test_ticket_without_PR_or_branch_is_free_beside_one_that_has_a_PR(self):
+        self.pr(branch="ticket-8", check_conclusions=("success",))
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        lines = self.run_loop("--max-iterations", "1", STUB_GH_TWO="1", RALPH_PR_SLEEP_SECONDS="1")[1]
 
         self.assertEqual("iteration 1 ok: 3 turns, cost $0.25", lines[0])
 
