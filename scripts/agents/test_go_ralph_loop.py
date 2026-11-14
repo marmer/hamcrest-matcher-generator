@@ -134,10 +134,10 @@ class IterationRulesTest(unittest.TestCase):
         return found[0]
 
     def test_control_file_is_read_between_work_steps(self):
-        self.rule_with("control.json", "between work steps", "$ralph_run_dir")
+        self.rule_with("control.json", "between work steps", "this run")
 
     def test_max_parallel_is_a_hard_number_read_from_the_control_file_at_the_start_with_the_read_tool(self):
-        self.rule_with("max_parallel", "hard", "control.json", "at the start", "read tool")
+        self.rule_with("max_parallel", "hard", "control.json", "at the start", "read tool", "this run")
 
     def test_control_file_is_reread_before_each_implementer_after_each_merge_and_before_each_review_round(self):
         self.rule_with("control.json", "before each new implementer", "after each merge",
@@ -149,8 +149,17 @@ class IterationRulesTest(unittest.TestCase):
     def test_max_parallel_bounds_the_tickets_of_the_iteration(self):
         self.rule_with("max_parallel", "upper bound")
 
-    def test_tickets_and_prs_are_written_to_the_iteration_file_in_the_run_directory(self):
-        self.rule_with("$ralph_run_dir", "iteration-", "$ralph_iteration", "tickets", "prs")
+    def test_tickets_and_prs_are_written_to_the_iteration_file_through_the_wrapper(self):
+        self.rule_with("scripts/agents/ralph-iteration.py", "data", "iteration-", "tickets", "prs")
+
+    def test_auto_merge_is_enabled_through_the_wrapper_and_never_merged_by_hand(self):
+        self.rule_with("scripts/agents/ralph-iteration.py", "auto-merge", "never merge", "by hand")
+
+    def test_run_directory_and_iteration_number_are_literal_values_at_the_end_of_the_prompt_never_expanded(self):
+        self.rule_with("literal", "this run", "never expand")
+
+    def test_bash_calls_are_one_command_with_pipes_only_into_head_or_grep(self):
+        self.rule_with("one command", "pipe", "head", "grep")
 
     def test_owner_question_is_a_ticket_comment_with_question_options_and_recommendation_and_needs_info(self):
         self.rule_with("never ask the owner interactively", "comment", "question", "options", "recommendation",
@@ -358,13 +367,13 @@ class LoopScriptTest(unittest.TestCase):
         self.assertIn(name, arguments, f"the child was started without {name}; its arguments: {arguments}")
         return arguments[arguments.index(name) + 1]
 
-    def test_child_is_allowed_exactly_git_maven_gh_api_repo_python_scripts_and_the_agent_tools(self):
+    def test_child_is_allowed_exactly_git_maven_gh_api_head_grep_repo_python_scripts_and_the_agent_tools(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
 
         self.run_loop("--max-iterations", "1")
 
-        self.assertEqual(["Agent", "Bash(./mvnw:*)", "Bash(gh api:*)", "Bash(git:*)", "Bash(python3 scripts/:*)",
-                          "Edit", "Read", "Skill", "Write"],
+        self.assertEqual(["Agent", "Bash(./mvnw:*)", "Bash(gh api:*)", "Bash(git:*)", "Bash(grep:*)",
+                          "Bash(head:*)", "Bash(python3 scripts/:*)", "Edit", "Read", "Skill", "Write"],
                          sorted(self.child_option("--allowedTools").split(",")))
 
     def test_child_is_denied_force_push_push_to_main_hard_reset_and_branch_delete(self):
@@ -392,8 +401,17 @@ class LoopScriptTest(unittest.TestCase):
         self.run_loop("--max-iterations", "1")
 
         rules = (REPO / SKILL_SCRIPTS / "iteration-rules.md").read_text(encoding="utf-8")
-        self.assertEqual(rules.strip(), self.child_option("--append-system-prompt").strip())
+        self.assertTrue(self.child_option("--append-system-prompt").startswith(rules.strip()))
         self.assertEqual("/implement-spec 42", self.child_option("-p"))
+
+    def test_child_is_told_the_literal_run_directory_and_its_iteration_number_in_the_system_prompt(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "2")
+
+        prompt = self.child_option("--append-system-prompt")
+        self.assertIn(f"Run directory: {self.only_run_dir()}\n", prompt)
+        self.assertTrue(prompt.endswith("\nIteration: 2"), prompt[-120:])
 
     def test_every_iteration_with_denials_gets_its_own_denial_line_naming_each_denied_tool(self):
         denied = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done",
@@ -1465,8 +1483,11 @@ class LoopScriptTest(unittest.TestCase):
         self.assertEqual(f"RALPH_RUN_DIR={run}\n", Path(f"{self.calls}.retro").read_text(encoding="utf-8"))
         self.assertEqual("sonnet", self.retro_option("--model"))
         rules = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
-        self.assertEqual(rules.strip(), self.retro_option("--append-system-prompt").strip())
-        self.assertEqual("Agent,Bash(./mvnw:*),Bash(gh api:*),Bash(git:*),Bash(python3 scripts/:*),Edit,Read,Skill,Write",
+        self.assertTrue(self.retro_option("--append-system-prompt").startswith(rules.strip()))
+        self.assertIn(f"Run directory: {run}\n", self.retro_option("--append-system-prompt"))
+        self.assertTrue(self.retro_option("--append-system-prompt").endswith("\nLast iteration of the run: 0"))
+        self.assertEqual("Agent,Bash(./mvnw:*),Bash(gh api:*),Bash(git:*),Bash(grep:*),Bash(head:*),"
+                         "Bash(python3 scripts/:*),Edit,Read,Skill,Write",
                          ",".join(sorted(self.retro_option("--allowedTools").split(","))))
         settings = json.loads(self.retro_option("--settings"))
         self.assertTrue(settings["disableAllHooks"])
@@ -1627,6 +1648,11 @@ class LearningsFileTest(unittest.TestCase):
         skill = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
         for expected in ("non-interactive", "docs/agents/implementer-brief.md", "docs/agents/goRalph-learnings.md",
                          "`retro`", "`ready-for-human`", "options", "recommendation"):
+            self.assertIn(expected, skill, f"the retro rules do not mention {expected}")
+
+    def test_the_retro_rules_make_every_bash_call_one_command_and_use_the_literal_run_directory(self):
+        skill = (REPO / SKILL_SCRIPTS / "retro-rules.md").read_text(encoding="utf-8")
+        for expected in ("one command", "head", "grep", "This run", "never expand"):
             self.assertIn(expected, skill, f"the retro rules do not mention {expected}")
 
 
