@@ -10,6 +10,8 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 | `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
 | `wontfix`                  | `wontfix`            | Will not be actioned                     |
 
+The `retro` label is not a triage role. It marks a retro proposal (a rule, model, gate, prompt or loop change that the retro turns into a ticket for the owner, `docs/agents/ralph-loop.md`). It is carried together with `ready-for-human` while the owner decides; once the owner accepts it, `ready-for-human` becomes `ready-for-agent` and `retro` stays.
+
 A ticket whose first step needs data an agent cannot read (e.g. the Dependabot alert list, HTTP 403 in cloud sessions) carries `needs-info`, not `ready-for-agent`, until the owner supplies the data.
 
 A ticket labelled `needs-info` or `ready-for-human` is not left for the owner to pick up alone: the agent walks the owner through it, does every sub-step it can do itself (gathering data, preparing options with a recommendation, running commands, writing the result back to the ticket) and hands the owner only what needs the owner's decision or action.
