@@ -74,8 +74,41 @@ class FrontierLinesTest(unittest.TestCase):
         self.assertEqual(["#1 t1", "waiting for the owner: #2 t2 (needs-info), #3 t3 (ready-for-human)"],
                          status.frontier_lines(tickets))
 
+    def test_tickets_in_flight_are_no_frontier_but_a_free_one_is(self):
+        tickets = [ready(1), ready(2), ready(3, ["needs-info"]), ready(4)]
+
+        self.assertEqual(["#2 t2", "waiting for the owner: #3 t3 (needs-info)"],
+                         status.frontier_lines(tickets, in_flight={1, 4}))
+
     def test_no_waiting_line_without_owner_labelled_tickets(self):
         self.assertEqual(["#1 t1 (ready-for-agent)"], status.frontier_lines([ready(1, ["ready-for-agent"])]))
+
+
+class InFlightTest(unittest.TestCase):
+
+    def served(self, pulls=(), refs=()):
+        def gh(endpoint):
+            if "/pulls?" in endpoint:
+                return [{"head": {"ref": ref}} for ref in pulls]
+            if "/git/matching-refs/heads/ticket-?" in endpoint:
+                return [{"ref": f"refs/heads/{ref}"} for ref in refs]
+            raise AssertionError(endpoint)
+        return mock.patch.object(status, "gh", side_effect=gh)
+
+    def test_open_pr_branch_and_remote_ticket_branch_are_in_flight_others_are_not(self):
+        with self.served(pulls=["ticket-1", "feature-x", "ticket-1a"], refs=["ticket-2", "ticket-12x"]):
+            self.assertEqual({1, 2}, status.in_flight_numbers())
+
+    def test_full_pages_are_read_until_a_short_one(self):
+        pages = [[{"head": {"ref": f"ticket-{n}"}} for n in range(100)], [{"head": {"ref": "ticket-100"}}]]
+        with mock.patch.object(status, "gh", side_effect=lambda e: pages[int(e.rsplit("=", 1)[1]) - 1]
+                               if "/pulls?" in e else []):
+            self.assertEqual(set(range(101)), status.in_flight_numbers())
+
+    def test_a_list_still_full_at_the_page_limit_fails_instead_of_truncating(self):
+        full = [{"head": {"ref": "ticket-1"}}] * 100
+        with mock.patch.object(status, "gh", return_value=full), self.assertRaises(RuntimeError):
+            status.in_flight_numbers()
 
 
 class CommandLineTest(unittest.TestCase):
@@ -99,6 +132,7 @@ class CommandLineTest(unittest.TestCase):
         out = io.StringIO()
 
         with mock.patch.object(status, "collect", return_value=tickets) as collect, \
+                mock.patch.object(status, "in_flight_numbers", return_value=set()), \
                 mock.patch.object(status, "gh", side_effect=AssertionError("must not call the API")), \
                 mock.patch.object(sys, "argv", ["issue-status.py", "12", "--frontier"]), \
                 contextlib.redirect_stdout(out):
@@ -106,6 +140,29 @@ class CommandLineTest(unittest.TestCase):
 
         collect.assert_called_once_with("12")
         self.assertEqual("#7 t7 (ready-for-agent)\n", out.getvalue())
+
+    def test_frontier_skips_a_ticket_with_an_open_pr_or_a_remote_branch(self):
+        tickets = [{"number": n, "title": f"t{n}", "closed": False, "blocked_by": [], "status": "ready",
+                    "labels": []} for n in (1, 2, 3)]
+        out = io.StringIO()
+
+        with mock.patch.object(status, "collect", return_value=tickets), \
+                mock.patch.object(status, "in_flight_numbers", return_value={1, 2}), \
+                mock.patch.object(sys, "argv", ["issue-status.py", "12", "--frontier"]), \
+                contextlib.redirect_stdout(out):
+            status.main()
+
+        self.assertEqual("#3 t3\n", out.getvalue())
+
+    def test_frontier_asks_for_pulls_and_branches_only_when_a_ticket_is_ready(self):
+        tickets = [{"number": 1, "title": "t1", "closed": False, "blocked_by": [], "status": "claimed",
+                    "labels": []}]
+
+        with mock.patch.object(status, "collect", return_value=tickets), \
+                mock.patch.object(status, "in_flight_numbers", side_effect=AssertionError("no call")), \
+                mock.patch.object(sys, "argv", ["issue-status.py", "12", "--frontier"]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            status.main()
 
 
 if __name__ == "__main__":

@@ -9,13 +9,14 @@ Usage:
   scripts/agents/issue-status.py <parent-number>           # update the parent's body
   scripts/agents/issue-status.py <parent-number> --print   # print the section only
   scripts/agents/issue-status.py <parent-number> --json    # print the raw status data
-  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets, those labelled needs-info or ready-for-human on a "waiting for the owner" line (no map write)
+  scripts/agents/issue-status.py <parent-number> --frontier  # print the ready tickets without an open PR or remote ticket-<n> branch, those labelled needs-info or ready-for-human on a "waiting for the owner" line (no map write)
 
 Besides --json, every run warns on stderr about open tickets that do not lead to the
 final ticket (see loose_tickets), so a ticket added after the blocking edges were set cannot go unnoticed.
 """
 import argparse
 import json
+import re
 import subprocess
 import sys
 
@@ -117,9 +118,36 @@ def frontier_line(ticket):
 OWNER_LABELS = ("needs-info", "ready-for-human")
 
 
-def frontier_lines(tickets):
-    """The ready tickets an agent can start; those labelled for the owner wait on a separate line."""
-    ready = [t for t in tickets if t["status"] == "ready"]
+MAX_PAGES = 10
+
+
+def gh_pages(endpoint):
+    """Every item of a list endpoint (its path has a query with per_page=100), read page by page: --paginate
+    follows Link headers the cloud proxy refuses. A list still full at the page limit fails, never truncated."""
+    items = []
+    for page in range(1, MAX_PAGES + 1):
+        batch = gh(f"{endpoint}&page={page}") or []
+        items += batch
+        if len(batch) < 100:
+            return items
+    raise RuntimeError(f"page limit {MAX_PAGES} reached for {endpoint}")
+
+
+def in_flight_numbers():
+    """The numbers n of the tickets with an open PR from branch ticket-<n> or a remote branch ticket-<n>.
+
+    Such a ticket already has an iteration's work (its PR may wait for CI or an owner), so it is no free ticket:
+    `Closes #n` fires only on the merge (#451)."""
+    heads = [pull["head"]["ref"] for pull in gh_pages(f"{REPO}/pulls?state=open&per_page=100")]
+    heads += [ref["ref"].removeprefix("refs/heads/")
+              for ref in gh_pages(f"{REPO}/git/matching-refs/heads/ticket-?per_page=100")]
+    return {int(m.group(1)) for m in map(re.compile(r"ticket-(\d+)").fullmatch, heads) if m}
+
+
+def frontier_lines(tickets, in_flight=frozenset()):
+    """The ready tickets an agent can start (none with a PR or branch in flight); those labelled for the owner wait
+    on a separate line."""
+    ready = [t for t in tickets if t["status"] == "ready" and t["number"] not in in_flight]
     waiting = [t for t in ready if any(name in OWNER_LABELS for name in t["labels"])]
     lines = [frontier_line(t) for t in ready if t not in waiting]
     if waiting:
@@ -186,7 +214,8 @@ def main():
         return
     warning = loose_warning_for(tickets)
     if args.frontier:
-        for line in frontier_lines(tickets):
+        ready = any(t["status"] == "ready" for t in tickets)  # no API call without a ready ticket
+        for line in frontier_lines(tickets, in_flight_numbers() if ready else frozenset()):
             print(line)
         if warning:
             print(warning, file=sys.stderr)
