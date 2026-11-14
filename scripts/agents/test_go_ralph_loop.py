@@ -155,6 +155,9 @@ class IterationRulesTest(unittest.TestCase):
     def test_auto_merge_is_enabled_through_the_wrapper_and_never_merged_by_hand(self):
         self.rule_with("scripts/agents/ralph-iteration.py", "auto-merge", "never merge", "by hand")
 
+    def test_a_failed_auto_merge_leaves_the_pr_for_the_owner_or_the_next_iteration_never_a_hand_merge(self):
+        self.rule_with("auto-merge", "fails", "waits for the owner or the next iteration", "never merge by hand")
+
     def test_run_directory_and_iteration_number_are_literal_values_at_the_end_of_the_prompt_never_expanded(self):
         self.rule_with("literal", "this run", "never expand")
 
@@ -385,6 +388,41 @@ class LoopScriptTest(unittest.TestCase):
         for command in ("git push --force", "git push -f", "git push origin main", "git push origin HEAD:main",
                         "git reset --hard", "git branch -D"):
             self.assertIn(f"Bash({command}*)", deny, f"{command} is not denied; deny list: {deny}")
+
+    def test_child_is_denied_the_hand_merge_routes(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        deny = json.loads(self.child_option("--settings"))["permissions"]["deny"]
+        for command in ("gh api*-X PUT", "gh api*-XPUT", "gh api*--method PUT", "gh api*--method=PUT",
+                        "gh api*-X put", "gh api*-Xput", "gh api*--method put", "gh api*--method=put",
+                        "gh api*-X Put", "gh api*-XPut", "gh api*--method Put", "gh api*--method=Put",
+                        "gh api*mergePullRequest", "gh pr merge"):
+            self.assertIn(f"Bash({command}*)", deny, f"{command} is not denied; deny list: {deny}")
+
+    def test_deny_list_blocks_the_merge_api_in_either_flag_order_but_not_reads_or_the_wrapper(self):
+        self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
+
+        self.run_loop("--max-iterations", "1")
+
+        patterns = [re.fullmatch(r"Bash\((.*)\)", entry).group(1)
+                    for entry in json.loads(self.child_option("--settings"))["permissions"]["deny"]]
+
+        def denied(command):
+            return any(re.fullmatch(".*".join(map(re.escape, pattern.split("*"))), command) for pattern in patterns)
+
+        merge = "repos/marmer/hamcrest-matcher-generator/pulls/1/merge"
+        for command in (f"gh api -X PUT {merge}", f"gh api --method PUT {merge}", f"gh api {merge} -X PUT",
+                        f"gh api {merge} --method=PUT -f merge_method=squash", f"gh api -XPUT {merge}", f"gh api -X put {merge}", f"gh api {merge} --method=put",
+                        f"gh api {merge} --method Put", f"gh api -XPut {merge}",
+                        "gh pr merge 1 --squash"):
+            self.assertTrue(denied(command), f"{command} is not denied; patterns: {patterns}")
+        for command in ("gh api repos/marmer/hamcrest-matcher-generator/pulls/1",
+                        "gh api repos/marmer/hamcrest-matcher-generator/pulls/1/comments",
+                        "python3 scripts/agents/ralph-iteration.py auto-merge 1",
+                        "python3 scripts/agents/ralph-iteration.py --help"):
+            self.assertFalse(denied(command), f"{command} is denied; patterns: {patterns}")
 
     def test_child_never_runs_with_bypassed_permissions(self):
         self.stream.write_text(SUCCESS + "\n", encoding="utf-8")
@@ -1492,6 +1530,7 @@ class LoopScriptTest(unittest.TestCase):
         settings = json.loads(self.retro_option("--settings"))
         self.assertTrue(settings["disableAllHooks"])
         self.assertIn("Bash(git push origin main*)", settings["permissions"]["deny"])
+        self.assertIn("Bash(gh api*-X PUT*)", settings["permissions"]["deny"])
         self.assertIn("stdin bytes: 0", self.calls.read_text(encoding="utf-8"))
 
     def test_retro_is_not_counted_as_an_iteration_and_keeps_its_own_files(self):

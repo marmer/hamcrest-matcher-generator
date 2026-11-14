@@ -421,7 +421,7 @@ finish_for_stop_kind() { # stop kind, iteration, reason
   if [ "$1" = now ]; then finish_without_retro "$2" "$3"; else finish_with_retro "$2" "$3"; fi
 }
 
-settings='{"disableAllHooks":true,"permissions":{"deny":["Bash(git push --force*)","Bash(git push -f*)","Bash(git push origin main*)","Bash(git push origin HEAD:main*)","Bash(git reset --hard*)","Bash(git branch -D*)"]}}'
+settings='{"disableAllHooks":true,"permissions":{"deny":["Bash(git push --force*)","Bash(git push -f*)","Bash(git push origin main*)","Bash(git push origin HEAD:main*)","Bash(git reset --hard*)","Bash(git branch -D*)","Bash(gh api*-X PUT*)","Bash(gh api*-XPUT*)","Bash(gh api*--method PUT*)","Bash(gh api*--method=PUT*)","Bash(gh api*-X put*)","Bash(gh api*-Xput*)","Bash(gh api*--method put*)","Bash(gh api*--method=put*)","Bash(gh api*-X Put*)","Bash(gh api*-XPut*)","Bash(gh api*--method Put*)","Bash(gh api*--method=Put*)","Bash(gh api*mergePullRequest*)","Bash(gh pr merge*)"]}}'
 allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(head:*),Bash(grep:*),Bash(python3 scripts/*),Read,Edit,Write,Agent,Skill'
 
 cd "$REPO" || exit 2
