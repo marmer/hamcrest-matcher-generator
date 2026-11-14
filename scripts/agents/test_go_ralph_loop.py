@@ -373,7 +373,7 @@ class LoopScriptTest(unittest.TestCase):
         self.run_loop("--max-iterations", "1")
 
         self.assertEqual(["Agent", "Bash(./mvnw:*)", "Bash(gh api:*)", "Bash(git:*)", "Bash(grep:*)",
-                          "Bash(head:*)", "Bash(python3 scripts/:*)", "Edit", "Read", "Skill", "Write"],
+                          "Bash(head:*)", "Bash(python3 scripts/*)", "Edit", "Read", "Skill", "Write"],
                          sorted(self.child_option("--allowedTools").split(",")))
 
     def test_child_is_denied_force_push_push_to_main_hard_reset_and_branch_delete(self):
@@ -1487,7 +1487,7 @@ class LoopScriptTest(unittest.TestCase):
         self.assertIn(f"Run directory: {run}\n", self.retro_option("--append-system-prompt"))
         self.assertTrue(self.retro_option("--append-system-prompt").endswith("\nLast iteration of the run: 0"))
         self.assertEqual("Agent,Bash(./mvnw:*),Bash(gh api:*),Bash(git:*),Bash(grep:*),Bash(head:*),"
-                         "Bash(python3 scripts/:*),Edit,Read,Skill,Write",
+                         "Bash(python3 scripts/*),Edit,Read,Skill,Write",
                          ",".join(sorted(self.retro_option("--allowedTools").split(","))))
         settings = json.loads(self.retro_option("--settings"))
         self.assertTrue(settings["disableAllHooks"])

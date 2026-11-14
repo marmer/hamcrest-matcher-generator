@@ -422,7 +422,7 @@ finish_for_stop_kind() { # stop kind, iteration, reason
 }
 
 settings='{"disableAllHooks":true,"permissions":{"deny":["Bash(git push --force*)","Bash(git push -f*)","Bash(git push origin main*)","Bash(git push origin HEAD:main*)","Bash(git reset --hard*)","Bash(git branch -D*)"]}}'
-allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(head:*),Bash(grep:*),Bash(python3 scripts/:*),Read,Edit,Write,Agent,Skill'
+allowed='Bash(git:*),Bash(./mvnw:*),Bash(gh api:*),Bash(head:*),Bash(grep:*),Bash(python3 scripts/*),Read,Edit,Write,Agent,Skill'
 
 cd "$REPO" || exit 2
 iteration=0
