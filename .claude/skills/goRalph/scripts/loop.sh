@@ -29,6 +29,8 @@
 # Before each iteration the script asks `gh api` for work without a model: a free frontier ticket or a PR that needs
 # action (red CI, merge conflict, review or review comment after its last commit) starts the iteration, PRs that only
 # wait for CI with auto-merge make it sleep and check again, nothing at all ends the run.
+# The same check enables squash auto-merge (REST, no model) for open PRs of the spec that need no action and lack it;
+# a failure is a WARN line and does not end the run.
 set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -259,10 +261,24 @@ json_test() { # input, jq arguments
   if [ "$status" -eq 0 ]; then test_result=true; else test_result=false; fi
 }
 
+# Enables squash auto-merge for a PR (#450) through the REST route of cloud sessions (GraphQL is blocked there, as for
+# `ralph-iteration.py auto-merge`), without a model. Sets test_result to true when it is enabled; a failure is a WARN
+# line on the monitor and leaves test_result false: it never ends the run, the PR just does not count as waiting.
+enable_auto_merge() { # PR number
+  if gh_call -X PUT -f merge_method=squash "$REPO_API/pulls/$1/ccr/auto_merge" > /dev/null; then
+    echo "auto-merge (squash) enabled for #$1"
+    test_result=true
+  else
+    echo "WARN auto-merge for #$1 failed: $(tail -c 200 "$run/pr-err.txt" | tr '\n' ' ')"
+    test_result=false
+  fi
+}
+
 # Looks at the open PRs of the spec's tickets (head branch ticket-<n>, n a sub-issue of the spec). Sets pr_action to
 # the first PR needing action (red CI, merge conflict, review or review comment after the head commit; replies in a
 # comment thread do not count) and pr_waiting to the number of PRs that need nothing but wait for CI with auto-merge
-# (a check run not completed, or none yet); returns 1 when `gh` or its output fails.
+# (a check run not completed, or none yet); a PR without auto-merge that needs no action gets it enabled first
+# (enable_auto_merge); returns 1 when `gh` or its output fails.
 check_prs() {
   pr_action=""
   pr_waiting=0
@@ -303,6 +319,7 @@ check_prs() {
     fi
     if [ -n "$reason" ]; then pr_action="#$number $reason"; return 0; fi
     json_test "$detail" '.auto_merge != null' || return 1
+    if [ "$test_result" = false ]; then enable_auto_merge "$number"; fi
     if [ "$test_result" = true ]; then
       json_test "$checks" 'length == 0 or any(.[]; .status != "completed")' || return 1
       if [ "$test_result" = true ]; then pr_waiting=$((pr_waiting + 1)); fi
