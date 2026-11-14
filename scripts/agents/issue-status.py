@@ -14,6 +14,7 @@ Usage:
 Besides --json, every run warns on stderr about open tickets that do not lead to the
 final ticket (see loose_tickets), so a ticket added after the blocking edges were set cannot go unnoticed.
 """
+import argparse
 import json
 import subprocess
 import sys
@@ -163,16 +164,28 @@ def replace_section(body, section):
     return body[: first + 1] + section + "\n\n" + body[first + 1:]
 
 
+def parse_args(argv):
+    parser = argparse.ArgumentParser(
+        prog="issue-status.py", description=__doc__.split("\n\n")[0],
+        epilog=__doc__.split("\n\n", 1)[1], formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("parent", help="number of the parent issue")
+    parser.add_argument("--print", action="store_true", dest="print_section", help="print the section only")
+    parser.add_argument("--json", action="store_true", help="print the raw status data")
+    parser.add_argument("--frontier", action="store_true",
+                        help="print the ready tickets, those labelled needs-info or ready-for-human on a "
+                             '"waiting for the owner" line (no map write)')
+    return parser.parse_args(argv)
+
+
 def main():
-    if len(sys.argv) < 2:
-        sys.exit(__doc__)
-    parent = sys.argv[1]
+    args = parse_args(sys.argv[1:])
+    parent = args.parent
     tickets = collect(parent)
-    if "--json" in sys.argv:
+    if args.json:
         print(json.dumps(tickets, indent=2))
         return
     warning = loose_warning_for(tickets)
-    if "--frontier" in sys.argv:
+    if args.frontier:
         for line in frontier_lines(tickets):
             print(line)
         if warning:
@@ -181,7 +194,7 @@ def main():
     if warning:
         print(warning, file=sys.stderr)
     section = render(tickets)
-    if "--print" in sys.argv:
+    if args.print_section:
         print(section)
         return
     body = gh(f"{REPO}/issues/{parent}")["body"] or ""
