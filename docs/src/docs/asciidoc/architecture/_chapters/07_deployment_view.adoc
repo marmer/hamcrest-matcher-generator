@@ -85,7 +85,7 @@ Releases run on CI and need no machine of the owner.
 ** `Publish to Maven Central`, only if `Release build` is green: `mvnw -T 1 -P release -DskipEndtoend -DskipTests -DskipITs deploy` (GPG signatures, SBOM, `central-publishing-maven-plugin` waiting for `published`), a build-provenance attestation (`actions/attest`), and it makes sure the release page exists.
 * After a confirmed publish, the job `Announce release` comments on the merged Release PR with the App token. The comment mentions the owner and links Maven Central, the release page and the CHANGELOG section.
 * A failed publish is re-run with `workflow_dispatch` and the existing tag as input; tags are never moved.
-* 6.0.0 is forced with `release-as` and merged by the owner. Auto-merge of Release PRs stays off until after 6.0.0.
+* The owner merges each Release PR by hand and approves the publish in the environment `release`. 6.0.0 was forced with `release-as`, which is removed again; auto-merge of Release PRs is not enabled.
 
 [[deployment-credentials]]
 === Credentials

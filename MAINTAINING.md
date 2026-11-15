@@ -72,8 +72,9 @@ jobs then build, publish and announce.
 1. A red Release pull request usually means `main` is red. Fix the cause in a normal pull request to `main`.
    release-please updates the Release pull request on the next push to `main`.
 2. Never merge a Release pull request with a red check, and never create a release tag by hand.
-3. For 6.0.0 the owner merges the Release pull request by hand (`release-as` in `release-please-config.json`). Release
-   pull request auto-merge is enabled only after 6.0.0, and then `release-as` is removed (comment in `release.yml`).
+3. The owner merges each Release pull request by hand; auto-merge of Release pull requests is not enabled. The
+   environment `release` additionally asks the owner to approve the publish. 6.0.0 was released this way, and the
+   version is derived from the commit types again (`release-as` is removed).
 4. When the release fixes a vulnerability in the project's own code that has a CVE or GHSA identifier, name the
    identifier in the release notes (the `CHANGELOG.md` section and the GitHub Release) before merging; `SECURITY.md`
    promises it (OpenSSF criterion `release_notes_vulns`).

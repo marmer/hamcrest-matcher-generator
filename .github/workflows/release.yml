@@ -8,8 +8,9 @@ name: Release
 # (secret), and the environment `release` holding CENTRAL_USERNAME, CENTRAL_PASSWORD, MAVEN_GPG_KEY and
 # MAVEN_GPG_PASSPHRASE.
 #
-# Release-PR auto-merge is deliberately NOT enabled: the owner merges the 6.0.0 Release PR by hand. Afterwards remove
-# `release-as` from release-please-config.json, then enable auto-merge for Release PRs.
+# Release-PR auto-merge is not enabled: the owner merges each Release PR by hand (6.0.0 was published this way, and
+# `release-as` is gone from release-please-config.json). The environment `release` still asks the owner to approve
+# the publish.
 on:
   push:
     branches: [ main ]
