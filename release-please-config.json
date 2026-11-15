@@ -5,7 +5,6 @@
   "include-v-in-tag": false,
   "packages": {
     ".": {
-      "release-as": "6.0.0",
       "extra-files": [
         "example-gradle-java/build.gradle.kts",
         "README.md",
