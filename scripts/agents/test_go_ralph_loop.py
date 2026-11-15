@@ -16,7 +16,8 @@ STUB_CLAUDE_STREAM.<n>.exit, 0 without it), and each call's time in seconds on t
 free) when STUB_GH_CLAIMED is set. Every other endpoint is answered from the file in STUB_GH_DIR named like the
 endpoint without the repository prefix and query, slashes as underscores (`pulls`, `pulls_5`,
 `commits_<sha>_check-runs`), `[]` when there is none; a file `fail_<name>` makes that endpoint fail, and every such
-call is appended to `calls.log` there, and a file `hang_<name>` makes it hang. For `page=N` the stub answers the
+call is appended to `calls.log` there (a call with `PUT` among its arguments also, with all arguments, in `put.log`), and a file
+`hang_<name>` makes it hang. For `page=N` the stub answers the
 sub-issues as one page (`[]` from page 2) and serves page N of every other file (`[]` beyond the last one), so the
 file of a list endpoint holds the list of its pages (for check runs a list of the pages' objects); an endpoint
 without `page=` gets the file as it is. Like the cloud proxy the stub refuses `--paginate`.
@@ -97,6 +98,7 @@ case "$endpoint" in
     name="${name%%\\?*}"
     name="${name//\\//_}"
     echo "$name" >> "$STUB_GH_DIR/calls.log"
+    case " $* " in *" PUT "*) echo "PUT $name $*" >> "$STUB_GH_DIR/put.log" ;; esac
     if [ -e "$STUB_GH_DIR/fail_$name" ]; then echo "stub gh: $name failed" >&2; exit 1; fi
     if [ -e "$STUB_GH_DIR/hang_$name" ]; then sleep 30; fi
     if [ ! -e "$STUB_GH_DIR/$name" ]; then echo '[]'
@@ -168,6 +170,9 @@ class IterationRulesTest(unittest.TestCase):
 
     def test_a_failed_auto_merge_leaves_the_pr_for_the_owner_or_the_next_iteration_never_a_hand_merge(self):
         self.rule_with("auto-merge", "fails", "waits for the owner or the next iteration", "never merge by hand")
+
+    def test_the_loop_script_enables_a_missing_auto_merge_between_iterations_so_a_failed_one_is_not_retried_by_hand(self):
+        self.rule_with("loop script", "enables", "auto-merge", "between iterations")
 
     def test_run_directory_and_iteration_number_are_literal_values_at_the_end_of_the_prompt_never_expanded(self):
         self.rule_with("literal", "this run", "never expand")
@@ -1159,14 +1164,15 @@ printf '%s\n' "${{doc:10}}"
     NO_WORK = ["END after 0 iterations: no ticket ready for an agent (0 ok, 0 failed)"]
 
     def pr(self, number=5, branch="ticket-7", sha="abc", auto_merge=True, state="clean", check_conclusions=("success",),
-           comments=(), replies=(), reviews=(), commit_date="2026-01-01T00:00:00Z"):
+           comments=(), replies=(), reviews=(), commit_date="2026-01-01T00:00:00Z", draft=False):
         """An open PR as the stub gh serves it, every list as one page; a check conclusion of None is a run still
         going, none at all is a PR whose CI has not started; replies are review comments in reply to another."""
         pulls_file = self.gh_dir / "pulls"
         pulls = json.loads(pulls_file.read_text(encoding="utf-8"))[0] if pulls_file.exists() else []
         pulls.append({"number": number, "head": {"ref": branch, "sha": sha}})
         self.serve("pulls", [pulls])
-        self.serve(f"pulls_{number}", {"number": number, "mergeable_state": state, "head": {"ref": branch, "sha": sha},
+        self.serve(f"pulls_{number}", {"number": number, "mergeable_state": state, "draft": draft,
+                                       "head": {"ref": branch, "sha": sha},
                                        "auto_merge": {"merge_method": "squash"} if auto_merge else None})
         self.serve(f"commits_{sha}_check-runs", [{"total_count": len(check_conclusions), "check_runs": [
             {"status": "completed" if c else "in_progress", "conclusion": c} for c in check_conclusions]}])
@@ -1336,7 +1342,60 @@ printf '%s\n' "${{doc:10}}"
     def test_green_PR_without_auto_merge_does_not_make_the_script_wait(self):
         self.pr(auto_merge=False, check_conclusions=("success",))
 
-        self.assertEqual((0, self.NO_WORK), self.run_with_pr_sleep()[:2])
+        self.assertEqual((0, ["auto-merge (squash) enabled for #5"] + self.NO_WORK), self.run_with_pr_sleep()[:2])
+
+    def puts(self):
+        log = self.gh_dir / "put.log"
+        return log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+
+    def test_PR_without_auto_merge_gets_squash_auto_merge_through_the_rest_route_and_is_then_waited_for(self):
+        self.pr(auto_merge=False, check_conclusions=(None,))
+        process = self.start_with_pr_sleep()
+        self.wait_until(lambda: self.pr_checks() >= 2, "a second check of the PRs")
+        self.assertIsNone(process.poll(), "the script ended instead of waiting")
+        self.assertFalse(self.calls.exists(), "a claude process was started while the PR waits")
+        process.terminate()
+        out = process.communicate(timeout=30)[0].splitlines()
+
+        self.assertEqual(1, len(self.puts()), self.puts())
+        self.assertIn("-X PUT", self.puts()[0])
+        self.assertIn("merge_method=squash", self.puts()[0])
+        self.assertTrue(self.puts()[0].startswith("PUT pulls_5_ccr_auto_merge "), self.puts())
+        self.assertEqual(["auto-merge (squash) enabled for #5"], [l for l in out if l.startswith("auto-merge")])
+
+    def test_PR_with_auto_merge_already_enabled_is_left_alone(self):
+        self.pr(auto_merge=True, check_conclusions=(None,))
+
+        self.assert_sleeping_without_claude(self.start_with_pr_sleep())
+
+        self.assertEqual([], self.puts())
+
+    def test_failing_auto_merge_is_reported_on_the_monitor_without_ending_the_run_with_an_error(self):
+        self.pr(auto_merge=False, check_conclusions=("success",))
+        (self.gh_dir / "fail_pulls_5_ccr_auto_merge").write_text("", encoding="utf-8")
+
+        code, lines, err = self.run_with_pr_sleep()
+
+        self.assertEqual(0, code, err)
+        self.assertEqual(1, len(self.puts()), self.puts())
+        self.assertTrue(lines[0].startswith("WARN auto-merge for #5 failed: "), lines)
+        self.assertEqual(self.NO_WORK[0], lines[1])
+        self.assertNotIn("ERROR", "\n".join(lines))
+
+    def test_draft_PR_gets_no_auto_merge_from_the_script(self):
+        self.pr(auto_merge=False, check_conclusions=("success",), draft=True)
+
+        lines = self.run_with_pr_sleep()[1]
+
+        self.assertEqual([], self.puts())
+        self.assertEqual(self.NO_WORK, lines)
+
+    def test_PR_needing_action_gets_no_auto_merge_from_the_script(self):
+        self.pr(auto_merge=False, check_conclusions=("failure",))
+
+        self.assert_iteration_started(self.run_with_pr_sleep())
+
+        self.assertEqual([], self.puts())
 
     def test_stop_request_ends_a_sleeping_script_before_the_sleep_is_over(self):
         self.pr(check_conclusions=(None,))
