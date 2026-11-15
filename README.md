@@ -1,8 +1,7 @@
 Matcher Generator
 =================
 
-[![Maven Central (Hamcrest)](https://img.shields.io/maven-central/v/io.github.marmer.testutils/hamcrest-matcher-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/hamcrest-matcher-generator)
-[![Maven Central (AssertJ)](https://img.shields.io/maven-central/v/io.github.marmer.testutils/assertj-assertion-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/assertj-assertion-generator)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.marmer.testutils/hamcrest-matcher-generator)](https://central.sonatype.com/artifact/io.github.marmer.testutils/hamcrest-matcher-generator)
 [![javadoc](https://javadoc.io/badge2/io.github.marmer.testutils/hamcrest-matcher-generator/javadoc.svg)](https://javadoc.io/doc/io.github.marmer.testutils/hamcrest-matcher-generator)
 [![CI](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml/badge.svg)](https://github.com/marmer/hamcrest-matcher-generator/actions/workflows/ci-build.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=io.github.marmer.testutils:matcher-generator-parent&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=io.github.marmer.testutils:matcher-generator-parent)
