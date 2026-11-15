@@ -8,9 +8,9 @@ name: Release
 # (secret), and the environment `release` holding CENTRAL_USERNAME, CENTRAL_PASSWORD, MAVEN_GPG_KEY and
 # MAVEN_GPG_PASSPHRASE.
 #
-# Release-PR auto-merge is not enabled: the owner merges each Release PR by hand (6.0.0 was published this way, and
-# `release-as` is gone from release-please-config.json). The environment `release` still asks the owner to approve
-# the publish.
+# Release-PR auto-merge is on: the `release-please` job enables squash auto-merge for the Release PR, so it merges as
+# soon as its required checks are green. The publish is still gated: the environment `release` asks the owner to
+# approve it.
 on:
   push:
     branches: [ main ]
@@ -50,6 +50,18 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # The PR may be new or updated, so it is looked up by its branch. A `chore`-only history opens no Release PR.
+      - name: Enable auto-merge for the Release PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          pr=$(gh api "repos/$REPO/pulls?state=open&head=$OWNER:release-please--branches--main" --jq '.[0].number // empty')
+          if [ -n "$pr" ]; then
+            gh pr merge "$pr" --auto --squash --repo "$REPO"
+          fi
 
   release-build:
     name: Release build
