@@ -2,6 +2,8 @@
 
 Stand: 2026-11-15 (alle Abrufe an diesem Tag). Recherche ohne Aenderung am Repo ausser dieser Datei.
 
+**Nachtrag 2026-11-15, nach dem Release:** Die Abrufe unten liegen vor der Veroeffentlichung von 6.0.0. Seitdem gibt es den GitHub-Release `6.0.0` (veroeffentlicht 2026-11-15T10:47:12Z, `GET repos/marmer/hamcrest-matcher-generator/releases/latest`), und `matcher-generator-core`, `matcher-generator-annotations`, `hamcrest-matcher-generator`, `hamcrest-matcher-generator-kotlin` und `assertj-assertion-generator` stehen mit `<release>6.0.0` auf Maven Central (`https://repo1.maven.org/maven2/io/github/marmer/testutils/<artifactId>/maven-metadata.xml`, gemessen). Die Aussagen "keine GitHub-Releases" (Kurzantwort Punkt 2, Tabelle GitHub-Releases) und "nicht auf Central" (Abschnitt 1, Koordinaten) beschreiben den Stand davor. Die Zaehlung der Commits nach Autor-Konto (Abschnitt 2, Contributors) unterschlaegt die Commits mit Claude-Trailer; die korrigierte Zaehlung steht in `projekthistorie-aufwand.md`.
+
 Kennzeichnung: **(gemessen)** direkt von der Primaerquelle abgerufen, **(geschaetzt)** abgeleitet, **(nicht ermittelbar)** oeffentlich nicht abrufbar. Es sind keine Zahlen erfunden; wo eine Quelle nichts liefert, steht das so da.
 
 ## Kurzantwort
