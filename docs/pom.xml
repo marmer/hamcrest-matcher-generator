@@ -37,7 +37,7 @@
         <!-- Structurizr 6.2.3 pins jackson-databind 2.22.2, which carries four advisories fixed in 2.22.3 (OpenSSF Scorecard
             Vulnerabilities). Jackson reaches only the docs tooling, never a published jar. JacksonVersionTest keeps this at or
             above 2.22.3. A patch-level override keeps Structurizr 6.2.3 as the tested version (ADR 0003). -->
-        <jackson.version>2.22.4</jackson.version>
+        <jackson.version>2.23.0</jackson.version>
     </properties>
 
     <dependencyManagement>
