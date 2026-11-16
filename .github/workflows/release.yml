@@ -151,9 +151,12 @@ jobs:
           mkdir -p "$RUNNER_TEMP/dist"
           # The modules excluded from Central in the release profile (end-to-end, docs) are not release artifacts.
           find . -path '*/target/*.jar' -not -path '*endtoend*' -not -path './docs/*' -exec cp {} "$RUNNER_TEMP/dist/" \;
+          # The detached PGP signatures the release profile made next to each jar (OpenSSF Scorecard: Signed-Releases).
+          find . -path '*/target/*.jar.asc' -not -path '*endtoend*' -not -path './docs/*' -exec cp {} "$RUNNER_TEMP/dist/" \;
           ls -l "$RUNNER_TEMP/dist"
 
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      - id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: ${{ runner.temp }}/dist/*.jar
 
@@ -164,6 +167,17 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+      # Scorecard's Signed-Releases check reads the release assets: *.asc counts as a signature (8 of 10), a
+      # *.intoto.jsonl provenance file as the maximum. The attestation bundle is an in-toto statement signed with
+      # Sigstore, so it is uploaded under that name. --clobber makes a workflow_dispatch re-run idempotent.
+      - name: Attach the artifacts, signatures and provenance to the GitHub Release
+        run: |
+          cp "$BUNDLE" "$RUNNER_TEMP/dist/provenance.intoto.jsonl"
+          gh release upload "$TAG" "$RUNNER_TEMP"/dist/* --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
 
       - id: coordinates
         name: Read the Maven coordinates
