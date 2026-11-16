@@ -52,6 +52,13 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <!-- jackson-annotations has no patch releases (2.23, not 2.23.0), so ${jackson.version} does not fit. Without this
+                pin Structurizr's 2.22 stays below the 2.23 that jackson-databind 2.23.0 needs (RequireUpperBoundDeps). -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.23</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
