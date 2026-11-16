@@ -33,7 +33,10 @@ jobs:
           # LicenseRef-scancode-public-domain, which the runtime allow-list does not take; the plugin is a build plugin
           # that the root pom pins in pluginManagement. Allowed here by purl, in runtime and unknown scopes, because the owner
           # confirmed them as allowed dependencies.
-          allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin, pkg:maven/org.apache.maven.plugins/maven-site-plugin
+          # license-maven-plugin 2.9.0 is reported as LicenseRef-github-NOASSERTION; its POM declares LGPL-3.0, as 2.8.0 did.
+          # It is a build plugin (third-party licence report), never part of a published jar. Allowed by purl like the others;
+          # the LGPL-3.0 build-time use is the owner's call (PR #513).
+          allow-dependencies-licenses: pkg:maven/org.codehaus.mojo/build-helper-maven-plugin, pkg:maven/org.codehaus.mojo/license-maven-plugin, pkg:maven/com.github.javaparser/javaparser-core, pkg:maven/org.apache.maven.plugins/maven-invoker-plugin, pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin, pkg:maven/org.apache.maven.plugins/maven-site-plugin
 
       - name: Test scope
         # Runs even when the runtime step found a violation, so a pull request that breaks both scopes reports both.
