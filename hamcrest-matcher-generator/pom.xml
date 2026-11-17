@@ -82,6 +82,28 @@
 
     <build>
         <plugins>
+            <!-- The Jazzer fuzz test lives in src/fuzz/java, not src/test/java: OpenSSF Scorecard's Fuzzing check skips every
+                 path under src/test/ (checks/fileparser/listing.go, isTestdataFile). The test is still compiled and run as a
+                 test, so the unit-test phase replays its seeds. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.7.0</version>
+                <executions>
+                    <execution>
+                        <id>add-fuzz-test-source</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/src/fuzz/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
