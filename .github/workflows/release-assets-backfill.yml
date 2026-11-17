@@ -13,12 +13,14 @@ on:
         type: string
 
 permissions:
-  contents: write   # gh release upload
+  contents: read
 
 jobs:
   backfill:
     name: Attach Central artifacts and signatures
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release upload
     env:
       TAG: ${{ inputs.tag }}
       GH_TOKEN: ${{ github.token }}
