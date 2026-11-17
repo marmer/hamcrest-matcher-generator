@@ -1,0 +1,44 @@
+name: Release assets backfill
+
+# TEMPORARY (ticket #287): attaches the artifacts of an already published release and their PGP signatures to its
+# GitHub Release, so OpenSSF Scorecard's Signed-Releases check finds `*.asc` assets. release.yml does this for new
+# releases; re-running it for a published tag would deploy to Maven Central again. This workflow does not build or
+# deploy: it downloads the files Maven Central serves for the tag. Remove it once the run for 6.0.0 has succeeded.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag and Maven version, e.g. 6.0.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    name: Attach Central artifacts and signatures
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release upload
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      BASE: https://repo1.maven.org/maven2/io/github/marmer/testutils
+    steps:
+      - name: Download from Maven Central
+        run: |
+          set -euo pipefail
+          mkdir dist
+          for a in matcher-generator-annotations matcher-generator-core hamcrest-matcher-generator assertj-assertion-generator \
+                   hamcrest-matcher-generator-kotlin hamcrest-matcher-generator-dependencies hamcrest-matcher-generator-annotationprocessor; do
+            for suffix in "" -sources -javadoc; do
+              for ext in jar jar.asc; do
+                curl --fail --silent --show-error --location --output "dist/$a-$TAG$suffix.$ext" "$BASE/$a/$TAG/$a-$TAG$suffix.$ext"
+              done
+            done
+          done
+          ls -l dist
+
+      - name: Attach to the GitHub Release
+        run: gh release upload "$TAG" dist/* --clobber --repo "$GITHUB_REPOSITORY"
