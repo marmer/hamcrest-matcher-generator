@@ -51,7 +51,8 @@ in the same pull request. Write the test first and see it fail before the change
   `-Dgolden.update=true` and review the diff; never edit them by hand.
 - Runtime behaviour is covered by unit tests (`BeanPropertyMatcherTest`, golden mismatch messages).
 - The end-to-end modules apply the annotation to real model classes and assert with the generated code.
-- `ItemsInAnyOrderFuzzTest` is a Jazzer fuzz test: in the normal build it only runs its `@MethodSource` seeds and any
+- `ItemsInAnyOrderFuzzTest` is a Jazzer fuzz test. It lives in `src/fuzz/java` (added as a test source directory by
+  `build-helper-maven-plugin`), because OpenSSF Scorecard's Fuzzing check ignores everything under `src/test/`. In the normal build it only runs its `@MethodSource` seeds and any
   crash reproducers in `src/test/resources/.../ItemsInAnyOrderFuzzTestInputs/`. That directory does not exist until
   the fuzzer finds a crash; the reproducer goes there, with a test that pins the fix. The fuzzing corpus directory
   `.cifuzz-corpus/` is in `.gitignore`.
